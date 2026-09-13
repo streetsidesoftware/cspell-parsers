@@ -1,0 +1,26 @@
+version: '0.2'
+language: en
+enableGlobDot: true
+dictionaries:
+  - typescript
+  - node
+  - npm
+  - fonts
+  - html
+  - css
+  - misc
+ignorePaths:
+  - node_modules
+  - dist
+  - dist-test
+  - coverage
+  - pnpm-lock.yaml
+  - '**/*.log'
+  - CHANGELOG.md
+  - .git/!(hooks,COMMIT_EDITMSG)
+words:
+  - tsdown
+  - vitest
+  - cspell
+  - pnpm
+  - COMMIT_EDITMSG
