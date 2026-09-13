@@ -11,8 +11,12 @@
     }
   },
   "scripts": {
-    "build": "tsc -b",
-    "clean": "shx rm -rf dist dist-test tsconfig.tsbuildinfo tsconfig.test.tsbuildinfo",
-    "test": "tsc -b && tsc -p tsconfig.test.json && node --test dist-test/index.test.js"
+    "build": "tsdown",
+    "clean": "shx rm -rf dist coverage",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@cspell/cspell-types": "catalog:"
   }
 }

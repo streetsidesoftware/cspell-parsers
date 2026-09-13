@@ -1,0 +1,26 @@
+name: Bug report
+description: Report a problem with one of the parser packages
+labels: [bug]
+body:
+  - type: input
+    id: package
+    attributes:
+      label: Package
+      description: Which package is affected (e.g. @cspell/parser-example)?
+      placeholder: '@cspell/parser-example'
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect to happen instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: A minimal input file and cspell configuration that reproduces the issue.
+    validations:
+      required: false

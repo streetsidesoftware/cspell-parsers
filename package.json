@@ -11,7 +11,8 @@
     "clean": "pnpm -r run clean",
     "lint": "eslint .",
     "lint-ci": "eslint . --max-warnings 0",
-    "test": "pnpm -r run test"
+    "test": "pnpm -r run test",
+    "typecheck": "pnpm -r run typecheck"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.0",
@@ -21,7 +22,9 @@
     "globals": "^16.4.0",
     "prettier": "^3.6.2",
     "shx": "^0.4.0",
-    "typescript": "^6.0.0",
-    "typescript-eslint": "^8.43.0"
+    "tsdown": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "^8.43.0",
+    "vitest": "catalog:"
   }
 }
