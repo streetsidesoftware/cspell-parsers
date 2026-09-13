@@ -1,10 +1,34 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
+import { describe, expect, it } from 'vitest';
 
-import { createExampleParser } from './index.js';
+import { parser } from './index.js';
 
-test('createExampleParser parses whitespace-delimited words', () => {
-  const parser = createExampleParser();
+describe('front-matter-example parser', () => {
+  it('excludes a leading YAML front-matter block from the parsed text', () => {
+    const content = '---\ntitle: Exampel\n---\nHello wrold\n';
 
-  assert.deepEqual(parser.parse('one   two\nthree'), ['one', 'two', 'three']);
+    const result = parser.parse(content, 'example.md');
+    const [parsedText] = [...result.parsedTexts];
+
+    expect(parsedText.text).toBe('Hello wrold\n');
+    expect(parsedText.range).toEqual([content.indexOf('Hello'), content.length]);
+  });
+
+  it('returns the whole document when there is no front matter', () => {
+    const content = 'Hello wrold\n';
+
+    const result = parser.parse(content, 'example.md');
+    const [parsedText] = [...result.parsedTexts];
+
+    expect(parsedText.text).toBe(content);
+    expect(parsedText.range).toEqual([0, content.length]);
+  });
+
+  it('preserves the filename and full content on the result', () => {
+    const content = 'Hello wrold\n';
+
+    const result = parser.parse(content, 'example.md');
+
+    expect(result.filename).toBe('example.md');
+    expect(result.content).toBe(content);
+  });
 });

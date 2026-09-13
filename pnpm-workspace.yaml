@@ -1,11 +1,25 @@
 packages:
   - packages/*
 
+catalog:
+  '@cspell/cspell-types': ^10.3.0
+  tsdown: ^0.23.0
+  typescript: ^6.0.3
+  vitest: ^5.0.0
+
 saveWorkspaceProtocol: rolling
 nodeLinker: isolated
+
 minimumReleaseAge: 2880
+minimumReleaseAgeExclude:
+  - '@cspell/*'
+  - 'cspell'
+  - 'cspell-*'
+
 blockExoticSubdeps: true
 trustPolicy: no-downgrade
 trustPolicyExclude:
   - undici-types@6.21.0
   - semver@5.7.2
+
+# cspell:dictionaries npm
