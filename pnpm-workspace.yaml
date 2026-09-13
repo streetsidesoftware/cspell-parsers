@@ -10,6 +10,11 @@ catalog:
 saveWorkspaceProtocol: rolling
 nodeLinker: isolated
 
+onlyBuiltDependencies:
+  - tree-sitter
+  - tree-sitter-javascript
+  - tree-sitter-typescript
+
 minimumReleaseAge: 2880
 minimumReleaseAgeExclude:
   - '@cspell/*'

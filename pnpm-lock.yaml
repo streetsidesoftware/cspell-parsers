@@ -66,6 +66,18 @@ importers:
         specifier: 'catalog:'
         version: 10.3.0
 
+  packages/parser-typescript:
+    dependencies:
+      '@cspell/cspell-types':
+        specifier: 10.3.2-alpha.0
+        version: 10.3.2-alpha.0
+      tree-sitter:
+        specifier: ^0.21.1
+        version: 0.21.1
+      tree-sitter-typescript:
+        specifier: ^0.23.2
+        version: 0.23.2(tree-sitter@0.21.1)
+
 packages:
 
   '@cacheable/memory@2.2.0':
@@ -104,6 +116,10 @@ packages:
 
   '@cspell/cspell-types@10.3.1':
     resolution: {integrity: sha512-c0ta73Z2KQdvOqlCWNCi9GYQSw/IUFm0R0FpNOaPZn3cjc6J6pMBd4IwD07TsOXMduCrmf/Ppg6gzcyviGHeAQ==}
+    engines: {node: '>=22.18.0'}
+
+  '@cspell/cspell-types@10.3.2-alpha.0':
+    resolution: {integrity: sha512-YRk69O20SUcVOiuZEfNlInDtQ78Ua/N4MFllPDgxNddXSeofnQRTsWgQkp+D4HhKHm5ewQEukLGZ2n9J4Fjp8A==}
     engines: {node: '>=22.18.0'}
 
   '@cspell/cspell-worker@10.3.1':
@@ -1240,6 +1256,14 @@ packages:
   nice-try@1.0.5:
     resolution: {integrity: sha512-1nh45deeb5olNY7eX82BkPO7SSxR5SSYJiPTrTdFUVYwAl8CKMA5N9PjTYkHiRjisVcxcQ1HXdLhx2qxxJzLNQ==}
 
+  node-addon-api@8.9.2:
+    resolution: {integrity: sha512-VijLXbi3UACN69I0JVXJsX4tjACjNoQDgv2gTF6sx2wWEi8tkSg2eX8p5gSIFi8z2+DL3oHmY6OyKce38SDolg==}
+    engines: {node: ^18 || ^20 || >= 21}
+
+  node-gyp-build@4.8.4:
+    resolution: {integrity: sha512-LA4ZjwlnUblHVgq0oBF3Jl/6h/Nvs5fzBLwdEF4nuxnFdsfajde4WfxtJr3CaiH+F6ewcIB/q4jQ4UzPyid+CQ==}
+    hasBin: true
+
   npm-run-path@2.0.2:
     resolution: {integrity: sha512-lJxZYlT4DW/bRUtFh1MQIWqmLwQfAxnqWG4HhEdjMlkrJYnJn0Jrr2u3mgxqaWsdiBc76TYkTG/mhrnYTuzfHw==}
     engines: {node: '>=4'}
@@ -1456,6 +1480,25 @@ packages:
   tree-kill@1.2.2:
     resolution: {integrity: sha512-L0Orpi8qGpRG//Nd+H90vFB+3iHnue1zSSGmNOOCh1GLJ7rUKVwV2HvijphGQS2UmhUZewS9VgvxYIdgr+fG1A==}
     hasBin: true
+
+  tree-sitter-javascript@0.23.1:
+    resolution: {integrity: sha512-/bnhbrTD9frUYHQTiYnPcxyHORIw157ERBa6dqzaKxvR/x3PC4Yzd+D1pZIMS6zNg2v3a8BZ0oK7jHqsQo9fWA==}
+    peerDependencies:
+      tree-sitter: ^0.21.1
+    peerDependenciesMeta:
+      tree-sitter:
+        optional: true
+
+  tree-sitter-typescript@0.23.2:
+    resolution: {integrity: sha512-e04JUUKxTT53/x3Uq1zIL45DoYKVfHH4CZqwgZhPg5qYROl5nQjV+85ruFzFGZxu+QeFVbRTPDRnqL9UbU4VeA==}
+    peerDependencies:
+      tree-sitter: ^0.21.0
+    peerDependenciesMeta:
+      tree-sitter:
+        optional: true
+
+  tree-sitter@0.21.1:
+    resolution: {integrity: sha512-7dxoA6kYvtgWw80265MyqJlkRl4yawIjO7S5MigytjELkX43fV2WsAXzsNfO7sBpPPCF5Gp0+XzHk0DwLCq3xQ==}
 
   ts-api-utils@2.5.0:
     resolution: {integrity: sha512-OJ/ibxhPlqrMM0UiNHJ/0CKQkoKF243/AEmplt3qpRgkW8VG7IfOS41h7V8TjITqdByHzrjcS/2si+y4lIh8NA==}
@@ -1752,6 +1795,8 @@ snapshots:
   '@cspell/cspell-types@10.3.0': {}
 
   '@cspell/cspell-types@10.3.1': {}
+
+  '@cspell/cspell-types@10.3.2-alpha.0': {}
 
   '@cspell/cspell-worker@10.3.1':
     dependencies:
@@ -2707,6 +2752,10 @@ snapshots:
 
   nice-try@1.0.5: {}
 
+  node-addon-api@8.9.2: {}
+
+  node-gyp-build@4.8.4: {}
+
   npm-run-path@2.0.2:
     dependencies:
       path-key: 2.0.1
@@ -2891,6 +2940,26 @@ snapshots:
       is-number: 7.0.0
 
   tree-kill@1.2.2: {}
+
+  tree-sitter-javascript@0.23.1(tree-sitter@0.21.1):
+    dependencies:
+      node-addon-api: 8.9.2
+      node-gyp-build: 4.8.4
+    optionalDependencies:
+      tree-sitter: 0.21.1
+
+  tree-sitter-typescript@0.23.2(tree-sitter@0.21.1):
+    dependencies:
+      node-addon-api: 8.9.2
+      node-gyp-build: 4.8.4
+      tree-sitter-javascript: 0.23.1(tree-sitter@0.21.1)
+    optionalDependencies:
+      tree-sitter: 0.21.1
+
+  tree-sitter@0.21.1:
+    dependencies:
+      node-addon-api: 8.9.2
+      node-gyp-build: 4.8.4
 
   ts-api-utils@2.5.0(typescript@6.0.3):
     dependencies:
