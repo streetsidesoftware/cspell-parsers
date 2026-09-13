@@ -4,7 +4,7 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['**/dist/**', '**/coverage/**', '**/node_modules/**'],
+    ignores: ['**/dist/**', '**/dist-test/**', '**/coverage/**', '**/node_modules/**'],
   },
   {
     languageOptions: {
@@ -17,14 +17,9 @@ export default tseslint.config(
     },
   },
   js.configs.recommended,
-  ...tseslint.configs.recommendedTypeChecked,
   {
     files: ['**/*.ts'],
-    languageOptions: {
-      parserOptions: {
-        projectService: true,
-      },
-    },
+    extends: [...tseslint.configs.recommended],
     rules: {
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': [

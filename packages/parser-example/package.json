@@ -12,7 +12,7 @@
   },
   "scripts": {
     "build": "tsc -b",
-    "clean": "shx rm -rf dist tsconfig.tsbuildinfo",
-    "test": "node --test dist/index.test.js"
+    "clean": "shx rm -rf dist dist-test tsconfig.tsbuildinfo tsconfig.test.tsbuildinfo",
+    "test": "tsc -b && tsc -p tsconfig.test.json && node --test dist-test/index.test.js"
   }
 }
