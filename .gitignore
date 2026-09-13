@@ -142,3 +142,5 @@ dist-test
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# cspell:ignore jscoverage pids stylelintcache wscript
