@@ -1,0 +1,11 @@
+packages:
+  - packages/*
+
+saveWorkspaceProtocol: rolling
+nodeLinker: isolated
+minimumReleaseAge: 2880
+blockExoticSubdeps: true
+trustPolicy: no-downgrade
+trustPolicyExclude:
+  - undici-types@6.21.0
+  - semver@5.7.2
