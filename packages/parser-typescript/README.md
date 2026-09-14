@@ -20,8 +20,14 @@ Each `ParsedText` segment also carries:
   *kind* of construct a segment sits inside, ordered local to global — never the source text itself, so a
   class named `Foo` and one named `Bar` get the same scope shape. For example, a string returned from a
   method inside a class gets the scope chain `string.quoted.single.ts` → `meta.method.declaration.ts` →
-  `meta.class.ts` → `source.ts`. These names approximate common TextMate/VS Code grammar conventions for
-  TypeScript; they aren't copied from any specific grammar.
+  `meta.class.ts` → `source.ts`. These names are checked against the real
+  [`TypeScript.YAML-tmLanguage`](https://github.com/microsoft/TypeScript-TmLanguage) grammar where a
+  construct maps cleanly onto one AST node, but it's still an approximation, not a byte-for-byte
+  reproduction: a real grammar stacks several scope names on one token (e.g. a class field name is
+  `meta.definition.property.ts variable.object.property.ts`), while this parser only ever contributes one
+  name per chain level, and property-ish identifiers (object literal keys, class fields, interface members,
+  and `a.b` property access) are all collapsed to the `variable.other.property.ts` scope that's accurate for
+  property access specifically.
 
 Import/export bindings get special treatment: a named import's original module-exported name (e.g. `expl` in
 `import { expl } from './mod.js'`) is never checked, at its declaration or anywhere it's referenced, since
@@ -30,12 +36,18 @@ it's dictated by the external module rather than authored in this file. A rename
 name — but properties accessed off it (`myExample.someProp`) are not, since they belong to the external
 module's shape, not this file.
 
+A local declaration can reuse the exact name of an import and shadow it for its own scope — e.g. a `const
+expl = ...` or parameter named `expl` inside a function that also imports `expl` is checked normally, and so
+are properties accessed off it, for the rest of that function/block. This shadowing tracking is intentionally
+simple: it covers plain `const`/`let`/`var`/function/class declarations and plain (non-destructured)
+parameters, not full lexical scoping (no hoisting, no destructured binding patterns).
+
 ## Usage
 
 ```jsonc
 {
   "plugins": ["@cspell/parser-typescript"],
-  "parser": "typescript-tree-sitter",
+  "parser": "typescript",
 }
 ```
 

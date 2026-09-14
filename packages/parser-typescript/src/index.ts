@@ -40,9 +40,17 @@ const referenceNodeTypes = new Set(['identifier', 'type_identifier']);
  * dotted, `.ts`-suffixed category names such as `meta.class.ts` or
  * `string.quoted.single.ts`, describing what KIND of construct a segment is
  * inside - never the source text itself (a class named `Foo` and one named
- * `Bar` get the same scope). The names below are hand-picked to read like a
- * real TypeScript TextMate grammar's scopes; they approximate the common
- * conventions rather than reproducing any specific grammar verbatim.
+ * `Bar` get the same scope). Names below are checked against the real
+ * TypeScript.YAML-tmLanguage grammar (microsoft/TypeScript-TmLanguage) where
+ * a construct maps cleanly onto one AST node; this is still an
+ * approximation, not a byte-for-byte reproduction, in a couple of ways:
+ *  - a real grammar stacks multiple scope names on one token (e.g. a class
+ *    field name is `meta.definition.property.ts variable.object.property.ts`);
+ *    we only ever contribute one name per chain level.
+ *  - property-ish identifiers (object literal keys, class fields, interface
+ *    members, and `a.b` property access) each get their own scope for real;
+ *    we collapse them all to `variable.other.property.ts`, which is the real
+ *    scope for the property-access case specifically.
  */
 
 /** Scope pushed for the body/contents of a node that introduces a named construct. */
@@ -50,27 +58,30 @@ const containerScopeByNodeType: Record<string, string> = {
   class_declaration: 'meta.class.ts',
   abstract_class_declaration: 'meta.class.ts',
   interface_declaration: 'meta.interface.ts',
-  enum_declaration: 'meta.enum.ts',
+  enum_declaration: 'meta.enum.declaration.ts',
   function_declaration: 'meta.function.ts',
-  function_expression: 'meta.function.ts',
-  generator_function: 'meta.function.ts',
+  function_expression: 'meta.function.expression.ts',
+  generator_function: 'meta.function.expression.ts',
   generator_function_declaration: 'meta.function.ts',
   method_definition: 'meta.method.declaration.ts',
   method_signature: 'meta.method.declaration.ts',
   function_signature: 'meta.function.ts',
   abstract_method_signature: 'meta.method.declaration.ts',
   type_alias_declaration: 'meta.type.declaration.ts',
-  internal_module: 'meta.namespace.ts',
-  module: 'meta.namespace.ts',
+  internal_module: 'meta.namespace.declaration.ts',
+  module: 'meta.namespace.declaration.ts',
   variable_declarator: 'meta.var.expr.ts',
-  property_signature: 'meta.object.member.ts',
+  property_signature: 'meta.object.type.ts',
   public_field_definition: 'meta.field.declaration.ts',
-  index_signature: 'meta.object.member.ts',
+  index_signature: 'meta.object.type.ts',
   generic_type: 'meta.type.parameters.ts',
   type_parameter: 'meta.type.parameters.ts',
   type_predicate: 'meta.return.type.ts',
-  required_parameter: 'meta.parameter.ts',
-  optional_parameter: 'meta.parameter.ts',
+  required_parameter: 'meta.parameters.ts',
+  optional_parameter: 'meta.parameters.ts',
+  arrow_function: 'meta.arrow.ts',
+  import_statement: 'meta.import.ts',
+  export_statement: 'meta.export.ts',
 };
 
 /** Fallback container scope for a "has a name field" node type not listed above. */
@@ -103,10 +114,12 @@ const identifierScopeByKind: Record<IdentifierKind, string> = {
   property: 'variable.other.property.ts',
   privateProperty: 'variable.other.property.ts',
   type: 'entity.name.type.ts',
-  shorthandProperty: 'variable.other.property.ts',
+  // A shorthand `{ foo }` is scoped as a plain variable reference, not a property, in the real grammar.
+  shorthandProperty: 'variable.other.readwrite.ts',
   label: 'entity.name.label.ts',
-  importBinding: 'variable.other.readwrite.ts',
-  exportBinding: 'variable.other.readwrite.ts',
+  // Import/export specifier identifiers (renamed or not) get the "alias" variant in the real grammar.
+  importBinding: 'variable.other.readwrite.alias.ts',
+  exportBinding: 'variable.other.readwrite.alias.ts',
 };
 
 function isTsx(filename: string): boolean {
@@ -203,19 +216,109 @@ function collectImportBindings(root: SyntaxNode): ImportBindings {
 /**
  * True when `node` is (or is a chain of property accesses rooted in) an
  * identifier bound to an import - meaning any property read off it belongs
- * to the external module, not to this file.
+ * to the external module, not to this file. A name currently shadowed by a
+ * local declaration (see `BindingScope`) is never treated as external.
  */
-function isExternalObject(node: SyntaxNode, imports: ImportBindings): boolean {
-  if (node.type === 'identifier') return imports.localNames.has(node.text);
+function isExternalObject(node: SyntaxNode, imports: ImportBindings, bindingScope: BindingScope | undefined): boolean {
+  if (node.type === 'identifier') return imports.localNames.has(node.text) && !isShadowed(bindingScope, node.text);
   if (node.type === 'member_expression') {
     const object = node.childForFieldName('object');
-    return object ? isExternalObject(object, imports) : false;
+    return object ? isExternalObject(object, imports, bindingScope) : false;
   }
   if (node.type === 'parenthesized_expression') {
     const inner = node.namedChild(0);
-    return inner ? isExternalObject(inner, imports) : false;
+    return inner ? isExternalObject(inner, imports, bindingScope) : false;
   }
   return false;
+}
+
+/**
+ * A local declaration (parameter, `const`/`let`/`var`, function, class) can
+ * reuse the exact name of an import binding, in which case it shadows that
+ * import for the rest of its enclosing function/block: this is a real,
+ * locally-authored binding and should be checked like any other, and
+ * property access through it is no longer "external". This is a lexical
+ * scope chain of just those shadowed names, layered on top of the
+ * whole-file `ImportBindings` computed once up front. It does not implement
+ * full scoping (no hoisting, no destructuring patterns) - just enough to
+ * stop a same-named local from being treated as the import it shadows.
+ */
+interface BindingScope {
+  readonly shadowed: ReadonlySet<string>;
+  readonly parent: BindingScope | undefined;
+}
+
+function isShadowed(scope: BindingScope | undefined, name: string): boolean {
+  for (let s = scope; s; s = s.parent) {
+    if (s.shadowed.has(name)) return true;
+  }
+  return false;
+}
+
+/** Pushes a new binding scope shadowing whichever `names` are actually bound to an import. */
+function pushShadow(
+  parent: BindingScope | undefined,
+  names: readonly string[],
+  imports: ImportBindings,
+): BindingScope | undefined {
+  const shadowed = new Set(names.filter((name) => imports.localNames.has(name)));
+  return shadowed.size ? { shadowed, parent } : parent;
+}
+
+/** Node types with a function-shaped `parameter(s)` field whose names can shadow an outer import. */
+const functionLikeNodeTypes = new Set([
+  'function_declaration',
+  'function_expression',
+  'generator_function',
+  'generator_function_declaration',
+  'method_definition',
+  'method_signature',
+  'function_signature',
+  'abstract_method_signature',
+  'arrow_function',
+]);
+
+/**
+ * `required_parameter`/`optional_parameter` list `name` as a possible field in the grammar, but for a
+ * plain identifier parameter the identifier actually comes through as `pattern` - `name` is null. Falling
+ * back to `pattern` is safe generally: for a destructured parameter, `pattern` resolves to an
+ * `object_pattern`/`array_pattern` node rather than an identifier, so callers that only care about a
+ * declared identifier name (guarded by `identifierKindByNodeType`) simply ignore it.
+ */
+function declarationNameNode(node: SyntaxNode): SyntaxNode | null {
+  return node.childForFieldName('name') ?? node.childForFieldName('pattern');
+}
+
+/** Plain parameter names declared directly on a function-like node (destructured patterns are skipped). */
+function parameterNames(node: SyntaxNode): string[] {
+  const names: string[] = [];
+  const singleParam = node.childForFieldName('parameter'); // arrow function shorthand: `x => ...`
+  if (singleParam?.type === 'identifier') names.push(singleParam.text);
+  const params = node.childForFieldName('parameters');
+  if (params) {
+    for (const child of params.namedChildren) {
+      const nameNode = declarationNameNode(child);
+      if (nameNode?.type === 'identifier') names.push(nameNode.text);
+    }
+  }
+  return names;
+}
+
+/** `const`/`let`/`var`/function/class names declared directly (not in a nested block) inside a block. */
+function blockDeclarationNames(node: SyntaxNode): string[] {
+  const names: string[] = [];
+  for (const child of node.namedChildren) {
+    if (child.type === 'lexical_declaration' || child.type === 'variable_declaration') {
+      for (const declarator of child.namedChildren) {
+        const nameNode = declarator.childForFieldName('name');
+        if (nameNode?.type === 'identifier') names.push(nameNode.text);
+      }
+    } else if (child.type === 'function_declaration' || child.type === 'class_declaration') {
+      const nameNode = child.childForFieldName('name');
+      if (nameNode) names.push(nameNode.text);
+    }
+  }
+  return names;
 }
 
 interface WalkContext {
@@ -250,9 +353,16 @@ function emit(
  * TextMate-flavored `ScopeChain` describing the kind of construct a segment
  * sits inside, local to global. `ctx.imports` drives excluding names/
  * properties that come from outside this file rather than being authored
- * here.
+ * here, and `bindingScope` overrides that when a local declaration shadows
+ * an import (see `BindingScope`).
  */
-function walk(node: SyntaxNode, scope: ScopeChain | undefined, ctx: WalkContext, out: ParsedText[]): void {
+function walk(
+  node: SyntaxNode,
+  scope: ScopeChain | undefined,
+  bindingScope: BindingScope | undefined,
+  ctx: WalkContext,
+  out: ParsedText[],
+): void {
   switch (node.type) {
     case 'comment':
       emit(node, scope, commentScope(node.text), ctx, commentTag(node.text), out);
@@ -265,19 +375,24 @@ function walk(node: SyntaxNode, scope: ScopeChain | undefined, ctx: WalkContext,
         if (child.type === 'string_fragment') {
           emit(child, scope, 'string.template.ts', ctx, { string: 'templateLiteral' }, out);
         } else if (child.type === 'template_substitution') {
-          walk(child, scope, ctx, out);
+          walk(child, scope, bindingScope, ctx, out);
         }
       }
       return;
     case 'jsx_text':
       if (node.text.trim()) emit(node, scope, 'meta.jsx.children.ts', ctx, undefined, out);
       return;
+    case 'statement_block': {
+      const innerBindingScope = pushShadow(bindingScope, blockDeclarationNames(node), ctx.imports);
+      for (const child of node.namedChildren) walk(child, scope, innerBindingScope, ctx, out);
+      return;
+    }
     case 'import_clause':
       for (const child of node.namedChildren) {
         if (child.type === 'identifier') {
           emit(child, scope, identifierScopeByKind.importBinding, ctx, identifierTag('importBinding'), out);
         } else {
-          walk(child, scope, ctx, out);
+          walk(child, scope, bindingScope, ctx, out);
         }
       }
       return;
@@ -304,7 +419,7 @@ function walk(node: SyntaxNode, scope: ScopeChain | undefined, ctx: WalkContext,
         if (aliasNode) emit(aliasNode, scope, identifierScopeByKind.exportBinding, ctx, identifierTag('exportBinding'), out);
       } else {
         // `name` references a pre-existing local binding - walk it like any other reference.
-        if (nameNode) walk(nameNode, scope, ctx, out);
+        if (nameNode) walk(nameNode, scope, bindingScope, ctx, out);
         if (aliasNode) emit(aliasNode, scope, identifierScopeByKind.exportBinding, ctx, identifierTag('exportBinding'), out);
       }
       return;
@@ -312,9 +427,9 @@ function walk(node: SyntaxNode, scope: ScopeChain | undefined, ctx: WalkContext,
     case 'member_expression': {
       const objectNode = node.childForFieldName('object');
       const propertyNode = node.childForFieldName('property');
-      if (objectNode) walk(objectNode, scope, ctx, out);
-      if (propertyNode && !(objectNode && isExternalObject(objectNode, ctx.imports))) {
-        walk(propertyNode, scope, ctx, out);
+      if (objectNode) walk(objectNode, scope, bindingScope, ctx, out);
+      if (propertyNode && !(objectNode && isExternalObject(objectNode, ctx.imports, bindingScope))) {
+        walk(propertyNode, scope, bindingScope, ctx, out);
       }
       return;
     }
@@ -322,16 +437,26 @@ function walk(node: SyntaxNode, scope: ScopeChain | undefined, ctx: WalkContext,
 
   const kind = identifierKindByNodeType[node.type];
   if (kind) {
-    // Plain reference to an unaliased import's exact (externally-dictated) name - never authored here.
-    if (referenceNodeTypes.has(node.type) && ctx.imports.externalNames.has(node.text)) return;
+    // Plain reference to an unaliased import's exact (externally-dictated) name, unless shadowed locally.
+    if (
+      referenceNodeTypes.has(node.type) &&
+      ctx.imports.externalNames.has(node.text) &&
+      !isShadowed(bindingScope, node.text)
+    ) {
+      return;
+    }
     emit(node, scope, identifierScopeByKind[kind], ctx, identifierTag(kind), out);
     return;
   }
 
-  const nameNode = node.childForFieldName('name');
-  const innerScope = nameNode
-    ? scoped(scope, containerScopeByNodeType[node.type] ?? genericContainerScope(node.type), ctx)
-    : scope;
+  const nameNode = declarationNameNode(node);
+  // Some containers (arrow functions, import/export statements) have no `name`/`pattern` field of their own.
+  const containerName = containerScopeByNodeType[node.type] ?? (nameNode ? genericContainerScope(node.type) : undefined);
+  const innerScope = containerName ? scoped(scope, containerName, ctx) : scope;
+  // A function's parameters can shadow an outer import for its whole body.
+  const innerBindingScope = functionLikeNodeTypes.has(node.type)
+    ? pushShadow(bindingScope, parameterNames(node), ctx.imports)
+    : bindingScope;
 
   for (const child of node.namedChildren) {
     if (child === nameNode) {
@@ -342,7 +467,7 @@ function walk(node: SyntaxNode, scope: ScopeChain | undefined, ctx: WalkContext,
         continue;
       }
     }
-    walk(child, innerScope, ctx, out);
+    walk(child, innerScope, innerBindingScope, ctx, out);
   }
 }
 
@@ -353,13 +478,13 @@ export function parse(content: string, filename: string): ParseResult {
   const baseScope: ScopeChain = { value: tsxMode ? 'source.tsx' : 'source.ts' };
 
   const parsedTexts: ParsedText[] = [];
-  walk(tree.rootNode, baseScope, ctx, parsedTexts);
+  walk(tree.rootNode, baseScope, undefined, ctx, parsedTexts);
 
   return { content, filename, parsedTexts };
 }
 
 export const parser: Parser = {
-  name: 'typescript-tree-sitter',
+  name: 'typescript',
   parse,
 };
 

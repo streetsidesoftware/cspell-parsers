@@ -37,7 +37,7 @@ function findAll(parsedTexts: ParsedText[], text: string): ParsedText[] {
   return parsedTexts.filter((p) => p.text === text);
 }
 
-describe('typescript-tree-sitter parser', () => {
+describe('typescript parser', () => {
   it('preserves the filename and full content on the result', () => {
     const content = readFixture('scope-and-tags.ts');
     const result = parser.parse(content, 'fixtures/scope-and-tags.ts');
@@ -111,6 +111,27 @@ describe('typescript-tree-sitter parser', () => {
       ]);
     });
 
+    it('gives an arrow function its own scope, nested under its variable-declaration scope', () => {
+      const labels = findAll(parsedTexts, 'label');
+      expect(labels).toHaveLength(2);
+
+      // the parameter declaration also sits inside the parameter-list scope
+      expect(scopeValues(labels[0]?.scope)).toEqual([
+        'variable.other.readwrite.ts',
+        'meta.parameters.ts',
+        'meta.arrow.ts',
+        'meta.var.expr.ts',
+        'source.ts',
+      ]);
+      // the body reference does not
+      expect(scopeValues(labels[1]?.scope)).toEqual([
+        'variable.other.readwrite.ts',
+        'meta.arrow.ts',
+        'meta.var.expr.ts',
+        'source.ts',
+      ]);
+    });
+
     it('does not spell check keywords, punctuation, or numbers', () => {
       expect(parsedTexts.some((p) => p.text === 'const')).toBe(false);
       expect(parsedTexts.some((p) => p.text === '42')).toBe(false);
@@ -132,6 +153,15 @@ describe('typescript-tree-sitter parser', () => {
       const myExample = findAll(identifiers, 'myExample');
       expect(myExample.length).toBeGreaterThan(0);
       expect(myExample[0]?.tags).toEqual({ identifier: 'importBinding' });
+    });
+
+    it('scopes an import alias under the import statement, using the "alias" scope variant', () => {
+      const declaration = findAll(identifiers, 'myExample')[0];
+      expect(scopeValues(declaration?.scope)).toEqual([
+        'variable.other.readwrite.alias.ts',
+        'meta.import.ts',
+        'source.ts',
+      ]);
     });
 
     it('checks default and namespace import bindings, since their names are chosen locally', () => {
@@ -160,6 +190,53 @@ describe('typescript-tree-sitter parser', () => {
     });
   });
 
+  describe('imports-and-local-variables.mts', () => {
+    const content = readFixture('imports-and-local-variables.mts');
+    const parsedTexts = parseFixture('imports-and-local-variables.mts');
+    const identifiers = parsedTexts.filter((p) => typeof p.tags?.identifier === 'string');
+    const explOccurrences = findAll(identifiers, 'expl').map((p) => p.range[0]).sort((a, b) => a - b);
+
+    // Six `expl` tokens appear in the source: the top-level import; a local `const expl` inside
+    // `check` that shadows it, plus a reference to that local; a reference to the real import inside
+    // `checkExpl`; and an arrow function parameter named `expl` (a different shadowing mechanism -
+    // parameters, not block declarations), plus a reference to that local. Only the import's own
+    // declaration and the genuine reference to it should be excluded - the four shadowing ones checked.
+    const localDeclarationIndex = content.indexOf('const expl') + 'const '.length;
+    const localReferenceIndex = content.indexOf('expl.toUpperCase');
+    const importDeclarationIndex = content.indexOf('{ expl }') + '{ '.length;
+    const externalReferenceIndex = content.indexOf('check(expl)') + 'check('.length;
+    const paramDeclarationIndex = content.indexOf('(expl: string)') + '('.length;
+    const paramReferenceIndex = content.lastIndexOf('expl.toUpperCase');
+
+    it('checks a local declaration that shadows an import of the same name', () => {
+      expect(explOccurrences).toContain(localDeclarationIndex);
+    });
+
+    it('checks a local reference to the shadowing declaration, not the import', () => {
+      expect(explOccurrences).toContain(localReferenceIndex);
+    });
+
+    it('checks a function parameter that shadows an import of the same name', () => {
+      expect(explOccurrences).toContain(paramDeclarationIndex);
+    });
+
+    it('checks a reference to a parameter that shadows an import, not the import itself', () => {
+      expect(explOccurrences).toContain(paramReferenceIndex);
+    });
+
+    it('still excludes the import declaration and a genuine reference to it elsewhere', () => {
+      expect(explOccurrences).not.toContain(importDeclarationIndex);
+      expect(explOccurrences).not.toContain(externalReferenceIndex);
+      expect(explOccurrences).toHaveLength(4);
+    });
+
+    it('checks a property access through a shadowing local, since it is no longer external', () => {
+      const toUpperCaseCalls = findAll(identifiers, 'toUpperCase');
+      expect(toUpperCaseCalls).toHaveLength(2);
+      for (const call of toUpperCaseCalls) expect(call.tags).toEqual({ identifier: 'property' });
+    });
+  });
+
   it('parses tsx files and includes untagged jsx text, using .tsx scope names', () => {
     const parsedTexts = parseFixture('jsx.tsx');
 
@@ -168,11 +245,13 @@ describe('typescript-tree-sitter parser', () => {
     expect(scopeValues(find(parsedTexts, 'Greeting').scope)).toEqual([
       'entity.name.function.tsx',
       'meta.function.tsx',
+      'meta.export.tsx',
       'source.tsx',
     ]);
     expect(scopeValues(find(parsedTexts, 'hello world').scope)).toEqual([
       'meta.jsx.children.tsx',
       'meta.function.tsx',
+      'meta.export.tsx',
       'source.tsx',
     ]);
   });

@@ -10,3 +10,4 @@ const greeting = 'hello';
 const doubleQuoted = "hello";
 const msg = `hi ${userName} bye`;
 const total = 42;
+const describe = (label: string) => label;
