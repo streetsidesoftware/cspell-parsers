@@ -196,7 +196,9 @@ describe('typescript parser', () => {
     const content = readFixture('imports-and-local-variables.mts');
     const parsedTexts = parseFixture('imports-and-local-variables.mts');
     const identifiers = parsedTexts.filter((p) => typeof p.tags?.identifier === 'string');
-    const explOccurrences = findAll(identifiers, 'expl').map((p) => p.range[0]).sort((a, b) => a - b);
+    const explOccurrences = findAll(identifiers, 'expl')
+      .map((p) => p.range[0])
+      .sort((a, b) => a - b);
 
     // Six `expl` tokens appear in the source: the top-level import; a local `const expl` inside
     // `check` that shadows it, plus a reference to that local; a reference to the real import inside

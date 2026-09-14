@@ -404,23 +404,25 @@ function walk(
     case 'import_specifier': {
       // `name` is always the module's own export name - never authored here.
       const aliasNode = node.childForFieldName('alias');
-      if (aliasNode) emit(aliasNode, scope, identifierScopeByKind.importBinding, ctx, identifierTag('importBinding'), out);
+      if (aliasNode)
+        emit(aliasNode, scope, identifierScopeByKind.importBinding, ctx, identifierTag('importBinding'), out);
       return;
     }
     case 'export_specifier': {
       const exportClause = node.parent;
       const exportStatement = exportClause?.type === 'export_clause' ? exportClause.parent : null;
-      const isReExport =
-        exportStatement?.type === 'export_statement' && !!exportStatement.childForFieldName('source');
+      const isReExport = exportStatement?.type === 'export_statement' && !!exportStatement.childForFieldName('source');
       const nameNode = node.childForFieldName('name');
       const aliasNode = node.childForFieldName('alias');
       if (isReExport) {
         // `name` is the module's own export name; only a rename is authored here.
-        if (aliasNode) emit(aliasNode, scope, identifierScopeByKind.exportBinding, ctx, identifierTag('exportBinding'), out);
+        if (aliasNode)
+          emit(aliasNode, scope, identifierScopeByKind.exportBinding, ctx, identifierTag('exportBinding'), out);
       } else {
         // `name` references a pre-existing local binding - walk it like any other reference.
         if (nameNode) walk(nameNode, scope, bindingScope, ctx, out);
-        if (aliasNode) emit(aliasNode, scope, identifierScopeByKind.exportBinding, ctx, identifierTag('exportBinding'), out);
+        if (aliasNode)
+          emit(aliasNode, scope, identifierScopeByKind.exportBinding, ctx, identifierTag('exportBinding'), out);
       }
       return;
     }
@@ -451,7 +453,8 @@ function walk(
 
   const nameNode = declarationNameNode(node);
   // Some containers (arrow functions, import/export statements) have no `name`/`pattern` field of their own.
-  const containerName = containerScopeByNodeType[node.type] ?? (nameNode ? genericContainerScope(node.type) : undefined);
+  const containerName =
+    containerScopeByNodeType[node.type] ?? (nameNode ? genericContainerScope(node.type) : undefined);
   const innerScope = containerName ? scoped(scope, containerName, ctx) : scope;
   // A function's parameters can shadow an outer import for its whole body.
   const innerBindingScope = functionLikeNodeTypes.has(node.type)
