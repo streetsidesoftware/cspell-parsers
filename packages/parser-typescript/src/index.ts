@@ -148,6 +148,31 @@ function quoteTag(text: string): ParsedTags {
   }
 }
 
+/**
+ * True when `node` is the module-specifier string of an `import ... from '...'` or
+ * `export ... from '...'` statement - as opposed to some unrelated string literal that
+ * happens to be a descendant (e.g. `export default "foo";`, where "foo" is the `value` field).
+ */
+function isModuleSpecifierString(node: SyntaxNode): boolean {
+  const parent = node.parent;
+  if (!parent) return false;
+  return (
+    (parent.type === 'import_statement' || parent.type === 'export_statement') &&
+    parent.childForFieldName('source') === node
+  );
+}
+
+/**
+ * True when a module specifier is a "bare" specifier - a package name resolved through
+ * node_modules (`prettier`, `@cspell/cspell-types`, `node:fs`) - rather than a relative path
+ * (`./example.js`, `../lib`) into this project. Bare specifiers aren't authored spelling: they're
+ * fixed by whatever package is being imported, so they're never spell checked.
+ */
+function isBareModuleSpecifier(quotedText: string): boolean {
+  const specifier = quotedText.slice(1, -1);
+  return specifier.length > 0 && specifier[0] !== '.' && specifier[0] !== '/';
+}
+
 function commentScope(text: string): string {
   if (text.startsWith('//')) return 'comment.line.double-slash.ts';
   return text.startsWith('/**') ? 'comment.block.documentation.ts' : 'comment.block.ts';
@@ -368,6 +393,8 @@ function walk(
       emit(node, scope, commentScope(node.text), ctx, commentTag(node.text), out);
       return;
     case 'string':
+      // A bare module specifier (`from 'prettier'`) is fixed by the package, not authored here.
+      if (isModuleSpecifierString(node) && isBareModuleSpecifier(node.text)) return;
       emit(node, scope, quoteScope(node.text), ctx, quoteTag(node.text), out);
       return;
     case 'template_string':

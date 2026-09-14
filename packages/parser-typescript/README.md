@@ -42,6 +42,11 @@ are properties accessed off it, for the rest of that function/block. This shadow
 simple: it covers plain `const`/`let`/`var`/function/class declarations and plain (non-destructured)
 parameters, not full lexical scoping (no hoisting, no destructured binding patterns).
 
+A module specifier string is checked only when it's a relative path (`'./mod.js'`, `'../lib'`) into this
+project. A bare specifier (`'prettier'`, `'@cspell/cspell-types'`, `'node:fs'`) resolves through
+`node_modules` or a runtime's built-ins rather than being authored spelling, so it's never checked — in
+either an `import`/`export ... from` statement.
+
 ## Usage
 
 ```jsonc

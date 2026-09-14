@@ -239,6 +239,26 @@ describe('typescript parser', () => {
       expect(toUpperCaseCalls).toHaveLength(2);
       for (const call of toUpperCaseCalls) expect(call.tags).toEqual({ identifier: 'property' });
     });
+
+    it('does not check a bare module specifier string, since it resolves through node_modules', () => {
+      expect(parsedTexts.some((p) => p.text === "'prettier'")).toBe(false);
+    });
+
+    it('still checks a relative module specifier string', () => {
+      expect(find(parsedTexts, "'./example.js'").tags).toEqual({ string: 'singleQuote' });
+    });
+
+    it('checks the default import binding for a bare specifier, since the author chose that name', () => {
+      expect(find(identifiers, 'prettier').tags).toEqual({ identifier: 'importBinding' });
+    });
+
+    it('does not check a property accessed off a bare-specifier import binding', () => {
+      expect(identifiers.some((p) => p.text === 'format')).toBe(false);
+    });
+
+    it('still checks an ordinary string argument that is not a module specifier', () => {
+      expect(find(parsedTexts, "'typescript'").tags).toEqual({ string: 'singleQuote' });
+    });
   });
 
   it('parses tsx files and includes untagged jsx text, using .tsx scope names', () => {
