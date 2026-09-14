@@ -19,8 +19,9 @@ ignorePaths:
   - CHANGELOG.md
   - .git/!(hooks,COMMIT_EDITMSG)
 words:
-  - tsdown
-  - vitest
+  - COMMIT_EDITMSG
   - cspell
   - pnpm
-  - COMMIT_EDITMSG
+  - tsdown
+  - unaliased
+  - vitest
