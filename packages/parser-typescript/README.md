@@ -58,3 +58,7 @@ parameters, not full lexical scoping (no hoisting, no destructured binding patte
 - `tree-sitter`/`tree-sitter-typescript` ship native addons; the pinned versions (`tree-sitter@^0.21.1`,
   `tree-sitter-typescript@^0.23.2`) are chosen to match `tree-sitter-typescript`'s declared `tree-sitter` peer
   range and avoid ABI mismatches between the two.
+
+<!---
+cspell:ignore expl
+--->

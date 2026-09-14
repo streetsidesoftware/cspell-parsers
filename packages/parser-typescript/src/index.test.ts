@@ -143,6 +143,8 @@ describe('typescript parser', () => {
     const parsedTexts = parseFixture('imports.ts');
     const identifiers = parsedTexts.filter((p) => typeof p.tags?.identifier === 'string');
 
+    // cspell:ignore expl
+
     it('does not check an unaliased import name, at its declaration or anywhere it is referenced', () => {
       // `expl` is the module's own export name (import, re-export, and the `expl as myExport`
       // reference all resolve back to it) - it is never spell checked.
