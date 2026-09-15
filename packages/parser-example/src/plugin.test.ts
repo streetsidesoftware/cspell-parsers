@@ -5,14 +5,14 @@ import { plugin } from './plugin.js';
 import type { Parser } from '@cspell/cspell-types';
 
 describe('plugin', () => {
-  it('exposes the typescript parser', () => {
+  it('exposes the c-style-comments parser', () => {
     expect(plugin.parsers).toEqual([parser]);
   });
 
-  it('is usable to parse TypeScript content', () => {
+  it('is usable to parse content', () => {
     const [pluginParser] = (plugin.parsers ?? []) as Parser[];
-    const result = pluginParser?.parse("const greeting = 'hello';\n", 'example.ts');
+    const result = pluginParser?.parse('// hello\n', 'example.c');
 
-    expect([...(result?.parsedTexts ?? [])].some((p) => p.text === 'greeting')).toBe(true);
+    expect([...(result?.parsedTexts ?? [])].some((p) => p.text === '// hello')).toBe(true);
   });
 });

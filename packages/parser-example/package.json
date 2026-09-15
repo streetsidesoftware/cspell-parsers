@@ -8,12 +8,26 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./parser": {
+      "types": "./dist/parser.d.ts",
+      "default": "./dist/parser.js"
+    },
+    "./plugin": {
+      "types": "./dist/plugin.d.ts",
+      "default": "./dist/plugin.js"
+    },
+    "./recommended": {
+      "types": "./dist/recommended.d.ts",
+      "default": "./dist/recommended.js"
     }
   },
   "scripts": {
     "build": "tsdown",
     "clean": "shx rm -rf dist coverage",
-    "test": "vitest run",
+    "test": "pnpm run test:vitest && pnpm run test:cspell",
+    "test:vitest": "vitest run",
+    "test:cspell": "cspell . --no-progress",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
