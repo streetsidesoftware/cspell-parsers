@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.0](https://github.com/streetsidesoftware/cspell-parsers/compare/@cspell/parser-typescript@1.0.2...@cspell/parser-typescript@1.1.0) (2026-09-15)
+
+
+### Features
+
+* Be able to customize plugins ([#34](https://github.com/streetsidesoftware/cspell-parsers/issues/34)) ([e86c7f7](https://github.com/streetsidesoftware/cspell-parsers/commit/e86c7f7fa213a464e94cc9a5f3a03be009952269))
+
+
+### Updates and Bug Fixes
+
+* Move cspell-types to a dev dep. ([#32](https://github.com/streetsidesoftware/cspell-parsers/issues/32)) ([d4edda0](https://github.com/streetsidesoftware/cspell-parsers/commit/d4edda0d08ec0b6df8cc09c6e861a02451919104))
+
 ## [1.0.2](https://github.com/streetsidesoftware/cspell-parsers/compare/@cspell/parser-typescript@1.0.1...@cspell/parser-typescript@1.0.2) (2026-09-15)
 
 
