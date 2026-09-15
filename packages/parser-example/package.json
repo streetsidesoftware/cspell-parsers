@@ -27,7 +27,7 @@
     "clean": "shx rm -rf dist coverage",
     "test": "pnpm run test:vitest && pnpm run test:cspell",
     "test:vitest": "vitest run",
-    "test:cspell": "cspell .",
+    "test:cspell": "cspell . --no-progress",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

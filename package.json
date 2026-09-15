@@ -12,7 +12,7 @@
     "lint": "eslint . && prettier --write .",
     "lint-ci": "eslint . --max-warnings 0 && prettier --check .",
     "spell": "cspell --no-progress .",
-    "test": "pnpm -r run test",
+    "test": "pnpm -r run test && pnpm run typecheck",
     "typecheck": "pnpm -r run typecheck"
   },
   "devDependencies": {
