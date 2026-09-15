@@ -50,9 +50,10 @@ plugin in yourself and choose the language IDs to use it for:
   chose that name, _is_ checked.
 - Still checks a local variable or parameter that happens to reuse an import's name, for the scope where it
   shadows that import.
-- Tags each checked segment with what kind of thing it is (a single-quoted string, a comment, a variable
-  name, ...) and a scope describing what construct it's nested in, for any tooling built on top of cspell
-  that wants that structure.
+- Tags each checked segment with a dot-separated tag such as `string.singleQuote`, `comment.block.doc`, or
+  `identifier.property`, plus every ancestor of it (`comment.block.doc` also carries `comment` and
+  `comment.block`), plus a scope describing what construct it's nested in - cspell's `validate` setting can
+  filter which segments get spell checked using these tags, at any level of specificity.
 
 ## Notes
 

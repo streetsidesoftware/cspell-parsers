@@ -20,7 +20,11 @@ pnpm test
 3. Implement the parser as four files under `src/`, each with a matching `package.json` `exports` subpath
    and `tsdown.config.ts` entry (see `CLAUDE.md`'s "Package shape" for why both matter):
    - `parser.ts` — `parse(content, filename): ParseResult` and `export const parser: Parser`. This is where
-     all the real logic lives.
+     all the real logic lives. If segments carry `tags`, use dot-separated hierarchical tag names as the
+     `ParsedTags` keys (e.g. `comment.block.doc`), each with a `true` value, and include every ancestor
+     alongside the most specific tag (`comment.block.doc` implies also emitting `comment` and
+     `comment.block`) so cspell's `validate` setting can filter at any level of specificity — see
+     `packages/parser-typescript/CONTRIBUTING.md`'s "Tags" section for the full convention.
    - `plugin.ts` — `export const plugin: Plugin = { parsers: [parser] }`.
    - `index.ts` — default export: an `AdvancedCSpellSettings` with just `plugins: [plugin]`.
    - `recommended.ts` — default export: an `AdvancedCSpellSettings` with `plugins: [plugin]` **and**

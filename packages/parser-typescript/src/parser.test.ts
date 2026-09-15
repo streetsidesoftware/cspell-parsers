@@ -37,6 +37,12 @@ function findAll(parsedTexts: ParsedText[], text: string): ParsedText[] {
   return parsedTexts.filter((p) => p.text === text);
 }
 
+/** The `identifier.<kind>` tag's kind, or `undefined` if `p` isn't tagged as any kind of identifier. */
+function identifierKind(p: ParsedText): string | undefined {
+  const key = Object.keys(p.tags ?? {}).find((tag) => tag.startsWith('identifier.'));
+  return key?.slice('identifier.'.length);
+}
+
 describe('typescript parser', () => {
   it('preserves the filename and full content on the result', () => {
     const content = readFixture('scope-and-tags.ts');
@@ -51,8 +57,8 @@ describe('typescript parser', () => {
     const content = readFixture('scope-and-tags.ts');
 
     it('tags single- and double-quoted strings', () => {
-      expect(find(parsedTexts, "'hello'").tags).toEqual({ string: 'singleQuote' });
-      expect(find(parsedTexts, '"hello"').tags).toEqual({ string: 'doubleQuote' });
+      expect(find(parsedTexts, "'hello'").tags).toEqual({ string: true, 'string.singleQuote': true });
+      expect(find(parsedTexts, '"hello"').tags).toEqual({ string: true, 'string.doubleQuote': true });
     });
 
     it('computes ranges relative to the original content', () => {
@@ -61,20 +67,24 @@ describe('typescript parser', () => {
     });
 
     it('tags template literal fragments and still walks embedded expressions', () => {
-      expect(find(parsedTexts, 'hi ').tags).toEqual({ string: 'templateLiteral' });
-      expect(find(parsedTexts, ' bye').tags).toEqual({ string: 'templateLiteral' });
-      expect(find(parsedTexts, 'userName').tags).toEqual({ identifier: 'variable' });
+      expect(find(parsedTexts, 'hi ').tags).toEqual({ string: true, 'string.templateLiteral': true });
+      expect(find(parsedTexts, ' bye').tags).toEqual({ string: true, 'string.templateLiteral': true });
+      expect(find(parsedTexts, 'userName').tags).toEqual({ identifier: true, 'identifier.variable': true });
     });
 
-    it('tags line and block comments', () => {
-      expect(find(parsedTexts, '// leading comment').tags).toEqual({ comment: 'line' });
-      expect(find(parsedTexts, '/** doc comment */').tags).toEqual({ comment: 'block' });
+    it('tags line and doc-block comments', () => {
+      expect(find(parsedTexts, '// leading comment').tags).toEqual({ comment: true, 'comment.line': true });
+      expect(find(parsedTexts, '/** doc comment */').tags).toEqual({
+        comment: true,
+        'comment.block': true,
+        'comment.block.doc': true,
+      });
     });
 
     it('tags identifiers with the kind of identifier they are', () => {
-      expect(find(parsedTexts, 'Greeter').tags).toEqual({ identifier: 'type' });
-      expect(find(parsedTexts, 'sayHello').tags).toEqual({ identifier: 'property' });
-      expect(find(parsedTexts, 'greeting').tags).toEqual({ identifier: 'variable' });
+      expect(find(parsedTexts, 'Greeter').tags).toEqual({ identifier: true, 'identifier.type': true });
+      expect(find(parsedTexts, 'sayHello').tags).toEqual({ identifier: true, 'identifier.property': true });
+      expect(find(parsedTexts, 'greeting').tags).toEqual({ identifier: true, 'identifier.variable': true });
     });
 
     it('builds a TextMate-style scope chain from the enclosing named declarations', () => {
@@ -141,7 +151,7 @@ describe('typescript parser', () => {
 
   describe('imports.ts', () => {
     const parsedTexts = parseFixture('imports.ts');
-    const identifiers = parsedTexts.filter((p) => typeof p.tags?.identifier === 'string');
+    const identifiers = parsedTexts.filter((p) => identifierKind(p) !== undefined);
 
     // cspell:ignore expl
 
@@ -154,7 +164,7 @@ describe('typescript parser', () => {
     it('checks the local alias of a renamed import', () => {
       const myExample = findAll(identifiers, 'myExample');
       expect(myExample.length).toBeGreaterThan(0);
-      expect(myExample[0]?.tags).toEqual({ identifier: 'importBinding' });
+      expect(myExample[0]?.tags).toEqual({ identifier: true, 'identifier.importBinding': true });
     });
 
     it('scopes an import alias under the import statement, using the "alias" scope variant', () => {
@@ -167,17 +177,17 @@ describe('typescript parser', () => {
     });
 
     it('checks default and namespace import bindings, since their names are chosen locally', () => {
-      expect(find(identifiers, 'defaultExport').tags).toEqual({ identifier: 'importBinding' });
-      expect(find(identifiers, 'namespaceImport').tags).toEqual({ identifier: 'importBinding' });
+      expect(find(identifiers, 'defaultExport').tags).toEqual({ identifier: true, 'identifier.importBinding': true });
+      expect(find(identifiers, 'namespaceImport').tags).toEqual({ identifier: true, 'identifier.importBinding': true });
     });
 
     it('checks a renamed export binding', () => {
-      expect(find(identifiers, 'myExport').tags).toEqual({ identifier: 'exportBinding' });
+      expect(find(identifiers, 'myExport').tags).toEqual({ identifier: true, 'identifier.exportBinding': true });
     });
 
     it('checks references to a renamed import used as a value', () => {
       const myExample = findAll(identifiers, 'myExample');
-      expect(myExample.some((p) => p.tags?.identifier === 'variable')).toBe(true);
+      expect(myExample.some((p) => identifierKind(p) === 'variable')).toBe(true);
     });
 
     it('does not check a property accessed off an imported binding, since it is external to this file', () => {
@@ -188,14 +198,14 @@ describe('typescript parser', () => {
 
     it('checks a reference to a locally-named import binding used as a call target', () => {
       const defaultExportRefs = findAll(identifiers, 'defaultExport');
-      expect(defaultExportRefs.some((p) => p.tags?.identifier === 'variable')).toBe(true);
+      expect(defaultExportRefs.some((p) => identifierKind(p) === 'variable')).toBe(true);
     });
   });
 
   describe('imports-and-local-variables.mts', () => {
     const content = readFixture('imports-and-local-variables.mts');
     const parsedTexts = parseFixture('imports-and-local-variables.mts');
-    const identifiers = parsedTexts.filter((p) => typeof p.tags?.identifier === 'string');
+    const identifiers = parsedTexts.filter((p) => identifierKind(p) !== undefined);
     const explOccurrences = findAll(identifiers, 'expl')
       .map((p) => p.range[0])
       .sort((a, b) => a - b);
@@ -237,7 +247,7 @@ describe('typescript parser', () => {
     it('checks a property access through a shadowing local, since it is no longer external', () => {
       const toUpperCaseCalls = findAll(identifiers, 'toUpperCase');
       expect(toUpperCaseCalls).toHaveLength(2);
-      for (const call of toUpperCaseCalls) expect(call.tags).toEqual({ identifier: 'property' });
+      for (const call of toUpperCaseCalls) expect(call.tags).toEqual({ identifier: true, 'identifier.property': true });
     });
 
     it('does not check a bare module specifier string, since it resolves through node_modules', () => {
@@ -245,11 +255,11 @@ describe('typescript parser', () => {
     });
 
     it('still checks a relative module specifier string', () => {
-      expect(find(parsedTexts, "'./example.js'").tags).toEqual({ string: 'singleQuote' });
+      expect(find(parsedTexts, "'./example.js'").tags).toEqual({ string: true, 'string.singleQuote': true });
     });
 
     it('checks the default import binding for a bare specifier, since the author chose that name', () => {
-      expect(find(identifiers, 'prettier').tags).toEqual({ identifier: 'importBinding' });
+      expect(find(identifiers, 'prettier').tags).toEqual({ identifier: true, 'identifier.importBinding': true });
     });
 
     it('does not check a property accessed off a bare-specifier import binding', () => {
@@ -257,7 +267,7 @@ describe('typescript parser', () => {
     });
 
     it('still checks an ordinary string argument that is not a module specifier', () => {
-      expect(find(parsedTexts, "'typescript'").tags).toEqual({ string: 'singleQuote' });
+      expect(find(parsedTexts, "'typescript'").tags).toEqual({ string: true, 'string.singleQuote': true });
     });
   });
 
@@ -265,7 +275,7 @@ describe('typescript parser', () => {
     const parsedTexts = parseFixture('jsx.tsx');
 
     expect(find(parsedTexts, 'hello world').tags).toBeUndefined();
-    expect(find(parsedTexts, 'Greeting').tags).toEqual({ identifier: 'variable' });
+    expect(find(parsedTexts, 'Greeting').tags).toEqual({ identifier: true, 'identifier.variable': true });
     expect(scopeValues(find(parsedTexts, 'Greeting').scope)).toEqual([
       'entity.name.function.tsx',
       'meta.function.tsx',

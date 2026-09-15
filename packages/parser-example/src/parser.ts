@@ -1,7 +1,12 @@
 import type { ParsedTags, ParsedText, Parser, ParseResult } from '@cspell/cspell-types';
 
+const COMMENT_TAG = { comment: true };
+const COMMENT_LINE_TAG = { ...COMMENT_TAG, 'comment.line': true };
+const COMMENT_BLOCK_TAG = { ...COMMENT_TAG, 'comment.block': true };
+const COMMENT_BLOCK_DOC_TAG = { ...COMMENT_BLOCK_TAG, 'comment.block.doc': true };
+
 function commentTag(text: string): ParsedTags {
-  return text.startsWith('//') ? { comment: 'line' } : { comment: 'block' };
+  return text.startsWith('//') ? COMMENT_LINE_TAG : text.startsWith('/**') ? COMMENT_BLOCK_DOC_TAG : COMMENT_BLOCK_TAG;
 }
 
 /**

@@ -42,8 +42,10 @@ plugin in yourself and choose the language IDs to use it for:
 - `parser.parse(content, filename)` returns a `ParseResult` containing one or more `ParsedText` entries.
 - Each `ParsedText.range` is the `[start, end]` offset of that segment in the original `content`, which is how
   cspell maps spelling issues found in the parsed text back to the right place in the source file.
-- Each comment is tagged `{ comment: 'line' }` or `{ comment: 'block' }`, so tooling built on top of cspell
-  can filter on what kind of segment it's looking at.
+- Each comment is tagged `{ comment: true, 'comment.line': true }` or `{ comment: true, 'comment.block':
+true }` - a dot-separated tag name as the key, `true` as the value, with every ancestor of the tag
+  included alongside it - which is what lets cspell's `validate` setting filter which segments get spell
+  checked, at any level of specificity (just `comment`, or the more specific `comment.line`).
 - `plugin.parsers` is the list of parsers a cspell plugin module exposes; a plugin can expose more than one.
 
 Use this package as a template: copy `src/parser.ts`, `src/plugin.ts`, `src/index.ts`, and `src/recommended.ts`
