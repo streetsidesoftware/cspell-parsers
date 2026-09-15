@@ -77,17 +77,40 @@ suspect this field first.
 
 ## Tags
 
-Each segment also carries `tags`, independent of `scope`:
+Each segment also carries `tags`, independent of `scope`. A tag is a dot-separated hierarchical name used
+as the key of the `ParsedTags` object, with `true` as its value (e.g. `'comment.block.doc': true`), not a
+category-name key holding a subtype string - this is what lets cspell's `validate`/`ValidationTags` setting
+(see `CSpellSettingsValidation` in `@cspell/cspell-types`) match a broad key like `comment.block` against a
+more specific tag like `comment.block.doc`.
 
-- Strings: `{ string: 'singleQuote' | 'doubleQuote' | 'templateLiteral' | true }` (`quoteTag`).
-- Comments: `{ comment: 'line' | 'block' }` (`commentTag`) - a leading `/**` is not distinguished from `/*`
-  in tags (unlike in scope, where `commentScope` does tag `/**` as `comment.block.documentation.ts`).
-- Identifiers: `{ identifier: IdentifierKind }` (`identifierTag`) - `variable`, `property`,
-  `privateProperty`, `type`, `shorthandProperty`, `label`, `importBinding`, `exportBinding`.
+`hierarchicalTags(tag)` builds the whole ancestor chain for a dotted tag - e.g.
+`hierarchicalTags('comment.block.doc')` is `{ comment: true, 'comment.block': true, 'comment.block.doc':
+true }` - so every leaf's `tags` object carries all of its ancestors, not just the most specific segment.
+This is deliberate even though a config's `validate` setting matches by dotted-prefix on its own: emitting
+the whole chain means a consumer can filter on `tags.comment` directly too, without needing its own
+prefix-matching logic just to ask "is this any kind of comment?"
+
+The set of possible tags is fixed and known ahead of time, so `hierarchicalTags` is only ever called at
+module load time, to build module-level constants (`STRING_SINGLE_QUOTE_TAG`, `COMMENT_BLOCK_DOC_TAG`,
+`identifierTagByKind.property`, ...) - never per emitted segment. `emit()` runs once per spell-checkable
+leaf in the file, so `quoteTag`/`commentTag` return one of a handful of shared constants rather than
+allocating a fresh object every call, and `identifierTag` was replaced entirely by `identifierTagByKind`, a
+`Record<IdentifierKind, ParsedTags>` indexed directly (mirroring `identifierScopeByKind`).
+
+- Strings (`quoteTag`): `string.singleQuote`, `string.doubleQuote`, or bare `string` for anything else.
+  Template literal fragments are tagged `string.templateLiteral` directly at their emit site.
+- Comments (`commentTag`): `comment.line`, `comment.block`, or `comment.block.doc` for a leading `/**` -
+  this now matches the distinction `commentScope` already made for `scope`
+  (`comment.block.documentation.ts`).
+- Identifiers (`identifierTagByKind`): `identifier.<kind>`, where `<kind>` is an `IdentifierKind` -
+  `variable`, `property`, `privateProperty`, `type`, `shorthandProperty`, `label`, `importBinding`,
+  `exportBinding`.
 
 `scope` is presentational (modeled on a real grammar's output); `tags` is the structured field meant for
 programmatic filtering - e.g. the import/export logic below is implemented in terms of _not emitting_
-certain segments at all, but a consumer with different needs could instead filter on `tags.identifier`.
+certain segments at all, but a consumer with different needs could instead filter on `tags.identifier` for
+"any kind of identifier", or on the more specific `tags['identifier.<kind>']` for one particular kind (see
+`parser.test.ts`'s `identifierKind` helper, which reads the specific kind back off that key).
 
 ## Import/export handling
 

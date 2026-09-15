@@ -136,14 +136,40 @@ function quoteScope(text: string): string {
   }
 }
 
+/**
+ * Builds a `ParsedTags` object with every dot-separated ancestor of `tag` set to `true`, in addition to
+ * `tag` itself - e.g. `hierarchicalTags('comment.block.doc')` is `{ comment: true, 'comment.block': true,
+ * 'comment.block.doc': true }`. Emitting the whole chain (rather than relying on a consumer to know that
+ * cspell's `validate` setting matches ancestors by dotted prefix) means a consumer can filter on any level -
+ * `tags.comment` or `tags['comment.block']` - without needing prefix-matching logic of its own.
+ *
+ * Only used below to build the fixed, module-level tag constants once at load time - never called per
+ * emitted segment, since the set of possible tags here is small and known ahead of time. `emit()` runs
+ * once per spell-checkable leaf, so allocating a new `ParsedTags` object (and re-splitting a string) on
+ * every call would be wasted work; a shared constant is handed out instead.
+ */
+function hierarchicalTags(tag: string): ParsedTags {
+  const segments = tag.split('.');
+  const tags: Record<string, true> = {};
+  for (let i = 1; i <= segments.length; i++) {
+    tags[segments.slice(0, i).join('.')] = true;
+  }
+  return tags;
+}
+
+const STRING_TAG = hierarchicalTags('string');
+const STRING_SINGLE_QUOTE_TAG = hierarchicalTags('string.singleQuote');
+const STRING_DOUBLE_QUOTE_TAG = hierarchicalTags('string.doubleQuote');
+const STRING_TEMPLATE_LITERAL_TAG = hierarchicalTags('string.templateLiteral');
+
 function quoteTag(text: string): ParsedTags {
   switch (text[0]) {
     case "'":
-      return { string: 'singleQuote' };
+      return STRING_SINGLE_QUOTE_TAG;
     case '"':
-      return { string: 'doubleQuote' };
+      return STRING_DOUBLE_QUOTE_TAG;
     default:
-      return { string: true };
+      return STRING_TAG;
   }
 }
 
@@ -177,13 +203,26 @@ function commentScope(text: string): string {
   return text.startsWith('/**') ? 'comment.block.documentation.ts' : 'comment.block.ts';
 }
 
+const COMMENT_LINE_TAG = hierarchicalTags('comment.line');
+const COMMENT_BLOCK_TAG = hierarchicalTags('comment.block');
+const COMMENT_BLOCK_DOC_TAG = hierarchicalTags('comment.block.doc');
+
 function commentTag(text: string): ParsedTags {
-  return text.startsWith('//') ? { comment: 'line' } : { comment: 'block' };
+  if (text.startsWith('//')) return COMMENT_LINE_TAG;
+  return text.startsWith('/**') ? COMMENT_BLOCK_DOC_TAG : COMMENT_BLOCK_TAG;
 }
 
-function identifierTag(kind: IdentifierKind): ParsedTags {
-  return { identifier: kind };
-}
+/** Tag for each `IdentifierKind`, precomputed once rather than built fresh per emitted identifier. */
+const identifierTagByKind: Record<IdentifierKind, ParsedTags> = {
+  variable: hierarchicalTags('identifier.variable'),
+  property: hierarchicalTags('identifier.property'),
+  privateProperty: hierarchicalTags('identifier.privateProperty'),
+  type: hierarchicalTags('identifier.type'),
+  shorthandProperty: hierarchicalTags('identifier.shorthandProperty'),
+  label: hierarchicalTags('identifier.label'),
+  importBinding: hierarchicalTags('identifier.importBinding'),
+  exportBinding: hierarchicalTags('identifier.exportBinding'),
+};
 
 /** Swaps a scope name's `.ts` suffix for `.tsx` when parsing a TSX file, matching grammar convention. */
 function forFileKind(scopeName: string, tsxMode: boolean): string {
@@ -399,7 +438,7 @@ function walk(
     case 'template_string':
       for (const child of node.namedChildren) {
         if (child.type === 'string_fragment') {
-          emit(child, scope, 'string.template.ts', ctx, { string: 'templateLiteral' }, out);
+          emit(child, scope, 'string.template.ts', ctx, STRING_TEMPLATE_LITERAL_TAG, out);
         } else if (child.type === 'template_substitution') {
           walk(child, scope, bindingScope, ctx, out);
         }
@@ -416,7 +455,7 @@ function walk(
     case 'import_clause':
       for (const child of node.namedChildren) {
         if (child.type === 'identifier') {
-          emit(child, scope, identifierScopeByKind.importBinding, ctx, identifierTag('importBinding'), out);
+          emit(child, scope, identifierScopeByKind.importBinding, ctx, identifierTagByKind.importBinding, out);
         } else {
           walk(child, scope, bindingScope, ctx, out);
         }
@@ -424,14 +463,14 @@ function walk(
       return;
     case 'namespace_import': {
       const id = node.namedChildren.find((c) => c.type === 'identifier');
-      if (id) emit(id, scope, identifierScopeByKind.importBinding, ctx, identifierTag('importBinding'), out);
+      if (id) emit(id, scope, identifierScopeByKind.importBinding, ctx, identifierTagByKind.importBinding, out);
       return;
     }
     case 'import_specifier': {
       // `name` is always the module's own export name - never authored here.
       const aliasNode = node.childForFieldName('alias');
       if (aliasNode)
-        emit(aliasNode, scope, identifierScopeByKind.importBinding, ctx, identifierTag('importBinding'), out);
+        emit(aliasNode, scope, identifierScopeByKind.importBinding, ctx, identifierTagByKind.importBinding, out);
       return;
     }
     case 'export_specifier': {
@@ -443,12 +482,12 @@ function walk(
       if (isReExport) {
         // `name` is the module's own export name; only a rename is authored here.
         if (aliasNode)
-          emit(aliasNode, scope, identifierScopeByKind.exportBinding, ctx, identifierTag('exportBinding'), out);
+          emit(aliasNode, scope, identifierScopeByKind.exportBinding, ctx, identifierTagByKind.exportBinding, out);
       } else {
         // `name` references a pre-existing local binding - walk it like any other reference.
         if (nameNode) walk(nameNode, scope, bindingScope, ctx, out);
         if (aliasNode)
-          emit(aliasNode, scope, identifierScopeByKind.exportBinding, ctx, identifierTag('exportBinding'), out);
+          emit(aliasNode, scope, identifierScopeByKind.exportBinding, ctx, identifierTagByKind.exportBinding, out);
       }
       return;
     }
@@ -473,7 +512,7 @@ function walk(
     ) {
       return;
     }
-    emit(node, scope, identifierScopeByKind[kind], ctx, identifierTag(kind), out);
+    emit(node, scope, identifierScopeByKind[kind], ctx, identifierTagByKind[kind], out);
     return;
   }
 
@@ -492,7 +531,7 @@ function walk(
       const nameKind = identifierKindByNodeType[child.type];
       if (nameKind) {
         const leafScope = declarationNameScopeByNodeType[node.type] ?? identifierScopeByKind[nameKind];
-        emit(child, innerScope, leafScope, ctx, identifierTag(nameKind), out);
+        emit(child, innerScope, leafScope, ctx, identifierTagByKind[nameKind], out);
         continue;
       }
     }

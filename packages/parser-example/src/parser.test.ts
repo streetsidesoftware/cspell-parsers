@@ -33,22 +33,22 @@ describe('c-style-comments parser', () => {
     it('extracts a line comment and tags it', () => {
       const comment = parsedTexts[0];
       expect(comment?.text).toBe('// running total');
-      expect(comment?.tags).toEqual({ comment: 'line' });
+      expect(comment?.tags).toEqual({ comment: true, 'comment.line': true });
       expect(comment?.range).toEqual([content.indexOf('//'), content.indexOf('//') + '// running total'.length]);
     });
 
     it('extracts a single-line block comment and tags it', () => {
       expect(parsedTexts[1]?.text).toBe('/* approximate */');
-      expect(parsedTexts[1]?.tags).toEqual({ comment: 'block' });
+      expect(parsedTexts[1]?.tags).toEqual({ comment: true, 'comment.block': true });
     });
 
     it('extracts a multi-line block comment', () => {
       expect(parsedTexts[2]?.text).toBe('/*\n * Adds two numbers together.\n */');
-      expect(parsedTexts[2]?.tags).toEqual({ comment: 'block' });
+      expect(parsedTexts[2]?.tags).toEqual({ comment: true, 'comment.block': true });
     });
 
     it('extracts multiple comments, each with its own range', () => {
-      const lineComments = parsedTexts.filter((p) => p.tags?.comment === 'line');
+      const lineComments = parsedTexts.filter((p) => p.tags?.['comment.line']);
       expect(lineComments.map((c) => c.text)).toEqual(['// running total', '// first', '// second']);
 
       const second = lineComments[2];
@@ -78,7 +78,7 @@ describe('c-style-comments parser', () => {
     const [comment] = parseFixture('unterminated.c');
 
     expect(comment?.text).toBe('/* never closed');
-    expect(comment?.tags).toEqual({ comment: 'block' });
+    expect(comment?.tags).toEqual({ comment: true, 'comment.block': true });
     expect(comment?.range).toEqual([content.indexOf('/*'), content.length]);
   });
 
