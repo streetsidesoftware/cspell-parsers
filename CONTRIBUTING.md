@@ -16,7 +16,10 @@ pnpm test
    `packages/parser-example` if you just want a minimal single-file starting point (bring it in line with
    the full shape before publishing it as a real plugin).
 2. Update `package.json`: `name`, `description`, `dependencies`, and the `exports` map for each file you're
-   publishing.
+   publishing. Leave `files` (`["dist", "!dist/**/*.map"]`), `repository`, and `sourcemap: true` in
+   `tsdown.config.ts` as-is, and keep the copied `LICENSE` file — these are all required for `npm publish` to
+   ship a correct, provenance-verifiable package without leaking source maps (see `CLAUDE.md`'s "Package
+   shape" note).
 3. Implement the parser as four files under `src/`, each with a matching `package.json` `exports` subpath
    and `tsdown.config.ts` entry (see `CLAUDE.md`'s "Package shape" for why both matter):
    - `parser.ts` — `parse(content, filename): ParseResult` and `export const parser: Parser`. This is where
@@ -43,6 +46,12 @@ pnpm test
    one means — see `CLAUDE.md`'s "`README.md`" note for why this belongs in the README rather than being
    omitted with the rest of the internals.
 7. Run `pnpm install` from the repo root to link the new package(s) into the workspace.
+8. If the new package is publishable to npm (not `private: true`), add it to `release-please-config.json`'s
+   `packages` map (`"packages/<your-parser-name>": {}`) and to `.release-please-manifest.json`
+   (`"packages/<your-parser-name>": "1.0.0"`) so release-please tracks its version/changelog and includes it
+   in release PRs. Private/internal packages don't need either entry — the root `"."` entry is the one that
+   must stay, since its version bump is what tags the release and triggers the publish workflow (see
+   `CLAUDE.md`'s "Release and publish flow" note).
 
 ## Before submitting a pull request
 

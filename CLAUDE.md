@@ -28,6 +28,9 @@ pnpm exec vitest run -t 'excludes a leading YAML front-matter block'
 CI runs `build` + `typecheck` + `test` in `.github/workflows/test.yml` and `lint-ci` in
 `.github/workflows/lint.yml`, as two separate workflows.
 
+Once you're done making changes, run `pnpm lint` from the repo root — it auto-fixes what it can (ESLint +
+`prettier --write`) rather than just reporting, so run it before a final `pnpm run lint-ci`/`pnpm test` pass.
+
 ## Architecture
 
 This is a pnpm workspace monorepo (`packages/*`) for cspell parser packages — each package under `packages/`
@@ -104,6 +107,33 @@ Two more directories, both at the package root (not under `src/`):
   `fixedExtension: false` in `tsdown.config.ts` — tsdown's default (`fixedExtension: true` on the default
   `platform: 'node'`) would otherwise emit `.mjs`/`.d.mts`, which doesn't match a package's
   `main`/`types`/`exports` fields.
+- Every package's `package.json` sets `"files": ["dist", "!dist/**/*.map"]`, so `npm publish` ships only built
+  output — without it, npm falls back to including everything not gitignored (`src/`, `fixtures/`, `samples/`,
+  `docs/`, `tsconfig.json`, `tsdown.config.ts`, ...). `package.json`, `README.md`, and `LICENSE` are always
+  included by npm regardless of `files`, so they don't need to be listed. Every package also carries its own
+  copy of the root `LICENSE` (same MIT text) at its package root, since npm only bundles a `LICENSE` that lives
+  inside the package being published, not one from the repo root.
+- `tsdown.config.ts` sets `sourcemap: true`, so `dist/*.js.map` is generated for local debugging from a
+  checkout, but the `!dist/**/*.map` entry in `files` (above) keeps those `.map` files out of the published
+  tarball.
+- Publishable packages (`publishConfig.provenance: true`) need a `repository` field —
+  `{ "type": "git", "url": "git+https://github.com/streetsidesoftware/cspell-parsers.git", "directory": "packages/<name>" }` —
+  matching the actual GitHub remote, with `directory` pointing at that package's
+  subfolder. Without it, `npm publish`'s sigstore provenance check fails (`repository.url` is "" but the CI
+  attestation expects it to match the repo the build ran in).
+
+**Release and publish flow** — `release-please` (`.github/workflows/release-please.yml`, config in
+`release-please-config.json`, versions tracked in `.release-please-manifest.json`) opens a release PR per
+package listed in `release-please-config.json`'s `packages` map, bumping versions/changelogs from conventional
+commits. Merging that PR tags the root package (`cspell-parsers@x.y.z`, from the `"."` entry — the
+`tag-separator: "@"` / `include-v-in-tag: false` settings control that format), which is the tag
+`.github/workflows/publish.yml` listens for to run `lerna publish from-package --no-private`; lerna publishes
+every workspace package whose version changed and skips `private: true` ones regardless of whether they're in
+`release-please-config.json`. So only **publishable** packages need an entry in both
+`release-please-config.json`'s `packages` map and `.release-please-manifest.json` (so their version/changelog
+is tracked and they end up in the release PR) — private/internal packages don't need either, since lerna would
+skip them anyway. The `"."` entry must always stay: it's what produces the tag that triggers the publish
+workflow, independent of whether the root package itself is published (it's `private: true` and never is).
 
 `README.md` is written for someone **installing and using** the parser as a cspell plugin, not for a
 contributor reading the source. Lead with the couple of lines needed to add it to a cspell config (the

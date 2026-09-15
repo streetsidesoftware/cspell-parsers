@@ -2,6 +2,11 @@
   "name": "@cspell/parser-typescript",
   "version": "1.0.0",
   "description": "A TypeScript parser plugin for cspell.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/streetsidesoftware/cspell-parsers.git",
+    "directory": "packages/parser-typescript"
+  },
   "funding": "https://github.com/streetsidesoftware/cspell?sponsor=1",
   "publishConfig": {
     "access": "public",
@@ -10,6 +15,10 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "!dist/**/*.map"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
