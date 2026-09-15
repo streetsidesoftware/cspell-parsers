@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/streetsidesoftware/cspell-parsers/compare/@cspell/parser-typescript@1.0.1...@cspell/parser-typescript@1.0.2) (2026-09-15)
+
+
+### Updates and Bug Fixes
+
+* Update README.md ([#29](https://github.com/streetsidesoftware/cspell-parsers/issues/29)) ([7eb7d4b](https://github.com/streetsidesoftware/cspell-parsers/commit/7eb7d4b5ff96ed9651ed04acb50c65c31ce48f2c))
+
 ## [1.0.1](https://github.com/streetsidesoftware/cspell-parsers/compare/@cspell/parser-typescript@1.0.0...@cspell/parser-typescript@1.0.1) (2026-09-15)
 
 
