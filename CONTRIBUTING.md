@@ -2,13 +2,53 @@
 
 Thanks for considering a contribution to cspell-parsers.
 
+## Workspace layout
+
+This is a pnpm workspace monorepo (`packages/*`) for cspell parser packages — each package under `packages/`
+is a standalone npm package implementing cspell's `Parser`/`Plugin` contract (types from
+`@cspell/cspell-types`) so it can be loaded via a cspell configuration's `plugins` list.
+
+- `packages/parser-typescript` is the canonical, fully-fledged package — use it as the template for a new
+  parser.
+- `packages/parser-example` is a minimal single-file starter that predates that convention; fine to start
+  from for a trivial parser, but bring it in line with the full shape (see "Adding a new parser package"
+  below) before publishing it as a real plugin.
+
+Each package:
+
+- builds its `dist/` output with [tsdown](https://tsdown.dev)
+- is type-checked with `tsc --noEmit` (TypeScript is used for type-checking only, not for emitting output)
+- is tested with [vitest](https://vitest.dev)
+
+Shared dependency versions (TypeScript, tsdown, vitest, `@cspell/cspell-types`) are pinned once via the pnpm
+[catalog](https://pnpm.io/catalogs) in `pnpm-workspace.yaml`.
+
 ## Getting started
 
 ```sh
 pnpm install
-pnpm run build
-pnpm test
+pnpm run build       # pnpm -r run build     — tsdown, per package
+pnpm run typecheck   # pnpm -r run typecheck — tsc --noEmit, per package
+pnpm test            # pnpm -r run test      — vitest run, per package
+pnpm run lint         # eslint + prettier --write — auto-fixes what it can
+pnpm run lint-ci      # --max-warnings 0, what CI runs
+pnpm run clean        # pnpm -r run clean
 ```
+
+All of the above operate across every package in `packages/*` via `pnpm -r`. To scope to one package, `cd`
+into it and run the underlying command directly (e.g. `cd packages/parser-example && pnpm run build`).
+
+Run a single test file or test case with vitest directly from inside a package:
+
+```sh
+cd packages/parser-example
+pnpm exec vitest run src/index.test.ts
+pnpm exec vitest run -t 'excludes a leading YAML front-matter block'
+```
+
+CI runs `build` + `typecheck` + `test` in `.github/workflows/test.yml` and `lint-ci` in
+`.github/workflows/lint.yml`, as two separate workflows. Run `pnpm lint` before a final `pnpm run
+lint-ci`/`pnpm test` pass, since it auto-fixes what it can rather than just reporting.
 
 ## Adding a new parser package
 
