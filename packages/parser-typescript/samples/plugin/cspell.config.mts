@@ -5,7 +5,7 @@ export default {
   languageSettings: [
     {
       languageId: 'typescript',
-      parser: 'typescript'
-    }
-  ]
+      parser: 'typescript',
+    },
+  ],
 };

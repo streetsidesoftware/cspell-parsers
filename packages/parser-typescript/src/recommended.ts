@@ -5,7 +5,7 @@ export default {
   languageSettings: [
     {
       languageId: 'typescript,javascript,typescriptreact,javascriptreact',
-      parser: 'typescript'
-    }
-  ]
+      parser: 'typescript',
+    },
+  ],
 };
