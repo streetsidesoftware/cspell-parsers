@@ -11,6 +11,7 @@ dictionaries:
   - misc
 ignorePaths:
   - node_modules
+  - fixtures
   - dist
   - dist-test
   - coverage
@@ -19,8 +20,9 @@ ignorePaths:
   - CHANGELOG.md
   - .git/!(hooks,COMMIT_EDITMSG)
 words:
-  - tsdown
-  - vitest
+  - COMMIT_EDITMSG
   - cspell
   - pnpm
-  - COMMIT_EDITMSG
+  - tsdown
+  - unaliased
+  - vitest

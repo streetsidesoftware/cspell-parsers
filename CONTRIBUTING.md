@@ -31,4 +31,4 @@ All of the above run in CI and must pass.
 
 ## Commit style
 
-Keep commits focused and describe the *why* in the commit message, not just the *what*.
+Keep commits focused and describe the _why_ in the commit message, not just the _what_.

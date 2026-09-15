@@ -37,7 +37,7 @@ is a standalone npm package implementing cspell's `Parser`/`Plugin` contract (ty
 **Toolchain split** — deliberately not the typical `tsc`-only setup:
 
 - **tsdown** builds each package's `dist/` output (config in each package's `tsdown.config.ts`). TypeScript
-  itself is used *only* for type-checking (`tsc --noEmit`), never for emitting.
+  itself is used _only_ for type-checking (`tsc --noEmit`), never for emitting.
 - There is no TypeScript project-reference/`composite` build graph — `tsconfig.base.json` sets `noEmit: true`
   and each package has its own flat `tsconfig.json` extending it. There is intentionally no root
   `tsconfig.json`.
@@ -54,7 +54,7 @@ is a standalone npm package implementing cspell's `Parser`/`Plugin` contract (ty
 
 - `src/index.ts` exports a `Parser` (`{ name, parse(content, filename) }`) and a `Plugin`
   (`{ parsers: [parser] }`), matching the types in `@cspell/cspell-types`. `parse` returns a `ParseResult`
-  whose `parsedTexts` entries carry `range: [start, end]` offsets *relative to the original file content* —
+  whose `parsedTexts` entries carry `range: [start, end]` offsets _relative to the original file content_ —
   getting these offsets right is the core correctness concern of any parser here, since cspell uses them to
   map spelling issues back to the source.
 - Build output is plain `dist/index.js` + `dist/index.d.ts` (ESM only). This requires
