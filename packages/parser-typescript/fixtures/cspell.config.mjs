@@ -1,4 +1,4 @@
-import typeScriptPlugin from '../dist/index.js';
+import { plugin as typeScriptPlugin } from '../dist/plugin.js';
 
 export default {
   plugins: [typeScriptPlugin],
