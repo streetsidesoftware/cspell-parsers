@@ -1,6 +1,6 @@
 {
   "name": "@cspell/parser-typescript",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A TypeScript parser plugin for cspell.",
   "repository": {
     "type": "git",
