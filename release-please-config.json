@@ -67,10 +67,13 @@
   ],
   "packages": {
     ".": {
-      "component": "cspell-parsers",
-      "releaseType": "node"
+      "component": "cspell-parsers"
     },
-    "packages/parser-example": {},
-    "packages/parser-typescript": {}
+    "packages/parser-example": {
+      "component": "@cspell/parser-example"
+    },
+    "packages/parser-typescript": {
+      "component": "@cspell/parser-typescript"
+    }
   }
 }
