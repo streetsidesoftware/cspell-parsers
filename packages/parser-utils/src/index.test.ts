@@ -1,7 +1,7 @@
-import type { ParsedText, Parser, Plugin } from '@cspell/cspell-types';
+import type { ParsedTags, ParsedText, Parser, Plugin } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
-import { customizeParser, customizePlugin } from './index.js';
+import { compileValidationTags, customizeParser, customizePlugin } from './index.js';
 
 function mkText(content: string, tags: ParsedText['tags']): ParsedText {
   return { text: content, range: [0, content.length], tags };
@@ -74,6 +74,94 @@ describe('customizeParser', () => {
     const result = parser.parse('content', 'file.ts');
     expect(result.content).toBe('content');
     expect(result.filename).toBe('file.ts');
+  });
+});
+
+describe('compileValidationTags', () => {
+  const docComment: ParsedTags = { comment: true, 'comment.block': true, 'comment.block.doc': true };
+  const lineComment: ParsedTags = { comment: true, 'comment.line': true };
+  const identifier: ParsedTags = { identifier: true, 'identifier.variable': true };
+
+  it('returns the default for undefined tags, with no exact/prefix/general rules at all', () => {
+    expect(compileValidationTags({})(undefined)).toBe(true);
+    expect(compileValidationTags({ '*': false })(undefined)).toBe(false);
+  });
+
+  describe('exact-only patterns (no "*" anywhere but the default key)', () => {
+    const isValidated = compileValidationTags({ '*': false, 'comment.block.doc': true, comment: true });
+
+    it('matches an own tag exactly', () => {
+      expect(isValidated({ 'comment.block.doc': true })).toBe(true);
+    });
+
+    it('lets the more specific exact key win over a shorter one on the same segment', () => {
+      // "comment" and "comment.block.doc" are both own tags of docComment; "comment.block.doc" is longer
+      // (more specific) and should win even though both are exact matches.
+      expect(isValidated(docComment)).toBe(true);
+      expect(isValidated({ ...docComment, 'comment.block.doc': false })).toBe(true); // still matches "comment"
+    });
+
+    it('falls back to the default for a tag with no exact match', () => {
+      expect(isValidated(identifier)).toBe(false);
+    });
+
+    it('returns the default for an empty/undefined tags object', () => {
+      expect(isValidated({})).toBe(false);
+      expect(isValidated(undefined)).toBe(false);
+    });
+  });
+
+  describe('prefix-only patterns (every "*" is a single trailing wildcard)', () => {
+    const isValidated = compileValidationTags({ '*': false, 'comment.block.*': true, 'string*': true });
+
+    it('matches via startsWith on the literal prefix', () => {
+      expect(isValidated(docComment)).toBe(true);
+      expect(isValidated({ string: true })).toBe(true);
+      expect(isValidated({ 'string.singleQuote': true })).toBe(true);
+    });
+
+    it('does not match a tag that only shares a partial prefix', () => {
+      expect(isValidated(lineComment)).toBe(false);
+    });
+
+    it('lets the longer (more specific) prefix win when more than one matches', () => {
+      const isValidated2 = compileValidationTags({ '*': true, 'comment.*': false, 'comment.block.*': true });
+      expect(isValidated2(docComment)).toBe(true);
+      expect(isValidated2(lineComment)).toBe(false); // only matches the shorter "comment.*"
+    });
+
+    it('lets the more specific rule win even when it is the prefix, not the exact key', () => {
+      const isValidated2 = compileValidationTags({ '*': false, 'comment.*': true, comment: false });
+      // On lineComment, "comment" (exact, specificity 7) matches the "comment" own tag, but "comment.*"
+      // (prefix "comment.", specificity 8) also matches the "comment.line" own tag - and wins, since 8 > 7.
+      expect(isValidated2(lineComment)).toBe(true);
+    });
+  });
+
+  describe('general patterns ("*" in the middle, or more than one "*")', () => {
+    it('matches a leading wildcard', () => {
+      const isValidated = compileValidationTags({ '*': false, '*.doc': true });
+      expect(isValidated(docComment)).toBe(true);
+      expect(isValidated(lineComment)).toBe(false);
+    });
+
+    it('matches a wildcard in the middle', () => {
+      const isValidated = compileValidationTags({ '*': false, 'comment.*.doc': true });
+      expect(isValidated(docComment)).toBe(true);
+      expect(isValidated(lineComment)).toBe(false);
+    });
+
+    it('still applies exact and prefix rules alongside general ones', () => {
+      const isValidated = compileValidationTags({
+        '*': false,
+        '*.doc': true,
+        'identifier*': true,
+        comment: false,
+      });
+      expect(isValidated(docComment)).toBe(false); // exact "comment" (specificity 7) beats general "*.doc" (specificity 0)
+      expect(isValidated(identifier)).toBe(true); // prefix "identifier*" match
+      expect(isValidated(lineComment)).toBe(false); // exact "comment" (specificity 7) matches; "*.doc" never applies
+    });
   });
 });
 
