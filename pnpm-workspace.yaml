@@ -2,6 +2,11 @@ packages:
   - packages/*
   - packages/*/samples
 
+allowBuilds:
+  tree-sitter: true
+  tree-sitter-javascript: true
+  tree-sitter-typescript: true
+
 blockExoticSubdeps: true
 
 catalog:
@@ -16,11 +21,6 @@ minimumReleaseAgeExclude:
   - cspell-*
 
 nodeLinker: isolated
-
-onlyBuiltDependencies:
-  - tree-sitter
-  - tree-sitter-javascript
-  - tree-sitter-typescript
 
 saveWorkspaceProtocol: rolling
 

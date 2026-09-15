@@ -3,12 +3,13 @@
   "version": "1.0.2",
   "private": true,
   "type": "module",
-  "packageManager": "pnpm@10.17.1",
+  "packageManager": "pnpm@12.4.2+sha512.08adc6613180275c7c9edada39dcf08c9c61ad4e7eaf330a4f3461f102b0f907423454d117f98e72d47fef0616070644d7bffc973a6a57f5090a6d7c368b07c9",
   "engines": {
     "node": ">=22.18.0"
   },
   "scripts": {
     "build": "pnpm -r run build",
+    "build:readme": "inject-markdown README.md \"packages/*/*.md\"",
     "clean": "pnpm -r run clean",
     "lint": "eslint . && prettier --write .",
     "lint-ci": "eslint . --max-warnings 0 && prettier --check .",
@@ -25,6 +26,7 @@
     "cspell": "catalog:",
     "eslint": "^10.10.0",
     "globals": "^17.12.0",
+    "inject-markdown": "^5.0.3",
     "prettier": "^3.9.6",
     "shx": "^0.4.0",
     "tsdown": "^0.23.0",
