@@ -35,7 +35,7 @@
     "test:cspell": "cspell . --no-progress",
     "typecheck": "tsc --noEmit"
   },
-  "dependencies": {
+  "devDependencies": {
     "@cspell/cspell-types": "catalog:"
   }
 }

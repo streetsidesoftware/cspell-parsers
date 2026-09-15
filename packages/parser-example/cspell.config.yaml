@@ -1,3 +1,4 @@
 ignorePaths:
   - node_modules
   - fixtures
+  - dist

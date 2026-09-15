@@ -98,11 +98,20 @@ Two more directories, both at the package root (not under `src/`):
   cspell config plus real, correctly-spelled source files. This is an end-to-end demo, checked for real by
   `test:cspell` (`cspell .` from the package root, which picks up each sample's own config), run alongside
   `test:vitest` as the package's combined `test` script. Each package also carries its own root
-  `cspell.config.yaml` (ignoring `node_modules`/`fixtures`, plus any package-local word list) so `cspell .`
-  passes cleanly over the whole package.
-- `@cspell/cspell-types` is a real `dependencies` entry (not `devDependencies`) on each parser package, since
-  consumers' editors/tsc need to resolve the `Parser`/`Plugin`/`AdvancedCSpellSettings` types from the
-  published `.d.ts`.
+  `cspell.config.yaml` (ignoring `node_modules`/`fixtures`/`dist`, plus any package-local word list) so
+  `cspell .` passes cleanly over the whole package — `dist` is ignored because it's generated build output,
+  and (see below) now contains the bundled third-party `@cspell/cspell-types` declarations verbatim, typos
+  and all.
+- `@cspell/cspell-types` is a `devDependencies` entry (not `dependencies`) on each parser package. tsdown
+  bundles the types of anything that isn't a production/peer/optional dependency straight into the emitted
+  `dist/*.d.ts` (this is the same mechanism that decides what gets bundled into `dist/*.js` — see
+  `deps.onlyBundle` in `tsdown.config.ts` below), so a devDependency's declarations end up inlined rather
+  than referenced via an `import` a consumer would need to resolve. This means consumers get the
+  `Parser`/`Plugin`/`AdvancedCSpellSettings` types without installing `@cspell/cspell-types` themselves.
+  Each package's `tsdown.config.ts` sets `deps: { onlyBundle: ['@cspell/cspell-types'] }` to make this
+  intentional (tsdown otherwise only logs a hint about unexpected bundled dependencies) and to fail the
+  build if some other, unintended dependency ends up inlined. A new parser package should follow the same
+  pattern for any other type-only dependency it wants to avoid shipping as a production dependency.
 - Build output is plain `dist/*.js` + `dist/*.d.ts` (ESM only, one pair per entry). This requires
   `fixedExtension: false` in `tsdown.config.ts` — tsdown's default (`fixedExtension: true` on the default
   `platform: 'node'`) would otherwise emit `.mjs`/`.d.mts`, which doesn't match a package's
