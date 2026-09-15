@@ -66,17 +66,8 @@
     }
   ],
   "packages": {
-    ".": {
-      "component": "cspell-parsers",
-      "releaseType": "node"
-    },
-    "packages/parser-example": {
-      "component": "@cspell/parser-example",
-      "releaseType": "node"
-    },
-    "packages/parser-typescript": {
-      "component": "@cspell/parser-typescript",
-      "releaseType": "node"
-    }
+    ".": {},
+    "packages/parser-example": {},
+    "packages/parser-typescript": {}
   }
 }
