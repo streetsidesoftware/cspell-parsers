@@ -59,7 +59,9 @@ lint-ci`/`pnpm test` pass, since it auto-fixes what it can rather than just repo
    publishing. Leave `files` (`["dist", "!dist/**/*.map"]`), `repository`, and `sourcemap: true` in
    `tsdown.config.ts` as-is, and keep the copied `LICENSE` file — these are all required for `npm publish` to
    ship a correct, provenance-verifiable package without leaking source maps (see `CLAUDE.md`'s "Package
-   shape" note).
+   shape" note). Keep `@cspell/cspell-types` a `devDependencies` entry, not `dependencies` — tsdown bundles
+   its types into `dist/*.d.ts`, so consumers don't need it installed (see `CLAUDE.md`'s "Package shape"
+   note on `deps.onlyBundle`).
 3. Implement the parser as four files under `src/`, each with a matching `package.json` `exports` subpath
    and `tsdown.config.ts` entry (see `CLAUDE.md`'s "Package shape" for why both matter):
    - `parser.ts` — `parse(content, filename): ParseResult` and `export const parser: Parser`. This is where
@@ -79,7 +81,8 @@ lint-ci`/`pnpm test` pass, since it auto-fixes what it can rather than just repo
 5. Add a `samples/` package (copy `packages/parser-typescript/samples`) with one subfolder per usage pattern,
    each holding a real cspell config and real source files it checks — this is what `test:cspell` (`cspell .`)
    exercises end-to-end, alongside `test:vitest`'s unit tests, combined as the package's `test` script. Give
-   the package its own root `cspell.config.yaml` (ignoring `node_modules`/`fixtures`) so that passes cleanly.
+   the package its own root `cspell.config.yaml` (ignoring `node_modules`/`fixtures`/`dist`) so that passes
+   cleanly.
 6. Write `README.md` for someone **using** the plugin, not reading its source — lead with how to add it to a
    cspell config; keep internals secondary. If `parser.ts` emits `tags`, include a table listing every tag
    it can emit (including implied ancestor tags, e.g. `comment` alongside `comment.block.doc`) and what each
