@@ -52,8 +52,8 @@ plugin in yourself and choose the language IDs to use it for:
   shadows that import.
 - Tags each checked segment with a dot-separated tag such as `string.singleQuote`, `comment.block.doc`, or
   `identifier.property`, plus every ancestor of it (`comment.block.doc` also carries `comment` and
-  `comment.block`), plus a scope describing what construct it's nested in - cspell's `validate` setting can
-  filter which segments get spell checked using these tags, at any level of specificity.
+  `comment.block`) - cspell's `validate` setting can filter which segments get spell checked using these
+  tags, at any level of specificity.
 
 ## Notes
 
