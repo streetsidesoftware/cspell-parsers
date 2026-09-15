@@ -38,7 +38,10 @@ pnpm test
    exercises end-to-end, alongside `test:vitest`'s unit tests, combined as the package's `test` script. Give
    the package its own root `cspell.config.yaml` (ignoring `node_modules`/`fixtures`) so that passes cleanly.
 6. Write `README.md` for someone **using** the plugin, not reading its source — lead with how to add it to a
-   cspell config; keep internals secondary.
+   cspell config; keep internals secondary. If `parser.ts` emits `tags`, include a table listing every tag
+   it can emit (including implied ancestor tags, e.g. `comment` alongside `comment.block.doc`) and what each
+   one means — see `CLAUDE.md`'s "`README.md`" note for why this belongs in the README rather than being
+   omitted with the rest of the internals.
 7. Run `pnpm install` from the repo root to link the new package(s) into the workspace.
 
 ## Before submitting a pull request

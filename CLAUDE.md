@@ -108,8 +108,15 @@ Two more directories, both at the package root (not under `src/`):
 `README.md` is written for someone **installing and using** the parser as a cspell plugin, not for a
 contributor reading the source. Lead with the couple of lines needed to add it to a cspell config (the
 `recommended` import, and/or manually wiring `plugin` + `languageSettings`); keep implementation details
-(how the AST walk works, the scope/tag taxonomy, etc.) secondary or omitted entirely — someone installing
-this off npm needs "how do I turn this on," not "how does it work."
+(how the AST walk works, why a given segment gets the tag it does, etc.) secondary or omitted entirely —
+someone installing this off npm needs "how do I turn this on," not "how does it work."
+
+If the parser emits `tags` on any segment, `README.md` must include a table listing every tag it can emit
+(including ancestor tags implied by `hierarchicalTags`, e.g. `comment` alongside `comment.block.doc`) with a
+one-line description of what each one means. This is reference material for using the plugin, not an
+implementation detail to omit: it's what a consumer needs to write a cspell `validate`/`ValidationTags`
+setting that filters by tag. Keep it to a plain two-column `Tag` / `Meaning` table — no discussion of how the
+parser computes or assigns the tags.
 
 When adding or editing a `.md` file that contains deliberate spelling errors (e.g. demonstrating what a
 parser flags or ignores), add a `<!-- cspell:ignore ... -->` comment at the end of the file listing those
