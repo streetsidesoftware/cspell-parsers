@@ -1,0 +1,41 @@
+name: Publish to NPM
+
+on:
+  workflow_dispatch:
+  workflow_call:
+    secrets:
+      PUBLISH_NPM:
+        required: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    if: github.repository_owner == 'streetsidesoftware'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm run build
+
+      # Release Please has already incremented versions and created tags, so we just
+      # need to publish all unpublished versions to NPM here.
+      # See: https://github.com/lerna/lerna/tree/main/commands/publish#bump-from-package
+      - name: Publish to NPM
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.PUBLISH_NPM }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm lerna publish from-package --no-push --no-private --yes
