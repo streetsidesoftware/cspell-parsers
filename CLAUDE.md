@@ -111,6 +111,10 @@ contributor reading the source. Lead with the couple of lines needed to add it t
 (how the AST walk works, the scope/tag taxonomy, etc.) secondary or omitted entirely — someone installing
 this off npm needs "how do I turn this on," not "how does it work."
 
+When adding or editing a `.md` file that contains deliberate spelling errors (e.g. demonstrating what a
+parser flags or ignores), add a `<!-- cspell:ignore ... -->` comment at the end of the file listing those
+words, so the repo's own spellcheck doesn't flag them.
+
 To add a new parser package: see `CONTRIBUTING.md` for the full steps.
 
 Dependency updates are handled by Dependabot (`.github/dependabot.yml`), not Renovate — dev and production

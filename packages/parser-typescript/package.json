@@ -36,7 +36,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@cspell/cspell-types": "10.3.2-alpha.0",
+    "@cspell/cspell-types": "catalog:",
     "tree-sitter": "^0.21.1",
     "tree-sitter-typescript": "^0.23.2"
   }
