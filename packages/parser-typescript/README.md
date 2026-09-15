@@ -50,10 +50,32 @@ plugin in yourself and choose the language IDs to use it for:
   chose that name, _is_ checked.
 - Still checks a local variable or parameter that happens to reuse an import's name, for the scope where it
   shadows that import.
-- Tags each checked segment with a dot-separated tag such as `string.singleQuote`, `comment.block.doc`, or
-  `identifier.property`, plus every ancestor of it (`comment.block.doc` also carries `comment` and
-  `comment.block`) - cspell's `validate` setting can filter which segments get spell checked using these
-  tags, at any level of specificity.
+- Tags each checked segment with a dot-separated tag, plus every ancestor of it (`comment.block.doc` also
+  carries `comment` and `comment.block`) - cspell's `validate`/`ValidationTags` setting can filter which
+  segments get spell checked using these tags, at any level of specificity. JSX text is checked but carries
+  no tag.
+
+## Tags
+
+| Tag                            | Meaning                                                                                      |
+| ------------------------------ | -------------------------------------------------------------------------------------------- |
+| `string`                       | A string literal (fallback for a quote style that's neither `'` nor `"`)                     |
+| `string.singleQuote`           | A `'...'` string literal                                                                     |
+| `string.doubleQuote`           | A `"..."` string literal                                                                     |
+| `string.templateLiteral`       | A literal text fragment of a template string (`` `...` ``), excluding `${...}` substitutions |
+| `comment`                      | Any comment                                                                                  |
+| `comment.line`                 | A `//` line comment                                                                          |
+| `comment.block`                | A `/* ... */` block comment                                                                  |
+| `comment.block.doc`            | A `/** ... */` doc comment                                                                   |
+| `identifier`                   | Any identifier                                                                               |
+| `identifier.variable`          | A variable name                                                                              |
+| `identifier.property`          | An object or class property name                                                             |
+| `identifier.privateProperty`   | A `#private` class property name                                                             |
+| `identifier.type`              | A type name                                                                                  |
+| `identifier.shorthandProperty` | A shorthand object property name (the `foo` in `{ foo }`)                                    |
+| `identifier.label`             | A statement label                                                                            |
+| `identifier.importBinding`     | A renamed import alias, default import name, or namespace import name                        |
+| `identifier.exportBinding`     | A renamed export alias (`export { x as y }`)                                                 |
 
 ## Notes
 
