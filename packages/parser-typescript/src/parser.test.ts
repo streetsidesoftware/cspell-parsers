@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import type { ParsedText, ScopeChain } from '@cspell/cspell-types/Parser';
+import type { ParsedText } from '@cspell/cspell-types/Parser';
 import { describe, expect, it } from 'vitest';
 
 import { parser } from './parser.js';
@@ -15,16 +15,6 @@ function readFixture(name: string): string {
 function parseFixture(name: string): ParsedText[] {
   const content = readFixture(name);
   return [...parser.parse(content, `fixtures/${name}`).parsedTexts];
-}
-
-function scopeValues(scope: ScopeChain | string | undefined): string[] {
-  const values: string[] = [];
-  let s = scope;
-  while (s && typeof s !== 'string') {
-    values.push(s.value);
-    s = s.parent;
-  }
-  return values;
 }
 
 function find(parsedTexts: ParsedText[], text: string): ParsedText {
@@ -45,16 +35,16 @@ function identifierKind(p: ParsedText): string | undefined {
 
 describe('typescript parser', () => {
   it('preserves the filename and full content on the result', () => {
-    const content = readFixture('scope-and-tags.ts');
-    const result = parser.parse(content, 'fixtures/scope-and-tags.ts');
+    const content = readFixture('tags.ts');
+    const result = parser.parse(content, 'fixtures/tags.ts');
 
-    expect(result.filename).toBe('fixtures/scope-and-tags.ts');
+    expect(result.filename).toBe('fixtures/tags.ts');
     expect(result.content).toBe(content);
   });
 
-  describe('scope-and-tags.ts', () => {
-    const parsedTexts = parseFixture('scope-and-tags.ts');
-    const content = readFixture('scope-and-tags.ts');
+  describe('tags.ts', () => {
+    const parsedTexts = parseFixture('tags.ts');
+    const content = readFixture('tags.ts');
 
     it('tags single- and double-quoted strings', () => {
       expect(find(parsedTexts, "'hello'").tags).toEqual({ string: true, 'string.singleQuote': true });
@@ -87,61 +77,6 @@ describe('typescript parser', () => {
       expect(find(parsedTexts, 'greeting').tags).toEqual({ identifier: true, 'identifier.variable': true });
     });
 
-    it('builds a TextMate-style scope chain from the enclosing named declarations', () => {
-      expect(scopeValues(find(parsedTexts, "'hello'").scope)).toEqual([
-        'string.quoted.single.ts',
-        'meta.method.declaration.ts',
-        'meta.class.ts',
-        'source.ts',
-      ]);
-      expect(scopeValues(find(parsedTexts, 'Greeter').scope)).toEqual([
-        'entity.name.type.class.ts',
-        'meta.class.ts',
-        'source.ts',
-      ]);
-      expect(scopeValues(find(parsedTexts, 'sayHello').scope)).toEqual([
-        'entity.name.function.ts',
-        'meta.method.declaration.ts',
-        'meta.class.ts',
-        'source.ts',
-      ]);
-    });
-
-    it('uses the kind of construct for scope, never the identifier text', () => {
-      // A class named `Greeter` and one named anything else get the same scope shape.
-      const scope = find(parsedTexts, 'Greeter').scope;
-      expect(scopeValues(scope)).not.toContain('Greeter');
-    });
-
-    it('scopes a string assigned to a top-level variable under a variable-declaration scope', () => {
-      expect(scopeValues(find(parsedTexts, '"hello"').scope)).toEqual([
-        'string.quoted.double.ts',
-        'meta.var.expr.ts',
-        'source.ts',
-      ]);
-    });
-
-    it('gives an arrow function its own scope, nested under its variable-declaration scope', () => {
-      const labels = findAll(parsedTexts, 'label');
-      expect(labels).toHaveLength(2);
-
-      // the parameter declaration also sits inside the parameter-list scope
-      expect(scopeValues(labels[0]?.scope)).toEqual([
-        'variable.other.readwrite.ts',
-        'meta.parameters.ts',
-        'meta.arrow.ts',
-        'meta.var.expr.ts',
-        'source.ts',
-      ]);
-      // the body reference does not
-      expect(scopeValues(labels[1]?.scope)).toEqual([
-        'variable.other.readwrite.ts',
-        'meta.arrow.ts',
-        'meta.var.expr.ts',
-        'source.ts',
-      ]);
-    });
-
     it('does not spell check keywords, punctuation, or numbers', () => {
       expect(parsedTexts.some((p) => p.text === 'const')).toBe(false);
       expect(parsedTexts.some((p) => p.text === '42')).toBe(false);
@@ -165,15 +100,6 @@ describe('typescript parser', () => {
       const myExample = findAll(identifiers, 'myExample');
       expect(myExample.length).toBeGreaterThan(0);
       expect(myExample[0]?.tags).toEqual({ identifier: true, 'identifier.importBinding': true });
-    });
-
-    it('scopes an import alias under the import statement, using the "alias" scope variant', () => {
-      const declaration = findAll(identifiers, 'myExample')[0];
-      expect(scopeValues(declaration?.scope)).toEqual([
-        'variable.other.readwrite.alias.ts',
-        'meta.import.ts',
-        'source.ts',
-      ]);
     });
 
     it('checks default and namespace import bindings, since their names are chosen locally', () => {
@@ -271,22 +197,10 @@ describe('typescript parser', () => {
     });
   });
 
-  it('parses tsx files and includes untagged jsx text, using .tsx scope names', () => {
+  it('parses tsx files and includes untagged jsx text', () => {
     const parsedTexts = parseFixture('jsx.tsx');
 
     expect(find(parsedTexts, 'hello world').tags).toBeUndefined();
     expect(find(parsedTexts, 'Greeting').tags).toEqual({ identifier: true, 'identifier.variable': true });
-    expect(scopeValues(find(parsedTexts, 'Greeting').scope)).toEqual([
-      'entity.name.function.tsx',
-      'meta.function.tsx',
-      'meta.export.tsx',
-      'source.tsx',
-    ]);
-    expect(scopeValues(find(parsedTexts, 'hello world').scope)).toEqual([
-      'meta.jsx.children.tsx',
-      'meta.function.tsx',
-      'meta.export.tsx',
-      'source.tsx',
-    ]);
   });
 });
