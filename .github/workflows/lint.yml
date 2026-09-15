@@ -19,11 +19,15 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 22.x
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Build
+        run: pnpm run build
+
       - run: pnpm run lint-ci
 
-      - run: pnpm run spell
+      - name: Spell Check
+        run: pnpm run spell
