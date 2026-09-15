@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/streetsidesoftware/cspell-parsers/compare/cspell-parsers@1.0.0...cspell-parsers@1.0.1) (2026-09-15)
+
+
+### Updates and Bug Fixes
+
+* Update publish.yml ([#21](https://github.com/streetsidesoftware/cspell-parsers/issues/21)) ([85d5462](https://github.com/streetsidesoftware/cspell-parsers/commit/85d5462ca96118e0c3d98992d3d2feed2807a970))
+
 ## 1.0.0 (2026-09-15)
 
 
