@@ -1,0 +1,28 @@
+{
+  "name": "@cspell/parser-utils",
+  "version": "1.0.0",
+  "description": "Internal helpers shared by cspell-parsers packages. Not published.",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "!dist/**/*.map"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "clean": "shx rm -rf dist coverage",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@cspell/cspell-types": "catalog:"
+  }
+}

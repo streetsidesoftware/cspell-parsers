@@ -36,6 +36,7 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@cspell/cspell-types": "catalog:"
+    "@cspell/cspell-types": "catalog:",
+    "@cspell/parser-utils": "workspace:*"
   }
 }
