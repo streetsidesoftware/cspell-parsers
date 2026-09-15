@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/streetsidesoftware/cspell-parsers/compare/@cspell/parser-typescript@1.0.0...@cspell/parser-typescript@1.0.1) (2026-09-15)
+
+
+### Updates and Bug Fixes
+
+* Update package repository and files ([#26](https://github.com/streetsidesoftware/cspell-parsers/issues/26)) ([2079870](https://github.com/streetsidesoftware/cspell-parsers/commit/2079870bc582fcd8ed3749d8f9a19a9dfd3f669d))
+
 ## 1.0.0 (2026-09-15)
 
 

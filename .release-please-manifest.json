@@ -1,5 +1,5 @@
 {
-  ".": "1.0.1",
-  "packages/parser-example": "1.0.0",
-  "packages/parser-typescript": "1.0.0"
+  ".": "1.0.2",
+  "packages/parser-example": "1.0.1",
+  "packages/parser-typescript": "1.0.1"
 }
