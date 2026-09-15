@@ -1,0 +1,5 @@
+ignorePaths:
+  - node_modules
+  - fixtures
+words:
+  - unaliased

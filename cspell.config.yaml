@@ -21,8 +21,4 @@ ignorePaths:
   - .git/!(hooks,COMMIT_EDITMSG)
 words:
   - COMMIT_EDITMSG
-  - cspell
-  - pnpm
-  - tsdown
   - unaliased
-  - vitest

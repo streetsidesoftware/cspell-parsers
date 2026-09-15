@@ -8,7 +8,7 @@ catalogs:
   default:
     '@cspell/cspell-types':
       specifier: ^10.3.0
-      version: 10.3.0
+      version: 10.3.1
     tsdown:
       specifier: ^0.23.0
       version: 0.23.0
@@ -64,7 +64,7 @@ importers:
     dependencies:
       '@cspell/cspell-types':
         specifier: 'catalog:'
-        version: 10.3.0
+        version: 10.3.1
 
   packages/parser-typescript:
     dependencies:
@@ -77,6 +77,12 @@ importers:
       tree-sitter-typescript:
         specifier: ^0.23.2
         version: 0.23.2(tree-sitter@0.21.1)
+
+  packages/parser-typescript/samples:
+    devDependencies:
+      '@cspell/parser-typescript':
+        specifier: workspace:*
+        version: link:..
 
 packages:
 
@@ -108,10 +114,6 @@ packages:
 
   '@cspell/cspell-service-bus@10.3.1':
     resolution: {integrity: sha512-Ha+H8SOBFA0QeWjYc9qY2/Jm41PGpmFjGqgOGZtI8BiJ5DTPLQpn2rPAxE6IKNUvtNE1kkknkbhsWVe/a14wkw==}
-    engines: {node: '>=22.18.0'}
-
-  '@cspell/cspell-types@10.3.0':
-    resolution: {integrity: sha512-xbBuCGaXFAINdrGzUqBOfIKYA74AMNBud+t3PlJXqg+8sHJU2PARiXo0GiaAOCf7QBLzPBpYpC5jZW96iH3/7Q==}
     engines: {node: '>=22.18.0'}
 
   '@cspell/cspell-types@10.3.1':
@@ -1791,8 +1793,6 @@ snapshots:
       global-directory: 5.0.0
 
   '@cspell/cspell-service-bus@10.3.1': {}
-
-  '@cspell/cspell-types@10.3.0': {}
 
   '@cspell/cspell-types@10.3.1': {}
 
