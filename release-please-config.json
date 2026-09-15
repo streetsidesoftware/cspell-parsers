@@ -68,18 +68,15 @@
   "packages": {
     ".": {
       "component": "cspell-parsers",
-      "releaseType": "node",
-      "release-as": "1.0.0"
+      "releaseType": "node"
     },
     "packages/parser-example": {
       "component": "@cspell/parser-example",
-      "releaseType": "node",
-      "release-as": "1.0.0"
+      "releaseType": "node"
     },
     "packages/parser-typescript": {
       "component": "@cspell/parser-typescript",
-      "releaseType": "node",
-      "release-as": "1.0.0"
+      "releaseType": "node"
     }
   }
 }
