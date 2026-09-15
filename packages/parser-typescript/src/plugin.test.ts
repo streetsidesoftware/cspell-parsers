@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { parser } from './parser.js';
-import { plugin } from './plugin.js';
+import { customizePlugin, plugin } from './plugin.js';
 import type { Parser } from '@cspell/cspell-types';
 
 describe('plugin', () => {
@@ -14,5 +14,17 @@ describe('plugin', () => {
     const result = pluginParser?.parse("const greeting = 'hello';\n", 'example.ts');
 
     expect([...(result?.parsedTexts ?? [])].some((p) => p.text === 'greeting')).toBe(true);
+  });
+});
+
+describe('customizePlugin', () => {
+  it('wires validate filtering into the typescript parser', () => {
+    const customized = customizePlugin({ '*': false, comment: true });
+    const [customizedParser] = (customized.parsers ?? []) as Parser[];
+    const result = customizedParser?.parse("// a comment\nconst greeting = 'hello';\n", 'example.ts');
+    const parsedTexts = [...(result?.parsedTexts ?? [])];
+
+    expect(parsedTexts.some((p) => p.text === '// a comment')).toBe(true);
+    expect(parsedTexts.some((p) => p.text === 'greeting')).toBe(false);
   });
 });

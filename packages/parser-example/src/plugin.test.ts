@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { parser } from './parser.js';
-import { plugin } from './plugin.js';
+import { customizePlugin, plugin } from './plugin.js';
 import type { Parser } from '@cspell/cspell-types';
 
 describe('plugin', () => {
@@ -14,5 +14,15 @@ describe('plugin', () => {
     const result = pluginParser?.parse('// hello\n', 'example.c');
 
     expect([...(result?.parsedTexts ?? [])].some((p) => p.text === '// hello')).toBe(true);
+  });
+});
+
+describe('customizePlugin', () => {
+  it('wires validate filtering into the c-style-comments parser', () => {
+    const customized = customizePlugin({ '*': true, comment: false });
+    const [customizedParser] = (customized.parsers ?? []) as Parser[];
+    const result = customizedParser?.parse('// hello\n', 'example.c');
+
+    expect([...(result?.parsedTexts ?? [])]).toEqual([]);
   });
 });
