@@ -28,6 +28,9 @@ pnpm exec vitest run -t 'excludes a leading YAML front-matter block'
 CI runs `build` + `typecheck` + `test` in `.github/workflows/test.yml` and `lint-ci` in
 `.github/workflows/lint.yml`, as two separate workflows.
 
+Once you're done making changes, run `pnpm lint` from the repo root — it auto-fixes what it can (ESLint +
+`prettier --write`) rather than just reporting, so run it before a final `pnpm run lint-ci`/`pnpm test` pass.
+
 ## Architecture
 
 This is a pnpm workspace monorepo (`packages/*`) for cspell parser packages — each package under `packages/`
@@ -114,8 +117,8 @@ Two more directories, both at the package root (not under `src/`):
   checkout, but the `!dist/**/*.map` entry in `files` (above) keeps those `.map` files out of the published
   tarball.
 - Publishable packages (`publishConfig.provenance: true`) need a `repository` field —
-  `{ "type": "git", "url": "git+https://github.com/streetsidesoftware/cspell-parsers.git", "directory":
-  "packages/<name>" }` — matching the actual GitHub remote, with `directory` pointing at that package's
+  `{ "type": "git", "url": "git+https://github.com/streetsidesoftware/cspell-parsers.git", "directory": "packages/<name>" }` —
+  matching the actual GitHub remote, with `directory` pointing at that package's
   subfolder. Without it, `npm publish`'s sigstore provenance check fails (`repository.url` is "" but the CI
   attestation expects it to match the repo the build ran in).
 

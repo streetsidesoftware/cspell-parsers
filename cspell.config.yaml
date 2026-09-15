@@ -21,4 +21,5 @@ ignorePaths:
   - .git/!(hooks,COMMIT_EDITMSG)
 words:
   - COMMIT_EDITMSG
+  - sigstore
   - unaliased
