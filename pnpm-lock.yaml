@@ -263,12 +263,9 @@ importers:
 
   packages/parser-typescript:
     dependencies:
-      tree-sitter:
-        specifier: ^0.21.1
-        version: 0.21.1
-      tree-sitter-typescript:
-        specifier: ^0.23.2
-        version: 0.23.2(tree-sitter@0.21.1)
+      '@cspell/parser-typescript-tree-sitter':
+        specifier: workspace:^
+        version: link:../parser-typescript-tree-sitter
     devDependencies:
       '@cspell/cspell-types':
         specifier: 'catalog:'
