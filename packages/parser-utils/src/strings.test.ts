@@ -7,7 +7,7 @@ import type { StringPart } from './strings.js';
  * Checks a map's `(srcLen, dstLen)` pairs are internally consistent with `parts` and the text they
  * decoded to: source lengths must sum to the raw parts' total length, and destination lengths must sum
  * to `text.length` - unlike the comment map (which only ever skips or copies verbatim), a real escape
- * decode's dest content (e.g. `é` for `é`) isn't a substring of the source, so it can't be
+ * decode's dest content (e.g. `é` for `\u00e9`) isn't a substring of the source, so it can't be
  * reconstructed from raw text the way `applyMap` does in comments.test.ts.
  */
 function mapIsConsistent(parts: readonly StringPart[], text: string, map: readonly number[]): boolean {
@@ -83,7 +83,7 @@ describe('decodeStringParts', () => {
   });
 
   it('reproduces the café example from the SourceMap doc comment', () => {
-    // "Grand Café" -> "Grand Café"
+    // "Grand Caf\u00e9" -> "Grand Café"
     const parts = [frag('Grand Caf'), esc('\\u00e9')];
     expect(decodeStringParts(parts)).toEqual({ text: 'Grand Café', map: [9, 9, 6, 1] });
   });
