@@ -39,6 +39,35 @@ plugin in yourself and choose the language IDs to use it for:
 }
 ```
 
+### Filtering by tag
+
+By default every segment the parser emits gets spell checked. To check only some of them — for example, only
+comments, or only string content — use `customizePlugin` instead of the plain `plugin` export. It takes a
+`validate` object (same shape as cspell's `CSpellSettingsValidation.validate` setting) and returns a `Plugin`
+whose parser filters segments by tag itself, before cspell ever sees them — so it works even with a cspell
+version that doesn't yet apply `validate` on its own.
+
+```js
+// cspell.config.mjs — customizePlugin returns a live Plugin object, so it needs a JS/TS config file
+// (.mjs/.ts/.cjs), not .json/.jsonc/.yaml, where "plugins" can only be a list of module-specifier strings.
+import { customizePlugin } from '@cspell/parser-typescript/plugin';
+
+export default {
+  plugins: [customizePlugin({ '*': false, comment: true })], // only check comments
+  languageSettings: [
+    {
+      languageId: 'typescript,typescriptreact',
+      parser: 'typescript',
+    },
+  ],
+};
+```
+
+`validate` keys are matched hierarchically against the tags below — `comment` also matches the more specific
+`comment.block.doc` unless a more specific key overrides it — and may use `*` as a wildcard
+(`comment.block.*`, `comment*`, or a bare `*` for "everything not otherwise matched", which defaults to
+`true`). See the [Tags](#tags) table below for every tag this parser can emit.
+
 ## What it does differently
 
 - Only checks identifiers, string/template contents, comments, and JSX text — never keywords, punctuation,
