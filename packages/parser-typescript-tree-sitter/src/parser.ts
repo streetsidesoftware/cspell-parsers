@@ -474,7 +474,8 @@ export function parse(content: string, filename: string): ParseResult {
   const tree = (tsxMode ? getTsxParser() : getTsParser()).parse(content);
   const imports = collectImportBindings(tree.rootNode);
 
-  const parsedTexts = walk(tree.rootNode, undefined, imports);
+  // Make it greedy for now so that the parse tree gets released.
+  const parsedTexts = [...walk(tree.rootNode, undefined, imports)];
 
   return { content, filename, parsedTexts };
 }
