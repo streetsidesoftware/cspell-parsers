@@ -101,6 +101,11 @@ because the import wasn't renamed). The distinction matters because:
 - A bare module specifier string (`from 'prettier'`, as opposed to `from './mod.js'`) is excluded the same
   way, for the same reason: it's a package name, not something authored here (`isModuleSpecifierString` +
   `isBareModuleSpecifier`, checked in the `'string'` case).
+- A module specifier string that _is_ checked (a relative specifier like `from './mod.js'`) additionally gets
+  `module.specifier.literal`, plus `.module` appended to its usual quote-style string tag (e.g.
+  `string.singleQuote` becomes `string.singleQuote.module`) - so a consumer can filter module specifiers
+  independently of ordinary string literals, without losing the plain `string`/`string.singleQuote` tags
+  (`quoteTag`'s `isModuleSpecifier` parameter, threaded through from the `'string'` case in `walk`).
 
 ## Shadowing
 

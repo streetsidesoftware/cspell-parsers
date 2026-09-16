@@ -100,7 +100,13 @@ export default {
 | `string`                       | A string literal (fallback for a quote style that's neither `'` nor `"`)                     |
 | `string.singleQuote`           | A `'...'` string literal                                                                     |
 | `string.doubleQuote`           | A `"..."` string literal                                                                     |
+| `string.module`                | A module specifier string literal (fallback for a quote style that's neither `'` nor `"`)    |
+| `string.singleQuote.module`    | A `'...'` string literal that is also a module specifier                                     |
+| `string.doubleQuote.module`    | A `"..."` string literal that is also a module specifier                                     |
 | `string.templateLiteral`       | A literal text fragment of a template string (`` `...` ``), excluding `${...}` substitutions |
+| `module`                       | Any module specifier string                                                                  |
+| `module.specifier`             | Any module specifier string (same as `module`, for a more specific filter)                   |
+| `module.specifier.literal`     | The module specifier string of an `import`/`export ... from` statement                       |
 | `comment`                      | Any comment                                                                                  |
 | `comment.line`                 | A `//` line comment                                                                          |
 | `comment.block`                | A `/* ... */` block comment                                                                  |

@@ -85,14 +85,31 @@ const STRING_SINGLE_QUOTE_TAG = hierarchicalTags('string.singleQuote');
 const STRING_DOUBLE_QUOTE_TAG = hierarchicalTags('string.doubleQuote');
 const STRING_TEMPLATE_LITERAL_TAG = hierarchicalTags('string.templateLiteral');
 
-function quoteTag(text: string): ParsedTags {
+/**
+ * A module specifier string gets both the usual `string`/`string.singleQuote`/`string.doubleQuote`
+ * hierarchy - with `.module` appended, so a consumer filtering on plain `string` still doesn't
+ * separately have to know about `module.specifier.literal` - and `module.specifier.literal`, which
+ * identifies it as a module specifier regardless of its quote style.
+ */
+const MODULE_SPECIFIER_LITERAL_TAG = hierarchicalTags('module.specifier.literal');
+const STRING_MODULE_TAG = { ...hierarchicalTags('string.module'), ...MODULE_SPECIFIER_LITERAL_TAG };
+const STRING_SINGLE_QUOTE_MODULE_TAG = {
+  ...hierarchicalTags('string.singleQuote.module'),
+  ...MODULE_SPECIFIER_LITERAL_TAG,
+};
+const STRING_DOUBLE_QUOTE_MODULE_TAG = {
+  ...hierarchicalTags('string.doubleQuote.module'),
+  ...MODULE_SPECIFIER_LITERAL_TAG,
+};
+
+function quoteTag(text: string, isModuleSpecifier: boolean): ParsedTags {
   switch (text[0]) {
     case "'":
-      return STRING_SINGLE_QUOTE_TAG;
+      return isModuleSpecifier ? STRING_SINGLE_QUOTE_MODULE_TAG : STRING_SINGLE_QUOTE_TAG;
     case '"':
-      return STRING_DOUBLE_QUOTE_TAG;
+      return isModuleSpecifier ? STRING_DOUBLE_QUOTE_MODULE_TAG : STRING_DOUBLE_QUOTE_TAG;
     default:
-      return STRING_TAG;
+      return isModuleSpecifier ? STRING_MODULE_TAG : STRING_TAG;
   }
 }
 
@@ -324,7 +341,7 @@ function makeComment(node: SyntaxNode): ParsedText {
  * (so a spell checker sees `café`, not `caf` + a stray `u00e9` token) and strips the surrounding quotes
  * into `rawText`/`map`, the same way `emitComment` strips a comment's delimiters.
  */
-function makeString(node: SyntaxNode): ParsedText {
+function makeString(node: SyntaxNode, isModuleSpecifier: boolean): ParsedText {
   const rawText = node.text;
   const parts = childrenToStringParts(node.namedChildren);
   // The opening/closing quote (or backtick) is always node's first/last child - including for an empty
@@ -337,7 +354,7 @@ function makeString(node: SyntaxNode): ParsedText {
   const map = [openLen, 0, ...innerMap];
   if (closeLen > 0) map.push(closeLen, 0);
 
-  return { text, rawText, map, range: [node.startIndex, node.endIndex], tags: quoteTag(rawText) };
+  return { text, rawText, map, range: [node.startIndex, node.endIndex], tags: quoteTag(rawText, isModuleSpecifier) };
 }
 
 /** Builds one decoded run of a template literal's `string_fragment`/`escape_sequence` children (see `walk`). */
@@ -368,11 +385,13 @@ function* walk(
     case 'comment':
       yield makeComment(node);
       return;
-    case 'string':
+    case 'string': {
+      const isModuleSpecifier = isModuleSpecifierString(node);
       // A bare module specifier (`from 'prettier'`) is fixed by the package, not authored here.
-      if (isModuleSpecifierString(node) && isBareModuleSpecifier(node.text)) return;
-      yield makeString(node);
+      if (isModuleSpecifier && isBareModuleSpecifier(node.text)) return;
+      yield makeString(node, isModuleSpecifier);
       return;
+    }
     case 'template_string': {
       let runParts: StringPart[] = [];
       let runStart = 0;

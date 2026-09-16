@@ -141,6 +141,21 @@ describe('typescript parser', () => {
       expect(myExample.some((p) => identifierKind(p) === 'variable')).toBe(true);
     });
 
+    it('tags a re-export source the same as an import source', () => {
+      const specifiers = findAll(parsedTexts, './example.js');
+      expect(specifiers.length).toBeGreaterThan(1);
+      for (const specifier of specifiers) {
+        expect(specifier.tags).toEqual({
+          string: true,
+          'string.singleQuote': true,
+          'string.singleQuote.module': true,
+          module: true,
+          'module.specifier': true,
+          'module.specifier.literal': true,
+        });
+      }
+    });
+
     it('does not check a property accessed off an imported binding, since it is external to this file', () => {
       for (const external of ['explReal', 'subProp', 'doThing', 'callSomething']) {
         expect(identifiers.some((p) => p.text === external)).toBe(false);
@@ -206,7 +221,14 @@ describe('typescript parser', () => {
     });
 
     it('still checks a relative module specifier string', () => {
-      expect(find(parsedTexts, './example.js').tags).toEqual({ string: true, 'string.singleQuote': true });
+      expect(find(parsedTexts, './example.js').tags).toEqual({
+        string: true,
+        'string.singleQuote': true,
+        'string.singleQuote.module': true,
+        module: true,
+        'module.specifier': true,
+        'module.specifier.literal': true,
+      });
     });
 
     it('checks the default import binding for a bare specifier, since the author chose that name', () => {
