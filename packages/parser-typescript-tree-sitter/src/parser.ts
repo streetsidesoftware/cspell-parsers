@@ -6,11 +6,7 @@ import type { StringPart } from '@internal/utils';
 
 type SyntaxNode = TreeSitterParser.SyntaxNode;
 
-const tsParser = new TreeSitterParser();
-tsParser.setLanguage(TypeScriptLanguages.typescript);
-
-const tsxParser = new TreeSitterParser();
-tsxParser.setLanguage(TypeScriptLanguages.tsx);
+let tsParser: TreeSitterParser | undefined;
 
 type IdentifierKind =
   | 'variable'
@@ -35,6 +31,29 @@ const identifierKindByNodeType: Record<string, IdentifierKind> = {
 
 /** Node types whose text is a reference to a name, as opposed to a struct/property key. */
 const referenceNodeTypes = new Set(['identifier', 'type_identifier']);
+
+type TSLanguage = typeof TypeScriptLanguages.typescript;
+
+function _getTreeSitter(): TreeSitterParser {
+  if (tsParser) return tsParser;
+  tsParser = new TreeSitterParser();
+  return tsParser;
+}
+
+function getTreeSitter(lang: TSLanguage): TreeSitterParser {
+  const parser = _getTreeSitter();
+  if (parser.getLanguage() === lang) return parser;
+  parser.setLanguage(lang);
+  return parser;
+}
+
+function getTsParser(): TreeSitterParser {
+  return getTreeSitter(TypeScriptLanguages.typescript);
+}
+
+function getTsxParser(): TreeSitterParser {
+  return getTreeSitter(TypeScriptLanguages.tsx);
+}
 
 function isTsx(filename: string): boolean {
   return /\.[cm]?tsx$/i.test(filename) || /\.jsx$/i.test(filename);
@@ -278,25 +297,25 @@ function blockDeclarationNames(node: SyntaxNode): string[] {
   return names;
 }
 
-function emit(node: SyntaxNode, tags: ParsedTags | undefined, out: ParsedText[]): void {
-  out.push({
+function makeText(node: SyntaxNode, tags: ParsedTags | undefined): ParsedText {
+  return {
     text: node.text,
     range: [node.startIndex, node.endIndex],
     ...(tags && { tags }),
-  });
+  };
 }
 
-/** Like `emit`, but for a comment node - `text` has its delimiters/gutter stripped, per `stripCommentMarkers`. */
-function emitComment(node: SyntaxNode, out: ParsedText[]): void {
+/** Like `makeText`, but for a comment node - `text` has its delimiters/gutter stripped, per `stripCommentMarkers`. */
+function makeComment(node: SyntaxNode): ParsedText {
   const rawText = node.text;
   const { text, map } = stripCommentMarkers(rawText);
-  out.push({
+  return {
     text,
     rawText,
     map,
     range: [node.startIndex, node.endIndex],
     tags: commentTag(rawText),
-  });
+  };
 }
 
 /**
@@ -305,7 +324,7 @@ function emitComment(node: SyntaxNode, out: ParsedText[]): void {
  * (so a spell checker sees `café`, not `caf` + a stray `u00e9` token) and strips the surrounding quotes
  * into `rawText`/`map`, the same way `emitComment` strips a comment's delimiters.
  */
-function emitString(node: SyntaxNode, out: ParsedText[]): void {
+function makeString(node: SyntaxNode): ParsedText {
   const rawText = node.text;
   const parts = childrenToStringParts(node.namedChildren);
   // The opening/closing quote (or backtick) is always node's first/last child - including for an empty
@@ -318,15 +337,15 @@ function emitString(node: SyntaxNode, out: ParsedText[]): void {
   const map = [openLen, 0, ...innerMap];
   if (closeLen > 0) map.push(closeLen, 0);
 
-  out.push({ text, rawText, map, range: [node.startIndex, node.endIndex], tags: quoteTag(rawText) });
+  return { text, rawText, map, range: [node.startIndex, node.endIndex], tags: quoteTag(rawText) };
 }
 
-/** Emits one decoded run of a template literal's `string_fragment`/`escape_sequence` children (see `walk`). */
-function emitTemplateRun(parts: StringPart[], start: number, end: number, out: ParsedText[]): void {
-  if (parts.length === 0) return;
+/** Builds one decoded run of a template literal's `string_fragment`/`escape_sequence` children (see `walk`). */
+function makeTemplateRun(parts: StringPart[], start: number, end: number): ParsedText | undefined {
+  if (parts.length === 0) return undefined;
   const rawText = parts.map((part) => part.text).join('');
   const { text, map } = decodeStringParts(parts);
-  out.push({ text, rawText, map, range: [start, end], tags: STRING_TEMPLATE_LITERAL_TAG });
+  return { text, rawText, map, range: [start, end], tags: STRING_TEMPLATE_LITERAL_TAG };
 }
 
 function childrenToStringParts(children: readonly SyntaxNode[]): StringPart[] {
@@ -340,20 +359,19 @@ function childrenToStringParts(children: readonly SyntaxNode[]): StringPart[] {
  * being authored here, and `bindingScope` overrides that when a local
  * declaration shadows an import (see `BindingScope`).
  */
-function walk(
+function* walk(
   node: SyntaxNode,
   bindingScope: BindingScope | undefined,
   imports: ImportBindings,
-  out: ParsedText[],
-): void {
+): Generator<ParsedText> {
   switch (node.type) {
     case 'comment':
-      emitComment(node, out);
+      yield makeComment(node);
       return;
     case 'string':
       // A bare module specifier (`from 'prettier'`) is fixed by the package, not authored here.
       if (isModuleSpecifierString(node) && isBareModuleSpecifier(node.text)) return;
-      emitString(node, out);
+      yield makeString(node);
       return;
     case 'template_string': {
       let runParts: StringPart[] = [];
@@ -365,40 +383,42 @@ function walk(
           runEnd = child.endIndex;
           runParts.push({ text: child.text, isEscape: child.type === 'escape_sequence' });
         } else if (child.type === 'template_substitution') {
-          emitTemplateRun(runParts, runStart, runEnd, out);
+          const run = makeTemplateRun(runParts, runStart, runEnd);
+          if (run) yield run;
           runParts = [];
-          walk(child, bindingScope, imports, out);
+          yield* walk(child, bindingScope, imports);
         }
       }
-      emitTemplateRun(runParts, runStart, runEnd, out);
+      const run = makeTemplateRun(runParts, runStart, runEnd);
+      if (run) yield run;
       return;
     }
     case 'jsx_text':
-      if (node.text.trim()) emit(node, undefined, out);
+      if (node.text.trim()) yield makeText(node, undefined);
       return;
     case 'statement_block': {
       const innerBindingScope = pushShadow(bindingScope, blockDeclarationNames(node), imports);
-      for (const child of node.namedChildren) walk(child, innerBindingScope, imports, out);
+      for (const child of node.namedChildren) yield* walk(child, innerBindingScope, imports);
       return;
     }
     case 'import_clause':
       for (const child of node.namedChildren) {
         if (child.type === 'identifier') {
-          emit(child, identifierTagByKind.importBinding, out);
+          yield makeText(child, identifierTagByKind.importBinding);
         } else {
-          walk(child, bindingScope, imports, out);
+          yield* walk(child, bindingScope, imports);
         }
       }
       return;
     case 'namespace_import': {
       const id = node.namedChildren.find((c) => c.type === 'identifier');
-      if (id) emit(id, identifierTagByKind.importBinding, out);
+      if (id) yield makeText(id, identifierTagByKind.importBinding);
       return;
     }
     case 'import_specifier': {
       // `name` is always the module's own export name - never authored here.
       const aliasNode = node.childForFieldName('alias');
-      if (aliasNode) emit(aliasNode, identifierTagByKind.importBinding, out);
+      if (aliasNode) yield makeText(aliasNode, identifierTagByKind.importBinding);
       return;
     }
     case 'export_specifier': {
@@ -409,20 +429,20 @@ function walk(
       const aliasNode = node.childForFieldName('alias');
       if (isReExport) {
         // `name` is the module's own export name; only a rename is authored here.
-        if (aliasNode) emit(aliasNode, identifierTagByKind.exportBinding, out);
+        if (aliasNode) yield makeText(aliasNode, identifierTagByKind.exportBinding);
       } else {
         // `name` references a pre-existing local binding - walk it like any other reference.
-        if (nameNode) walk(nameNode, bindingScope, imports, out);
-        if (aliasNode) emit(aliasNode, identifierTagByKind.exportBinding, out);
+        if (nameNode) yield* walk(nameNode, bindingScope, imports);
+        if (aliasNode) yield makeText(aliasNode, identifierTagByKind.exportBinding);
       }
       return;
     }
     case 'member_expression': {
       const objectNode = node.childForFieldName('object');
       const propertyNode = node.childForFieldName('property');
-      if (objectNode) walk(objectNode, bindingScope, imports, out);
+      if (objectNode) yield* walk(objectNode, bindingScope, imports);
       if (propertyNode && !(objectNode && isExternalObject(objectNode, imports, bindingScope))) {
-        walk(propertyNode, bindingScope, imports, out);
+        yield* walk(propertyNode, bindingScope, imports);
       }
       return;
     }
@@ -438,7 +458,7 @@ function walk(
     ) {
       return;
     }
-    emit(node, identifierTagByKind[kind], out);
+    yield makeText(node, identifierTagByKind[kind]);
     return;
   }
 
@@ -447,16 +467,16 @@ function walk(
     ? pushShadow(bindingScope, parameterNames(node), imports)
     : bindingScope;
 
-  for (const child of node.namedChildren) walk(child, innerBindingScope, imports, out);
+  for (const child of node.namedChildren) yield* walk(child, innerBindingScope, imports);
 }
 
 export function parse(content: string, filename: string): ParseResult {
   const tsxMode = isTsx(filename);
-  const tree = (tsxMode ? tsxParser : tsParser).parse(content);
+  const tree = (tsxMode ? getTsxParser() : getTsParser()).parse(content);
   const imports = collectImportBindings(tree.rootNode);
 
-  const parsedTexts: ParsedText[] = [];
-  walk(tree.rootNode, undefined, imports, parsedTexts);
+  // Make it greedy for now so that the parse tree gets released.
+  const parsedTexts = [...walk(tree.rootNode, undefined, imports)];
 
   return { content, filename, parsedTexts };
 }
