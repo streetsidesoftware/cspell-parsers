@@ -72,8 +72,8 @@ function decodeEscapeSequence(raw: string): string {
     }
     case '\n':
     case '\r':
-    case ' ':
-    case ' ':
+    case '\u2028':
+    case '\u2029':
       return ''; // line continuation - splices the escaped line break out of the string entirely
     default:
       // Everything else (an unrecognized letter, or a legacy octal digit like "\1"): the JS/TS spec just
