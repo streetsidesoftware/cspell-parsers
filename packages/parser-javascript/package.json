@@ -2,6 +2,13 @@
   "name": "@cspell/parser-javascript",
   "version": "1.0.0",
   "description": "A JavaScript parser plugin for cspell.",
+  "keywords": [
+    "cspell",
+    "parser",
+    "plugin",
+    "javascript",
+    "javascriptreact"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/streetsidesoftware/cspell-parsers.git",
