@@ -301,16 +301,18 @@ function emitComment(node: SyntaxNode, out: ParsedText[]): void {
 
 /**
  * A `string` node's own children already split its content into `string_fragment` (literal text) and
- * `escape_sequence` (e.g. `\n`, `é`) nodes - `text` decodes every escape via `decodeStringParts`
+ * `escape_sequence` (e.g. `\n`, `\u00e9`) nodes - `text` decodes every escape via `decodeStringParts`
  * (so a spell checker sees `café`, not `caf` + a stray `u00e9` token) and strips the surrounding quotes
  * into `rawText`/`map`, the same way `emitComment` strips a comment's delimiters.
  */
 function emitString(node: SyntaxNode, out: ParsedText[]): void {
   const rawText = node.text;
-  const children = node.namedChildren;
-  const parts = childrenToStringParts(children);
-  const openLen = children.length ? children[0].startIndex - node.startIndex : rawText.length;
-  const closeLen = children.length ? node.endIndex - children[children.length - 1].endIndex : 0;
+  const parts = childrenToStringParts(node.namedChildren);
+  // The opening/closing quote (or backtick) is always node's first/last child - including for an empty
+  // literal (e.g. `""`), which has no named children at all but still has both anonymous quote tokens.
+  const allChildren = node.children;
+  const openLen = allChildren[0].endIndex - node.startIndex;
+  const closeLen = node.endIndex - allChildren[allChildren.length - 1].startIndex;
 
   const { text, map: innerMap } = decodeStringParts(parts);
   const map = [openLen, 0, ...innerMap];

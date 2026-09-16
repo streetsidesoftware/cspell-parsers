@@ -250,6 +250,15 @@ describe('typescript parser', () => {
     expect(str.tags).toEqual({ string: true, 'string.doubleQuote': true });
   });
 
+  it('maps an empty string literal as separate open/close quote spans, not one combined span', () => {
+    const content = 'const s = "";';
+    const parsedTexts = [...parser.parse(content, 'file.ts').parsedTexts];
+
+    const str = findByRawText(parsedTexts, '""');
+    expect(str.text).toBe('');
+    expect(str.map).toEqual([1, 0, 1, 0]);
+  });
+
   it('decodes escape sequences in a template literal, split into per-run segments around substitutions', () => {
     const content = 'const s = `caf\\u00e9${name}line\\nbreak`;';
     const parsedTexts = [...parser.parse(content, 'file.ts').parsedTexts];

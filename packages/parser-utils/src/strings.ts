@@ -4,7 +4,7 @@ import type { SourceMap } from '@cspell/cspell-types';
 export interface StringPart {
   /** The exact source text of this piece - a `string_fragment`'s literal text, or one `escape_sequence`. */
   readonly text: string;
-  /** True if `text` is a single escape sequence (e.g. `\n`, `é`, `\x41`) that should be decoded. */
+  /** True if `text` is a single escape sequence (e.g. `\n`, `\u00e9`, `\x41`) that should be decoded. */
   readonly isEscape: boolean;
 }
 
@@ -19,7 +19,7 @@ export interface DecodedText {
  * Decodes a sequence of string/template-literal parts - as split out by a grammar that already
  * distinguishes literal text from escape sequences (e.g. tree-sitter's `string_fragment` and
  * `escape_sequence` node types) - into the text a spell checker should actually see, plus a `map` back
- * to the original (still-escaped) source. `é` and `\x41` become `é` and `A`; `\n`/`\t`/etc. become
+ * to the original (still-escaped) source. `\u00e9` and `\x41` become `é` and `A`; `\n`/`\t`/etc. become
  * their real control character; a line-continuation escape (backslash followed by an actual newline)
  * disappears entirely (zero-length replacement). This does not handle the surrounding quotes/backticks
  * or the delimiters of a template substitution (`${`/`}`) - a caller splits those out separately, the
