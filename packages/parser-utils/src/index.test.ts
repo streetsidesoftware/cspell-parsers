@@ -2,11 +2,16 @@ import { describe, expect, it } from 'vitest';
 
 import { stripCommentMarkers as stripCommentMarkersImpl } from './comments.js';
 import { customizeParser as customizeParserImpl, customizePlugin as customizePluginImpl } from './customize.js';
-import { customizeParser, customizePlugin, stripCommentMarkers } from './index.js';
+import { customizeParser, customizePlugin, decodeStringParts, stripCommentMarkers } from './index.js';
+import { decodeStringParts as decodeStringPartsImpl } from './strings.js';
 
 describe('index', () => {
   it('re-exports stripCommentMarkers from comments.js', () => {
     expect(stripCommentMarkers).toBe(stripCommentMarkersImpl);
+  });
+
+  it('re-exports decodeStringParts from strings.js', () => {
+    expect(decodeStringParts).toBe(decodeStringPartsImpl);
   });
 
   it('re-exports customizePlugin and customizeParser from customize.js', () => {
