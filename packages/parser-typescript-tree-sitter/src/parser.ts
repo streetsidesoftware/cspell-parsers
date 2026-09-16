@@ -6,8 +6,6 @@ import type { StringPart } from '@internal/utils';
 
 type SyntaxNode = TreeSitterParser.SyntaxNode;
 
-let tsParser: TreeSitterParser | undefined;
-
 type IdentifierKind =
   | 'variable'
   | 'property'
@@ -33,18 +31,15 @@ const identifierKindByNodeType: Record<string, IdentifierKind> = {
 const referenceNodeTypes = new Set(['identifier', 'type_identifier']);
 
 type TSLanguage = typeof TypeScriptLanguages.typescript;
-
-function _getTreeSitter(): TreeSitterParser {
-  if (tsParser) return tsParser;
-  tsParser = new TreeSitterParser();
-  return tsParser;
-}
+const tsParsers: Map<TSLanguage, TreeSitterParser> = new Map();
 
 function getTreeSitter(lang: TSLanguage): TreeSitterParser {
-  const parser = _getTreeSitter();
-  if (parser.getLanguage() === lang) return parser;
-  parser.setLanguage(lang);
-  return parser;
+  let tsParser = tsParsers.get(lang);
+  if (tsParser) return tsParser;
+  tsParser = new TreeSitterParser();
+  tsParser.setLanguage(lang);
+  tsParsers.set(lang, tsParser);
+  return tsParser;
 }
 
 function getTsParser(): TreeSitterParser {
