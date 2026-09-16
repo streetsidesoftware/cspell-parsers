@@ -27,6 +27,12 @@ function findAll(parsedTexts: ParsedText[], text: string): ParsedText[] {
   return parsedTexts.filter((p) => p.text === text);
 }
 
+function findByRawText(parsedTexts: ParsedText[], rawText: string): ParsedText {
+  const found = parsedTexts.find((p) => p.rawText === rawText);
+  if (!found) throw new Error(`Could not find parsed text with rawText: ${rawText}`);
+  return found;
+}
+
 /** The `identifier.<kind>` tag's kind, or `undefined` if `p` isn't tagged as any kind of identifier. */
 function identifierKind(p: ParsedText): string | undefined {
   const key = Object.keys(p.tags ?? {}).find((tag) => tag.startsWith('identifier.'));
@@ -47,12 +53,21 @@ describe('typescript parser', () => {
     const content = readFixture('tags.ts');
 
     it('tags single- and double-quoted strings', () => {
-      expect(find(parsedTexts, "'hello'").tags).toEqual({ string: true, 'string.singleQuote': true });
-      expect(find(parsedTexts, '"hello"').tags).toEqual({ string: true, 'string.doubleQuote': true });
+      const single = findByRawText(parsedTexts, "'hello'");
+      const double = findByRawText(parsedTexts, '"hello"');
+      expect(single.text).toBe('hello');
+      expect(single.tags).toEqual({ string: true, 'string.singleQuote': true });
+      expect(double.text).toBe('hello');
+      expect(double.tags).toEqual({ string: true, 'string.doubleQuote': true });
+    });
+
+    it('strips the quotes into rawText/map, leaving only the content in text', () => {
+      const str = findByRawText(parsedTexts, "'hello'");
+      expect(str.map).toEqual([1, 0, 5, 5, 1, 0]);
     });
 
     it('computes ranges relative to the original content', () => {
-      const str = find(parsedTexts, "'hello'");
+      const str = findByRawText(parsedTexts, "'hello'");
       expect(str.range).toEqual([content.indexOf("'hello'"), content.indexOf("'hello'") + "'hello'".length]);
     });
 
@@ -187,11 +202,11 @@ describe('typescript parser', () => {
     });
 
     it('does not check a bare module specifier string, since it resolves through node_modules', () => {
-      expect(parsedTexts.some((p) => p.text === "'prettier'")).toBe(false);
+      expect(parsedTexts.some((p) => p.rawText === "'prettier'")).toBe(false);
     });
 
     it('still checks a relative module specifier string', () => {
-      expect(find(parsedTexts, "'./example.js'").tags).toEqual({ string: true, 'string.singleQuote': true });
+      expect(find(parsedTexts, './example.js').tags).toEqual({ string: true, 'string.singleQuote': true });
     });
 
     it('checks the default import binding for a bare specifier, since the author chose that name', () => {
@@ -203,7 +218,7 @@ describe('typescript parser', () => {
     });
 
     it('still checks an ordinary string argument that is not a module specifier', () => {
-      expect(find(parsedTexts, "'typescript'").tags).toEqual({ string: true, 'string.singleQuote': true });
+      expect(find(parsedTexts, 'typescript').tags).toEqual({ string: true, 'string.singleQuote': true });
     });
   });
 
@@ -221,5 +236,41 @@ describe('typescript parser', () => {
     const comment = find(parsedTexts, '\none\ntwo\n');
     expect(comment.rawText).toBe('/**\n * one\n * two\n */');
     expect(comment.tags).toEqual({ comment: true, 'comment.block': true, 'comment.block.doc': true });
+  });
+
+  it('decodes escape sequences in a string literal', () => {
+    // Source text contains a literal 6-character unicode escape and 2-character "\n" escape - not an
+    // actual accented character or newline - for the parser itself to decode.
+    const content = 'const s = "caf\\u00e9 \\n end";';
+    const parsedTexts = [...parser.parse(content, 'file.ts').parsedTexts];
+
+    const str = findByRawText(parsedTexts, '"caf\\u00e9 \\n end"');
+    expect(str.text).toBe('café \n end');
+    expect(str.map).toEqual([1, 0, 3, 3, 6, 1, 1, 1, 2, 1, 4, 4, 1, 0]);
+    expect(str.tags).toEqual({ string: true, 'string.doubleQuote': true });
+  });
+
+  it('maps an empty string literal as separate open/close quote spans, not one combined span', () => {
+    const content = 'const s = "";';
+    const parsedTexts = [...parser.parse(content, 'file.ts').parsedTexts];
+
+    const str = findByRawText(parsedTexts, '""');
+    expect(str.text).toBe('');
+    expect(str.map).toEqual([1, 0, 1, 0]);
+  });
+
+  it('decodes escape sequences in a template literal, split into per-run segments around substitutions', () => {
+    const content = 'const s = `caf\\u00e9${name}line\\nbreak`;';
+    const parsedTexts = [...parser.parse(content, 'file.ts').parsedTexts];
+
+    const before = find(parsedTexts, 'café');
+    expect(before.rawText).toBe('caf\\u00e9');
+    expect(before.tags).toEqual({ string: true, 'string.templateLiteral': true });
+
+    const after = find(parsedTexts, 'line\nbreak');
+    expect(after.rawText).toBe('line\\nbreak');
+    expect(after.tags).toEqual({ string: true, 'string.templateLiteral': true });
+
+    expect(find(parsedTexts, 'name').tags).toEqual({ identifier: true, 'identifier.variable': true });
   });
 });

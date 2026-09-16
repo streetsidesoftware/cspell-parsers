@@ -1,7 +1,8 @@
 import TreeSitterParser from 'tree-sitter';
 import TypeScriptLanguages from 'tree-sitter-typescript';
 import type { ParsedTags, ParsedText, Parser, ParseResult } from '@cspell/cspell-types/Parser';
-import { stripCommentMarkers } from '@cspell/parser-utils';
+import { decodeStringParts, stripCommentMarkers } from '@cspell/parser-utils';
+import type { StringPart } from '@cspell/parser-utils';
 
 type SyntaxNode = TreeSitterParser.SyntaxNode;
 
@@ -299,6 +300,40 @@ function emitComment(node: SyntaxNode, out: ParsedText[]): void {
 }
 
 /**
+ * A `string` node's own children already split its content into `string_fragment` (literal text) and
+ * `escape_sequence` (e.g. `\n`, `\u00e9`) nodes - `text` decodes every escape via `decodeStringParts`
+ * (so a spell checker sees `café`, not `caf` + a stray `u00e9` token) and strips the surrounding quotes
+ * into `rawText`/`map`, the same way `emitComment` strips a comment's delimiters.
+ */
+function emitString(node: SyntaxNode, out: ParsedText[]): void {
+  const rawText = node.text;
+  const parts = childrenToStringParts(node.namedChildren);
+  // The opening/closing quote (or backtick) is always node's first/last child - including for an empty
+  // literal (e.g. `""`), which has no named children at all but still has both anonymous quote tokens.
+  const allChildren = node.children;
+  const openLen = allChildren[0].endIndex - node.startIndex;
+  const closeLen = node.endIndex - allChildren[allChildren.length - 1].startIndex;
+
+  const { text, map: innerMap } = decodeStringParts(parts);
+  const map = [openLen, 0, ...innerMap];
+  if (closeLen > 0) map.push(closeLen, 0);
+
+  out.push({ text, rawText, map, range: [node.startIndex, node.endIndex], tags: quoteTag(rawText) });
+}
+
+/** Emits one decoded run of a template literal's `string_fragment`/`escape_sequence` children (see `walk`). */
+function emitTemplateRun(parts: StringPart[], start: number, end: number, out: ParsedText[]): void {
+  if (parts.length === 0) return;
+  const rawText = parts.map((part) => part.text).join('');
+  const { text, map } = decodeStringParts(parts);
+  out.push({ text, rawText, map, range: [start, end], tags: STRING_TEMPLATE_LITERAL_TAG });
+}
+
+function childrenToStringParts(children: readonly SyntaxNode[]): StringPart[] {
+  return children.map((child) => ({ text: child.text, isEscape: child.type === 'escape_sequence' }));
+}
+
+/**
  * Walks the AST, emitting a ParsedText for each spell-checkable leaf
  * (identifiers, string/template contents, comments). `imports` drives
  * excluding names/properties that come from outside this file rather than
@@ -318,17 +353,26 @@ function walk(
     case 'string':
       // A bare module specifier (`from 'prettier'`) is fixed by the package, not authored here.
       if (isModuleSpecifierString(node) && isBareModuleSpecifier(node.text)) return;
-      emit(node, quoteTag(node.text), out);
+      emitString(node, out);
       return;
-    case 'template_string':
+    case 'template_string': {
+      let runParts: StringPart[] = [];
+      let runStart = 0;
+      let runEnd = 0;
       for (const child of node.namedChildren) {
-        if (child.type === 'string_fragment') {
-          emit(child, STRING_TEMPLATE_LITERAL_TAG, out);
+        if (child.type === 'string_fragment' || child.type === 'escape_sequence') {
+          if (runParts.length === 0) runStart = child.startIndex;
+          runEnd = child.endIndex;
+          runParts.push({ text: child.text, isEscape: child.type === 'escape_sequence' });
         } else if (child.type === 'template_substitution') {
+          emitTemplateRun(runParts, runStart, runEnd, out);
+          runParts = [];
           walk(child, bindingScope, imports, out);
         }
       }
+      emitTemplateRun(runParts, runStart, runEnd, out);
       return;
+    }
     case 'jsx_text':
       if (node.text.trim()) emit(node, undefined, out);
       return;
