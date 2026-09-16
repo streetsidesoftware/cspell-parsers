@@ -23,6 +23,12 @@ function find(parsedTexts: ParsedText[], text: string): ParsedText {
   return found;
 }
 
+function findByRawText(parsedTexts: ParsedText[], rawText: string): ParsedText {
+  const found = parsedTexts.find((p) => p.rawText === rawText);
+  if (!found) throw new Error(`Could not find parsed text with rawText: ${rawText}`);
+  return found;
+}
+
 describe('javascript parser', () => {
   it('is named "javascript", not "typescript" - even though it reuses the typescript implementation', () => {
     expect(parser.name).toBe('javascript');
@@ -44,8 +50,12 @@ describe('javascript parser', () => {
     const parsedTexts = parseFixture('tags.js');
 
     it('tags single- and double-quoted strings, same as the typescript parser', () => {
-      expect(find(parsedTexts, "'hello'").tags).toEqual({ string: true, 'string.singleQuote': true });
-      expect(find(parsedTexts, '"hello"').tags).toEqual({ string: true, 'string.doubleQuote': true });
+      const single = findByRawText(parsedTexts, "'hello'");
+      const double = findByRawText(parsedTexts, '"hello"');
+      expect(single.text).toBe('hello');
+      expect(single.tags).toEqual({ string: true, 'string.singleQuote': true });
+      expect(double.text).toBe('hello');
+      expect(double.tags).toEqual({ string: true, 'string.doubleQuote': true });
     });
 
     it('tags template literal fragments and still walks embedded expressions', () => {
