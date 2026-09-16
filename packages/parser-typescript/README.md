@@ -39,6 +39,17 @@ plugin in yourself and choose the language IDs to use it for:
 }
 ```
 
+## Supported file types
+
+`recommended` selects the parser for these cspell language IDs:
+
+| Language ID       |
+| ----------------- |
+| `javascript`      |
+| `javascriptreact` |
+| `typescript`      |
+| `typescriptreact` |
+
 ### Filtering by tag
 
 By default every segment the parser emits gets spell checked. To check only some of them — for example, only

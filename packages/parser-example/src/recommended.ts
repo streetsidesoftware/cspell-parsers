@@ -1,10 +1,10 @@
-import { plugin } from './plugin.js';
+import { plugin, supportedFileTypes } from './plugin.js';
 
 export default {
   plugins: [plugin],
   languageSettings: [
     {
-      languageId: 'c,cpp,csharp,java,javascript,typescript',
+      languageId: supportedFileTypes.join(','),
       parser: 'c-style-comments',
     },
   ],

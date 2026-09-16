@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { plugin } from './plugin.js';
+import { plugin, supportedFileTypes } from './plugin.js';
 import recommended from './recommended.js';
 
 describe('recommended (cspell settings entry point)', () => {
@@ -8,10 +8,10 @@ describe('recommended (cspell settings entry point)', () => {
     expect(recommended.plugins).toEqual([plugin]);
   });
 
-  it('selects the typescript parser for TS/JS/TSX/JSX language ids', () => {
+  it('selects the typescript parser for every supported file type', () => {
     expect(recommended.languageSettings).toEqual([
       {
-        languageId: 'typescript,javascript,typescriptreact,javascriptreact',
+        languageId: supportedFileTypes.join(','),
         parser: 'typescript',
       },
     ]);

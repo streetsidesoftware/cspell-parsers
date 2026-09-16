@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
-import { parser } from './parser.js';
-import { customizePlugin, plugin } from './plugin.js';
+import { parser, supportedFileTypes as parserSupportedFileTypes } from './parser.js';
+import { customizePlugin, plugin, supportedFileTypes } from './plugin.js';
 import type { Parser } from '@cspell/cspell-types';
 
 describe('plugin', () => {
   it('exposes the c-style-comments parser', () => {
     expect(plugin.parsers).toEqual([parser]);
+  });
+
+  it('re-exports supportedFileTypes from the parser', () => {
+    expect(supportedFileTypes).toBe(parserSupportedFileTypes);
   });
 
   it('is usable to parse content', () => {

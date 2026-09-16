@@ -64,9 +64,13 @@ Every package publishes **four** things, each its own file under `src/` and its 
   `parser: Parser` (`{ name, parse }`), matching the types in `@cspell/cspell-types`. `parse`'s `ParseResult`
   carries `parsedTexts` entries with `range: [start, end]` offsets _relative to the original file content_ —
   getting these right is the core correctness concern of any parser here, since cspell uses them to map
-  spelling issues back to the source. Published as `./parser` → `dist/parser.js`.
-- `src/plugin.ts` — thin wiring: `export const plugin: Plugin = { parsers: [parser] }`. Published as
-  `./plugin` → `dist/plugin.js`. If `parser.ts` emits `tags`, also export
+  spelling issues back to the source. Published as `./parser` → `dist/parser.js`. Also exports
+  `supportedFileTypes: string[]` — the cspell/vscode language IDs (e.g. `'typescript'`, `'javascriptreact'`)
+  the parser is meant to handle, kept alphabetically sorted — as the single source of truth `recommended.ts`
+  builds its `languageSettings` from, so the list only needs updating in one place.
+- `src/plugin.ts` — thin wiring: `export const plugin: Plugin = { parsers: [parser] }`, plus
+  `export { supportedFileTypes } from './parser.js'` so it's reachable from the `./plugin` subpath too.
+  Published as `./plugin` → `dist/plugin.js`. If `parser.ts` emits `tags`, also export
   `function customizePlugin(validate: ValidationTags): Plugin` — a thin wrapper around
   `@cspell/parser-utils`'s `customizePlugin(plugin, validate)` (see below) bound to this package's own
   `plugin`, so a consumer can filter which tagged segments get spell checked without needing a cspell
@@ -77,7 +81,7 @@ Every package publishes **four** things, each its own file under `src/` and its 
   still has to add their own `languageSettings`.
 - `src/recommended.ts` — a batteries-included alternative, published as `./recommended` →
   `dist/recommended.js`. Exports a default `AdvancedCSpellSettings` with `plugins: [plugin]` **and**
-  `languageSettings` mapping the relevant language IDs to the parser by name, so a consumer only has to
+  `languageSettings` mapping `supportedFileTypes.join(',')` to the parser by name, so a consumer only has to
   `"import": ["@cspell/parser-x/recommended"]` and nothing else.
 
 Every top-level `src/*.ts` file needs a matching entry in **both** `tsdown.config.ts`'s `entry` array and
@@ -169,6 +173,10 @@ one-line description of what each one means. This is reference material for usin
 implementation detail to omit: it's what a consumer needs to write a cspell `validate`/`ValidationTags`
 setting that filters by tag. Keep it to a plain two-column `Tag` / `Meaning` table — no discussion of how the
 parser computes or assigns the tags.
+
+`README.md` must also include a "Supported file types" section listing every language ID in
+`supportedFileTypes` (a single-column table is enough) — this is what a consumer checks before deciding
+whether `recommended` already covers their file types or they need to wire `languageSettings` themselves.
 
 The same "if the parser emits `tags`" condition also means `plugin.ts` exports `customizePlugin` (see
 "Package shape" above), and `README.md` must show it: a short "Filtering by tag" (or similarly named)

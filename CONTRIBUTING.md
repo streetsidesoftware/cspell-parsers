@@ -68,21 +68,25 @@ lint-ci`/`pnpm test` pass, since it auto-fixes what it can rather than just repo
    note on `@cspell/parser-utils`).
 3. Implement the parser as four files under `src/`, each with a matching `package.json` `exports` subpath
    and `tsdown.config.ts` entry (see `CLAUDE.md`'s "Package shape" for why both matter):
-   - `parser.ts` — `parse(content, filename): ParseResult` and `export const parser: Parser`. This is where
-     all the real logic lives. If segments carry `tags`, use dot-separated hierarchical tag names as the
-     `ParsedTags` keys (e.g. `comment.block.doc`), each with a `true` value, and include every ancestor
-     alongside the most specific tag (`comment.block.doc` implies also emitting `comment` and
-     `comment.block`) so cspell's `validate` setting can filter at any level of specificity — see
-     `packages/parser-typescript/CONTRIBUTING.md`'s "Tags" section for the full convention.
-   - `plugin.ts` — `export const plugin: Plugin = { parsers: [parser] }`. If `parser.ts` emits `tags`, also
-     export `function customizePlugin(validate: ValidationTags): Plugin`, a thin wrapper around
+   - `parser.ts` — `parse(content, filename): ParseResult`, `export const parser: Parser`, and
+     `export const supportedFileTypes: string[]` (the cspell/vscode language IDs the parser handles, e.g.
+     `'typescript'`, `'javascriptreact'`, kept alphabetically sorted) — the single source of truth
+     `recommended.ts` builds its `languageSettings` from. This is where all the real logic lives. If segments
+     carry `tags`, use dot-separated hierarchical tag names as the `ParsedTags` keys (e.g.
+     `comment.block.doc`), each with a `true` value, and include every ancestor alongside the most specific
+     tag (`comment.block.doc` implies also emitting `comment` and `comment.block`) so cspell's `validate`
+     setting can filter at any level of specificity — see `packages/parser-typescript/CONTRIBUTING.md`'s
+     "Tags" section for the full convention.
+   - `plugin.ts` — `export const plugin: Plugin = { parsers: [parser] }` plus
+     `export { supportedFileTypes } from './parser.js'`. If `parser.ts` emits `tags`, also export
+     `function customizePlugin(validate: ValidationTags): Plugin`, a thin wrapper around
      `@cspell/parser-utils`'s `customizePlugin(plugin, validate)` bound to this package's own `plugin` — see
      `packages/parser-typescript/src/plugin.ts` for the pattern to copy. This is what lets a consumer filter
      which tagged segments get spell checked without needing a cspell version that already applies
      `validate` itself.
    - `index.ts` — default export: an `AdvancedCSpellSettings` with just `plugins: [plugin]`.
    - `recommended.ts` — default export: an `AdvancedCSpellSettings` with `plugins: [plugin]` **and**
-     `languageSettings` mapping the relevant language IDs to the parser by name, so it works standalone.
+     `languageSettings` mapping `supportedFileTypes.join(',')` to the parser by name, so it works standalone.
 4. Write tests: `parser.test.ts` for real parsing behavior — put realistic input in `fixtures/` (excluded
    from `tsc`/ESLint/Prettier, since a fixture's exact bytes are often what's being asserted on) rather than
    inline strings — plus thin `plugin.test.ts` / `index.test.ts` / `recommended.test.ts` that just check each
@@ -100,11 +104,12 @@ lint-ci`/`pnpm test` pass, since it auto-fixes what it can rather than just repo
    the filter, the way `packages/parser-typescript/samples/customize` does — see its `cspell.config.mts` and
    `example.ts` for the pattern to copy.
 6. Write `README.md` for someone **using** the plugin, not reading its source — lead with how to add it to a
-   cspell config; keep internals secondary. If `parser.ts` emits `tags`, include a table listing every tag
-   it can emit (including implied ancestor tags, e.g. `comment` alongside `comment.block.doc`) and what each
-   one means — see `CLAUDE.md`'s "`README.md`" note for why this belongs in the README rather than being
-   omitted with the rest of the internals. Also add a short "Filtering by tag" section showing
-   `customizePlugin` in use, since it's how a consumer actually applies that tags table — see
+   cspell config; keep internals secondary. Include a "Supported file types" section listing every language
+   ID in `supportedFileTypes`. If `parser.ts` emits `tags`, also include a table listing every tag it can
+   emit (including implied ancestor tags, e.g. `comment` alongside `comment.block.doc`) and what each one
+   means — see `CLAUDE.md`'s "`README.md`" note for why these belong in the README rather than being omitted
+   with the rest of the internals. Also add a short "Filtering by tag" section showing `customizePlugin` in
+   use, since it's how a consumer actually applies that tags table — see
    `packages/parser-typescript/README.md`'s "Filtering by tag" section for the pattern to copy, and note
    there that it needs a JS/TS cspell config (`.mjs`/`.ts`/`.cjs`), not `.json`/`.jsonc`/`.yaml`.
 7. Run `pnpm install` from the repo root to link the new package(s) into the workspace.
