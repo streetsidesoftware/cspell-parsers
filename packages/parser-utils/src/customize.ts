@@ -17,13 +17,14 @@ export interface TagFilterOptions {
    * The default filter setting for any tag not otherwise matched.
    * @default true
    */
-  '*'?: boolean;
+  '*'?: boolean | undefined;
+
   /**
    * Filter setting for the specific tag or wildcard pattern.
    *
    * If not specified, the default (`'*'`) will be used.
    */
-  [tag: TagPattern]: boolean;
+  [tag: TagPattern]: boolean | undefined;
 }
 
 /**
@@ -50,7 +51,7 @@ export interface CustomizeParserOptions {
  * `options.tags` is compiled into a {@link TagsFilter} once here - not per parsed segment - and
  * that one compiled filter is shared by every parser in `plugin`.
  *
- * Each package's `plugin.ts` wraps this in a `customizePlugin(tags)` bound to its own `plugin`, so
+ * Each package's `plugin.ts` wraps this in a `customizePlugin(options)` bound to its own `plugin`, so
  * a consumer never has to pass the plugin in themselves.
  */
 export function customizePlugin(plugin: Plugin, options: CustomizeParserOptions): Plugin {
@@ -143,7 +144,8 @@ export function compileTagFilter(options: TagFilterOptions): TagsFilter {
   const general: GeneralRule[] = [];
 
   for (const [pattern, value] of Object.entries(options)) {
-    if (pattern === '*') continue;
+    // An explicit `undefined` (vs. the key being absent) means "no opinion here" - same as unset.
+    if (pattern === '*' || value === undefined) continue;
     const starIndex = pattern.indexOf('*');
     if (starIndex === -1) {
       exact.set(pattern, value);

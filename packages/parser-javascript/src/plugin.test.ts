@@ -22,7 +22,7 @@ describe('plugin', () => {
 });
 
 describe('customizePlugin', () => {
-  it('wires validate filtering into the javascript parser', () => {
+  it('wires tag filtering into the javascript parser', () => {
     const customized = customizePlugin({ tags: { '*': false, comment: true } });
     const [customizedParser] = (customized.parsers ?? []) as Parser[];
     const result = customizedParser?.parse("// a comment\nconst greeting = 'hello';\n", 'example.js');

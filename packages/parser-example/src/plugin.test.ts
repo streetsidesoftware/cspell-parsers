@@ -22,7 +22,7 @@ describe('plugin', () => {
 });
 
 describe('customizePlugin', () => {
-  it('wires validate filtering into the c-style-comments parser', () => {
+  it('wires tag filtering into the c-style-comments parser', () => {
     const customized = customizePlugin({ tags: { '*': true, comment: false } });
     const [customizedParser] = (customized.parsers ?? []) as Parser[];
     const result = customizedParser?.parse('// hello\n', 'example.c');

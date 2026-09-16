@@ -87,6 +87,14 @@ describe('compileTagFilter', () => {
     expect(compileTagFilter({ '*': false })(undefined)).toBe(false);
   });
 
+  it('treats an explicit `undefined` value the same as the key being absent', () => {
+    expect(compileTagFilter({ '*': false, comment: undefined })(docComment)).toBe(false);
+    expect(compileTagFilter({ '*': false, comment: true, 'comment.block': undefined })(docComment)).toBe(true);
+    expect(compileTagFilter({ '*': false, 'comment*': undefined })(docComment)).toBe(false);
+    expect(compileTagFilter({ '*': false, '*.doc': undefined })(docComment)).toBe(false);
+    expect(compileTagFilter({ '*': true, '*.doc': undefined })(docComment)).toBe(true);
+  });
+
   describe('exact-only patterns (no "*" anywhere but the default key)', () => {
     const isIncluded = compileTagFilter({ '*': false, 'comment.block.doc': true, comment: true });
 
