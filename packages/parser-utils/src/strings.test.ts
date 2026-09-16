@@ -74,6 +74,10 @@ describe('decodeStringParts', () => {
     expect(decodeStringParts([esc('\\q')])).toEqual({ text: 'q', map: [2, 1] });
   });
 
+  it('falls back to dropping just the backslash for a \\u{...} code point past U+10FFFF', () => {
+    expect(decodeStringParts([esc('\\u{110000}')])).toEqual({ text: 'u{110000}', map: [10, 9] });
+  });
+
   it('leaves a legacy multi-digit octal escape as its literal digits, not its numeric value', () => {
     expect(decodeStringParts([esc('\\12')])).toEqual({ text: '12', map: [3, 2] });
   });

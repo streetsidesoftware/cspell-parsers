@@ -62,22 +62,31 @@ function decodeEscapeSequence(raw: string): string {
     case '`':
     case '$':
       return c;
-    case 'x': {
-      const hex = raw.slice(2);
-      return /^[0-9a-fA-F]{2}$/.test(hex) ? String.fromCharCode(parseInt(hex, 16)) : raw.slice(1);
-    }
-    case 'u': {
-      const hex = raw[2] === '{' ? raw.slice(3, -1) : raw.slice(2);
-      return /^[0-9a-fA-F]+$/.test(hex) ? String.fromCodePoint(parseInt(hex, 16)) : raw.slice(1);
-    }
     case '\n':
     case '\r':
     case '\u2028':
     case '\u2029':
       return ''; // line continuation - splices the escaped line break out of the string entirely
-    default:
-      // Everything else (an unrecognized letter, or a legacy octal digit like "\1"): the JS/TS spec just
-      // drops the backslash and keeps the character(s) after it as-is.
-      return raw.slice(1);
+  }
+
+  try {
+    switch (c) {
+      case 'x': {
+        const hex = raw.slice(2);
+        return /^[0-9a-fA-F]{2}$/.test(hex) ? String.fromCharCode(parseInt(hex, 16)) : raw.slice(1);
+      }
+      case 'u': {
+        const hex = raw[2] === '{' ? raw.slice(3, -1) : raw.slice(2);
+        return /^[0-9a-fA-F]+$/.test(hex) ? String.fromCodePoint(parseInt(hex, 16)) : raw.slice(1);
+      }
+      default:
+        // Everything else (an unrecognized letter, or a legacy octal digit like "\1"): the JS/TS spec just
+        // drops the backslash and keeps the character(s) after it as-is.
+        return raw.slice(1);
+    }
+  } catch {
+    // e.g. \u{110000} - syntactically valid but out of Unicode's range, so String.fromCodePoint throws.
+    // Fall back to the same "drop just the backslash" behavior as any other unrecognized escape.
+    return raw.slice(1);
   }
 }
