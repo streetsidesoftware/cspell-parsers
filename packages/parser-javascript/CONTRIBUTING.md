@@ -25,7 +25,7 @@ The only things this package adds are:
 Because `parse` itself is untouched, this package's `parser.ts`/`plugin.ts`/`index.ts`/`recommended.ts` still
 follow the same four-file shape and `exports` map as every other package (see root `CLAUDE.md`'s "Package
 shape"), and `customizePlugin` still works, since it's generic over any `Plugin`/`Parser` (see
-`@cspell/parser-utils`).
+`@internal/utils`).
 
 `@cspell/parser-typescript` is listed as a real `dependencies` entry (not bundled) in `package.json`, and
 `tsdown.config.ts` doesn't need an `onlyBundle` entry for it: tsdown automatically treats anything in

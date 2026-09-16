@@ -62,10 +62,10 @@ lint-ci`/`pnpm test` pass, since it auto-fixes what it can rather than just repo
    shape" note). Keep `@cspell/cspell-types` a `devDependencies` entry, not `dependencies` — tsdown bundles
    its types into `dist/*.d.ts`, so consumers don't need it installed (see `CLAUDE.md`'s "Package shape"
    note on `deps.onlyBundle`). If `parser.ts` will emit `tags` (see step 3), also add
-   `"@cspell/parser-utils": "workspace:*"` as a `devDependencies` entry — it's a private, unpublished
+   `"@internal/utils": "workspace:*"` as a `devDependencies` entry — it's a private, unpublished
    workspace package, and tsdown bundles workspace dependencies into `dist/*.js`/`dist/*.d.ts`
    automatically, without needing a `deps.onlyBundle` entry of its own (see `CLAUDE.md`'s "Package shape"
-   note on `@cspell/parser-utils`).
+   note on `@internal/utils`).
 3. Implement the parser as four files under `src/`, each with a matching `package.json` `exports` subpath
    and `tsdown.config.ts` entry (see `CLAUDE.md`'s "Package shape" for why both matter):
    - `parser.ts` — `parse(content, filename): ParseResult`, `export const parser: Parser`, and
@@ -80,7 +80,7 @@ lint-ci`/`pnpm test` pass, since it auto-fixes what it can rather than just repo
    - `plugin.ts` — `export const plugin: Plugin = { parsers: [parser] }` plus
      `export { supportedFileTypes } from './parser.js'`. If `parser.ts` emits `tags`, also export
      `function customizePlugin(validate: ValidationTags): Plugin`, a thin wrapper around
-     `@cspell/parser-utils`'s `customizePlugin(plugin, validate)` bound to this package's own `plugin` — see
+     `@internal/utils`'s `customizePlugin(plugin, validate)` bound to this package's own `plugin` — see
      `packages/parser-typescript/src/plugin.ts` for the pattern to copy. This is what lets a consumer filter
      which tagged segments get spell checked without needing a cspell version that already applies
      `validate` itself.

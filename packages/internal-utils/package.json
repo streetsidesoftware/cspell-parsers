@@ -1,5 +1,5 @@
 {
-  "name": "@cspell/parser-utils",
+  "name": "@internal/utils",
   "version": "1.0.0",
   "description": "Internal helpers shared by cspell-parsers packages. Not published.",
   "private": true,

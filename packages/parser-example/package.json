@@ -48,6 +48,6 @@
   },
   "devDependencies": {
     "@cspell/cspell-types": "catalog:",
-    "@cspell/parser-utils": "workspace:*"
+    "@internal/utils": "workspace:*"
   }
 }

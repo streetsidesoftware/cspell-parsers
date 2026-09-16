@@ -1,8 +1,8 @@
 import TreeSitterParser from 'tree-sitter';
 import TypeScriptLanguages from 'tree-sitter-typescript';
 import type { ParsedTags, ParsedText, Parser, ParseResult } from '@cspell/cspell-types/Parser';
-import { decodeStringParts, stripCommentMarkers } from '@cspell/parser-utils';
-import type { StringPart } from '@cspell/parser-utils';
+import { decodeStringParts, stripCommentMarkers } from '@internal/utils';
+import type { StringPart } from '@internal/utils';
 
 type SyntaxNode = TreeSitterParser.SyntaxNode;
 
