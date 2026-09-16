@@ -42,6 +42,7 @@ function _getTreeSitter(): TreeSitterParser {
 
 function getTreeSitter(lang: TSLanguage): TreeSitterParser {
   const parser = _getTreeSitter();
+  if (parser.getLanguage() === lang) return parser;
   parser.setLanguage(lang);
   return parser;
 }
