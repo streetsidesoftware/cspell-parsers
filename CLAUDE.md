@@ -31,6 +31,13 @@ CI runs `build` + `typecheck` + `test` in `.github/workflows/test.yml` and `lint
 Once you're done making changes, run `pnpm lint` from the repo root — it auto-fixes what it can (ESLint +
 `prettier --write`) rather than just reporting, so run it before a final `pnpm run lint-ci`/`pnpm test` pass.
 
+## Code style
+
+Use explicit escape sequences (e.g. `\u2028`, `\u2029`) rather than literal invisible/non-printing
+characters in source code — including inside string/regex literals and `switch` `case` labels. A literal
+invisible character is nearly indistinguishable from its neighbors in a diff or review, and editors/formatters
+can silently mangle or normalize it; an explicit escape keeps the intent visible.
+
 ## Architecture
 
 This is a pnpm workspace monorepo (`packages/*`) for cspell parser packages — each package under `packages/`
