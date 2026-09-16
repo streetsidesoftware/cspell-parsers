@@ -23,7 +23,7 @@ describe('plugin', () => {
 
 describe('customizePlugin', () => {
   it('wires validate filtering into the typescript parser', () => {
-    const customized = customizePlugin({ '*': false, comment: true });
+    const customized = customizePlugin({ tags: { '*': false, comment: true } });
     const [customizedParser] = (customized.parsers ?? []) as Parser[];
     const result = customizedParser?.parse("// a comment\nconst greeting = 'hello';\n", 'example.ts');
     const parsedTexts = [...(result?.parsedTexts ?? [])];

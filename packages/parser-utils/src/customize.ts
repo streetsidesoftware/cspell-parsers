@@ -1,65 +1,99 @@
-import type { DocumentParser, ParsedTags, ParsedText, Parser, Plugin, ValidationTags } from '@cspell/cspell-types';
+import type { DocumentParser, ParsedTags, ParsedText, Parser, Plugin } from '@cspell/cspell-types';
 
 /**
- * Decides whether a `ParsedText` should be validated (spell checked), given its `tags`. Returned by
- * {@link compileValidationTags}, which does all the pattern-matching setup once so this function itself
+ * A tag name, or a `*`-wildcard pattern matching one (see {@link TagFilterOptions}).
+ */
+export type TagPattern = string;
+
+/**
+ * Options for {@link customizePlugin}/{@link customizeParser}: which tagged segments to keep.
+ *
+ * Deliberately declared here rather than imported from `@cspell/cspell-types`'s `ValidationTags` - the
+ * two happen to share a shape today, but that's incidental. `customizePlugin`'s options are a property of
+ * its own filtering behavior and should be free to diverge from it.
+ */
+export interface TagFilterOptions {
+  /**
+   * The default filter setting for any tag not otherwise matched.
+   * @default true
+   */
+  '*'?: boolean;
+  /**
+   * Filter setting for the specific tag or wildcard pattern.
+   *
+   * If not specified, the default (`'*'`) will be used.
+   */
+  [tag: TagPattern]: boolean;
+}
+
+/**
+ * Decides whether a `ParsedText` should be kept (spell checked), given its `tags`. Returned by
+ * {@link compileTagFilter}, which does all the pattern-matching setup once so this function itself
  * is cheap to call per segment.
  */
-export type TagsValidator = (tags: ParsedTags | undefined) => boolean;
+export type TagsFilter = (tags: ParsedTags | undefined) => boolean;
 
 /**
- * Returns a copy of `plugin` whose parsers filter their `parsedTexts` output through `validate`
- * (the same shape as `CSpellSettingsValidation.validate`) before emitting them, rather than relying on
- * the host application to apply `validate` itself. This lets a plugin consumer opt a segment out of
- * spell checking by tag even against a cspell version that doesn't yet honor `validate`.
+ * Options for {@link customizePlugin}/{@link customizeParser}, as a struct rather than a bare
+ * `TagFilterOptions` so either function can grow more options later without a breaking signature change.
+ */
+export interface CustomizeParserOptions {
+  tags: TagFilterOptions;
+}
+
+/**
+ * Returns a copy of `plugin` whose parsers filter their `parsedTexts` output through `options.tags`
+ * before emitting them, rather than relying on the host application to filter by tag itself. This lets a
+ * plugin consumer opt a segment out of spell checking by tag without depending on cspell to support that
+ * filtering natively.
  *
- * `validate` is compiled into a {@link TagsValidator} once here - not per parsed segment - and that one
- * compiled validator is shared by every parser in `plugin`.
+ * `options.tags` is compiled into a {@link TagsFilter} once here - not per parsed segment - and
+ * that one compiled filter is shared by every parser in `plugin`.
  *
- * Each package's `plugin.ts` wraps this in a `customizePlugin(validate)` bound to its own `plugin`, so
+ * Each package's `plugin.ts` wraps this in a `customizePlugin(tags)` bound to its own `plugin`, so
  * a consumer never has to pass the plugin in themselves.
  */
-export function customizePlugin(plugin: Plugin, validate: ValidationTags): Plugin {
+export function customizePlugin(plugin: Plugin, options: CustomizeParserOptions): Plugin {
   if (!plugin.parsers) return plugin;
-  const isValidated = compileValidationTags(validate);
+  const isIncluded = compileTagFilter(options.tags);
   return {
     ...plugin,
-    parsers: plugin.parsers.map((entry) => customizeParserEntry(entry, isValidated)),
+    parsers: plugin.parsers.map((entry) => customizeParserEntry(entry, isIncluded)),
   };
 }
 
-function customizeParserEntry(entry: DocumentParser | Parser, isValidated: TagsValidator): DocumentParser | Parser {
+function customizeParserEntry(entry: DocumentParser | Parser, isIncluded: TagsFilter): DocumentParser | Parser {
   // DocumentParser (parseDocument-based) isn't used by any parser in this repo today; pass it through
   // unmodified rather than guessing at how to filter it.
   if (!isParser(entry)) return entry;
-  return customizeParserWithValidator(entry, isValidated);
+  return customizeParserWithFilter(entry, isIncluded);
 }
 
 /**
- * Wraps a single `Parser` so its `parse()` output only includes `parsedTexts` selected by `validate`.
- * `validate` is compiled into a {@link TagsValidator} once here, before the parser ever runs - see
- * {@link compileValidationTags}.
+ * Wraps a single `Parser` so its `parse()` output only includes `parsedTexts` selected by
+ * `options.tags`. `options.tags` is compiled into a {@link TagsFilter} once here, before the
+ * parser ever runs - see {@link compileTagFilter}.
  */
-export function customizeParser(parser: Parser, validate: ValidationTags): Parser {
-  return customizeParserWithValidator(parser, compileValidationTags(validate));
+export function customizeParser(parser: Parser, options: CustomizeParserOptions): Parser {
+  return customizeParserWithFilter(parser, compileTagFilter(options.tags));
 }
 
-function customizeParserWithValidator(parser: Parser, isValidated: TagsValidator): Parser {
+function customizeParserWithFilter(parser: Parser, isIncluded: TagsFilter): Parser {
   return {
     name: parser.name,
     parse(content, filename) {
       const result = parser.parse(content, filename);
       return {
         ...result,
-        parsedTexts: filterParsedTexts(result.parsedTexts, isValidated),
+        parsedTexts: filterParsedTexts(result.parsedTexts, isIncluded),
       };
     },
   };
 }
 
-function* filterParsedTexts(parsedTexts: Iterable<ParsedText>, isValidated: TagsValidator): Iterable<ParsedText> {
+function* filterParsedTexts(parsedTexts: Iterable<ParsedText>, isIncluded: TagsFilter): Iterable<ParsedText> {
   for (const parsedText of parsedTexts) {
-    if (isValidated(parsedText.tags)) yield parsedText;
+    if (isIncluded(parsedText.tags)) yield parsedText;
   }
 }
 
@@ -82,12 +116,12 @@ interface GeneralRule extends Rule {
 }
 
 /**
- * Compiles `validate` (the same shape as `CSpellSettingsValidation.validate`) into a {@link TagsValidator},
- * doing all the pattern classification, sorting, and regexp compilation up front - once per `validate`
+ * Compiles `options` ({@link TagFilterOptions}) into a {@link TagsFilter},
+ * doing all the pattern classification, sorting, and regexp compilation up front - once per `options`
  * object - so that calling the returned function per `ParsedText` (potentially thousands of times per
  * file) is as cheap as possible.
  *
- * Every non-`'*'` key in `validate` is a {@link TagPattern} and falls into one of three buckets:
+ * Every non-`'*'` key in `options` is a {@link TagPattern} and falls into one of three buckets:
  * - **exact** - no `*` at all (e.g. `comment.block.doc`). Matched with a plain `Map` lookup.
  * - **prefix** - exactly one `*`, and it's the last character (e.g. `comment.block.*`, `comment*`).
  *   Matched with `tag.startsWith(prefix)`, sorted longest-prefix-first once so matching can stop at the
@@ -101,14 +135,14 @@ interface GeneralRule extends Rule {
  * `{ "*": false, "comment.block.*": true }` gets a hashmap-or-startsWith fast path, not a search through
  * regexps for every segment of every file.
  */
-export function compileValidationTags(validate: ValidationTags): TagsValidator {
-  const defaultValue = validate['*'] ?? true;
+export function compileTagFilter(options: TagFilterOptions): TagsFilter {
+  const defaultValue = options['*'] ?? true;
 
   const exact = new Map<string, boolean>();
   const prefixes: PrefixRule[] = [];
   const general: GeneralRule[] = [];
 
-  for (const [pattern, value] of Object.entries(validate)) {
+  for (const [pattern, value] of Object.entries(options)) {
     if (pattern === '*') continue;
     const starIndex = pattern.indexOf('*');
     if (starIndex === -1) {
@@ -204,7 +238,7 @@ function matchExact(best: Best, tag: string, exact: ReadonlyMap<string, boolean>
   best.specificity = tag.length;
 }
 
-/** `prefixes` must already be sorted longest-first (see `compileValidationTags`). */
+/** `prefixes` must already be sorted longest-first (see `compileTagFilter`). */
 function matchPrefixes(best: Best, tag: string, prefixes: readonly PrefixRule[]): void {
   for (const rule of prefixes) {
     // Every later entry is <= this one's specificity (sorted desc), so once one can no longer beat the

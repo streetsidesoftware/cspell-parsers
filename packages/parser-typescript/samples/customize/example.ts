@@ -1,5 +1,5 @@
-// This config only validates the "comment" tag (see cspell.config.mts: customizePlugin({ '*': false,
-// comment: true })), so identifiers and string content below are never spell checked - only comments are.
+// This config only validates the "comment" tag (see cspell.config.mts: customizePlugin({ tags: { '*': false,
+// comment: true } })), so identifiers and string content below are never spell checked - only comments are.
 
 /*
  Has delibbberate typos in this comment.
