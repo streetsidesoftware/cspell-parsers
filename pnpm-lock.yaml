@@ -221,14 +221,20 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0(@types/node@24.13.4)(vite@8.3.0(@types/node@24.13.4)(yaml@2.9.1))
 
+  packages/internal-utils:
+    devDependencies:
+      '@cspell/cspell-types':
+        specifier: 'catalog:'
+        version: 10.3.3
+
   packages/parser-example:
     devDependencies:
       '@cspell/cspell-types':
         specifier: 'catalog:'
         version: 10.3.3
-      '@cspell/parser-utils':
+      '@internal/utils':
         specifier: workspace:*
-        version: link:../parser-utils
+        version: link:../internal-utils
 
   packages/parser-example/samples:
     devDependencies:
@@ -245,9 +251,9 @@ importers:
       '@cspell/cspell-types':
         specifier: 'catalog:'
         version: 10.3.3
-      '@cspell/parser-utils':
+      '@internal/utils':
         specifier: workspace:*
-        version: link:../parser-utils
+        version: link:../internal-utils
 
   packages/parser-javascript/samples:
     devDependencies:
@@ -267,21 +273,15 @@ importers:
       '@cspell/cspell-types':
         specifier: 'catalog:'
         version: 10.3.3
-      '@cspell/parser-utils':
+      '@internal/utils':
         specifier: workspace:*
-        version: link:../parser-utils
+        version: link:../internal-utils
 
   packages/parser-typescript/samples:
     devDependencies:
       '@cspell/parser-typescript':
         specifier: workspace:*
         version: link:..
-
-  packages/parser-utils:
-    devDependencies:
-      '@cspell/cspell-types':
-        specifier: 'catalog:'
-        version: 10.3.3
 
 packages:
 

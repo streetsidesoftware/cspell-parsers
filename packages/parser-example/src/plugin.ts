@@ -1,6 +1,6 @@
 import type { Plugin } from '@cspell/cspell-types';
-import type { TagFilterOptions } from '@cspell/parser-utils';
-import { customizePlugin as customizePluginWithTags } from '@cspell/parser-utils';
+import type { TagFilterOptions } from '@internal/utils';
+import { customizePlugin as customizePluginWithTags } from '@internal/utils';
 
 import { parser } from './parser.js';
 

@@ -81,7 +81,7 @@ Every package publishes **four** things, each its own file under `src/` and its 
   `CustomizePluginOptions` interface (`{ tags: TagFilterOptions }` — a struct rather than a bare
   `TagFilterOptions` so it can grow more options later without a breaking signature change) and
   `function customizePlugin(options: CustomizePluginOptions): Plugin` — a thin wrapper around
-  `@cspell/parser-utils`'s `customizePlugin(plugin, options)` (see below) bound to this package's own
+  `@internal/utils`'s `customizePlugin(plugin, options)` (see below) bound to this package's own
   `plugin`, so a consumer can filter which tagged segments get spell checked without needing cspell itself
   to support that filtering. See `packages/parser-typescript/src/plugin.ts` for the pattern.
 - `src/index.ts` — the package's main entry (`.` / `main`). Exports a default settings object with just
@@ -122,11 +122,11 @@ Two more directories, both at the package root (not under `src/`):
   `cspell .` passes cleanly over the whole package — `dist` is ignored because it's generated build output,
   and (see below) now contains the bundled third-party `@cspell/cspell-types` declarations verbatim, typos
   and all.
-- `@cspell/parser-utils` (`packages/parser-utils`) is a private, unpublished workspace package holding logic
+- `@internal/utils` (`packages/internal-utils`) is a private, unpublished workspace package holding logic
   shared across parser packages — currently the tag-matching engine behind `customizePlugin`
   (`compileTagFilter` turns a `TagFilterOptions` object into a fast `TagsFilter` closure once, up front,
   rather than re-matching patterns per parsed segment). A package that uses it lists
-  `"@cspell/parser-utils": "workspace:*"` as a `devDependencies` entry, same as `@cspell/cspell-types` —
+  `"@internal/utils": "workspace:*"` as a `devDependencies` entry, same as `@cspell/cspell-types` —
   but unlike `@cspell/cspell-types`, it's a workspace package, so tsdown bundles its code and types into
   `dist/*.js`/`dist/*.d.ts` automatically and does **not** need (and warns as unused if given) its own
   `deps.onlyBundle` entry.
@@ -145,7 +145,7 @@ Two more directories, both at the package root (not under `src/`):
   dependencies are shared across packages: tsdown's `.d.ts` bundler inlines a workspace dependency's _entire_
   compiled declaration file wherever even one type is imported from it, with no tree-shaking and no dedup
   against a differently-rooted import of the same underlying types — so prefer duplicating a small type
-  locally per package over centralizing it in `@cspell/parser-utils`, and be conservative about adding any
+  locally per package over centralizing it in `@internal/utils`, and be conservative about adding any
   new production `dependencies` entry.
 - Build output is plain `dist/*.js` + `dist/*.d.ts` (ESM only, one pair per entry). This requires
   `fixedExtension: false` in `tsdown.config.ts` — tsdown's default (`fixedExtension: true` on the default

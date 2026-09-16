@@ -12,7 +12,7 @@ export default defineConfig({
   // don't need it as a production dependency. onlyBundle documents that intentionally (rather than
   // tsdown's default warning) and fails the build if some other, unintended dependency ends up bundled.
   // @cspell/parser-typescript is a production dependency (this package is a thin wrapper around it), so
-  // tsdown externalizes it automatically - it's never bundled. (@cspell/parser-utils, a private/unpublished
+  // tsdown externalizes it automatically - it's never bundled. (@internal/utils, a private/unpublished
   // workspace devDependency used by plugin.ts, is bundled automatically as a workspace package and doesn't
   // need - and triggers an "unused" warning from - an onlyBundle entry of its own.)
   deps: {
