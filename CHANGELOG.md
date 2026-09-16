@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.1](https://github.com/streetsidesoftware/cspell-parsers/compare/cspell-parsers@1.1.0...cspell-parsers@1.1.1) (2026-09-16)
+
+
+### Updates and Bug Fixes
+
+* Add customize docs ([#35](https://github.com/streetsidesoftware/cspell-parsers/issues/35)) ([670662e](https://github.com/streetsidesoftware/cspell-parsers/commit/670662e2d26bfd50c42d06a22ed3f578058234ac))
+* Add keywords to packages ([#39](https://github.com/streetsidesoftware/cspell-parsers/issues/39)) ([6605844](https://github.com/streetsidesoftware/cspell-parsers/commit/6605844d3026a09dbdb7126fcd6490be0045d6c8))
+* Add list of supported file types ([#37](https://github.com/streetsidesoftware/cspell-parsers/issues/37)) ([fdeeea5](https://github.com/streetsidesoftware/cspell-parsers/commit/fdeeea55026a273db39adbf09d50054c715a2a4f))
+* Add package parser-javascript ([#38](https://github.com/streetsidesoftware/cspell-parsers/issues/38)) ([b86344a](https://github.com/streetsidesoftware/cspell-parsers/commit/b86344a4366d3ccd4dbd2666f70f5a357c21e37b))
+* take control over the customization options ([#42](https://github.com/streetsidesoftware/cspell-parsers/issues/42)) ([5f18527](https://github.com/streetsidesoftware/cspell-parsers/commit/5f18527070e808d0e784dbea20b2309a0665bd2c))
+* Transform comments ([#40](https://github.com/streetsidesoftware/cspell-parsers/issues/40)) ([5294d26](https://github.com/streetsidesoftware/cspell-parsers/commit/5294d264bac8d1b744536e0ed9b392787e2fbccb))
+* Transform strings ([#41](https://github.com/streetsidesoftware/cspell-parsers/issues/41)) ([c4f38a5](https://github.com/streetsidesoftware/cspell-parsers/commit/c4f38a56cc3b6e7b0362ba1fdc1297f2e52e16dd))
+
 ## [1.1.0](https://github.com/streetsidesoftware/cspell-parsers/compare/cspell-parsers@1.0.3...cspell-parsers@1.1.0) (2026-09-15)
 
 
