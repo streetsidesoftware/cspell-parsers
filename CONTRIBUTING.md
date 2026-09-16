@@ -61,7 +61,11 @@ lint-ci`/`pnpm test` pass, since it auto-fixes what it can rather than just repo
    ship a correct, provenance-verifiable package without leaking source maps (see `CLAUDE.md`'s "Package
    shape" note). Keep `@cspell/cspell-types` a `devDependencies` entry, not `dependencies` — tsdown bundles
    its types into `dist/*.d.ts`, so consumers don't need it installed (see `CLAUDE.md`'s "Package shape"
-   note on `deps.onlyBundle`).
+   note on `deps.onlyBundle`). If `parser.ts` will emit `tags` (see step 3), also add
+   `"@cspell/parser-utils": "workspace:*"` as a `devDependencies` entry — it's a private, unpublished
+   workspace package, and tsdown bundles workspace dependencies into `dist/*.js`/`dist/*.d.ts`
+   automatically, without needing a `deps.onlyBundle` entry of its own (see `CLAUDE.md`'s "Package shape"
+   note on `@cspell/parser-utils`).
 3. Implement the parser as four files under `src/`, each with a matching `package.json` `exports` subpath
    and `tsdown.config.ts` entry (see `CLAUDE.md`'s "Package shape" for why both matter):
    - `parser.ts` — `parse(content, filename): ParseResult` and `export const parser: Parser`. This is where
@@ -70,14 +74,20 @@ lint-ci`/`pnpm test` pass, since it auto-fixes what it can rather than just repo
      alongside the most specific tag (`comment.block.doc` implies also emitting `comment` and
      `comment.block`) so cspell's `validate` setting can filter at any level of specificity — see
      `packages/parser-typescript/CONTRIBUTING.md`'s "Tags" section for the full convention.
-   - `plugin.ts` — `export const plugin: Plugin = { parsers: [parser] }`.
+   - `plugin.ts` — `export const plugin: Plugin = { parsers: [parser] }`. If `parser.ts` emits `tags`, also
+     export `function customizePlugin(validate: ValidationTags): Plugin`, a thin wrapper around
+     `@cspell/parser-utils`'s `customizePlugin(plugin, validate)` bound to this package's own `plugin` — see
+     `packages/parser-typescript/src/plugin.ts` for the pattern to copy. This is what lets a consumer filter
+     which tagged segments get spell checked without needing a cspell version that already applies
+     `validate` itself.
    - `index.ts` — default export: an `AdvancedCSpellSettings` with just `plugins: [plugin]`.
    - `recommended.ts` — default export: an `AdvancedCSpellSettings` with `plugins: [plugin]` **and**
      `languageSettings` mapping the relevant language IDs to the parser by name, so it works standalone.
 4. Write tests: `parser.test.ts` for real parsing behavior — put realistic input in `fixtures/` (excluded
    from `tsc`/ESLint/Prettier, since a fixture's exact bytes are often what's being asserted on) rather than
    inline strings — plus thin `plugin.test.ts` / `index.test.ts` / `recommended.test.ts` that just check each
-   file wires the layer below it together.
+   file wires the layer below it together (including, if present, that `customizePlugin` actually filters
+   `parsedTexts` when wired to the real parser — see `packages/parser-typescript/src/plugin.test.ts`).
 5. Add a `samples/` package (copy `packages/parser-typescript/samples`) with one subfolder per usage pattern,
    each holding a real cspell config and real source files it checks — this is what `test:cspell` (`cspell .`)
    exercises end-to-end, alongside `test:vitest`'s unit tests, combined as the package's `test` script. Give
@@ -87,7 +97,10 @@ lint-ci`/`pnpm test` pass, since it auto-fixes what it can rather than just repo
    cspell config; keep internals secondary. If `parser.ts` emits `tags`, include a table listing every tag
    it can emit (including implied ancestor tags, e.g. `comment` alongside `comment.block.doc`) and what each
    one means — see `CLAUDE.md`'s "`README.md`" note for why this belongs in the README rather than being
-   omitted with the rest of the internals.
+   omitted with the rest of the internals. Also add a short "Filtering by tag" section showing
+   `customizePlugin` in use, since it's how a consumer actually applies that tags table — see
+   `packages/parser-typescript/README.md`'s "Filtering by tag" section for the pattern to copy, and note
+   there that it needs a JS/TS cspell config (`.mjs`/`.ts`/`.cjs`), not `.json`/`.jsonc`/`.yaml`.
 7. Run `pnpm install` from the repo root to link the new package(s) into the workspace.
 8. If the new package is publishable to npm (not `private: true`), add it to `release-please-config.json`'s
    `packages` map (`"packages/<your-parser-name>": {}`) and to `.release-please-manifest.json`

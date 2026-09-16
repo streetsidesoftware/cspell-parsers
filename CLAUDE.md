@@ -66,7 +66,12 @@ Every package publishes **four** things, each its own file under `src/` and its 
   getting these right is the core correctness concern of any parser here, since cspell uses them to map
   spelling issues back to the source. Published as `./parser` → `dist/parser.js`.
 - `src/plugin.ts` — thin wiring: `export const plugin: Plugin = { parsers: [parser] }`. Published as
-  `./plugin` → `dist/plugin.js`.
+  `./plugin` → `dist/plugin.js`. If `parser.ts` emits `tags`, also export
+  `function customizePlugin(validate: ValidationTags): Plugin` — a thin wrapper around
+  `@cspell/parser-utils`'s `customizePlugin(plugin, validate)` (see below) bound to this package's own
+  `plugin`, so a consumer can filter which tagged segments get spell checked without needing a cspell
+  version that already applies `validate` itself. See `packages/parser-typescript/src/plugin.ts` for the
+  pattern.
 - `src/index.ts` — the package's main entry (`.` / `main`). Exports a default `AdvancedCSpellSettings` with
   just `plugins: [plugin]` — the parser is registered but not yet selected for any file type, so a consumer
   still has to add their own `languageSettings`.
@@ -102,6 +107,14 @@ Two more directories, both at the package root (not under `src/`):
   `cspell .` passes cleanly over the whole package — `dist` is ignored because it's generated build output,
   and (see below) now contains the bundled third-party `@cspell/cspell-types` declarations verbatim, typos
   and all.
+- `@cspell/parser-utils` (`packages/parser-utils`) is a private, unpublished workspace package holding logic
+  shared across parser packages — currently the tag-matching engine behind `customizePlugin`
+  (`compileValidationTags` turns a `ValidationTags` object into a fast `TagsValidator` closure once, up
+  front, rather than re-matching patterns per parsed segment). A package that uses it lists
+  `"@cspell/parser-utils": "workspace:*"` as a `devDependencies` entry, same as `@cspell/cspell-types` —
+  but unlike `@cspell/cspell-types`, it's a workspace package, so tsdown bundles its code and types into
+  `dist/*.js`/`dist/*.d.ts` automatically and does **not** need (and warns as unused if given) its own
+  `deps.onlyBundle` entry.
 - `@cspell/cspell-types` is a `devDependencies` entry (not `dependencies`) on each parser package. tsdown
   bundles the types of anything that isn't a production/peer/optional dependency straight into the emitted
   `dist/*.d.ts` (this is the same mechanism that decides what gets bundled into `dist/*.js` — see
@@ -156,6 +169,15 @@ one-line description of what each one means. This is reference material for usin
 implementation detail to omit: it's what a consumer needs to write a cspell `validate`/`ValidationTags`
 setting that filters by tag. Keep it to a plain two-column `Tag` / `Meaning` table — no discussion of how the
 parser computes or assigns the tags.
+
+The same "if the parser emits `tags`" condition also means `plugin.ts` exports `customizePlugin` (see
+"Package shape" above), and `README.md` must show it: a short "Filtering by tag" (or similarly named)
+section, after the plain `plugin`/`languageSettings` wiring example, with a runnable snippet calling
+`customizePlugin({ ... })` and pointing at the tags table for what keys are available. Call out that
+`customizePlugin` returns a live `Plugin` object, not a module-specifier string, so it only works from a
+JS/TS cspell config (`cspell.config.mjs`/`.ts`/`.cjs`) — not `.json`/`.jsonc`/`.yaml`, where `plugins` can
+only be a list of strings cspell resolves itself. See `packages/parser-typescript/README.md`'s "Filtering by
+tag" section for the pattern to copy.
 
 When adding or editing a `.md` file that contains deliberate spelling errors (e.g. demonstrating what a
 parser flags or ignores), add a `<!-- cspell:ignore ... -->` comment at the end of the file listing those
