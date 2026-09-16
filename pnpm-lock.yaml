@@ -236,6 +236,25 @@ importers:
         specifier: workspace:*
         version: link:..
 
+  packages/parser-javascript:
+    dependencies:
+      '@cspell/parser-typescript':
+        specifier: workspace:^
+        version: link:../parser-typescript
+    devDependencies:
+      '@cspell/cspell-types':
+        specifier: 'catalog:'
+        version: 10.3.2
+      '@cspell/parser-utils':
+        specifier: workspace:*
+        version: link:../parser-utils
+
+  packages/parser-javascript/samples:
+    devDependencies:
+      '@cspell/parser-javascript':
+        specifier: workspace:*
+        version: link:..
+
   packages/parser-typescript:
     dependencies:
       tree-sitter:
