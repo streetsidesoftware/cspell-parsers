@@ -2,5 +2,6 @@
   ".": "1.1.1",
   "packages/parser-example": "1.1.1",
   "packages/parser-javascript": "1.0.1",
-  "packages/parser-typescript": "1.1.1"
+  "packages/parser-typescript": "1.1.1",
+  "packages/parser-typescript-tree-sitter": "1.0.0"
 }

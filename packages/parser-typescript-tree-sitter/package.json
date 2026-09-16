@@ -1,0 +1,65 @@
+{
+  "name": "@cspell/parser-typescript-tree-sitter",
+  "version": "1.0.0",
+  "description": "A TypeScript parser plugin using tree-sitter for cspell.",
+  "keywords": [
+    "cspell",
+    "parser",
+    "plugin",
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/streetsidesoftware/cspell-parsers.git",
+    "directory": "packages/parser-typescript-tree-sitter"
+  },
+  "funding": "https://github.com/streetsidesoftware/cspell?sponsor=1",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "!dist/**/*.map"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./parser": {
+      "types": "./dist/parser.d.ts",
+      "default": "./dist/parser.js"
+    },
+    "./plugin": {
+      "types": "./dist/plugin.d.ts",
+      "default": "./dist/plugin.js"
+    },
+    "./recommended": {
+      "types": "./dist/recommended.d.ts",
+      "default": "./dist/recommended.js"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "clean": "shx rm -rf dist coverage",
+    "test": "pnpm run test:vitest && pnpm run test:cspell",
+    "test:vitest": "vitest run",
+    "test:cspell": "cspell . --no-progress",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "tree-sitter": "^0.21.1",
+    "tree-sitter-typescript": "^0.23.2"
+  },
+  "devDependencies": {
+    "@cspell/cspell-types": "catalog:",
+    "@internal/utils": "workspace:*"
+  }
+}
