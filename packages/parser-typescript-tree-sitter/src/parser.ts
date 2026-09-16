@@ -113,18 +113,62 @@ function quoteTag(text: string, isModuleSpecifier: boolean): ParsedTags {
   }
 }
 
+/** True when `node` is a `call_expression` whose callee is the dynamic `import(...)` keyword. */
+function isDynamicImportCall(node: SyntaxNode): boolean {
+  return node.type === 'call_expression' && node.childForFieldName('function')?.type === 'import';
+}
+
 /**
- * True when `node` is the module-specifier string of an `import ... from '...'` or
- * `export ... from '...'` statement - as opposed to some unrelated string literal that
- * happens to be a descendant (e.g. `export default "foo";`, where "foo" is the `value` field).
+ * True when `node` is a `call_expression` whose callee is exactly the identifier `require` - a heuristic,
+ * same spirit as `isBareModuleSpecifier`: there's no grammar-level way to know `require` really is Node's
+ * module loader rather than some unrelated same-named local function, but treating it as one is right far
+ * more often than not.
+ */
+function isRequireCall(node: SyntaxNode): boolean {
+  if (node.type !== 'call_expression') return false;
+  const fn = node.childForFieldName('function');
+  return fn?.type === 'identifier' && fn.text === 'require';
+}
+
+/**
+ * True when `node` is the specifier argument of a dynamic `import('...')` call - tree-sitter gives the
+ * callee its own `import` node type (distinct from `identifier`), so this can't be confused with a call to
+ * some unrelated function that merely happens to be named `import`.
+ */
+function isDynamicImportSpecifier(node: SyntaxNode): boolean {
+  const args = node.parent;
+  if (!args || args.type !== 'arguments' || args.namedChildren[0] !== node) return false;
+  const call = args.parent;
+  return !!call && isDynamicImportCall(call);
+}
+
+/**
+ * True when `value` - a `variable_declarator`'s `value` field - is a dynamic `import(...)` call or a
+ * `require(...)` call, optionally `await`-ed, so the variable it initializes is bound to an external
+ * module the same way a namespace import (`import * as x from '...'`) is: the name itself is authored here
+ * (so it's checked), but any property read off it belongs to the external module (see `isExternalObject`).
+ */
+function isModuleBindingInitializer(value: SyntaxNode): boolean {
+  const expr = value.type === 'await_expression' ? value.namedChild(0) : value;
+  return !!expr && (isDynamicImportCall(expr) || isRequireCall(expr));
+}
+
+/**
+ * True when `node` is the module-specifier string of an `import ... from '...'` statement,
+ * `export ... from '...'` statement, or a dynamic `import('...')` call - as opposed to some unrelated
+ * string literal that happens to be a descendant (e.g. `export default "foo";`, where "foo" is the
+ * `value` field).
  */
 function isModuleSpecifierString(node: SyntaxNode): boolean {
   const parent = node.parent;
   if (!parent) return false;
-  return (
+  if (
     (parent.type === 'import_statement' || parent.type === 'export_statement') &&
     parent.childForFieldName('source') === node
-  );
+  ) {
+    return true;
+  }
+  return isDynamicImportSpecifier(node);
 }
 
 /**
@@ -160,9 +204,10 @@ const identifierTagByKind: Record<IdentifierKind, ParsedTags> = {
 };
 
 /**
- * Local names bound by `import` declarations, gathered with a pass over the
- * whole file before the main walk so usage doesn't need to textually follow
- * the import.
+ * Local names bound by `import` declarations - or a `const x = require(...)` / `const x = await
+ * import(...)` variable initializer, which binds a name to an external module the same way a namespace
+ * import does - gathered with a pass over the whole file before the main walk so usage doesn't need to
+ * textually follow the binding.
  */
 interface ImportBindings {
   /** Every local name introduced by an import (aliases, defaults, namespaces, and unaliased names). */
@@ -197,6 +242,13 @@ function collectImportBindings(root: SyntaxNode): ImportBindings {
           const id = child.namedChildren.find((c) => c.type === 'identifier');
           if (id) localNames.add(id.text);
         }
+      }
+    }
+    if (node.type === 'variable_declarator') {
+      const nameNode = node.childForFieldName('name');
+      const valueNode = node.childForFieldName('value');
+      if (nameNode?.type === 'identifier' && valueNode && isModuleBindingInitializer(valueNode)) {
+        localNames.add(nameNode.text);
       }
     }
     for (const child of node.namedChildren) visit(child);
