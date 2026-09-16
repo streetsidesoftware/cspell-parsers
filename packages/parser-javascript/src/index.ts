@@ -3,9 +3,10 @@ import type { CSpellPlugin } from '@cspell/cspell-types';
 import { plugin } from './plugin.js';
 
 /**
- * Typed as this minimal shape rather than `AdvancedCSpellSettings` so tsdown only needs to bundle
- * `CSpellPlugin`'s (small) type graph into `dist/index.d.ts`, not the much larger one behind the full
- * settings type - `index.test.ts` separately checks this is still assignable to `AdvancedCSpellSettings`.
+ * The shape of this package's default export - a minimal cspell settings object that registers the
+ * plugin, but doesn't select it for any file type. Add your own `languageSettings` to choose which files
+ * it applies to, or import `@cspell/parser-javascript/recommended` instead for a settings object that
+ * already includes them.
  */
 export interface SelectedCSpellSettings {
   plugins: CSpellPlugin[];

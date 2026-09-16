@@ -54,9 +54,8 @@ For TypeScript, TSX, or a single plugin that covers all four, use
 
 By default every segment the parser emits gets spell checked. To check only some of them — for example, only
 comments, or only string content — use `customizePlugin` instead of the plain `plugin` export. It takes a
-`validate` object (same shape as cspell's `CSpellSettingsValidation.validate` setting) and returns a `Plugin`
-whose parser filters segments by tag itself, before cspell ever sees them — so it works even with a cspell
-version that doesn't yet apply `validate` on its own.
+`CustomizePluginOptions` object (with a `tags: TagFilterOptions` property) and returns a `Plugin` whose
+parser filters segments by tag itself, before cspell ever sees them.
 
 ```js
 // cspell.config.mjs — customizePlugin returns a live Plugin object, so it needs a JS/TS config file
@@ -64,7 +63,7 @@ version that doesn't yet apply `validate` on its own.
 import { customizePlugin } from '@cspell/parser-javascript/plugin';
 
 export default {
-  plugins: [customizePlugin({ '*': false, comment: true })], // only check comments
+  plugins: [customizePlugin({ tags: { '*': false, comment: true } })], // only check comments
   languageSettings: [
     {
       languageId: 'javascript,javascriptreact',
@@ -74,7 +73,7 @@ export default {
 };
 ```
 
-`validate` keys are matched hierarchically against the tags below — `comment` also matches the more specific
+`tags` keys are matched hierarchically against the tags below — `comment` also matches the more specific
 `comment.block.doc` unless a more specific key overrides it — and may use `*` as a wildcard
 (`comment.block.*`, `comment*`, or a bare `*` for "everything not otherwise matched", which defaults to
 `true`). See the [Tags](#tags) table below for every tag this parser can emit.
@@ -91,9 +90,8 @@ export default {
 - Still checks a local variable or parameter that happens to reuse an import's name, for the scope where it
   shadows that import.
 - Tags each checked segment with a dot-separated tag, plus every ancestor of it (`comment.block.doc` also
-  carries `comment` and `comment.block`) - cspell's `validate`/`ValidationTags` setting can filter which
-  segments get spell checked using these tags, at any level of specificity. JSX text is checked but carries
-  no tag.
+  carries `comment` and `comment.block`) - `customizePlugin` can filter which segments get spell checked
+  using these tags, at any level of specificity. JSX text is checked but carries no tag.
 
 ## Tags
 

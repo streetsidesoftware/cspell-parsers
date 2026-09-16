@@ -50,15 +50,13 @@ for a node's name ever seems to silently fail, suspect this field first.
 
 Each segment carries `tags`. A tag is a dot-separated hierarchical name used
 as the key of the `ParsedTags` object, with `true` as its value (e.g. `'comment.block.doc': true`), not a
-category-name key holding a subtype string - this is what lets cspell's `validate`/`ValidationTags` setting
-(see `CSpellSettingsValidation` in `@cspell/cspell-types`) match a broad key like `comment.block` against a
-more specific tag like `comment.block.doc`.
+category-name key holding a subtype string - this is what lets a consumer match a broad key like
+`comment.block` against a more specific tag like `comment.block.doc`.
 
 `hierarchicalTags(tag)` builds the whole ancestor chain for a dotted tag - e.g.
 `hierarchicalTags('comment.block.doc')` is `{ comment: true, 'comment.block': true, 'comment.block.doc':
 true }` - so every leaf's `tags` object carries all of its ancestors, not just the most specific segment.
-This is deliberate even though a config's `validate` setting matches by dotted-prefix on its own: emitting
-the whole chain means a consumer can filter on `tags.comment` directly too, without needing its own
+Emitting the whole chain means a consumer can filter on `tags.comment` directly, without needing its own
 prefix-matching logic just to ask "is this any kind of comment?"
 
 The set of possible tags is fixed and known ahead of time, so `hierarchicalTags` is only ever called at

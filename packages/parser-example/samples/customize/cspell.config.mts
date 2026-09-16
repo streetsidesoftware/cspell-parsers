@@ -1,7 +1,7 @@
 import { customizePlugin } from '@cspell/parser-example/plugin';
 
 export default {
-  plugins: [customizePlugin({ '*': false, 'comment.block.doc': true })],
+  plugins: [customizePlugin({ tags: { '*': false, 'comment.block.doc': true } })],
   languageSettings: [
     {
       languageId: 'c',

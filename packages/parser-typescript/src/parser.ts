@@ -43,9 +43,9 @@ function isTsx(filename: string): boolean {
 /**
  * Builds a `ParsedTags` object with every dot-separated ancestor of `tag` set to `true`, in addition to
  * `tag` itself - e.g. `hierarchicalTags('comment.block.doc')` is `{ comment: true, 'comment.block': true,
- * 'comment.block.doc': true }`. Emitting the whole chain (rather than relying on a consumer to know that
- * cspell's `validate` setting matches ancestors by dotted prefix) means a consumer can filter on any level -
- * `tags.comment` or `tags['comment.block']` - without needing prefix-matching logic of its own.
+ * 'comment.block.doc': true }`. Emitting the whole chain (rather than requiring a consumer to implement
+ * its own dotted-prefix matching) means a consumer can filter on any level - `tags.comment` or
+ * `tags['comment.block']` - without needing prefix-matching logic of its own.
  *
  * Only used below to build the fixed, module-level tag constants once at load time - never called per
  * emitted segment, since the set of possible tags here is small and known ahead of time. `emit()` runs

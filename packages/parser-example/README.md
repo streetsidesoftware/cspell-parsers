@@ -53,10 +53,9 @@ plugin in yourself and choose the language IDs to use it for:
 ### Filtering by tag
 
 By default every comment the parser emits gets spell checked. To check only some of them — for example, only
-doc comments — use `customizePlugin` instead of the plain `plugin` export. It takes a `validate` object (same
-shape as cspell's `CSpellSettingsValidation.validate` setting) and returns a `Plugin` whose parser filters
-segments by tag itself, before cspell ever sees them — so it works even with a cspell version that doesn't
-yet apply `validate` on its own.
+doc comments — use `customizePlugin` instead of the plain `plugin` export. It takes a
+`CustomizePluginOptions` object (with a `tags: TagFilterOptions` property) and returns a `Plugin` whose
+parser filters segments by tag itself, before cspell ever sees them.
 
 ```js
 // cspell.config.mjs — customizePlugin returns a live Plugin object, so it needs a JS/TS config file
@@ -64,7 +63,7 @@ yet apply `validate` on its own.
 import { customizePlugin } from '@cspell/parser-example/plugin';
 
 export default {
-  plugins: [customizePlugin({ '*': false, 'comment.block.doc': true })], // only check doc comments
+  plugins: [customizePlugin({ tags: { '*': false, 'comment.block.doc': true } })], // only check doc comments
   languageSettings: [
     {
       languageId: 'c,cpp',
@@ -74,7 +73,7 @@ export default {
 };
 ```
 
-`validate` keys are matched hierarchically against the tags below — `comment` also matches the more specific
+`tags` keys are matched hierarchically against the tags below — `comment` also matches the more specific
 `comment.block.doc` unless a more specific key overrides it — and may use `*` as a wildcard (`comment.block.*`,
 or a bare `*` for "everything not otherwise matched", which defaults to `true`). See the [Tags](#tags) table
 below for every tag this parser can emit.
@@ -85,9 +84,8 @@ below for every tag this parser can emit.
 - Each `ParsedText.range` is the `[start, end]` offset of that segment in the original `content`, which is how
   cspell maps spelling issues found in the parsed text back to the right place in the source file.
 - Each comment is tagged with a dot-separated tag, plus every ancestor of it (`comment.block.doc` also
-  carries `comment` and `comment.block`) - which is what lets cspell's `validate` setting filter which
-  segments get spell checked, at any level of specificity (just `comment`, or the more specific
-  `comment.line`).
+  carries `comment` and `comment.block`) - `customizePlugin` can filter which segments get spell checked
+  using these tags, at any level of specificity (just `comment`, or the more specific `comment.line`).
 - `plugin.parsers` is the list of parsers a cspell plugin module exposes; a plugin can expose more than one.
 
 ## Tags
