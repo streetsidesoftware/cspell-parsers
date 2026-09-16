@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
-import { parser } from './parser.js';
-import { customizePlugin, plugin } from './plugin.js';
+import { parser, supportedFileTypes as parserSupportedFileTypes } from './parser.js';
+import { customizePlugin, plugin, supportedFileTypes } from './plugin.js';
 import type { Parser } from '@cspell/cspell-types';
 
 describe('plugin', () => {
   it('exposes the typescript parser', () => {
     expect(plugin.parsers).toEqual([parser]);
+  });
+
+  it('re-exports supportedFileTypes from the parser', () => {
+    expect(supportedFileTypes).toBe(parserSupportedFileTypes);
   });
 
   it('is usable to parse TypeScript content', () => {

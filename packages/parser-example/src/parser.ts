@@ -65,3 +65,5 @@ export const parser: Parser = {
   name: 'c-style-comments',
   parse,
 };
+
+export const supportedFileTypes: string[] = ['c', 'cpp', 'csharp', 'java', 'javascript', 'typescript'];

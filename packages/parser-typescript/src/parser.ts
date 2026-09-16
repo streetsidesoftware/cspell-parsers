@@ -407,3 +407,5 @@ export const parser: Parser = {
   name: 'typescript',
   parse,
 };
+
+export const supportedFileTypes: string[] = ['typescript', 'javascript', 'typescriptreact', 'javascriptreact'];

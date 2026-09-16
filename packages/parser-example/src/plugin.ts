@@ -3,6 +3,8 @@ import { customizePlugin as customizePluginWithValidationTags } from '@cspell/pa
 
 import { parser } from './parser.js';
 
+export { supportedFileTypes } from './parser.js';
+
 export const plugin: Plugin = {
   parsers: [parser],
 };
