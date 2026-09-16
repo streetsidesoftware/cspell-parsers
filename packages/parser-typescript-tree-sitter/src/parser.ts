@@ -6,7 +6,7 @@ import type { StringPart } from '@internal/utils';
 
 type SyntaxNode = TreeSitterParser.SyntaxNode;
 
-let tsParser: TreeSitterParser | undefined = undefined;
+let tsParser: TreeSitterParser | undefined;
 
 type IdentifierKind =
   | 'variable'
