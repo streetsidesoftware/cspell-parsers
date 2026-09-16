@@ -72,6 +72,9 @@
     "packages/parser-example": {
       "component": "@cspell/parser-example"
     },
+    "packages/parser-javascript": {
+      "component": "@cspell/parser-javascript"
+    },
     "packages/parser-typescript": {
       "component": "@cspell/parser-typescript"
     }
