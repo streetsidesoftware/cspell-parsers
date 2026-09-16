@@ -408,4 +408,4 @@ export const parser: Parser = {
   parse,
 };
 
-export const supportedFileTypes: string[] = ['typescript', 'javascript', 'typescriptreact', 'javascriptreact'];
+export const supportedFileTypes: string[] = ['javascript', 'javascriptreact', 'typescript', 'typescriptreact'];
