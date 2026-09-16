@@ -63,12 +63,22 @@ describe('typescript parser', () => {
     });
 
     it('tags line and doc-block comments', () => {
-      expect(find(parsedTexts, '// leading comment').tags).toEqual({ comment: true, 'comment.line': true });
-      expect(find(parsedTexts, '/** doc comment */').tags).toEqual({
+      expect(find(parsedTexts, 'leading comment').tags).toEqual({ comment: true, 'comment.line': true });
+      expect(find(parsedTexts, 'doc comment').tags).toEqual({
         comment: true,
         'comment.block': true,
         'comment.block.doc': true,
       });
+    });
+
+    it('strips the comment marker into rawText/map, leaving only the content in text', () => {
+      const line = find(parsedTexts, 'leading comment');
+      expect(line.rawText).toBe('// leading comment');
+      expect(line.map).toEqual([3, 0]);
+
+      const doc = find(parsedTexts, 'doc comment');
+      expect(doc.rawText).toBe('/** doc comment */');
+      expect(doc.map).toEqual([4, 0, 11, 11, 3, 0]);
     });
 
     it('tags identifiers with the kind of identifier they are', () => {
@@ -202,5 +212,14 @@ describe('typescript parser', () => {
 
     expect(find(parsedTexts, 'hello world').tags).toBeUndefined();
     expect(find(parsedTexts, 'Greeting').tags).toEqual({ identifier: true, 'identifier.variable': true });
+  });
+
+  it('strips the "*" gutter from each line of a multi-line doc comment', () => {
+    const content = ['/**', ' * one', ' * two', ' */', 'const x = 1;'].join('\n');
+    const parsedTexts = [...parser.parse(content, 'file.ts').parsedTexts];
+
+    const comment = find(parsedTexts, '\none\ntwo\n');
+    expect(comment.rawText).toBe('/**\n * one\n * two\n */');
+    expect(comment.tags).toEqual({ comment: true, 'comment.block': true, 'comment.block.doc': true });
   });
 });

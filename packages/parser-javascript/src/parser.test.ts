@@ -54,8 +54,8 @@ describe('javascript parser', () => {
     });
 
     it('tags line and doc-block comments', () => {
-      expect(find(parsedTexts, '// leading comment').tags).toEqual({ comment: true, 'comment.line': true });
-      expect(find(parsedTexts, '/** doc comment */').tags).toEqual({
+      expect(find(parsedTexts, 'leading comment').tags).toEqual({ comment: true, 'comment.line': true });
+      expect(find(parsedTexts, 'doc comment').tags).toEqual({
         comment: true,
         'comment.block': true,
         'comment.block.doc': true,

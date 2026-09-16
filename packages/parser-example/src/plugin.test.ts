@@ -17,7 +17,7 @@ describe('plugin', () => {
     const [pluginParser] = (plugin.parsers ?? []) as Parser[];
     const result = pluginParser?.parse('// hello\n', 'example.c');
 
-    expect([...(result?.parsedTexts ?? [])].some((p) => p.text === '// hello')).toBe(true);
+    expect([...(result?.parsedTexts ?? [])].some((p) => p.text === 'hello')).toBe(true);
   });
 });
 

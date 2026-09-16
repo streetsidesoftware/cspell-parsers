@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { plugin, supportedFileTypes } from './plugin.js';
 import recommended from './recommended.js';
+import type { AdvancedCSpellSettings } from '@cspell/cspell-types';
 
 describe('recommended (cspell settings entry point)', () => {
   it('wires the plugin into a set of cspell settings', () => {
@@ -19,5 +20,10 @@ describe('recommended (cspell settings entry point)', () => {
 
   it('only covers javascript file types, not typescript', () => {
     expect(supportedFileTypes).toEqual(['javascript', 'javascriptreact']);
+  });
+
+  it('is assignable to AdvancedCSpellSettings', () => {
+    const cspellSettings: AdvancedCSpellSettings = recommended;
+    expect(cspellSettings.plugins).toBeDefined();
   });
 });

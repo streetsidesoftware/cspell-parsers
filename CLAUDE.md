@@ -76,9 +76,12 @@ Every package publishes **four** things, each its own file under `src/` and its 
   `plugin`, so a consumer can filter which tagged segments get spell checked without needing a cspell
   version that already applies `validate` itself. See `packages/parser-typescript/src/plugin.ts` for the
   pattern.
-- `src/index.ts` — the package's main entry (`.` / `main`). Exports a default `AdvancedCSpellSettings` with
-  just `plugins: [plugin]` — the parser is registered but not yet selected for any file type, so a consumer
-  still has to add their own `languageSettings`.
+- `src/index.ts` — the package's main entry (`.` / `main`). Exports a default settings object with just
+  `plugins: [plugin]` — the parser is registered but not yet selected for any file type, so a consumer still
+  has to add their own `languageSettings`. Typed as a small local `SelectedCSpellSettings` interface
+  (`{ plugins: CSpellPlugin[] }`) rather than the full `AdvancedCSpellSettings`, to keep `dist/index.d.ts`
+  small — see the dist-size bullet below. `index.test.ts` separately checks the object is still assignable
+  to `AdvancedCSpellSettings`.
 - `src/recommended.ts` — a batteries-included alternative, published as `./recommended` →
   `dist/recommended.js`. Exports a default `AdvancedCSpellSettings` with `plugins: [plugin]` **and**
   `languageSettings` mapping `supportedFileTypes.join(',')` to the parser by name, so a consumer only has to
@@ -129,6 +132,13 @@ Two more directories, both at the package root (not under `src/`):
   intentional (tsdown otherwise only logs a hint about unexpected bundled dependencies) and to fail the
   build if some other, unintended dependency ends up inlined. A new parser package should follow the same
   pattern for any other type-only dependency it wants to avoid shipping as a production dependency.
+- **Keep `dist` size and the number of production dependencies low** — both are deliberately optimized for
+  in this repo. Verify `dist` size (especially `dist/index.d.ts`) before/after any change to how types or
+  dependencies are shared across packages: tsdown's `.d.ts` bundler inlines a workspace dependency's _entire_
+  compiled declaration file wherever even one type is imported from it, with no tree-shaking and no dedup
+  against a differently-rooted import of the same underlying types — so prefer duplicating a small type
+  locally per package over centralizing it in `@cspell/parser-utils`, and be conservative about adding any
+  new production `dependencies` entry.
 - Build output is plain `dist/*.js` + `dist/*.d.ts` (ESM only, one pair per entry). This requires
   `fixedExtension: false` in `tsdown.config.ts` — tsdown's default (`fixedExtension: true` on the default
   `platform: 'node'`) would otherwise emit `.mjs`/`.d.mts`, which doesn't match a package's

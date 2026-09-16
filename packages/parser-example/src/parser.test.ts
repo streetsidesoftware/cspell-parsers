@@ -32,24 +32,28 @@ describe('c-style-comments parser', () => {
 
     it('extracts a line comment and tags it', () => {
       const comment = parsedTexts[0];
-      expect(comment?.text).toBe('// running total');
+      expect(comment?.text).toBe('running total');
+      expect(comment?.rawText).toBe('// running total');
+      expect(comment?.map).toEqual([3, 0]);
       expect(comment?.tags).toEqual({ comment: true, 'comment.line': true });
       expect(comment?.range).toEqual([content.indexOf('//'), content.indexOf('//') + '// running total'.length]);
     });
 
     it('extracts a single-line block comment and tags it', () => {
-      expect(parsedTexts[1]?.text).toBe('/* approximate */');
+      expect(parsedTexts[1]?.text).toBe('approximate');
+      expect(parsedTexts[1]?.rawText).toBe('/* approximate */');
       expect(parsedTexts[1]?.tags).toEqual({ comment: true, 'comment.block': true });
     });
 
-    it('extracts a multi-line block comment', () => {
-      expect(parsedTexts[2]?.text).toBe('/*\n * Adds two numbers together.\n */');
+    it('extracts a multi-line block comment, stripping the "*" gutter from each line', () => {
+      expect(parsedTexts[2]?.text).toBe('\nAdds two numbers together.\n');
+      expect(parsedTexts[2]?.rawText).toBe('/*\n * Adds two numbers together.\n */');
       expect(parsedTexts[2]?.tags).toEqual({ comment: true, 'comment.block': true });
     });
 
     it('extracts multiple comments, each with its own range', () => {
       const lineComments = parsedTexts.filter((p) => p.tags?.['comment.line']);
-      expect(lineComments.map((c) => c.text)).toEqual(['// running total', '// first', '// second']);
+      expect(lineComments.map((c) => c.text)).toEqual(['running total', 'first', 'second']);
 
       const second = lineComments[2];
       expect(second?.range).toEqual([content.indexOf('// second'), content.indexOf('// second') + '// second'.length]);
@@ -61,7 +65,7 @@ describe('c-style-comments parser', () => {
 
     it('does not mistake "//" inside a string literal for a line comment', () => {
       expect(parsedTexts).toHaveLength(1);
-      expect(parsedTexts[0]?.text).toBe('// a real comment');
+      expect(parsedTexts[0]?.text).toBe('a real comment');
     });
 
     it('does not mistake "/*" inside a string literal for a block comment', () => {
@@ -77,7 +81,8 @@ describe('c-style-comments parser', () => {
     const content = readFixture('unterminated.c');
     const [comment] = parseFixture('unterminated.c');
 
-    expect(comment?.text).toBe('/* never closed');
+    expect(comment?.text).toBe('never closed');
+    expect(comment?.rawText).toBe('/* never closed');
     expect(comment?.tags).toEqual({ comment: true, 'comment.block': true });
     expect(comment?.range).toEqual([content.indexOf('/*'), content.length]);
   });

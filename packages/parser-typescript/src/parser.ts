@@ -1,6 +1,7 @@
 import TreeSitterParser from 'tree-sitter';
 import TypeScriptLanguages from 'tree-sitter-typescript';
 import type { ParsedTags, ParsedText, Parser, ParseResult } from '@cspell/cspell-types/Parser';
+import { stripCommentMarkers } from '@cspell/parser-utils';
 
 type SyntaxNode = TreeSitterParser.SyntaxNode;
 
@@ -284,6 +285,19 @@ function emit(node: SyntaxNode, tags: ParsedTags | undefined, out: ParsedText[])
   });
 }
 
+/** Like `emit`, but for a comment node - `text` has its delimiters/gutter stripped, per `stripCommentMarkers`. */
+function emitComment(node: SyntaxNode, out: ParsedText[]): void {
+  const rawText = node.text;
+  const { text, map } = stripCommentMarkers(rawText);
+  out.push({
+    text,
+    rawText,
+    map,
+    range: [node.startIndex, node.endIndex],
+    tags: commentTag(rawText),
+  });
+}
+
 /**
  * Walks the AST, emitting a ParsedText for each spell-checkable leaf
  * (identifiers, string/template contents, comments). `imports` drives
@@ -299,7 +313,7 @@ function walk(
 ): void {
   switch (node.type) {
     case 'comment':
-      emit(node, commentTag(node.text), out);
+      emitComment(node, out);
       return;
     case 'string':
       // A bare module specifier (`from 'prettier'`) is fixed by the package, not authored here.
