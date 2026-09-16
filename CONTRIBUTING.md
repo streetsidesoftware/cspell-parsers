@@ -88,11 +88,17 @@ lint-ci`/`pnpm test` pass, since it auto-fixes what it can rather than just repo
    inline strings — plus thin `plugin.test.ts` / `index.test.ts` / `recommended.test.ts` that just check each
    file wires the layer below it together (including, if present, that `customizePlugin` actually filters
    `parsedTexts` when wired to the real parser — see `packages/parser-typescript/src/plugin.test.ts`).
-5. Add a `samples/` package (copy `packages/parser-typescript/samples`) with one subfolder per usage pattern,
-   each holding a real cspell config and real source files it checks — this is what `test:cspell` (`cspell .`)
+5. Add a `samples/` package (copy `packages/parser-typescript/samples`) with one subfolder per usage pattern
+   — `plugin/`, `recommended/`, and, if `parser.ts` emits `tags`, `customize/` for `customizePlugin` — each
+   holding a real cspell config and real source files it checks. This is what `test:cspell` (`cspell .`)
    exercises end-to-end, alongside `test:vitest`'s unit tests, combined as the package's `test` script. Give
    the package its own root `cspell.config.yaml` (ignoring `node_modules`/`fixtures`/`dist`) so that passes
-   cleanly.
+   cleanly. For `customize/` specifically, prove the filter is doing something real: put a genuine misspelling
+   cspell would otherwise flag in a segment `validate` excludes (not in a comment that explains the typo by name —
+   that comment is itself checked unless its own tag is excluded too, which is exactly the mistake to avoid),
+   and sanity-check by temporarily swapping in the plain `plugin` to confirm `cspell .` actually fails without
+   the filter, the way `packages/parser-typescript/samples/customize` does — see its `cspell.config.mts` and
+   `example.ts` for the pattern to copy.
 6. Write `README.md` for someone **using** the plugin, not reading its source — lead with how to add it to a
    cspell config; keep internals secondary. If `parser.ts` emits `tags`, include a table listing every tag
    it can emit (including implied ancestor tags, e.g. `comment` alongside `comment.block.doc`) and what each
