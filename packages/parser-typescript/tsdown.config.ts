@@ -5,6 +5,7 @@ export default defineConfig({
   format: ['esm'],
   dts: true,
   sourcemap: true,
+  treeshake: true,
   clean: true,
   // Single ESM format + "type": "module" makes plain .js/.d.ts unambiguous.
   fixedExtension: false,

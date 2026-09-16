@@ -28,7 +28,7 @@ describe('customizePlugin', () => {
     const result = customizedParser?.parse("// a comment\nconst greeting = 'hello';\n", 'example.js');
     const parsedTexts = [...(result?.parsedTexts ?? [])];
 
-    expect(parsedTexts.some((p) => p.text === '// a comment')).toBe(true);
+    expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(true);
     expect(parsedTexts.some((p) => p.text === 'greeting')).toBe(false);
   });
 });

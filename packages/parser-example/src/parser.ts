@@ -1,4 +1,5 @@
 import type { ParsedTags, ParsedText, Parser, ParseResult } from '@cspell/cspell-types';
+import { stripCommentMarkers } from '@cspell/parser-utils';
 
 const COMMENT_TAG = { comment: true };
 const COMMENT_LINE_TAG = { ...COMMENT_TAG, 'comment.line': true };
@@ -25,8 +26,9 @@ export function parse(content: string, filename: string): ParseResult {
     if (twoChars === '//') {
       const newlineIndex = content.indexOf('\n', i);
       const end = newlineIndex === -1 ? content.length : newlineIndex;
-      const text = content.slice(i, end);
-      parsedTexts.push({ text, range: [i, end], tags: commentTag(text) });
+      const rawText = content.slice(i, end);
+      const { text, map } = stripCommentMarkers(rawText);
+      parsedTexts.push({ text, rawText, map, range: [i, end], tags: commentTag(rawText) });
       i = end;
       continue;
     }
@@ -34,8 +36,9 @@ export function parse(content: string, filename: string): ParseResult {
     if (twoChars === '/*') {
       const closeIndex = content.indexOf('*/', i + 2);
       const end = closeIndex === -1 ? content.length : closeIndex + 2;
-      const text = content.slice(i, end);
-      parsedTexts.push({ text, range: [i, end], tags: commentTag(text) });
+      const rawText = content.slice(i, end);
+      const { text, map } = stripCommentMarkers(rawText);
+      parsedTexts.push({ text, rawText, map, range: [i, end], tags: commentTag(rawText) });
       i = end;
       continue;
     }
