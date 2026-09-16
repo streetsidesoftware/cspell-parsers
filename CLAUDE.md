@@ -77,12 +77,13 @@ Every package publishes **four** things, each its own file under `src/` and its 
   builds its `languageSettings` from, so the list only needs updating in one place.
 - `src/plugin.ts` — thin wiring: `export const plugin: Plugin = { parsers: [parser] }`, plus
   `export { supportedFileTypes } from './parser.js'` so it's reachable from the `./plugin` subpath too.
-  Published as `./plugin` → `dist/plugin.js`. If `parser.ts` emits `tags`, also export
-  `function customizePlugin(validate: ValidationTags): Plugin` — a thin wrapper around
-  `@cspell/parser-utils`'s `customizePlugin(plugin, validate)` (see below) bound to this package's own
-  `plugin`, so a consumer can filter which tagged segments get spell checked without needing a cspell
-  version that already applies `validate` itself. See `packages/parser-typescript/src/plugin.ts` for the
-  pattern.
+  Published as `./plugin` → `dist/plugin.js`. If `parser.ts` emits `tags`, also export a local
+  `CustomizePluginOptions` interface (`{ tags: TagFilterOptions }` — a struct rather than a bare
+  `TagFilterOptions` so it can grow more options later without a breaking signature change) and
+  `function customizePlugin(options: CustomizePluginOptions): Plugin` — a thin wrapper around
+  `@cspell/parser-utils`'s `customizePlugin(plugin, options)` (see below) bound to this package's own
+  `plugin`, so a consumer can filter which tagged segments get spell checked without needing cspell itself
+  to support that filtering. See `packages/parser-typescript/src/plugin.ts` for the pattern.
 - `src/index.ts` — the package's main entry (`.` / `main`). Exports a default settings object with just
   `plugins: [plugin]` — the parser is registered but not yet selected for any file type, so a consumer still
   has to add their own `languageSettings`. Typed as a small local `SelectedCSpellSettings` interface
@@ -123,8 +124,8 @@ Two more directories, both at the package root (not under `src/`):
   and all.
 - `@cspell/parser-utils` (`packages/parser-utils`) is a private, unpublished workspace package holding logic
   shared across parser packages — currently the tag-matching engine behind `customizePlugin`
-  (`compileValidationTags` turns a `ValidationTags` object into a fast `TagsValidator` closure once, up
-  front, rather than re-matching patterns per parsed segment). A package that uses it lists
+  (`compileTagFilter` turns a `TagFilterOptions` object into a fast `TagsFilter` closure once, up front,
+  rather than re-matching patterns per parsed segment). A package that uses it lists
   `"@cspell/parser-utils": "workspace:*"` as a `devDependencies` entry, same as `@cspell/cspell-types` —
   but unlike `@cspell/cspell-types`, it's a workspace package, so tsdown bundles its code and types into
   `dist/*.js`/`dist/*.d.ts` automatically and does **not** need (and warns as unused if given) its own
@@ -187,9 +188,9 @@ someone installing this off npm needs "how do I turn this on," not "how does it 
 If the parser emits `tags` on any segment, `README.md` must include a table listing every tag it can emit
 (including ancestor tags implied by `hierarchicalTags`, e.g. `comment` alongside `comment.block.doc`) with a
 one-line description of what each one means. This is reference material for using the plugin, not an
-implementation detail to omit: it's what a consumer needs to write a cspell `validate`/`ValidationTags`
-setting that filters by tag. Keep it to a plain two-column `Tag` / `Meaning` table — no discussion of how the
-parser computes or assigns the tags.
+implementation detail to omit: it's what a consumer needs to write a `customizePlugin({ tags: ... })` filter
+by tag. Keep it to a plain two-column `Tag` / `Meaning` table — no discussion of how the parser computes or
+assigns the tags.
 
 `README.md` must also include a "Supported file types" section listing every language ID in
 `supportedFileTypes` (a single-column table is enough) — this is what a consumer checks before deciding
@@ -198,8 +199,8 @@ whether `recommended` already covers their file types or they need to wire `lang
 The same "if the parser emits `tags`" condition also means `plugin.ts` exports `customizePlugin` (see
 "Package shape" above), and `README.md` must show it: a short "Filtering by tag" (or similarly named)
 section, after the plain `plugin`/`languageSettings` wiring example, with a runnable snippet calling
-`customizePlugin({ ... })` and pointing at the tags table for what keys are available. Call out that
-`customizePlugin` returns a live `Plugin` object, not a module-specifier string, so it only works from a
+`customizePlugin({ tags: { ... } })` and pointing at the tags table for what keys are available. Call out
+that `customizePlugin` returns a live `Plugin` object, not a module-specifier string, so it only works from a
 JS/TS cspell config (`cspell.config.mjs`/`.ts`/`.cjs`) — not `.json`/`.jsonc`/`.yaml`, where `plugins` can
 only be a list of strings cspell resolves itself. See `packages/parser-typescript/README.md`'s "Filtering by
 tag" section for the pattern to copy.
