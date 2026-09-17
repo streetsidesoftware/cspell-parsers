@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/streetsidesoftware/cspell-parsers/compare/@cspell/parser-typescript-tree-sitter-wasm@1.0.1...@cspell/parser-typescript-tree-sitter-wasm@1.0.2) (2026-09-17)
+
+
+### Updates and Bug Fixes
+
+* Use images from streetsidesoftware.com ([#55](https://github.com/streetsidesoftware/cspell-parsers/issues/55)) ([c8537d8](https://github.com/streetsidesoftware/cspell-parsers/commit/c8537d8049736ed57a6cd1fa14c0dc0f83ff1753))
+
 ## [1.0.1](https://github.com/streetsidesoftware/cspell-parsers/compare/@cspell/parser-typescript-tree-sitter-wasm@1.0.0...@cspell/parser-typescript-tree-sitter-wasm@1.0.1) (2026-09-17)
 
 
