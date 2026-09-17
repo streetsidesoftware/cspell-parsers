@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.3](https://github.com/streetsidesoftware/cspell-parsers/compare/@cspell/parser-example@1.1.2...@cspell/parser-example@1.1.3) (2026-09-17)
+
+
+### Updates and Bug Fixes
+
+* Use images from streetsidesoftware.com ([#55](https://github.com/streetsidesoftware/cspell-parsers/issues/55)) ([c8537d8](https://github.com/streetsidesoftware/cspell-parsers/commit/c8537d8049736ed57a6cd1fa14c0dc0f83ff1753))
+
 ## [1.1.2](https://github.com/streetsidesoftware/cspell-parsers/compare/@cspell/parser-example@1.1.1...@cspell/parser-example@1.1.2) (2026-09-17)
 
 
