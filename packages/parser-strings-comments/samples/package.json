@@ -1,0 +1,7 @@
+{
+  "name": "@internal/parser-strings-comments-samples",
+  "private": true,
+  "devDependencies": {
+    "@cspell/parser-strings-comments": "workspace:*"
+  }
+}

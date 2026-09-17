@@ -4,5 +4,6 @@
   "packages/parser-javascript": "1.0.5",
   "packages/parser-typescript": "1.1.5",
   "packages/parser-typescript-tree-sitter": "1.0.4",
-  "packages/parser-typescript-tree-sitter-wasm": "1.0.3"
+  "packages/parser-typescript-tree-sitter-wasm": "1.0.3",
+  "packages/parser-strings-comments": "1.0.0"
 }
