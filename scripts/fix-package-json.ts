@@ -6,7 +6,22 @@ import fs from 'node:fs/promises';
 import { fixPackageJson } from './lib/package-json-util.ts';
 import { REPO_ROOT_DIR } from './lib/consts.ts';
 
+const HELP = `Usage: fix-package-json [options]
+
+Fixes up packages/*/package.json files (name, repository, keywords, publishConfig).
+
+Options:
+  --dry-run   Report which files need fixing without writing changes; exits with a
+              non-zero status if any file needs fixing.
+  -h, --help  Show this help message.
+`;
+
 async function main() {
+  if (process.argv.includes('-h') || process.argv.includes('--help')) {
+    console.log(HELP);
+    return;
+  }
+
   const dryRun = process.argv.includes('--dry-run');
 
   console.error('Fixing package.json files...');
