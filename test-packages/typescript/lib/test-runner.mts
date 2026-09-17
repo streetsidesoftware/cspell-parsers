@@ -42,6 +42,7 @@ async function runSuite(moduleName: string, suite: string, cwd: string, options:
     await fs.mkdir(path.dirname(snapshotFile), { recursive: true });
     await fs.writeFile(snapshotFile, JSON.stringify(actual, null, 2) + '\n');
     console.error(`Updated snapshot: __snapshots/${suite}.json`);
+    await fs.rm(actualFile, { force: true });
     return;
   }
 
@@ -54,11 +55,16 @@ async function runSuite(moduleName: string, suite: string, cwd: string, options:
     );
   }
 
+  // On mismatch, actualFile is left in place (rather than cleaned up below) so it can be inspected
+  // or diffed by hand - the AssertionError below already reports the diff too, but this makes the
+  // full actual output easy to get at directly.
   assert.deepStrictEqual(
     actual,
     JSON.parse(expectedText),
     `snapshot mismatch for module "${moduleName}", suite "${suite}": __snapshots/${suite}.actual.json does not match __snapshots/${suite}.json (run with --update to accept)`,
   );
+
+  await fs.rm(actualFile, { force: true });
 }
 
 function spawnCspell(
