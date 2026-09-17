@@ -1,4 +1,4 @@
-import type { DocumentParser, ParsedTags, ParsedText, Parser, Plugin } from '@cspell/cspell-types';
+import type { ParsedTags, ParsedText, Parser } from '@cspell/cspell-types';
 
 /**
  * A tag name, or a `*`-wildcard pattern matching one (see {@link TagFilterOptions}).
@@ -6,10 +6,10 @@ import type { DocumentParser, ParsedTags, ParsedText, Parser, Plugin } from '@cs
 export type TagPattern = string;
 
 /**
- * Options for {@link customizePlugin}/{@link customizeParser}: which tagged segments to keep.
+ * Options for {@link customizeParser}: which tagged segments to keep.
  *
  * Deliberately declared here rather than imported from `@cspell/cspell-types`'s `ValidationTags` - the
- * two happen to share a shape today, but that's incidental. `customizePlugin`'s options are a property of
+ * two happen to share a shape today, but that's incidental. `customizeParser`'s options are a property of
  * its own filtering behavior and should be free to diverge from it.
  */
 export interface TagFilterOptions {
@@ -35,53 +35,36 @@ export interface TagFilterOptions {
 export type TagsFilter = (tags: ParsedTags | undefined) => boolean;
 
 /**
- * Options for {@link customizePlugin}/{@link customizeParser}, as a struct rather than a bare
- * `TagFilterOptions` so either function can grow more options later without a breaking signature change.
+ * Options for {@link customizeParser}, as a struct rather than a bare `TagFilterOptions` so it can grow
+ * more options later without a breaking signature change.
  */
 export interface CustomizeParserOptions {
-  tags: TagFilterOptions;
-}
-
-/**
- * Returns a copy of `plugin` whose parsers filter their `parsedTexts` output through `options.tags`
- * before emitting them, rather than relying on the host application to filter by tag itself. This lets a
- * plugin consumer opt a segment out of spell checking by tag without depending on cspell to support that
- * filtering natively.
- *
- * `options.tags` is compiled into a {@link TagsFilter} once here - not per parsed segment - and
- * that one compiled filter is shared by every parser in `plugin`.
- *
- * Each package's `plugin.ts` wraps this in a `customizePlugin(options)` bound to its own `plugin`, so
- * a consumer never has to pass the plugin in themselves.
- */
-export function customizePlugin(plugin: Plugin, options: CustomizeParserOptions): Plugin {
-  if (!plugin.parsers) return plugin;
-  const isIncluded = compileTagFilter(options.tags);
-  return {
-    ...plugin,
-    parsers: plugin.parsers.map((entry) => customizeParserEntry(entry, isIncluded)),
-  };
-}
-
-function customizeParserEntry(entry: DocumentParser | Parser, isIncluded: TagsFilter): DocumentParser | Parser {
-  // DocumentParser (parseDocument-based) isn't used by any parser in this repo today; pass it through
-  // unmodified rather than guessing at how to filter it.
-  if (!isParser(entry)) return entry;
-  return customizeParserWithFilter(entry, isIncluded);
+  /**
+   * Override the parser's `name`. Useful when registering more than one customized copy of the same
+   * parser (e.g. under `plugins`), since cspell selects a parser by name and two parsers can't share one.
+   */
+  name?: string;
+  /**
+   * Which tagged segments to keep. Omit to keep everything.
+   */
+  tags?: TagFilterOptions;
 }
 
 /**
  * Wraps a single `Parser` so its `parse()` output only includes `parsedTexts` selected by
- * `options.tags`. `options.tags` is compiled into a {@link TagsFilter} once here, before the
- * parser ever runs - see {@link compileTagFilter}.
+ * `options.tags`, and its `name` is `options.name` when given. `options.tags` is compiled into a
+ * {@link TagsFilter} once here, before the parser ever runs - see {@link compileTagFilter}.
  */
 export function customizeParser(parser: Parser, options: CustomizeParserOptions): Parser {
-  return customizeParserWithFilter(parser, compileTagFilter(options.tags));
+  if (!options.tags || Object.keys(options.tags).length === 0) {
+    return options.name ? { ...parser, name: options.name } : parser;
+  }
+  return customizeParserWithFilter(parser, compileTagFilter(options.tags), options.name);
 }
 
-function customizeParserWithFilter(parser: Parser, isIncluded: TagsFilter): Parser {
-  return {
-    name: parser.name,
+function customizeParserWithFilter(parser: Parser, isIncluded: TagsFilter, name: string | undefined): Parser {
+  const newParser: Parser = {
+    name: name ?? parser.name,
     parse(content, filename) {
       const result = parser.parse(content, filename);
       return {
@@ -90,6 +73,18 @@ function customizeParserWithFilter(parser: Parser, isIncluded: TagsFilter): Pars
       };
     },
   };
+
+  if (parser.parseDocument) {
+    newParser.parseDocument = (doc) => {
+      if (!parser.parseDocument) {
+        throw new Error('parseDocument is not implemented on the original parser.');
+      }
+      const result = parser.parseDocument(doc);
+      return { ...result, parsedTexts: filterParsedTexts(result.parsedTexts, isIncluded) };
+    };
+  }
+
+  return newParser;
 }
 
 function* filterParsedTexts(parsedTexts: Iterable<ParsedText>, isIncluded: TagsFilter): Iterable<ParsedText> {
@@ -260,8 +255,4 @@ function patternToRegExp(pattern: string): RegExp {
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function isParser(entry: Parser | DocumentParser): entry is Parser {
-  return 'parse' in entry && typeof entry.parse === 'function';
 }

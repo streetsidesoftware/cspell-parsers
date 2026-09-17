@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import type { ParsedText } from '@cspell/cspell-types/Parser';
 import { describe, expect, it } from 'vitest';
 
-import { parser } from './parser.js';
+import { createParser, parser } from './parser.js';
 
 const fixturesDir = join(import.meta.dirname, '../fixtures');
 
@@ -330,5 +330,42 @@ describe('typescript parser', () => {
     expect(after.tags).toEqual({ string: true, 'string.templateLiteral': true });
 
     expect(find(parsedTexts, 'name').tags).toEqual({ identifier: true, 'identifier.variable': true });
+  });
+});
+
+describe('createParser', () => {
+  it('defaults to the "typescript" name and keeps everything when called with no options', () => {
+    const customized = createParser();
+    expect(customized.name).toBe('typescript');
+
+    const parsedTexts = [...customized.parse('// a comment\nconst greeting = 1;\n', 'file.ts').parsedTexts];
+    expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(true);
+    expect(parsedTexts.some((p) => p.text === 'greeting')).toBe(true);
+  });
+
+  it('overrides the name without filtering when tags is omitted', () => {
+    const customized = createParser({ name: 'custom-typescript' });
+    expect(customized.name).toBe('custom-typescript');
+
+    const parsedTexts = [...customized.parse('// a comment\nconst greeting = 1;\n', 'file.ts').parsedTexts];
+    expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(true);
+    expect(parsedTexts.some((p) => p.text === 'greeting')).toBe(true);
+  });
+
+  it('filters segments by tag when tags is given', () => {
+    const customized = createParser({ tags: { '*': false, comment: true } });
+    const parsedTexts = [...customized.parse('// a comment\nconst greeting = 1;\n', 'file.ts').parsedTexts];
+
+    expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(true);
+    expect(parsedTexts.some((p) => p.text === 'greeting')).toBe(false);
+  });
+
+  it('combines a name override with tag filtering', () => {
+    const customized = createParser({ name: 'custom-typescript', tags: { '*': false, comment: true } });
+    expect(customized.name).toBe('custom-typescript');
+
+    const parsedTexts = [...customized.parse('// a comment\nconst greeting = 1;\n', 'file.ts').parsedTexts];
+    expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(true);
+    expect(parsedTexts.some((p) => p.text === 'greeting')).toBe(false);
   });
 });

@@ -32,4 +32,11 @@ describe('customizePlugin', () => {
     expect(parsedTexts.some((p) => p.rawText === '// a comment')).toBe(true);
     expect(parsedTexts.some((p) => p.text === 'greeting')).toBe(false);
   });
+
+  it('wires name customization into the typescript parser', () => {
+    const customized = customizePlugin({ name: 'custom-typescript', tags: {} });
+    const [customizedParser] = (customized.parsers ?? []) as Parser[];
+
+    expect(customizedParser?.name).toBe('custom-typescript');
+  });
 });

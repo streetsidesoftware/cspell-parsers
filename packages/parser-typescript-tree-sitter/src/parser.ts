@@ -1,8 +1,8 @@
 import TreeSitterParser from 'tree-sitter';
 import TypeScriptLanguages from 'tree-sitter-typescript';
 import type { ParsedTags, ParsedText, Parser, ParseResult } from '@cspell/cspell-types/Parser';
-import { decodeStringParts, stripCommentMarkers } from '@internal/utils';
-import type { StringPart } from '@internal/utils';
+import { customizeParser, decodeStringParts, stripCommentMarkers } from '@internal/utils';
+import type { StringPart, TagFilterOptions } from '@internal/utils';
 
 type SyntaxNode = TreeSitterParser.SyntaxNode;
 
@@ -553,3 +553,41 @@ export const parser: Parser = {
 };
 
 export const supportedFileTypes: string[] = ['javascript', 'javascriptreact', 'typescript', 'typescriptreact'];
+
+/** Options for {@link createParser}: the parser's name, and which tagged segments to keep. */
+export interface CustomizeParserOptions {
+  /**
+   * Set the name of the parser.
+   */
+  name?: string;
+  /**
+   * Define which tagged segments to keep. Omit to keep everything.
+   */
+  tags?: TagFilterOptions;
+}
+
+/**
+ * Create a parser for TypeScript, TSX, JavaScript, and JSX files. You can set the name of the parser and
+ * filter on the tags if desired.
+ *
+ * The name is used to select the parser via the
+ * [cspell `parser`](https://cspell.org/docs/api/cspell-types/interfaces/CSpellSettings#parser) setting.
+ *
+ * Usage: **`cspell.config.mts`**
+ * ```ts
+ * import { createParser } from '@cspell/parser-typescript-tree-sitter/parser';
+ *
+ * const parser = createParser({
+ *   name: 'typescript-comments-only',
+ *   tags: { '*': false, comment: true },
+ * });
+ *
+ * export default {
+ *   plugins: [{ parsers: [parser] }],
+ *   languageSettings: [{ languageId: 'typescript', parser: 'typescript-comments-only' }],
+ * };
+ * ```
+ */
+export function createParser(options: CustomizeParserOptions = {}): Parser {
+  return customizeParser(parser, options);
+}
