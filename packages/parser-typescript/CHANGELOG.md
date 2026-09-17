@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.1.2](https://github.com/streetsidesoftware/cspell-parsers/compare/@cspell/parser-typescript@1.1.1...@cspell/parser-typescript@1.1.2) (2026-09-17)
+
+
+### Code Refactoring
+
+* Make typescript an alias of typescript-tree-sitter ([#46](https://github.com/streetsidesoftware/cspell-parsers/issues/46)) ([23ff2ca](https://github.com/streetsidesoftware/cspell-parsers/commit/23ff2caf9568cb517dbc7831db1a26d7d6826c91))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @cspell/parser-typescript-tree-sitter bumped to 1.0.1
+
 ## [1.1.1](https://github.com/streetsidesoftware/cspell-parsers/compare/@cspell/parser-typescript@1.1.0...@cspell/parser-typescript@1.1.1) (2026-09-16)
 
 

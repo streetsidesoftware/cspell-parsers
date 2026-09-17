@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.1.2](https://github.com/streetsidesoftware/cspell-parsers/compare/cspell-parsers@1.1.1...cspell-parsers@1.1.2) (2026-09-17)
+
+
+### Updates and Bug Fixes
+
+* Add a tree-sitter specific version of the parser. ([#44](https://github.com/streetsidesoftware/cspell-parsers/issues/44)) ([10c0dcc](https://github.com/streetsidesoftware/cspell-parsers/commit/10c0dccb4dde9dbbd76cb6a8c12ff78fef7e4e3b))
+* initial version of parser-typescript-tree-sitter-wasm ([#50](https://github.com/streetsidesoftware/cspell-parsers/issues/50)) ([1146384](https://github.com/streetsidesoftware/cspell-parsers/commit/114638457d35b73f73aa0441ca0128385e49ac9d))
+* Use a single instance of Tree-sitter ([#47](https://github.com/streetsidesoftware/cspell-parsers/issues/47)) ([0ea8001](https://github.com/streetsidesoftware/cspell-parsers/commit/0ea8001b92c60b406906d90a4eef2d1cbddc6334))
+
+
+### Code Refactoring
+
+* Make tree-sitter unique per language. ([#48](https://github.com/streetsidesoftware/cspell-parsers/issues/48)) ([715dc9a](https://github.com/streetsidesoftware/cspell-parsers/commit/715dc9aab864ad19c669183f57f2ee320ed38386))
+* Make typescript an alias of typescript-tree-sitter ([#46](https://github.com/streetsidesoftware/cspell-parsers/issues/46)) ([23ff2ca](https://github.com/streetsidesoftware/cspell-parsers/commit/23ff2caf9568cb517dbc7831db1a26d7d6826c91))
+
 ## [1.1.1](https://github.com/streetsidesoftware/cspell-parsers/compare/cspell-parsers@1.1.0...cspell-parsers@1.1.1) (2026-09-16)
 
 
