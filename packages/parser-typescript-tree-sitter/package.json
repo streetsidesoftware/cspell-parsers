@@ -1,6 +1,6 @@
 {
   "name": "@cspell/parser-typescript-tree-sitter",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A TypeScript parser plugin using tree-sitter for cspell.",
   "repository": {
     "type": "git",
