@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.0.5](https://github.com/streetsidesoftware/cspell-parsers/compare/@cspell/parser-javascript@1.0.4...@cspell/parser-javascript@1.0.5) (2026-09-17)
+
+
+### Updates and Bug Fixes
+
+* Add customizable parser name and example ([#57](https://github.com/streetsidesoftware/cspell-parsers/issues/57)) ([f7990d2](https://github.com/streetsidesoftware/cspell-parsers/commit/f7990d23a79dc124713be6839b0eb716ae53709c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @cspell/parser-typescript bumped to 1.1.5
+
 ## [1.0.4](https://github.com/streetsidesoftware/cspell-parsers/compare/@cspell/parser-javascript@1.0.3...@cspell/parser-javascript@1.0.4) (2026-09-17)
 
 

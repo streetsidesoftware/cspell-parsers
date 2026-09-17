@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.5](https://github.com/streetsidesoftware/cspell-parsers/compare/cspell-parsers@1.1.4...cspell-parsers@1.1.5) (2026-09-17)
+
+
+### Updates and Bug Fixes
+
+* Add customizable parser name and example ([#57](https://github.com/streetsidesoftware/cspell-parsers/issues/57)) ([f7990d2](https://github.com/streetsidesoftware/cspell-parsers/commit/f7990d23a79dc124713be6839b0eb716ae53709c))
+
 ## [1.1.4](https://github.com/streetsidesoftware/cspell-parsers/compare/cspell-parsers@1.1.3...cspell-parsers@1.1.4) (2026-09-17)
 
 
