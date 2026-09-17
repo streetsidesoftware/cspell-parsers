@@ -1,5 +1,5 @@
 {
-  "files": 11,
+  "files": 14,
   "issues": [
     {
       "uri": "with-issues/comment-and-identifier.ts",
@@ -24,6 +24,30 @@
       "text": "decleration",
       "row": 4,
       "col": 19
+    },
+    {
+      "uri": "with-issues/template-and-jsx.tsx",
+      "text": "Wecome",
+      "row": 1,
+      "col": 75
+    },
+    {
+      "uri": "with-issues/template-and-jsx.tsx",
+      "text": "Wecome",
+      "row": 4,
+      "col": 15
+    },
+    {
+      "uri": "with-issues/template-and-jsx.tsx",
+      "text": "occured",
+      "row": 8,
+      "col": 4
+    },
+    {
+      "uri": "with-issues/template-and-jsx.tsx",
+      "text": "occured",
+      "row": 10,
+      "col": 20
     }
   ],
   "errors": [],
