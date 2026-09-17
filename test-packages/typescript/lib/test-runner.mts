@@ -15,10 +15,13 @@ export interface RunOptions {
  * `plugin`, `recommended`, `customize`, and `with-issues` are all covered by this single invocation.
  *
  * `lib/reporter.mts` (wired up in `tests/cspell.config.mts`) captures the issues cspell reports into
- * `__snapshots/tests.actual.json`, which is then compared against - or, with `options.update`, copied
- * over - the checked-in `__snapshots/tests.json`. Pass/fail always comes from that comparison, never
- * from cspell's own exit code, since `with-issues` is expected to report real issues and a plain
- * "issues found" exit code can't tell that apart from a regression.
+ * `__snapshots/<moduleName>.tests.actual.json` - prefixed per module so concurrent `run()` calls for
+ * different modules (see exec-test.mts, which runs all of them in parallel) don't clobber each other's
+ * output - which is then compared against - or, with `options.update`, copied over - the checked-in
+ * `__snapshots/tests.json` (shared, since every module is expected to produce the same result).
+ * Pass/fail always comes from that comparison, never from cspell's own exit code, since `with-issues`
+ * is expected to report real issues and a plain "issues found" exit code can't tell that apart from a
+ * regression.
  *
  * `cwd` is expected to be this package's root directory (the parent of both `tests/` and `__snapshots/`).
  */
@@ -28,7 +31,8 @@ export async function run(moduleName: string, cwd: string, options: RunOptions =
 
 async function runSuite(moduleName: string, suite: string, cwd: string, options: RunOptions): Promise<void> {
   const target = `${suite}`;
-  const actualFile = path.join(cwd, '__snapshots', `${suite}.actual.json`);
+  const moduleNamePrefix = moduleName.replaceAll(/[^\w]/g, '_');
+  const actualFile = path.join(cwd, '__snapshots', `${moduleNamePrefix}.${suite}.actual.json`);
   const snapshotFile = path.join(cwd, '__snapshots', `${suite}.json`);
 
   await spawnCspell('.', moduleName, path.join(cwd, suite), actualFile);
@@ -58,7 +62,7 @@ async function runSuite(moduleName: string, suite: string, cwd: string, options:
   assert.deepStrictEqual(
     actual,
     JSON.parse(expectedText),
-    `snapshot mismatch for module "${moduleName}", suite "${suite}": __snapshots/${suite}.actual.json does not match __snapshots/${suite}.json (run with --update to accept)`,
+    `snapshot mismatch for module "${moduleName}", suite "${suite}": ${path.relative(cwd, actualFile)} does not match __snapshots/${suite}.json (run with --update to accept)`,
   );
 
   await fs.rm(actualFile, { force: true });

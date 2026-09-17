@@ -33,15 +33,15 @@ async function main() {
     return;
   }
 
-  const failures: string[] = [];
+  modules.forEach((moduleName) => console.error(`Running tests for module: ${moduleName}`));
 
-  for (const moduleName of modules) {
-    console.error(`Running tests for module: ${moduleName}`);
-    try {
-      await run(moduleName, import.meta.dirname, { update });
-    } catch (error) {
-      console.error(error instanceof Error ? error.message : error);
-      failures.push(moduleName);
+  const results = await Promise.allSettled(modules.map((moduleName) => run(moduleName, process.cwd(), { update })));
+
+  const failures = modules.filter((_, index) => results[index].status === 'rejected');
+
+  for (const result of results) {
+    if (result.status === 'rejected') {
+      console.error(result.reason instanceof Error ? result.reason.message : result.reason);
     }
   }
 
