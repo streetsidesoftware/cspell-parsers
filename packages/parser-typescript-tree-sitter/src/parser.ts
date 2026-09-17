@@ -80,29 +80,90 @@ const STRING_SINGLE_QUOTE_TAG = hierarchicalTags('string.singleQuote');
 const STRING_DOUBLE_QUOTE_TAG = hierarchicalTags('string.doubleQuote');
 const STRING_TEMPLATE_LITERAL_TAG = hierarchicalTags('string.templateLiteral');
 
-function quoteTag(text: string): ParsedTags {
+/**
+ * A module specifier string gets both the usual `string`/`string.singleQuote`/`string.doubleQuote`
+ * hierarchy - with `.module` appended, so a consumer filtering on plain `string` still doesn't
+ * separately have to know about `module.specifier.literal` - and `module.specifier.literal`, which
+ * identifies it as a module specifier regardless of its quote style.
+ */
+const MODULE_SPECIFIER_LITERAL_TAG = hierarchicalTags('module.specifier.literal');
+const STRING_MODULE_TAG = { ...hierarchicalTags('string.module'), ...MODULE_SPECIFIER_LITERAL_TAG };
+const STRING_SINGLE_QUOTE_MODULE_TAG = {
+  ...hierarchicalTags('string.singleQuote.module'),
+  ...MODULE_SPECIFIER_LITERAL_TAG,
+};
+const STRING_DOUBLE_QUOTE_MODULE_TAG = {
+  ...hierarchicalTags('string.doubleQuote.module'),
+  ...MODULE_SPECIFIER_LITERAL_TAG,
+};
+
+function quoteTag(text: string, isModuleSpecifier: boolean): ParsedTags {
   switch (text[0]) {
     case "'":
-      return STRING_SINGLE_QUOTE_TAG;
+      return isModuleSpecifier ? STRING_SINGLE_QUOTE_MODULE_TAG : STRING_SINGLE_QUOTE_TAG;
     case '"':
-      return STRING_DOUBLE_QUOTE_TAG;
+      return isModuleSpecifier ? STRING_DOUBLE_QUOTE_MODULE_TAG : STRING_DOUBLE_QUOTE_TAG;
     default:
-      return STRING_TAG;
+      return isModuleSpecifier ? STRING_MODULE_TAG : STRING_TAG;
   }
 }
 
+/** True when `node` is a `call_expression` whose callee is the dynamic `import(...)` keyword. */
+function isDynamicImportCall(node: SyntaxNode): boolean {
+  return node.type === 'call_expression' && node.childForFieldName('function')?.type === 'import';
+}
+
 /**
- * True when `node` is the module-specifier string of an `import ... from '...'` or
- * `export ... from '...'` statement - as opposed to some unrelated string literal that
- * happens to be a descendant (e.g. `export default "foo";`, where "foo" is the `value` field).
+ * True when `node` is a `call_expression` whose callee is exactly the identifier `require` - a heuristic,
+ * same spirit as `isBareModuleSpecifier`: there's no grammar-level way to know `require` really is Node's
+ * module loader rather than some unrelated same-named local function, but treating it as one is right far
+ * more often than not.
+ */
+function isRequireCall(node: SyntaxNode): boolean {
+  if (node.type !== 'call_expression') return false;
+  const fn = node.childForFieldName('function');
+  return fn?.type === 'identifier' && fn.text === 'require';
+}
+
+/**
+ * True when `node` is the specifier argument of a dynamic `import('...')` call - tree-sitter gives the
+ * callee its own `import` node type (distinct from `identifier`), so this can't be confused with a call to
+ * some unrelated function that merely happens to be named `import`.
+ */
+function isDynamicImportSpecifier(node: SyntaxNode): boolean {
+  const args = node.parent;
+  if (!args || args.type !== 'arguments' || args.namedChildren[0] !== node) return false;
+  const call = args.parent;
+  return !!call && isDynamicImportCall(call);
+}
+
+/**
+ * True when `value` - a `variable_declarator`'s `value` field - is a dynamic `import(...)` call or a
+ * `require(...)` call, optionally `await`-ed, so the variable it initializes is bound to an external
+ * module the same way a namespace import (`import * as x from '...'`) is: the name itself is authored here
+ * (so it's checked), but any property read off it belongs to the external module (see `isExternalObject`).
+ */
+function isModuleBindingInitializer(value: SyntaxNode): boolean {
+  const expr = value.type === 'await_expression' ? value.namedChild(0) : value;
+  return !!expr && (isDynamicImportCall(expr) || isRequireCall(expr));
+}
+
+/**
+ * True when `node` is the module-specifier string of an `import ... from '...'` statement,
+ * `export ... from '...'` statement, or a dynamic `import('...')` call - as opposed to some unrelated
+ * string literal that happens to be a descendant (e.g. `export default "foo";`, where "foo" is the
+ * `value` field).
  */
 function isModuleSpecifierString(node: SyntaxNode): boolean {
   const parent = node.parent;
   if (!parent) return false;
-  return (
+  if (
     (parent.type === 'import_statement' || parent.type === 'export_statement') &&
     parent.childForFieldName('source') === node
-  );
+  ) {
+    return true;
+  }
+  return isDynamicImportSpecifier(node);
 }
 
 /**
@@ -138,9 +199,10 @@ const identifierTagByKind: Record<IdentifierKind, ParsedTags> = {
 };
 
 /**
- * Local names bound by `import` declarations, gathered with a pass over the
- * whole file before the main walk so usage doesn't need to textually follow
- * the import.
+ * Local names bound by `import` declarations - or a `const x = require(...)` / `const x = await
+ * import(...)` variable initializer, which binds a name to an external module the same way a namespace
+ * import does - gathered with a pass over the whole file before the main walk so usage doesn't need to
+ * textually follow the binding.
  */
 interface ImportBindings {
   /** Every local name introduced by an import (aliases, defaults, namespaces, and unaliased names). */
@@ -175,6 +237,13 @@ function collectImportBindings(root: SyntaxNode): ImportBindings {
           const id = child.namedChildren.find((c) => c.type === 'identifier');
           if (id) localNames.add(id.text);
         }
+      }
+    }
+    if (node.type === 'variable_declarator') {
+      const nameNode = node.childForFieldName('name');
+      const valueNode = node.childForFieldName('value');
+      if (nameNode?.type === 'identifier' && valueNode && isModuleBindingInitializer(valueNode)) {
+        localNames.add(nameNode.text);
       }
     }
     for (const child of node.namedChildren) visit(child);
@@ -319,7 +388,7 @@ function makeComment(node: SyntaxNode): ParsedText {
  * (so a spell checker sees `café`, not `caf` + a stray `u00e9` token) and strips the surrounding quotes
  * into `rawText`/`map`, the same way `emitComment` strips a comment's delimiters.
  */
-function makeString(node: SyntaxNode): ParsedText {
+function makeString(node: SyntaxNode, isModuleSpecifier: boolean): ParsedText {
   const rawText = node.text;
   const parts = childrenToStringParts(node.namedChildren);
   // The opening/closing quote (or backtick) is always node's first/last child - including for an empty
@@ -332,7 +401,7 @@ function makeString(node: SyntaxNode): ParsedText {
   const map = [openLen, 0, ...innerMap];
   if (closeLen > 0) map.push(closeLen, 0);
 
-  return { text, rawText, map, range: [node.startIndex, node.endIndex], tags: quoteTag(rawText) };
+  return { text, rawText, map, range: [node.startIndex, node.endIndex], tags: quoteTag(rawText, isModuleSpecifier) };
 }
 
 /** Builds one decoded run of a template literal's `string_fragment`/`escape_sequence` children (see `walk`). */
@@ -363,11 +432,13 @@ function* walk(
     case 'comment':
       yield makeComment(node);
       return;
-    case 'string':
+    case 'string': {
+      const isModuleSpecifier = isModuleSpecifierString(node);
       // A bare module specifier (`from 'prettier'`) is fixed by the package, not authored here.
-      if (isModuleSpecifierString(node) && isBareModuleSpecifier(node.text)) return;
-      yield makeString(node);
+      if (isModuleSpecifier && isBareModuleSpecifier(node.text)) return;
+      yield makeString(node, isModuleSpecifier);
       return;
+    }
     case 'template_string': {
       let runParts: StringPart[] = [];
       let runStart = 0;

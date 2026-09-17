@@ -141,6 +141,21 @@ describe('typescript parser', () => {
       expect(myExample.some((p) => identifierKind(p) === 'variable')).toBe(true);
     });
 
+    it('tags a re-export source the same as an import source', () => {
+      const specifiers = findAll(parsedTexts, './example.js');
+      expect(specifiers.length).toBeGreaterThan(1);
+      for (const specifier of specifiers) {
+        expect(specifier.tags).toEqual({
+          string: true,
+          'string.singleQuote': true,
+          'string.singleQuote.module': true,
+          module: true,
+          'module.specifier': true,
+          'module.specifier.literal': true,
+        });
+      }
+    });
+
     it('does not check a property accessed off an imported binding, since it is external to this file', () => {
       for (const external of ['explReal', 'subProp', 'doThing', 'callSomething']) {
         expect(identifiers.some((p) => p.text === external)).toBe(false);
@@ -150,6 +165,21 @@ describe('typescript parser', () => {
     it('checks a reference to a locally-named import binding used as a call target', () => {
       const defaultExportRefs = findAll(identifiers, 'defaultExport');
       expect(defaultExportRefs.some((p) => identifierKind(p) === 'variable')).toBe(true);
+    });
+
+    it('tags a relative dynamic import() specifier as a module specifier', () => {
+      expect(find(parsedTexts, './dynamic-module.js').tags).toEqual({
+        string: true,
+        'string.singleQuote': true,
+        'string.singleQuote.module': true,
+        module: true,
+        'module.specifier': true,
+        'module.specifier.literal': true,
+      });
+    });
+
+    it('does not check a bare dynamic import() specifier, since it resolves through node_modules', () => {
+      expect(parsedTexts.some((p) => p.rawText === "'prettier'")).toBe(false);
     });
   });
 
@@ -206,7 +236,14 @@ describe('typescript parser', () => {
     });
 
     it('still checks a relative module specifier string', () => {
-      expect(find(parsedTexts, './example.js').tags).toEqual({ string: true, 'string.singleQuote': true });
+      expect(find(parsedTexts, './example.js').tags).toEqual({
+        string: true,
+        'string.singleQuote': true,
+        'string.singleQuote.module': true,
+        module: true,
+        'module.specifier': true,
+        'module.specifier.literal': true,
+      });
     });
 
     it('checks the default import binding for a bare specifier, since the author chose that name', () => {
@@ -219,6 +256,27 @@ describe('typescript parser', () => {
 
     it('still checks an ordinary string argument that is not a module specifier', () => {
       expect(find(parsedTexts, 'typescript').tags).toEqual({ string: true, 'string.singleQuote': true });
+    });
+  });
+
+  describe('module-bindings.ts', () => {
+    const parsedTexts = parseFixture('module-bindings.ts');
+    const identifiers = parsedTexts.filter((p) => identifierKind(p) !== undefined);
+
+    it('checks a variable bound to a dynamic import(), since the author chose that name', () => {
+      expect(find(identifiers, 'varPrettier').tags).toEqual({ identifier: true, 'identifier.variable': true });
+    });
+
+    it('checks a variable bound to require(), since the author chose that name', () => {
+      expect(find(identifiers, 'treeSitter').tags).toEqual({ identifier: true, 'identifier.variable': true });
+    });
+
+    it('does not check a property accessed off a variable bound to a dynamic import()', () => {
+      expect(identifiers.some((p) => p.text === 'check')).toBe(false);
+    });
+
+    it('does not check a property accessed off a variable bound to require()', () => {
+      expect(identifiers.some((p) => p.text === 'parse')).toBe(false);
     });
   });
 

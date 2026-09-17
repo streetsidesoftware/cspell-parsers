@@ -101,6 +101,24 @@ because the import wasn't renamed). The distinction matters because:
 - A bare module specifier string (`from 'prettier'`, as opposed to `from './mod.js'`) is excluded the same
   way, for the same reason: it's a package name, not something authored here (`isModuleSpecifierString` +
   `isBareModuleSpecifier`, checked in the `'string'` case).
+- A module specifier string that _is_ checked (a relative specifier like `from './mod.js'`) additionally gets
+  `module.specifier.literal`, plus `.module` appended to its usual quote-style string tag (e.g.
+  `string.singleQuote` becomes `string.singleQuote.module`) - so a consumer can filter module specifiers
+  independently of ordinary string literals, without losing the plain `string`/`string.singleQuote` tags
+  (`quoteTag`'s `isModuleSpecifier` parameter, threaded through from the `'string'` case in `walk`).
+- `isModuleSpecifierString` also recognizes a dynamic `import('...')` call's specifier argument
+  (`isDynamicImportSpecifier`) - tree-sitter gives that call's callee its own `import` node type, distinct
+  from `identifier`, so this can't misfire on some unrelated function that happens to be named `import`. A
+  plain `require('...')` call's specifier string isn't tagged `module.specifier.literal` the same way: its
+  callee is an ordinary `identifier`, indistinguishable from any other function call by grammar alone, so
+  tagging its argument would mean tagging the argument of any 1-arg call named `require` - too broad a net
+  for a tag meant to identify the string itself as a module specifier.
+- `collectImportBindings` also treats `const x = await import('...')` and `const x = require('...')` like a
+  namespace import (`isModuleBindingInitializer`, matched via `variable_declarator`'s `value` field, unwrapping
+  one level of `await_expression` first): `x` itself is added to `localNames` (so it's checked, like
+  `identifierKindByNodeType`'s plain `identifier` case - no `importBinding` tag, since it's an ordinary
+  variable declaration, not import syntax) but never to `externalNames`, so `isExternalObject` still treats
+  `x.someProp` as external the same way it would for a real namespace import.
 
 ## Shadowing
 

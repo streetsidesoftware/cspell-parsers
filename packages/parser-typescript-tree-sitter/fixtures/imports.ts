@@ -11,3 +11,6 @@ myExample.explReal;
 myExample.explReal.subProp;
 namespaceImport.doThing();
 defaultExport();
+
+import('./dynamic-module.js');
+import('prettier');
