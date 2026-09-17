@@ -1,5 +1,5 @@
 import type { Plugin } from '@cspell/cspell-types';
-import { customizePlugin as customizePluginWithTags } from '@internal/utils';
+import { customizeParser } from '@internal/utils';
 
 import { parser, type CustomizeParserOptions } from './parser.js';
 
@@ -18,5 +18,5 @@ export type CustomizePluginOptions = CustomizeParserOptions;
  * natively, and whose parser is renamed to `options.name` when given.
  */
 export function customizePlugin(options: CustomizePluginOptions): Plugin {
-  return customizePluginWithTags(plugin, options);
+  return { ...plugin, parsers: [customizeParser(parser, options)] };
 }

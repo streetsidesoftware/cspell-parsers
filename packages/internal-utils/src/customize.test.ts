@@ -1,7 +1,7 @@
-import type { ParsedTags, ParsedText, Parser, Plugin } from '@cspell/cspell-types';
+import type { ParsedTags, ParsedText, Parser } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
-import { compileTagFilter, customizeParser, customizePlugin } from './customize.js';
+import { compileTagFilter, customizeParser } from './customize.js';
 
 function mkText(content: string, tags: ParsedText['tags']): ParsedText {
   return { text: content, range: [0, content.length], tags };
@@ -180,32 +180,5 @@ describe('compileTagFilter', () => {
       expect(isIncluded(identifier)).toBe(true); // prefix "identifier*" match
       expect(isIncluded(lineComment)).toBe(false); // exact "comment" (specificity 7) matches; "*.doc" never applies
     });
-  });
-});
-
-describe('customizePlugin', () => {
-  it('wraps every parser in the plugin', () => {
-    const kept = mkText('a', { string: true });
-    const dropped = mkText('b', { comment: true });
-    const plugin: Plugin = { parsers: [fakeParser([kept, dropped])] };
-
-    const customized = customizePlugin(plugin, { tags: { '*': false, string: true } });
-    const [parser] = customized.parsers ?? [];
-    expect(parser).toBeDefined();
-    expect('parse' in (parser as Parser) ? [...(parser as Parser).parse('', 'f').parsedTexts] : undefined).toEqual([
-      kept,
-    ]);
-  });
-
-  it('passes through plugins with no parsers', () => {
-    const plugin: Plugin = { name: 'empty' };
-    expect(customizePlugin(plugin, { tags: {} })).toEqual(plugin);
-  });
-
-  it('overrides every parser name in the plugin when options.name is given', () => {
-    const plugin: Plugin = { parsers: [fakeParser([])] };
-    const customized = customizePlugin(plugin, { name: 'custom', tags: {} });
-    const [parser] = customized.parsers ?? [];
-    expect((parser as Parser).name).toBe('custom');
   });
 });
