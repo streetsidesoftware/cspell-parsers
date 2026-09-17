@@ -96,7 +96,7 @@ describe('createParser', () => {
   const content = '// a comment\n/* a block */\n';
 
   it('defaults to the "c-style-comments" name and keeps everything when called with no options', () => {
-    const customized = createParser({});
+    const customized = createParser();
     expect(customized.name).toBe('c-style-comments');
 
     const parsedTexts = [...customized.parse(content, 'file.c').parsedTexts];

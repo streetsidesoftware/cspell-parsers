@@ -94,7 +94,7 @@ describe('createParser', () => {
   const content = "// a comment\nconst greeting = 'hello';\n";
 
   it('defaults to the "javascript" name and keeps everything when called with no options', () => {
-    const customized = createParser({});
+    const customized = createParser();
     expect(customized.name).toBe('javascript');
 
     const parsedTexts = [...customized.parse(content, 'file.js').parsedTexts];

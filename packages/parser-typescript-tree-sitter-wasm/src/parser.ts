@@ -629,6 +629,6 @@ export interface CustomizeParserOptions {
  * };
  * ```
  */
-export function createParser(options: CustomizeParserOptions): Parser {
+export function createParser(options: CustomizeParserOptions = {}): Parser {
   return customizeParser(parser, options);
 }

@@ -335,7 +335,7 @@ describe('typescript parser', () => {
 
 describe('createParser', () => {
   it('defaults to the "typescript" name and keeps everything when called with no options', () => {
-    const customized = createParser({});
+    const customized = createParser();
     expect(customized.name).toBe('typescript');
 
     const parsedTexts = [...customized.parse('// a comment\nconst greeting = 1;\n', 'file.ts').parsedTexts];
