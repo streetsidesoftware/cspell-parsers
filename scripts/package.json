@@ -1,0 +1,11 @@
+{
+  "name": "@internal/scripts",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "fix-package-json": "./fix-package-json.ts"
+  },
+  "devDependencies": {
+    "sort-package-json": "^4.0.0"
+  }
+}

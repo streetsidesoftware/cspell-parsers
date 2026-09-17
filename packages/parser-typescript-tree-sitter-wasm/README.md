@@ -125,6 +125,17 @@ export default {
 
 - Uses WebAssembly (via `@vscode/tree-sitter-wasm`), so it does not require a native compiler toolchain to install.
 
+## Requirements
+
+<!--- @@inject: ../../static/requirements.md --->
+
+| Tool                                                                                                            | Version    |
+| --------------------------------------------------------------------------------------------------------------- | ---------- |
+| [cspell](https://cspell.org)                                                                                    | `>=10.0.0` |
+| [Code Spell Checker](https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.code-spell-checker) | `>=4.4.0`  |
+
+<!--- @@inject-end: ../../static/requirements.md --->
+
 ## Support Future Development
 
 <!--- @@inject: ../../static/sponsor.md --->

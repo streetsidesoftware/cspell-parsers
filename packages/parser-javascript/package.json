@@ -20,6 +20,10 @@
     "provenance": true
   },
   "type": "module",
+  "engines": {
+    "node": ">=22.18.0",
+    "cspell": ">=10.0.0"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
