@@ -11,5 +11,4 @@ export default {
       parser: 'typescript',
     },
   ],
-  reporters: ['default', '../../lib/reporter.mts'],
 };

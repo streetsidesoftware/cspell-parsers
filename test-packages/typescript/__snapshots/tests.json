@@ -1,26 +1,26 @@
 {
-  "files": 3,
+  "files": 11,
   "issues": [
     {
-      "uri": "tests/with-issues/comment-and-identifier.ts",
+      "uri": "with-issues/comment-and-identifier.ts",
       "text": "recieve",
       "row": 2,
       "col": 38
     },
     {
-      "uri": "tests/with-issues/comment-and-identifier.ts",
+      "uri": "with-issues/comment-and-identifier.ts",
       "text": "Greetign",
       "row": 4,
       "col": 23
     },
     {
-      "uri": "tests/with-issues/comment-and-identifier.ts",
+      "uri": "with-issues/comment-and-identifier.ts",
       "text": "sentance",
       "row": 8,
       "col": 37
     },
     {
-      "uri": "tests/with-issues/example.ts",
+      "uri": "with-issues/example.ts",
       "text": "decleration",
       "row": 4,
       "col": 19

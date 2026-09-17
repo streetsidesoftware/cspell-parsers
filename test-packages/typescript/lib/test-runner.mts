@@ -3,8 +3,6 @@ import child_process from 'node:child_process';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const SUITES = ['plugin', 'recommended', 'customize', 'with-issues'];
-
 export interface RunOptions {
   /** Promote each suite's actual results to be the new checked-in snapshot instead of checking them. */
   update?: boolean;
@@ -23,18 +21,15 @@ export interface RunOptions {
  * `cwd` is expected to be this package's root directory (the parent of both `tests/` and `__snapshots/`).
  */
 export async function run(moduleName: string, cwd: string, options: RunOptions = {}): Promise<void> {
-  for (const suite of SUITES) {
-    await runSuite(moduleName, suite, cwd, options);
-  }
+  await runSuite(moduleName, 'tests', cwd, options);
 }
 
 async function runSuite(moduleName: string, suite: string, cwd: string, options: RunOptions): Promise<void> {
-  const config = `tests/${suite}/cspell.config.mts`;
-  const target = `tests/${suite}`;
+  const target = `${suite}`;
   const actualFile = path.join(cwd, '__snapshots', `${suite}.actual.json`);
   const snapshotFile = path.join(cwd, '__snapshots', `${suite}.json`);
 
-  await spawnCspell(config, target, moduleName, cwd, actualFile);
+  await spawnCspell('.', moduleName, path.join(cwd, suite), actualFile);
 
   const actual = JSON.parse(await fs.readFile(actualFile, 'utf8'));
 
@@ -67,13 +62,7 @@ async function runSuite(moduleName: string, suite: string, cwd: string, options:
   await fs.rm(actualFile, { force: true });
 }
 
-function spawnCspell(
-  config: string,
-  target: string,
-  moduleName: string,
-  cwd: string,
-  actualFile: string,
-): Promise<void> {
+function spawnCspell(target: string, moduleName: string, cwd: string, actualFile: string): Promise<void> {
   const env = {
     ...process.env,
     CSPELL_PARSER_TYPESCRIPT_MODULE: moduleName,
@@ -86,11 +75,12 @@ function spawnCspell(
   // checked here - `with-issues` always reports real issues, so pass/fail is decided by the snapshot
   // diff in runSuite instead.
   return new Promise<void>((resolve, reject) => {
-    const child = child_process.spawn(
-      'pnpm',
-      ['exec', 'cspell', '--no-config-search', '-c', config, target, '--no-progress', '--no-color'],
-      { cwd, env, stdio: 'inherit', shell: process.platform === 'win32' },
-    );
+    const child = child_process.spawn('pnpm', ['exec', 'cspell', target, '--no-progress', '--no-color'], {
+      cwd,
+      env,
+      stdio: 'inherit',
+      shell: process.platform === 'win32',
+    });
 
     child.on('error', reject);
     child.on('exit', () => resolve());
