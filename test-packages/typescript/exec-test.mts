@@ -1,4 +1,3 @@
-import Path from 'node:path';
 import process from 'node:process';
 import packageJson from './package.json' with { type: 'json' };
 
@@ -26,6 +25,7 @@ async function main() {
   console.error('Test Runner');
 
   const modules = modulesToTest();
+  const update = process.argv.includes('--update');
 
   if (modules.length === 0) {
     console.error('No modules to test. Use --module <name> or --all.');
@@ -38,7 +38,7 @@ async function main() {
   for (const moduleName of modules) {
     console.error(`Running tests for module: ${moduleName}`);
     try {
-      await run(moduleName, Path.join(import.meta.dirname, 'tests'));
+      await run(moduleName, import.meta.dirname, { update });
     } catch (error) {
       console.error(error instanceof Error ? error.message : error);
       failures.push(moduleName);

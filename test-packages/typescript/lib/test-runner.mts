@@ -3,76 +3,90 @@ import child_process from 'node:child_process';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const WITH_ISSUES_DIR = 'with-issues';
-const WITH_ISSUES_CONFIG = `${WITH_ISSUES_DIR}/cspell.config.mts`;
-const WITH_ISSUES_ACTUAL = `${WITH_ISSUES_DIR}/actual.snapshot.json`;
-const WITH_ISSUES_SNAPSHOT = `${WITH_ISSUES_DIR}/snapshot.json`;
+const SUITES = ['plugin', 'recommended', 'customize', 'with-issues'];
+
+export interface RunOptions {
+  /** Promote each suite's actual results to be the new checked-in snapshot instead of checking them. */
+  update?: boolean;
+}
 
 /**
- * Runs the full test suite for a single parser module, with `CSPELL_PARSER_TYPESCRIPT_MODULE` set to
- * `moduleName` so each test's `cspell.config.mts` loads that module's plugin/recommended export: the
- * "happy path" fixtures (which must produce zero issues) and the `with-issues` fixtures (deliberate,
- * known typos whose exact locations must match the checked-in snapshot on every backend).
+ * Runs every `tests/<suite>` fixture for a single parser module, with `CSPELL_PARSER_TYPESCRIPT_MODULE`
+ * set to `moduleName` so each suite's `cspell.config.mts` loads that module's plugin/recommended export.
  *
- * `cwd` is expected to be this package's `tests/` directory.
+ * Every suite is checked the same way, whether or not it's expected to be clean: `lib/reporter.mts`
+ * captures the issues cspell reports into `__snapshots/<suite>.actual.json`, which is then compared
+ * against - or, with `options.update`, copied over - the checked-in `__snapshots/<suite>.json`. Pass/fail
+ * always comes from that comparison, never from cspell's own exit code, since `with-issues` is expected
+ * to report real issues and a plain "issues found" exit code can't tell that apart from a regression.
+ *
+ * `cwd` is expected to be this package's root directory (the parent of both `tests/` and `__snapshots/`).
  */
-export async function run(moduleName: string, cwd: string): Promise<void> {
-  await runHappyPath(moduleName, cwd);
-  await runWithIssues(moduleName, cwd);
+export async function run(moduleName: string, cwd: string, options: RunOptions = {}): Promise<void> {
+  for (const suite of SUITES) {
+    await runSuite(moduleName, suite, cwd, options);
+  }
 }
 
-async function runHappyPath(moduleName: string, cwd: string): Promise<void> {
-  // tests/cspell.config.mjs's `ignorePaths` excludes `with-issues` from this run (its fixtures
-  // contain deliberate typos - see runWithIssues), so this is expected to find zero issues.
-  await spawnCspell(['.', '--no-progress', '--no-color'], moduleName, cwd);
-}
+async function runSuite(moduleName: string, suite: string, cwd: string, options: RunOptions): Promise<void> {
+  const config = `tests/${suite}/cspell.config.mts`;
+  const target = `tests/${suite}`;
+  const actualFile = path.join(cwd, '__snapshots', `${suite}.actual.json`);
+  const snapshotFile = path.join(cwd, '__snapshots', `${suite}.json`);
 
-async function runWithIssues(moduleName: string, cwd: string): Promise<void> {
-  // `--no-config-search -c <config>` bypasses the `ignorePaths` that exclude `with-issues` from the
-  // happy-path run above. cspell will exit non-zero here since those typos are real, expected
-  // findings - that's not a failure. The reporter configured in WITH_ISSUES_CONFIG writes every
-  // issue it sees to WITH_ISSUES_ACTUAL, and pass/fail is decided below by diffing that against the
-  // checked-in WITH_ISSUES_SNAPSHOT.
-  await spawnCspell(
-    ['--no-config-search', '-c', WITH_ISSUES_CONFIG, WITH_ISSUES_DIR, '--no-progress', '--no-color'],
-    moduleName,
-    cwd,
-    { ignoreExitCode: true },
-  );
+  await spawnCspell(config, target, moduleName, cwd, actualFile);
 
-  const actual = JSON.parse(await fs.readFile(path.join(cwd, WITH_ISSUES_ACTUAL), 'utf8'));
-  const expected = JSON.parse(await fs.readFile(path.join(cwd, WITH_ISSUES_SNAPSHOT), 'utf8'));
+  const actual = JSON.parse(await fs.readFile(actualFile, 'utf8'));
+
+  if (options.update) {
+    await fs.mkdir(path.dirname(snapshotFile), { recursive: true });
+    await fs.writeFile(snapshotFile, JSON.stringify(actual, null, 2) + '\n');
+    console.error(`Updated snapshot: __snapshots/${suite}.json`);
+    return;
+  }
+
+  let expectedText: string;
+  try {
+    expectedText = await fs.readFile(snapshotFile, 'utf8');
+  } catch {
+    throw new Error(
+      `No snapshot found for suite "${suite}" (__snapshots/${suite}.json). Run with --update to create it.`,
+    );
+  }
 
   assert.deepStrictEqual(
     actual,
-    expected,
-    `known-issues snapshot mismatch for module "${moduleName}": ${WITH_ISSUES_ACTUAL} does not match ${WITH_ISSUES_SNAPSHOT}`,
+    JSON.parse(expectedText),
+    `snapshot mismatch for module "${moduleName}", suite "${suite}": __snapshots/${suite}.actual.json does not match __snapshots/${suite}.json (run with --update to accept)`,
   );
 }
 
 function spawnCspell(
-  args: string[],
+  config: string,
+  target: string,
   moduleName: string,
   cwd: string,
-  options: { ignoreExitCode?: boolean } = {},
+  actualFile: string,
 ): Promise<void> {
-  const env = { ...process.env, CSPELL_PARSER_TYPESCRIPT_MODULE: moduleName };
+  const env = {
+    ...process.env,
+    CSPELL_PARSER_TYPESCRIPT_MODULE: moduleName,
+    CSPELL_SNAPSHOT_OUT: actualFile,
+  };
 
+  // `--no-config-search -c <config>` targets exactly one suite's own config, bypassing the repo-level
+  // `ignorePaths` that exclude the whole `tests` tree from the repo-wide `pnpm spell` check (its
+  // fixtures contain deliberate typos and aren't meant for that scan). cspell's own exit code isn't
+  // checked here - `with-issues` always reports real issues, so pass/fail is decided by the snapshot
+  // diff in runSuite instead.
   return new Promise<void>((resolve, reject) => {
-    const child = child_process.spawn('pnpm', ['exec', 'cspell', ...args], {
-      cwd,
-      env,
-      stdio: 'inherit',
-      shell: process.platform === 'win32',
-    });
+    const child = child_process.spawn(
+      'pnpm',
+      ['exec', 'cspell', '--no-config-search', '-c', config, target, '--no-progress', '--no-color'],
+      { cwd, env, stdio: 'inherit', shell: process.platform === 'win32' },
+    );
 
     child.on('error', reject);
-    child.on('exit', (code) => {
-      if (code === 0 || options.ignoreExitCode) {
-        resolve();
-      } else {
-        reject(new Error(`cspell failed for module "${moduleName}" (exit code ${code})`));
-      }
-    });
+    child.on('exit', () => resolve());
   });
 }

@@ -2,4 +2,5 @@ const moduleName = process.env['CSPELL_PARSER_TYPESCRIPT_MODULE'] || '@cspell/pa
 
 export default {
   import: [moduleName + '/recommended'],
+  reporters: ['default', '../../lib/reporter.mts'],
 };

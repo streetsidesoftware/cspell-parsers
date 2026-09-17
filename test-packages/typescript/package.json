@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "test": "pnpm run test:typescript",
-    "test:typescript": "node exec-test.mts --all"
+    "test:typescript": "node exec-test.mts --all",
+    "test:update": "node exec-test.mts --all --update"
   },
   "dependencies": {
     "@cspell/parser-typescript": "workspace:*",

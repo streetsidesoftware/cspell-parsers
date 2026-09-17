@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { format } from 'node:util';
 
 import type { CSpellReporter } from '@cspell/cspell-types';
 
@@ -11,19 +12,18 @@ interface Issue {
   col: number;
 }
 
-interface ReporterSettings {
-  outFile?: string;
-}
-
 /**
- * A cspell reporter used by the `with-issues` tests to capture every reported issue into a JSON
- * file (`settings.outFile`, resolved relative to `process.cwd()`), so it can be diffed against a
- * checked-in snapshot. This lets us assert that every parser backend under test flags the exact same
- * set of words at the exact same locations, not just that a run "found some issues".
+ * A cspell reporter shared by every `tests/*` suite to capture every reported issue into a JSON
+ * file (`process.env.CSPELL_SNAPSHOT_OUT`, resolved relative to `process.cwd()`), so it can be
+ * diffed against a checked-in snapshot in `__snapshots/`. This lets us assert that every parser
+ * backend under test flags the exact same set of words at the exact same locations in every suite -
+ * including the ones that are supposed to find nothing - rather than trusting cspell's own exit code,
+ * which can't tell "no issues" apart from "the expected issues".
  */
-export function getReporter(settings: ReporterSettings = {}): CSpellReporter {
-  const outFile = settings.outFile;
+export function getReporter(): CSpellReporter {
+  const outFile = process.env['CSPELL_SNAPSHOT_OUT'];
   const issues: Issue[] = [];
+  const errors: string[] = [];
 
   return {
     issue: (issue) => {
@@ -34,14 +34,25 @@ export function getReporter(settings: ReporterSettings = {}): CSpellReporter {
         col: issue.col,
       });
     },
-    result: () => {
+    result: (result) => {
       if (!outFile) return;
       issues.sort(compareIssues);
+
+      const { files, cachedFiles, skippedFiles } = result;
+
+      const report = {
+        files,
+        issues,
+        errors,
+        cachedFiles,
+        skippedFiles,
+      };
+
       fs.mkdirSync(path.dirname(outFile), { recursive: true });
-      fs.writeFileSync(outFile, JSON.stringify(issues, null, 2) + '\n');
+      fs.writeFileSync(outFile, JSON.stringify(report, null, 2) + '\n');
     },
     error: (message, error) => {
-      console.error('[reporter.mts]', message, error);
+      errors.push(format(message, error));
     },
   };
 }
