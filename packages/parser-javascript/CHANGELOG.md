@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.0.2](https://github.com/streetsidesoftware/cspell-parsers/compare/@cspell/parser-javascript@1.0.1...@cspell/parser-javascript@1.0.2) (2026-09-17)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @cspell/parser-typescript bumped to 1.1.2
+
 ## [1.0.1](https://github.com/streetsidesoftware/cspell-parsers/compare/@cspell/parser-javascript@1.0.0...@cspell/parser-javascript@1.0.1) (2026-09-16)
 
 
