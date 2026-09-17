@@ -19,8 +19,9 @@
     "typecheck": "pnpm -r run typecheck"
   },
   "devDependencies": {
-    "@internal/scripts": "workspace:*",
+    "@cspell/cspell-json-reporter": "^10.3.3",
     "@eslint/js": "^10.0.1",
+    "@internal/scripts": "workspace:*",
     "@lerna-lite/cli": "^5.6.1",
     "@lerna-lite/publish": "^5.6.1",
     "@tsconfig/node22": "^22.0.6",
