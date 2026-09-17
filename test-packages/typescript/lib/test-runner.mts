@@ -9,14 +9,16 @@ export interface RunOptions {
 }
 
 /**
- * Runs every `tests/<suite>` fixture for a single parser module, with `CSPELL_PARSER_TYPESCRIPT_MODULE`
- * set to `moduleName` so each suite's `cspell.config.mts` loads that module's plugin/recommended export.
+ * Runs cspell over the whole `tests` folder for a single parser module, with
+ * `CSPELL_PARSER_TYPESCRIPT_MODULE` set to `moduleName` so each subfolder's own `cspell.config.mts`
+ * loads that module's plugin/recommended export - cspell resolves the nearest config per file, so
+ * `plugin`, `recommended`, `customize`, and `with-issues` are all covered by this single invocation.
  *
- * Every suite is checked the same way, whether or not it's expected to be clean: `lib/reporter.mts`
- * captures the issues cspell reports into `__snapshots/<suite>.actual.json`, which is then compared
- * against - or, with `options.update`, copied over - the checked-in `__snapshots/<suite>.json`. Pass/fail
- * always comes from that comparison, never from cspell's own exit code, since `with-issues` is expected
- * to report real issues and a plain "issues found" exit code can't tell that apart from a regression.
+ * `lib/reporter.mts` (wired up in `tests/cspell.config.mts`) captures the issues cspell reports into
+ * `__snapshots/tests.actual.json`, which is then compared against - or, with `options.update`, copied
+ * over - the checked-in `__snapshots/tests.json`. Pass/fail always comes from that comparison, never
+ * from cspell's own exit code, since `with-issues` is expected to report real issues and a plain
+ * "issues found" exit code can't tell that apart from a regression.
  *
  * `cwd` is expected to be this package's root directory (the parent of both `tests/` and `__snapshots/`).
  */
@@ -69,11 +71,11 @@ function spawnCspell(target: string, moduleName: string, cwd: string, actualFile
     CSPELL_SNAPSHOT_OUT: actualFile,
   };
 
-  // `--no-config-search -c <config>` targets exactly one suite's own config, bypassing the repo-level
-  // `ignorePaths` that exclude the whole `tests` tree from the repo-wide `pnpm spell` check (its
-  // fixtures contain deliberate typos and aren't meant for that scan). cspell's own exit code isn't
-  // checked here - `with-issues` always reports real issues, so pass/fail is decided by the snapshot
-  // diff in runSuite instead.
+  // Running with `cwd` set to the `tests` folder itself means config search starts there and finds
+  // `tests/cspell.config.mts` first, rather than climbing past it to this package's own
+  // cspell.config.yaml (which ignores `tests/with-issues` - that's for the repo-wide `pnpm spell`
+  // check, not for this). cspell's own exit code isn't checked here - `with-issues` always reports
+  // real issues, so pass/fail is decided by the snapshot diff in runSuite instead.
   return new Promise<void>((resolve, reject) => {
     const child = child_process.spawn('pnpm', ['exec', 'cspell', target, '--no-progress', '--no-color'], {
       cwd,
