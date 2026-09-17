@@ -19,6 +19,7 @@ ignorePaths:
   - '**/*.log'
   - CHANGELOG.md
   - .git/!(hooks,COMMIT_EDITMSG)
+  - test-packages/*/tests
 words:
   - COMMIT_EDITMSG
   - dedup
