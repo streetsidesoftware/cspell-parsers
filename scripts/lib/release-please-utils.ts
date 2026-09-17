@@ -28,8 +28,23 @@ export async function writeReleasePleaseConfig(config: ReleasePleaseConfig): Pro
   await fs.writeFile(configPath, configString, 'utf-8');
 }
 
-export async function updateReleasePleaseConfig(packageFiles: string[]): Promise<void> {
-  const config = await readReleasePleaseConfig();
+export interface UpdateReleasePleaseConfigOptions {
+  dryRun?: boolean;
+}
+
+/**
+ * Updates release-please-config.json from the given package.json files, optionally writing the
+ * result back to disk.
+ * @returns `true` if the config needed updating, `false` if it was already correct.
+ */
+export async function updateReleasePleaseConfig(
+  packageFiles: string[],
+  options: UpdateReleasePleaseConfigOptions = {},
+): Promise<boolean> {
+  const { dryRun } = options;
+  const configPath = Path.resolve(REPO_ROOT_DIR, RELEASE_PLEASE_CONFIG_FILE);
+  const orig = await fs.readFile(configPath, 'utf-8');
+  const config = JSON.parse(orig) as ReleasePleaseConfig;
   const packages = config.packages || {};
   for (const packageFile of packageFiles) {
     const packageJsonFile = Path.resolve(REPO_ROOT_DIR, packageFile);
@@ -41,5 +56,18 @@ export async function updateReleasePleaseConfig(packageFiles: string[]): Promise
     packages[packageDir] = { component: name };
   }
   config.packages = Object.fromEntries(Object.entries(packages).sort(([a], [b]) => a.localeCompare(b)));
-  await writeReleasePleaseConfig(config);
+  const result = JSON.stringify(config, null, 2) + '\n';
+  const needsFix = orig !== result;
+
+  if (!needsFix) {
+    return false;
+  }
+
+  if (dryRun) {
+    console.error('Dry run enabled, not writing changes to: %s', RELEASE_PLEASE_CONFIG_FILE);
+    return true;
+  }
+
+  await fs.writeFile(configPath, result, 'utf-8');
+  return true;
 }

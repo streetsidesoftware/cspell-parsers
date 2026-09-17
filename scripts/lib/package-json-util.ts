@@ -51,12 +51,8 @@ export function formatPackageJson(packageJson: PackageJson): string {
   return stringifyPackageJson(sortPackageJson(packageJson, { sortOrder: SORT_PACKAGE_ORDER }));
 }
 
-export function writePackageJson(filePath: string, data: PackageJson): Promise<void> {
-  return fs.writeFile(filePath, formatPackageJson(data), 'utf-8');
-}
-
 export function setPackageRepository(packageJson: PackageJson, filePath: string) {
-  const directory = Path.relative(REPO_ROOT_DIR, Path.dirname(filePath));
+  const directory = Path.relative(REPO_ROOT_DIR, Path.dirname(filePath)).replaceAll('\\', '/');
   packageJson.repository = {
     type: 'git',
     url: REPOSITORY_GIT_URL,
@@ -87,7 +83,11 @@ export interface FixPackageJsonOptions {
   force?: boolean;
 }
 
-export async function fixPackageJson(filePath: string, options: FixPackageJsonOptions): Promise<void> {
+/**
+ * Fixes up a package.json file, optionally writing the result back to disk.
+ * @returns `true` if the file's contents needed fixing, `false` if it was already correct.
+ */
+export async function fixPackageJson(filePath: string, options: FixPackageJsonOptions): Promise<boolean> {
   const { dryRun, force } = options;
   const relPath = Path.relative(REPO_ROOT_DIR, filePath);
   console.error('Fixing package.json for: %s', relPath);
@@ -95,15 +95,17 @@ export async function fixPackageJson(filePath: string, options: FixPackageJsonOp
   const orig = await fs.readFile(filePath, 'utf-8');
   fixUpPackageJson(packageJson, filePath);
   const result = formatPackageJson(packageJson);
+  const needsFix = orig !== result;
 
-  if (!force && orig === result) {
-    return;
+  if (!needsFix && !force) {
+    return false;
   }
 
   if (dryRun) {
     console.error('Dry run enabled, not writing changes for: %s', relPath);
-    return;
+    return needsFix;
   }
 
-  return await fs.writeFile(filePath, result, 'utf-8');
+  await fs.writeFile(filePath, result, 'utf-8');
+  return needsFix;
 }

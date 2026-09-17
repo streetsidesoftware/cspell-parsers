@@ -14,8 +14,16 @@ async function main() {
     console.error('Running in dry run mode, no changes will be written.');
   }
 
+  let needsFix = false;
   for await (const relFilePath of fs.glob('packages/*/package.json', { cwd: REPO_ROOT_DIR })) {
-    await fixPackageJson(Path.join(REPO_ROOT_DIR, relFilePath), { dryRun });
+    const fixed = await fixPackageJson(Path.join(REPO_ROOT_DIR, relFilePath), { dryRun });
+    needsFix ||= fixed;
+  }
+
+  if (dryRun && needsFix) {
+    console.error('One or more package.json files need fixing. Run `pnpm exec fix-package-json` to fix them.');
+    process.exitCode = 1;
+    return;
   }
 
   console.error('Done.');
