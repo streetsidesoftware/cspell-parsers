@@ -290,6 +290,25 @@ importers:
         specifier: workspace:*
         version: link:../internal-utils
 
+  packages/parser-typescript-tree-sitter-wasm:
+    dependencies:
+      '@vscode/tree-sitter-wasm':
+        specifier: ^0.3.1
+        version: 0.3.1
+    devDependencies:
+      '@cspell/cspell-types':
+        specifier: 'catalog:'
+        version: 10.3.3
+      '@internal/utils':
+        specifier: workspace:*
+        version: link:../internal-utils
+
+  packages/parser-typescript-tree-sitter-wasm/samples:
+    devDependencies:
+      '@cspell/parser-typescript-tree-sitter-wasm':
+        specifier: workspace:*
+        version: link:..
+
   packages/parser-typescript-tree-sitter/samples:
     devDependencies:
       '@cspell/parser-typescript-tree-sitter':
@@ -1147,6 +1166,9 @@ packages:
 
   '@vitest/spy@5.0.0':
     resolution: {integrity: sha512-uy+luWBAPw9XfthoHi5AkfHUnuPYEESjl0p/r+meoBnU8bxg5GDQ3Ey8MjcJ6sqahkL4PFyrvfMJJBw7LbU06g==}
+
+  '@vscode/tree-sitter-wasm@0.3.1':
+    resolution: {integrity: sha512-RJFoomET6FajjG511fmQxeBQfU6M24a0aFZPqpid+ttIxanWf1VGytBG0UmsGjt07qmIPJS8U31D+aecuCucsQ==}
 
   '@yuku-codegen/binding-android-arm64@0.9.5':
     resolution: {integrity: sha512-jrOY5WM+AaAqkv51fHP1x28ifto4WgcZVzodLUyMU1jMWn5Sq+VciRdk/n8E0Ey5w4p4cWWE+m5GfXWOYh7Kzw==}
@@ -3968,6 +3990,8 @@ snapshots:
       vite: 8.3.0(@types/node@24.13.4)(yaml@2.9.1)
 
   '@vitest/spy@5.0.0': {}
+
+  '@vscode/tree-sitter-wasm@0.3.1': {}
 
   '@yuku-codegen/binding-android-arm64@0.9.5':
     optional: true
