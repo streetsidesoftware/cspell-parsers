@@ -44,7 +44,10 @@ export interface CustomizeParserOptions {
    * parser (e.g. under `plugins`), since cspell selects a parser by name and two parsers can't share one.
    */
   name?: string;
-  tags: TagFilterOptions;
+  /**
+   * Which tagged segments to keep. Omit to keep everything.
+   */
+  tags?: TagFilterOptions;
 }
 
 /**
@@ -61,7 +64,7 @@ export interface CustomizeParserOptions {
  */
 export function customizePlugin(plugin: Plugin, options: CustomizeParserOptions): Plugin {
   if (!plugin.parsers) return plugin;
-  const isIncluded = compileTagFilter(options.tags);
+  const isIncluded = compileTagFilter(options.tags ?? {});
   return {
     ...plugin,
     parsers: plugin.parsers.map((entry) => customizeParserEntry(entry, isIncluded, options.name)),
@@ -85,7 +88,7 @@ function customizeParserEntry(
  * {@link TagsFilter} once here, before the parser ever runs - see {@link compileTagFilter}.
  */
 export function customizeParser(parser: Parser, options: CustomizeParserOptions): Parser {
-  return customizeParserWithFilter(parser, compileTagFilter(options.tags), options.name);
+  return customizeParserWithFilter(parser, compileTagFilter(options.tags ?? {}), options.name);
 }
 
 function customizeParserWithFilter(parser: Parser, isIncluded: TagsFilter, name: string | undefined): Parser {

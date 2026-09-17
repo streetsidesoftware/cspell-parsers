@@ -1,7 +1,6 @@
 import type { Plugin } from '@cspell/cspell-types';
-import type { TagFilterOptions } from '@internal/utils';
 import { customizePlugin as customizePluginWithTags } from '@internal/utils';
-import { parser } from './parser.js';
+import { parser, type CustomizeParserOptions } from './parser.js';
 
 export { supportedFileTypes } from './parser.js';
 
@@ -10,16 +9,7 @@ export const plugin: Plugin = {
 };
 
 /** Options for {@link customizePlugin}: which tagged segments to keep. */
-export interface CustomizePluginOptions {
-  /**
-   * Set the name of the parser.
-   */
-  name?: string;
-  /**
-   * Define which tagged segments to keep.
-   */
-  tags: TagFilterOptions;
-}
+export type CustomizePluginOptions = CustomizeParserOptions;
 
 /**
  * Returns a copy of `plugin` whose parser filters segments by `options.tags` before emitting them,

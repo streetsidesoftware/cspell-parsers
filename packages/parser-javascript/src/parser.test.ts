@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import type { ParsedText } from '@cspell/cspell-types/Parser';
 import { describe, expect, it } from 'vitest';
 
-import { parse, parser, supportedFileTypes } from './parser.js';
+import { createParser, parse, parser, supportedFileTypes } from './parser.js';
 
 const fixturesDir = join(import.meta.dirname, '../fixtures');
 
@@ -87,5 +87,44 @@ describe('javascript parser', () => {
 
   it('only declares javascript file types as supported, not typescript', () => {
     expect(supportedFileTypes).toEqual(['javascript', 'javascriptreact']);
+  });
+});
+
+describe('createParser', () => {
+  const content = "// a comment\nconst greeting = 'hello';\n";
+
+  it('defaults to the "javascript" name and keeps everything when called with no options', () => {
+    const customized = createParser({});
+    expect(customized.name).toBe('javascript');
+
+    const parsedTexts = [...customized.parse(content, 'file.js').parsedTexts];
+    expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(true);
+    expect(parsedTexts.some((p) => p.text === 'greeting')).toBe(true);
+  });
+
+  it('overrides the name without filtering when tags is omitted', () => {
+    const customized = createParser({ name: 'custom-javascript' });
+    expect(customized.name).toBe('custom-javascript');
+
+    const parsedTexts = [...customized.parse(content, 'file.js').parsedTexts];
+    expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(true);
+    expect(parsedTexts.some((p) => p.text === 'greeting')).toBe(true);
+  });
+
+  it('filters segments by tag when tags is given', () => {
+    const customized = createParser({ tags: { '*': false, comment: true } });
+    const parsedTexts = [...customized.parse(content, 'file.js').parsedTexts];
+
+    expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(true);
+    expect(parsedTexts.some((p) => p.text === 'greeting')).toBe(false);
+  });
+
+  it('combines a name override with tag filtering', () => {
+    const customized = createParser({ name: 'custom-javascript', tags: { '*': false, comment: true } });
+    expect(customized.name).toBe('custom-javascript');
+
+    const parsedTexts = [...customized.parse(content, 'file.js').parsedTexts];
+    expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(true);
+    expect(parsedTexts.some((p) => p.text === 'greeting')).toBe(false);
   });
 });

@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import type { ParsedText } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
-import { parser } from './parser.js';
+import { createParser, parser } from './parser.js';
 
 const fixturesDir = join(import.meta.dirname, '../fixtures');
 
@@ -89,5 +89,44 @@ describe('c-style-comments parser', () => {
 
   it('returns no parsed text when there are no comments', () => {
     expect(parseFixture('no-comments.c')).toEqual([]);
+  });
+});
+
+describe('createParser', () => {
+  const content = '// a comment\n/* a block */\n';
+
+  it('defaults to the "c-style-comments" name and keeps everything when called with no options', () => {
+    const customized = createParser({});
+    expect(customized.name).toBe('c-style-comments');
+
+    const parsedTexts = [...customized.parse(content, 'file.c').parsedTexts];
+    expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(true);
+    expect(parsedTexts.some((p) => p.text === 'a block')).toBe(true);
+  });
+
+  it('overrides the name without filtering when tags is omitted', () => {
+    const customized = createParser({ name: 'custom-example' });
+    expect(customized.name).toBe('custom-example');
+
+    const parsedTexts = [...customized.parse(content, 'file.c').parsedTexts];
+    expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(true);
+    expect(parsedTexts.some((p) => p.text === 'a block')).toBe(true);
+  });
+
+  it('filters segments by tag when tags is given', () => {
+    const customized = createParser({ tags: { '*': false, 'comment.line': true } });
+    const parsedTexts = [...customized.parse(content, 'file.c').parsedTexts];
+
+    expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(true);
+    expect(parsedTexts.some((p) => p.text === 'a block')).toBe(false);
+  });
+
+  it('combines a name override with tag filtering', () => {
+    const customized = createParser({ name: 'custom-example', tags: { '*': false, 'comment.line': true } });
+    expect(customized.name).toBe('custom-example');
+
+    const parsedTexts = [...customized.parse(content, 'file.c').parsedTexts];
+    expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(true);
+    expect(parsedTexts.some((p) => p.text === 'a block')).toBe(false);
   });
 });
