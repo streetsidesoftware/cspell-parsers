@@ -344,6 +344,10 @@ importers:
       '@cspell/parser-typescript-tree-sitter-wasm':
         specifier: workspace:*
         version: link:../../packages/parser-typescript-tree-sitter-wasm
+    devDependencies:
+      '@cspell/cspell-types':
+        specifier: ^10.3.3
+        version: 10.3.3
 
 packages:
 

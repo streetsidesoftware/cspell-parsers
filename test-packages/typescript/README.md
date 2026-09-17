@@ -17,7 +17,7 @@ This fixture contains deliberate, known typos. Every backend must report the exa
 same `row`/`col`, which is checked by diffing against the checked-in `snapshot.json`, not by cspell's own
 exit code (which is always non-zero here, since the typos are real and expected).
 
-The diffing works via `tests/reporter.mjs`, a custom cspell reporter that captures every `issue` event into
+The diffing works via `lib/reporter.mts`, a custom cspell reporter that captures every `issue` event into
 `actual.snapshot.json` (gitignored - it's regenerated on every run). If you add a new deliberate typo to
 `tests/with-issues` and the new `actual.snapshot.json` looks right, promote it to the golden file:
 

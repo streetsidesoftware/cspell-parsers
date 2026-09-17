@@ -7,8 +7,11 @@
     "test:typescript": "node exec-test.mts --all"
   },
   "dependencies": {
+    "@cspell/parser-typescript": "workspace:*",
     "@cspell/parser-typescript-tree-sitter": "workspace:*",
-    "@cspell/parser-typescript-tree-sitter-wasm": "workspace:*",
-    "@cspell/parser-typescript": "workspace:*"
+    "@cspell/parser-typescript-tree-sitter-wasm": "workspace:*"
+  },
+  "devDependencies": {
+    "@cspell/cspell-types": "^10.3.3"
   }
 }
