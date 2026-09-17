@@ -106,7 +106,7 @@ export default {
 | `string.templateLiteral`       | A literal text fragment of a template string (`` `...` ``), excluding `${...}` substitutions |
 | `module`                       | Any module specifier string                                                                  |
 | `module.specifier`             | Any module specifier string (same as `module`, for a more specific filter)                   |
-| `module.specifier.literal`     | The module specifier string of an `import`/`export ... from` statement                       |
+| `module.specifier.literal`     | The module specifier string of an `import`/`export ... from` statement or a dynamic `import('...')` call |
 | `comment`                      | Any comment                                                                                  |
 | `comment.line`                 | A `//` line comment                                                                          |
 | `comment.block`                | A `/* ... */` block comment                                                                  |
