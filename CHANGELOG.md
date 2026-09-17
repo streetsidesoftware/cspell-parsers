@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.3](https://github.com/streetsidesoftware/cspell-parsers/compare/cspell-parsers@1.1.2...cspell-parsers@1.1.3) (2026-09-17)
+
+
+### Updates and Bug Fixes
+
+* Update the sponsor banner. ([#53](https://github.com/streetsidesoftware/cspell-parsers/issues/53)) ([7cb119f](https://github.com/streetsidesoftware/cspell-parsers/commit/7cb119f3d204b4d1a4c72459a8787ef003807a1d))
+
 ## [1.1.2](https://github.com/streetsidesoftware/cspell-parsers/compare/cspell-parsers@1.1.1...cspell-parsers@1.1.2) (2026-09-17)
 
 
