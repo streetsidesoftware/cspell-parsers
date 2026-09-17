@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "bin": {
-    "fix-package-json": "./fix-package-json.ts"
+    "fix-package-json": "./fix-package-json.ts",
+    "fix-release-please-config": "./fix-release-please-config.ts"
   },
   "devDependencies": {
     "sort-package-json": "^4.0.0"

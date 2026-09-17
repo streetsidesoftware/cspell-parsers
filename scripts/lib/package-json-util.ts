@@ -8,6 +8,10 @@ const PUBLISH_CONFIG: PackageJsonPublishConfig = {
   provenance: true,
 };
 
+const SORT_PACKAGE_ORDER = ['name', 'version', 'private', 'description', 'repository', 'funding', 'publishConfig'];
+
+const requiredKeywords = ['cspell', 'parser', 'plugin', 'spellchecker', 'spell'];
+
 export interface PackageJson {
   name?: string;
   version?: string;
@@ -39,8 +43,12 @@ export function readPackageJson(filePath: string): Promise<PackageJson> {
   return fs.readFile(filePath, 'utf-8').then(JSON.parse);
 }
 
+export function stringifyPackageJson(packageJson: PackageJson): string {
+  return JSON.stringify(packageJson, null, 2) + '\n';
+}
+
 export function formatPackageJson(packageJson: PackageJson): string {
-  return JSON.stringify(sortPackageJson(packageJson), null, 2);
+  return stringifyPackageJson(sortPackageJson(packageJson, { sortOrder: SORT_PACKAGE_ORDER }));
 }
 
 export function writePackageJson(filePath: string, data: PackageJson): Promise<void> {
@@ -48,7 +56,7 @@ export function writePackageJson(filePath: string, data: PackageJson): Promise<v
 }
 
 export function setPackageRepository(packageJson: PackageJson, filePath: string) {
-  const directory = Path.relative(REPO_ROOT_DIR, filePath);
+  const directory = Path.relative(REPO_ROOT_DIR, Path.dirname(filePath));
   packageJson.repository = {
     type: 'git',
     url: REPOSITORY_GIT_URL,
@@ -58,19 +66,31 @@ export function setPackageRepository(packageJson: PackageJson, filePath: string)
 
 export function fixUpPackageJson(packageJson: PackageJson, filePath: string) {
   setPackageRepository(packageJson, filePath);
+
+  if (!packageJson.private) {
+    const setOfKeywords = new Set([...(packageJson.keywords ?? []), ...requiredKeywords]);
+    packageJson.keywords = [...setOfKeywords];
+  }
+  if (packageJson.keywords) packageJson.keywords.sort();
+
   packageJson.publishConfig = PUBLISH_CONFIG;
 }
 
-export async function fixPackageJson(filePath: string, dryRun: boolean): Promise<void> {
+export interface FixPackageJsonOptions {
+  dryRun?: boolean;
+  force?: boolean;
+}
+
+export async function fixPackageJson(filePath: string, options: FixPackageJsonOptions): Promise<void> {
+  const { dryRun, force } = options;
   const relPath = Path.relative(REPO_ROOT_DIR, filePath);
   console.error('Fixing package.json for: %s', relPath);
   const packageJson = await readPackageJson(filePath);
-  const orig = JSON.stringify(packageJson, null, 2);
+  const orig = await fs.readFile(filePath, 'utf-8');
   fixUpPackageJson(packageJson, filePath);
   const result = formatPackageJson(packageJson);
 
-  if (orig === result) {
-    console.error('No changes needed for: %s', relPath);
+  if (!force && orig === result) {
     return;
   }
 
