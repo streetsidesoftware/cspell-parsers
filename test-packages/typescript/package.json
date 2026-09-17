@@ -1,0 +1,14 @@
+{
+  "name": "@internal/test-packages-typescript",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "pnpm run test:typescript",
+    "test:typescript": "node exec-test.mts --all"
+  },
+  "dependencies": {
+    "@cspell/parser-typescript-tree-sitter": "workspace:*",
+    "@cspell/parser-typescript-tree-sitter-wasm": "workspace:*",
+    "@cspell/parser-typescript": "workspace:*"
+  }
+}

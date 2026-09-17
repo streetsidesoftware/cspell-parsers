@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "allowImportingTsExtensions": true
+  },
+  "include": ["**/cspell.config.mts", "exec-test.mts", "lib"],
+  "exclude": ["node_modules"]
+}

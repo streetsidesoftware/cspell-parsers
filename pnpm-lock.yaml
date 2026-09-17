@@ -330,6 +330,18 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
 
+  test-packages/typescript:
+    dependencies:
+      '@cspell/parser-typescript':
+        specifier: workspace:*
+        version: link:../../packages/parser-typescript
+      '@cspell/parser-typescript-tree-sitter':
+        specifier: workspace:*
+        version: link:../../packages/parser-typescript-tree-sitter
+      '@cspell/parser-typescript-tree-sitter-wasm':
+        specifier: workspace:*
+        version: link:../../packages/parser-typescript-tree-sitter-wasm
+
 packages:
 
   '@cacheable/memory@2.2.0':
