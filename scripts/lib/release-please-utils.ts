@@ -37,7 +37,7 @@ export async function updateReleasePleaseConfig(packageFiles: string[]): Promise
     const packageJsonDir = Path.relative(REPO_ROOT_DIR, Path.dirname(packageJsonFile));
     const name = packageJson.name;
     if (!name || name.startsWith('@internal')) continue;
-    const packageDir = './' + packageJsonDir.replaceAll('\\', '/');
+    const packageDir = packageJsonDir.replaceAll('\\', '/');
     packages[packageDir] = { component: name };
   }
   config.packages = Object.fromEntries(Object.entries(packages).sort(([a], [b]) => a.localeCompare(b)));

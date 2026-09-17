@@ -1,22 +1,31 @@
 {
   "name": "@internal/utils",
   "version": "1.0.0",
-  "description": "Internal helpers shared by cspell-parsers packages. Not published.",
   "private": true,
-  "type": "module",
+  "description": "Internal helpers shared by cspell-parsers packages. Not published.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/streetsidesoftware/cspell-parsers.git",
+    "directory": "packages/internal-utils"
+  },
+  "publishConfig": {
+    "access": "restricted",
+    "provenance": true
+  },
   "sideEffects": false,
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "files": [
-    "dist",
-    "!dist/**/*.map"
-  ],
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
   },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "!dist/**/*.map"
+  ],
   "scripts": {
     "build": "tsdown",
     "clean": "shx rm -rf dist coverage",

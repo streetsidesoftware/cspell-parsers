@@ -65,6 +65,8 @@ export function setPackageRepository(packageJson: PackageJson, filePath: string)
 }
 
 export function fixUpPackageJson(packageJson: PackageJson, filePath: string) {
+  const name = packageJson.name ?? '@internal/' + Path.basename(Path.dirname(filePath));
+  packageJson.name = name;
   setPackageRepository(packageJson, filePath);
 
   if (!packageJson.private) {
@@ -73,7 +75,11 @@ export function fixUpPackageJson(packageJson: PackageJson, filePath: string) {
   }
   if (packageJson.keywords) packageJson.keywords.sort();
 
-  packageJson.publishConfig = PUBLISH_CONFIG;
+  const publishConfig = { ...PUBLISH_CONFIG };
+  if (name.startsWith('@internal/')) {
+    publishConfig.access = 'restricted';
+  }
+  packageJson.publishConfig = publishConfig;
 }
 
 export interface FixPackageJsonOptions {

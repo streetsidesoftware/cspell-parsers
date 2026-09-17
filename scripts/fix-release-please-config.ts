@@ -15,13 +15,7 @@ async function getPackageJsonFilenames() {
 }
 
 async function main() {
-  const force = process.argv.includes('--force');
-  const dryRun = !force && !process.argv.includes('--write');
-
   console.error(`Fixing ${RELEASE_PLEASE_CONFIG_FILE} files`);
-  if (dryRun) {
-    console.error('Running in dry run mode, no changes will be written. Use `--write`.');
-  }
 
   const packageJsonFilenames = await getPackageJsonFilenames();
   await updateReleasePleaseConfig(packageJsonFilenames);
