@@ -630,10 +630,5 @@ export interface CustomizeParserOptions {
  * ```
  */
 export function createParser(options: CustomizeParserOptions): Parser {
-  const { name = 'typescript', tags } = options;
-  if (tags) return customizeParser(parser, { name, tags });
-  return {
-    name,
-    parse,
-  };
+  return customizeParser(parser, options);
 }

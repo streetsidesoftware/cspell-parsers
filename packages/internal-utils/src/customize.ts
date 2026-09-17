@@ -56,11 +56,14 @@ export interface CustomizeParserOptions {
  * {@link TagsFilter} once here, before the parser ever runs - see {@link compileTagFilter}.
  */
 export function customizeParser(parser: Parser, options: CustomizeParserOptions): Parser {
-  return customizeParserWithFilter(parser, compileTagFilter(options.tags ?? {}), options.name);
+  if (!options.tags || Object.keys(options.tags).length === 0) {
+    return options.name ? { ...parser, name: options.name } : parser;
+  }
+  return customizeParserWithFilter(parser, compileTagFilter(options.tags), options.name);
 }
 
 function customizeParserWithFilter(parser: Parser, isIncluded: TagsFilter, name: string | undefined): Parser {
-  return {
+  const newParser: Parser = {
     name: name ?? parser.name,
     parse(content, filename) {
       const result = parser.parse(content, filename);
@@ -70,6 +73,18 @@ function customizeParserWithFilter(parser: Parser, isIncluded: TagsFilter, name:
       };
     },
   };
+
+  if (parser.parseDocument) {
+    newParser.parseDocument = (doc) => {
+      if (!parser.parseDocument) {
+        throw new Error('parseDocument is not implemented on the original parser.');
+      }
+      const result = parser.parseDocument(doc);
+      return { ...result, parsedTexts: filterParsedTexts(result.parsedTexts, isIncluded) };
+    };
+  }
+
+  return newParser;
 }
 
 function* filterParsedTexts(parsedTexts: Iterable<ParsedText>, isIncluded: TagsFilter): Iterable<ParsedText> {
