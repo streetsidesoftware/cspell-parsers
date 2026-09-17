@@ -29,4 +29,11 @@ describe('customizePlugin', () => {
 
     expect([...(result?.parsedTexts ?? [])]).toEqual([]);
   });
+
+  it('wires name customization into the c-style-comments parser', () => {
+    const customized = customizePlugin({ name: 'custom-example', tags: {} });
+    const [customizedParser] = (customized.parsers ?? []) as Parser[];
+
+    expect(customizedParser?.name).toBe('custom-example');
+  });
 });

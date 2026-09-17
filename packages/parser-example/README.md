@@ -54,8 +54,8 @@ plugin in yourself and choose the language IDs to use it for:
 
 By default every comment the parser emits gets spell checked. To check only some of them — for example, only
 doc comments — use `customizePlugin` instead of the plain `plugin` export. It takes a
-`CustomizePluginOptions` object (with a `tags: TagFilterOptions` property) and returns a `Plugin` whose
-parser filters segments by tag itself, before cspell ever sees them.
+`CustomizePluginOptions` object (with `tags: TagFilterOptions` and an optional `name` property) and returns
+a `Plugin` whose parser filters segments by tag itself, before cspell ever sees them.
 
 ```js
 // cspell.config.mjs — customizePlugin returns a live Plugin object, so it needs a JS/TS config file
@@ -77,6 +77,10 @@ export default {
 `comment.block.doc` unless a more specific key overrides it — and may use `*` as a wildcard (`comment.block.*`,
 or a bare `*` for "everything not otherwise matched", which defaults to `true`). See the [Tags](#tags) table
 below for every tag this parser can emit.
+
+`name` overrides the parser's registered name (`c-style-comments` by default). This matters when registering
+more than one customized copy of this parser, since cspell selects a parser by name and two parsers can't
+share one.
 
 ## How it works
 

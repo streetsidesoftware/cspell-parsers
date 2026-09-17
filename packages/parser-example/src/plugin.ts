@@ -12,13 +12,20 @@ export const plugin: Plugin = {
 
 /** Options for {@link customizePlugin}: which tagged segments to keep. */
 export interface CustomizePluginOptions {
+  /**
+   * Set the name of the parser.
+   */
+  name?: string;
+  /**
+   * Define which tagged segments to keep.
+   */
   tags: TagFilterOptions;
 }
 
 /**
  * Returns a copy of `plugin` whose parser filters segments by `options.tags` before emitting them,
  * matching a segment's tags hierarchically, without depending on cspell to support that filtering
- * natively.
+ * natively, and whose parser is renamed to `options.name` when given.
  */
 export function customizePlugin(options: CustomizePluginOptions): Plugin {
   return customizePluginWithTags(plugin, options);

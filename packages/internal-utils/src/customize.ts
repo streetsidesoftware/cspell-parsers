@@ -39,6 +39,11 @@ export type TagsFilter = (tags: ParsedTags | undefined) => boolean;
  * `TagFilterOptions` so either function can grow more options later without a breaking signature change.
  */
 export interface CustomizeParserOptions {
+  /**
+   * Override the parser's `name`. Useful when registering more than one customized copy of the same
+   * parser (e.g. under `plugins`), since cspell selects a parser by name and two parsers can't share one.
+   */
+  name?: string;
   tags: TagFilterOptions;
 }
 
@@ -59,29 +64,33 @@ export function customizePlugin(plugin: Plugin, options: CustomizeParserOptions)
   const isIncluded = compileTagFilter(options.tags);
   return {
     ...plugin,
-    parsers: plugin.parsers.map((entry) => customizeParserEntry(entry, isIncluded)),
+    parsers: plugin.parsers.map((entry) => customizeParserEntry(entry, isIncluded, options.name)),
   };
 }
 
-function customizeParserEntry(entry: DocumentParser | Parser, isIncluded: TagsFilter): DocumentParser | Parser {
+function customizeParserEntry(
+  entry: DocumentParser | Parser,
+  isIncluded: TagsFilter,
+  name: string | undefined,
+): DocumentParser | Parser {
   // DocumentParser (parseDocument-based) isn't used by any parser in this repo today; pass it through
   // unmodified rather than guessing at how to filter it.
   if (!isParser(entry)) return entry;
-  return customizeParserWithFilter(entry, isIncluded);
+  return customizeParserWithFilter(entry, isIncluded, name);
 }
 
 /**
  * Wraps a single `Parser` so its `parse()` output only includes `parsedTexts` selected by
- * `options.tags`. `options.tags` is compiled into a {@link TagsFilter} once here, before the
- * parser ever runs - see {@link compileTagFilter}.
+ * `options.tags`, and its `name` is `options.name` when given. `options.tags` is compiled into a
+ * {@link TagsFilter} once here, before the parser ever runs - see {@link compileTagFilter}.
  */
 export function customizeParser(parser: Parser, options: CustomizeParserOptions): Parser {
-  return customizeParserWithFilter(parser, compileTagFilter(options.tags));
+  return customizeParserWithFilter(parser, compileTagFilter(options.tags), options.name);
 }
 
-function customizeParserWithFilter(parser: Parser, isIncluded: TagsFilter): Parser {
+function customizeParserWithFilter(parser: Parser, isIncluded: TagsFilter, name: string | undefined): Parser {
   return {
-    name: parser.name,
+    name: name ?? parser.name,
     parse(content, filename) {
       const result = parser.parse(content, filename);
       return {

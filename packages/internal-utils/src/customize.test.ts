@@ -75,6 +75,16 @@ describe('customizeParser', () => {
     expect(result.content).toBe('content');
     expect(result.filename).toBe('file.ts');
   });
+
+  it('keeps the original name when options.name is not given', () => {
+    const parser = customizeParser(fakeParser([]), { tags: {} });
+    expect(parser.name).toBe('fake');
+  });
+
+  it('overrides the name when options.name is given', () => {
+    const parser = customizeParser(fakeParser([]), { name: 'custom', tags: {} });
+    expect(parser.name).toBe('custom');
+  });
 });
 
 describe('compileTagFilter', () => {
@@ -190,5 +200,12 @@ describe('customizePlugin', () => {
   it('passes through plugins with no parsers', () => {
     const plugin: Plugin = { name: 'empty' };
     expect(customizePlugin(plugin, { tags: {} })).toEqual(plugin);
+  });
+
+  it('overrides every parser name in the plugin when options.name is given', () => {
+    const plugin: Plugin = { parsers: [fakeParser([])] };
+    const customized = customizePlugin(plugin, { name: 'custom', tags: {} });
+    const [parser] = customized.parsers ?? [];
+    expect((parser as Parser).name).toBe('custom');
   });
 });
