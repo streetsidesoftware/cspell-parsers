@@ -35,6 +35,11 @@ jobs:
       - name: Build
         run: pnpm run build
 
+      - name: Adjust Sponsor Information
+        run: |
+          cp ./static/sponsor-pub.md ./static/sponsor.md
+          pnpm run build:readme
+
       # Release Please has already incremented versions and created tags, so we just
       # need to publish all unpublished versions to NPM here.
       # See: https://github.com/lerna/lerna/tree/main/commands/publish#bump-from-package
