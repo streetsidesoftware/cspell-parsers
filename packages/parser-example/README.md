@@ -101,6 +101,17 @@ Use this package as a template: copy `src/parser.ts`, `src/plugin.ts`, `src/inde
 into a new package under `packages/` and replace the parsing logic with your own. See the repo root
 `CONTRIBUTING.md` for the full steps.
 
+## Requirements
+
+<!--- @@inject: ../../static/requirements.md --->
+
+| Tool                                                                                                            | Version    |
+| --------------------------------------------------------------------------------------------------------------- | ---------- |
+| [cspell](https://cspell.org)                                                                                    | `>=10.0.0` |
+| [Code Spell Checker](https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.code-spell-checker) | `>=4.4.0`  |
+
+<!--- @@inject-end: ../../static/requirements.md --->
+
 ## Support Future Development
 
 <!--- @@inject: ../../static/sponsor.md --->

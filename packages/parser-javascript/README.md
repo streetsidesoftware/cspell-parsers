@@ -121,6 +121,17 @@ export default {
   prebuilt binaries are used automatically on common platforms, so no local compiler toolchain should be
   needed to install it.
 
+## Requirements
+
+<!--- @@inject: ../../static/requirements.md --->
+
+| Tool                                                                                                            | Version    |
+| --------------------------------------------------------------------------------------------------------------- | ---------- |
+| [cspell](https://cspell.org)                                                                                    | `>=10.0.0` |
+| [Code Spell Checker](https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.code-spell-checker) | `>=4.4.0`  |
+
+<!--- @@inject-end: ../../static/requirements.md --->
+
 ## Support Future Development
 
 <!--- @@inject: ../../static/sponsor.md --->

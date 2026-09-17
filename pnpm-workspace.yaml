@@ -1,6 +1,7 @@
 packages:
   - packages/*
   - packages/*/samples
+  - scripts
 
 allowBuilds:
   tree-sitter: true

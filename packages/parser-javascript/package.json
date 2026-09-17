@@ -2,13 +2,6 @@
   "name": "@cspell/parser-javascript",
   "version": "1.0.1",
   "description": "A JavaScript parser plugin for cspell.",
-  "keywords": [
-    "cspell",
-    "parser",
-    "plugin",
-    "javascript",
-    "javascriptreact"
-  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/streetsidesoftware/cspell-parsers.git",
@@ -19,13 +12,16 @@
     "access": "public",
     "provenance": true
   },
-  "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "files": [
-    "dist",
-    "!dist/**/*.map"
+  "keywords": [
+    "cspell",
+    "javascript",
+    "javascriptreact",
+    "parser",
+    "plugin",
+    "spell",
+    "spellchecker"
   ],
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -44,12 +40,18 @@
       "default": "./dist/recommended.js"
     }
   },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "!dist/**/*.map"
+  ],
   "scripts": {
     "build": "tsdown",
     "clean": "shx rm -rf dist coverage",
     "test": "pnpm run test:vitest && pnpm run test:cspell",
-    "test:vitest": "vitest run",
     "test:cspell": "cspell . --no-progress",
+    "test:vitest": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -58,5 +60,9 @@
   "devDependencies": {
     "@cspell/cspell-types": "catalog:",
     "@internal/utils": "workspace:*"
+  },
+  "engines": {
+    "cspell": ">=10.0.0",
+    "node": ">=22.18.0"
   }
 }

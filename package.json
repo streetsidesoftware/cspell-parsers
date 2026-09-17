@@ -9,15 +9,17 @@
   },
   "scripts": {
     "build": "pnpm -r run build",
+    "fix:all": "pnpm exec fix-package-json && pnpm exec fix-release-please-config",
     "build:readme": "inject-markdown README.md \"packages/*/*.md\" && pnpm run lint",
     "clean": "pnpm -r run clean",
-    "lint": "eslint . && prettier --write .",
-    "lint-ci": "eslint . --max-warnings 0 && prettier --check .",
+    "lint": "pnpm exec fix-package-json && pnpm exec fix-release-please-config && eslint . && prettier --write .",
+    "lint-ci": "pnpm exec fix-package-json --dry-run && pnpm exec fix-release-please-config --dry-run && eslint . --max-warnings 0 && prettier --check .",
     "spell": "cspell --no-progress .",
     "test": "pnpm -r run test && pnpm run typecheck",
     "typecheck": "pnpm -r run typecheck"
   },
   "devDependencies": {
+    "@internal/scripts": "workspace:*",
     "@eslint/js": "^10.0.1",
     "@lerna-lite/cli": "^5.6.1",
     "@lerna-lite/publish": "^5.6.1",

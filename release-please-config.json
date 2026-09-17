@@ -80,6 +80,9 @@
     },
     "packages/parser-typescript-tree-sitter": {
       "component": "@cspell/parser-typescript-tree-sitter"
+    },
+    "packages/parser-typescript-tree-sitter-wasm": {
+      "component": "@cspell/parser-typescript-tree-sitter-wasm"
     }
   }
 }
