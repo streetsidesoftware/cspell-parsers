@@ -76,6 +76,16 @@ risk of misreading real code, but it's fundamentally limited to what a single pr
 you: a class that opens with a quote right after `[` (`/['"]/`) is truly ambiguous with a real string
 starting right after an array literal's bracket, and still gets misread either way.
 
+`scanCode` only calls `canPrecedeString` once it's seen a bare `/` since the last reset point
+(`sawSlash`) - regex literals are rare, so this skips a regex test entirely for the overwhelming majority of
+quotes, which are nowhere near a `/`. `sawSlash` is **sticky, not toggled**: it's set on any `/` and only
+cleared at an actual reset point (a newline, or a recognized `//`/`/*`/`` ` `` token) - it does not flip back
+to `false` on a second `/`. Toggling was tried first and is wrong: a division is a single, unpaired `/`, so
+`a / b; const re = /don't/;` would toggle "on" for the division and then immediately toggle back "off" at the
+regex's own opening `/`, turning the guard off right where it's needed and reintroducing the original bug for
+that (common) pattern - see `parser.test.ts`'s "is not thrown off by an unrelated division..." test, which
+fails against a toggled implementation.
+
 ## Testing
 
 - `parser.test.ts` reads fixtures out of `fixtures/` (via `readFixture`/`parseFixture` helpers) rather than

@@ -145,6 +145,16 @@ describe('typescript-strings-comments parser', () => {
       const str = byText(parsedTexts, 'still recognized as a real string');
       expect(str?.tags).toEqual({ string: true, 'string.singleQuote': true });
     });
+
+    it('is not thrown off by an unrelated division earlier on the same line as a regex with a contraction', () => {
+      // Regression coverage: sawSlash (scanCode's gate for canPrecedeString, see its doc comment) must be
+      // sticky rather than toggled per "/" - a single division operator is an unpaired "/" that would
+      // otherwise cancel out against the regex's own opening "/" and turn the guard off right where it's
+      // needed.
+      const content = "const x = a / b; const re = /don't/; const s = 'real string';\n";
+      const parsed = [...parse(content, 'file.ts').parsedTexts];
+      expect(byText(parsed, 'real string')?.tags).toEqual({ string: true, 'string.singleQuote': true });
+    });
   });
 
   describe('unterminated literals ending in a trailing lone backslash', () => {

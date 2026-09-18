@@ -51,6 +51,10 @@ function skipEscape(content: string, i: number): number {
  * This can't catch every such case - a class that opens with a quote right after `[` (`` /['"]/ ``) looks
  * exactly like a real string starting right after an array literal's bracket (`["real string"]`), which *is*
  * valid, so that one's ambiguous either way and still gets misread. See `README.md`'s "Known limitations".
+ *
+ * `scanCode` only calls this once it's seen a bare `/` since the last reset point (`sawSlash`), rather than
+ * on every quote in the file - regex literals are rare, so this skips the regex test entirely for the
+ * overwhelming majority of quotes, which are nowhere near a `/`.
  */
 function canPrecedeString(prev: string | undefined): boolean {
   return prev === undefined || !/[A-Za-z0-9_$'"]/.test(prev);
@@ -80,9 +84,15 @@ class Scanner {
   private scanCode(end: number, stopAtUnmatchedBrace: boolean): void {
     const { content } = this;
     let braceDepth = 0;
+    // Sticky, not toggled: sawSlash just means "a bare `/` appeared somewhere since the last reset point
+    // (start of scan, a newline, or a recognized //, /*, or ` token)". It's cleared as soon as this scan
+    // sees any of those. See canPrecedeString's doc comment for why this gates it at all, and its own doc
+    // comment just below for why it's sticky rather than toggled per `/`.
+    let sawSlash = false;
 
     while (this.i < end) {
       const c = content[this.i];
+      const n = content[this.i + 1];
 
       if (c === '{') {
         braceDepth++;
@@ -99,21 +109,31 @@ class Scanner {
         continue;
       }
 
-      if (c === '/' && content[this.i + 1] === '/') {
+      if (c === '/' && n === '/') {
         this.scanLineComment();
+        sawSlash = false;
         continue;
       }
-      if (c === '/' && content[this.i + 1] === '*') {
+      if (c === '/' && n === '*') {
         this.scanBlockComment();
+        sawSlash = false;
         continue;
       }
       if (c === '`') {
         this.scanTemplateLiteral();
+        sawSlash = false;
         continue;
       }
-      if ((c === '"' || c === "'") && canPrecedeString(content[this.i - 1])) {
+
+      if ((c === '"' || c === "'") && (!sawSlash || canPrecedeString(content[this.i - 1]))) {
         this.scanQuotedString(c);
         continue;
+      }
+
+      if (c === '/') {
+        sawSlash = true;
+      } else if (c === '\n') {
+        sawSlash = false;
       }
 
       this.i++;
