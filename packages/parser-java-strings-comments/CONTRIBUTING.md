@@ -57,7 +57,6 @@ backslash right at EOF (an unterminated char/string literal or text block ending
 end of `content` instead of one past it. Every backslash-skip in `scanQuotedString`/`scanJavaTextBlock` goes
 through this - without it, the emitted `range`/`map` can exceed `content.length`, inconsistent with the
 actual `rawText` (this was a real bug, found by Copilot's review of `@cspell/parser-strings-comments` PR #60
-
 - see `parser.test.ts`'s "unterminated literals at EOF" tests).
 
 ## Javadoc detection
