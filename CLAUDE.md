@@ -71,7 +71,13 @@ Every package publishes **four** things, each its own file under `src/` and its 
   `parser: Parser` (`{ name, parse }`), matching the types in `@cspell/cspell-types`. `parse`'s `ParseResult`
   carries `parsedTexts` entries with `range: [start, end]` offsets _relative to the original file content_ —
   getting these right is the core correctness concern of any parser here, since cspell uses them to map
-  spelling issues back to the source. Published as `./parser` → `dist/parser.js`. Also exports
+  spelling issues back to the source. `parsedTexts` is typed `Iterable<ParsedText>`, not an array — for a
+  hand-written scanner with no memory-retention concern (nothing held onto across the scan needs to be freed
+  by a consumer draining the result, unlike a tree-sitter backend's parse tree), emit it lazily via a
+  generator (`function*`/`yield`) rather than collecting into an array first; see
+  `packages/parser-typescript-strings-comments/src/parser.ts`'s `Scanner` for the pattern (`run()` and its
+  per-construct helpers are generators that `yield`/`yield*` directly, rather than pushing onto an array
+  field). Published as `./parser` → `dist/parser.js`. Also exports
   `supportedFileTypes: string[]` — the cspell/vscode language IDs (e.g. `'typescript'`, `'javascriptreact'`)
   the parser is meant to handle, kept alphabetically sorted — as the single source of truth `recommended.ts`
   builds its `languageSettings` from, so the list only needs updating in one place.

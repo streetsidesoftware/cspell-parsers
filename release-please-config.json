@@ -81,6 +81,9 @@
     "packages/parser-typescript": {
       "component": "@cspell/parser-typescript"
     },
+    "packages/parser-typescript-strings-comments": {
+      "component": "@cspell/parser-typescript-strings-comments"
+    },
     "packages/parser-typescript-tree-sitter": {
       "component": "@cspell/parser-typescript-tree-sitter"
     },
