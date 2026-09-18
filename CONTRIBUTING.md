@@ -122,7 +122,7 @@ lint-ci`/`pnpm test` pass, since it auto-fixes what it can rather than just repo
 ```sh
 pnpm run build
 pnpm run typecheck
-pnpm run lint-ci
+pnpm run lint
 pnpm test
 ```
 
