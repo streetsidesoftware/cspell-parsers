@@ -288,7 +288,7 @@ describe('strings-comments parser', () => {
     function expectRangeMatchesRawText(p: ParsedText | undefined, content: string): void {
       expect(p).toBeDefined();
       expect(p?.range[1]).toBeLessThanOrEqual(content.length);
-      expect((p?.range[1] ?? 0) - (p?.range[0] ?? 0)).toBe(p?.rawText.length);
+      expect((p?.range[1] ?? 0) - (p?.range[0] ?? 0)).toBe(p?.rawText?.length);
     }
 
     it('a plain double-quoted string (scanQuotedString)', () => {
