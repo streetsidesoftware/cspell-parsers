@@ -25,6 +25,7 @@ words:
   - COMMIT_EDITMSG
   - dedup
   - gitdir
+  - heredocs
   - inlines
   - sigstore
   - unaliased
