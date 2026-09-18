@@ -1,0 +1,7 @@
+{
+  "name": "@internal/parser-python-strings-comments-samples",
+  "private": true,
+  "devDependencies": {
+    "@cspell/parser-python-strings-comments": "workspace:*"
+  }
+}
