@@ -75,6 +75,9 @@
     "packages/parser-go-strings-comments": {
       "component": "@cspell/parser-go-strings-comments"
     },
+    "packages/parser-java-strings-comments": {
+      "component": "@cspell/parser-java-strings-comments"
+    },
     "packages/parser-javascript": {
       "component": "@cspell/parser-javascript"
     },
