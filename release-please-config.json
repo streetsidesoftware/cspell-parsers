@@ -78,6 +78,9 @@
     "packages/parser-javascript": {
       "component": "@cspell/parser-javascript"
     },
+    "packages/parser-php-strings-comments": {
+      "component": "@cspell/parser-php-strings-comments"
+    },
     "packages/parser-strings-comments": {
       "component": "@cspell/parser-strings-comments"
     },
