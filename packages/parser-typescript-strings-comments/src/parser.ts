@@ -13,6 +13,29 @@ const STRING_DOUBLE_TAG: ParsedTags = { ...STRING_TAG, 'string.doubleQuote': tru
 const STRING_TEMPLATE_TAG: ParsedTags = { ...STRING_TAG, 'string.templateLiteral': true };
 
 /**
+ * A module specifier string additionally gets the whole `module`/`module.specifier`/
+ * `module.specifier.literal` chain, plus `.module` appended to its own quote-style tag - the same
+ * convention `@cspell/parser-typescript` uses - so a consumer can filter module specifiers out with
+ * `customizePlugin` independently of ordinary string literals, without losing the plain `string`/
+ * `string.singleQuote`/`string.doubleQuote` tags.
+ */
+const MODULE_SPECIFIER_LITERAL_TAG: ParsedTags = {
+  module: true,
+  'module.specifier': true,
+  'module.specifier.literal': true,
+};
+const STRING_SINGLE_MODULE_TAG: ParsedTags = {
+  ...STRING_SINGLE_TAG,
+  'string.singleQuote.module': true,
+  ...MODULE_SPECIFIER_LITERAL_TAG,
+};
+const STRING_DOUBLE_MODULE_TAG: ParsedTags = {
+  ...STRING_DOUBLE_TAG,
+  'string.doubleQuote.module': true,
+  ...MODULE_SPECIFIER_LITERAL_TAG,
+};
+
+/**
  * Strips a fixed-length opening/closing delimiter pair (quotes) from `rawText`. `hasClose` must come from
  * the scan itself (whether it actually found a closing delimiter, vs. running off the end of the file) -
  * it can't be inferred from `rawText`'s length alone, since a well-formed literal can end exactly at EOF.
@@ -114,6 +137,45 @@ function isDivisionContext(content: string, slashIndex: number): boolean {
   let wordStart = j;
   while (wordStart > 0 && /[A-Za-z0-9_$]/.test(content[wordStart - 1])) wordStart--;
   return !REGEX_CONTEXT_KEYWORDS.has(content.slice(wordStart, j + 1));
+}
+
+/** The identifier word ending right before (exclusive) `end`, or `''` if `content[end - 1]` isn't one. */
+function precedingWord(content: string, end: number): string {
+  let start = end;
+  while (start > 0 && isIdentChar(content[start - 1])) start--;
+  return content.slice(start, end);
+}
+
+/** `import ... from 'x'`/`export ... from 'x'` (the "from" keyword) or a bare side-effect `import 'x'`. */
+const MODULE_SPECIFIER_KEYWORDS = new Set(['from', 'import']);
+
+/** `NAME('x')` calls whose first string argument is a module specifier. */
+const MODULE_SPECIFIER_CALL_NAMES = new Set(['import', 'require']);
+
+/**
+ * `true` if the string literal starting at `quoteIndex` is a module specifier - the argument of a bare
+ * `import 'x'`, the specifier after `from` in `import ... from 'x'`/`export ... from 'x'`, or the first
+ * argument to a dynamic `import('x')`/`require('x')` call. Only whitespace is skipped between the relevant
+ * keyword/call and the string, the same "grammar forces adjacency" reasoning `isDivisionContext` uses for
+ * division - none of these forms allow anything else there (`import x from 'y'` always has the specifier
+ * directly after a bare `from`, `require('y')` always has it directly after `require`'s own `(`), so this
+ * doesn't need to be exhaustive to avoid misfiring on unrelated code: a variable named `from`
+ * (`const from = 'y'`) or `require` (`myRequire('y')`) never has a string in this exact adjacent position.
+ * Detection doesn't need to be perfect - missing a module specifier here just means it's spell checked like
+ * any other string, not that anything is misread.
+ */
+function isModuleSpecifierContext(content: string, quoteIndex: number): boolean {
+  let j = quoteIndex - 1;
+  while (j >= 0 && (content[j] === ' ' || content[j] === '\t' || content[j] === '\n')) j--;
+  if (j < 0) return false;
+
+  if (content[j] === '(') {
+    let k = j - 1;
+    while (k >= 0 && (content[k] === ' ' || content[k] === '\t' || content[k] === '\n')) k--;
+    return k >= 0 && MODULE_SPECIFIER_CALL_NAMES.has(precedingWord(content, k + 1));
+  }
+
+  return MODULE_SPECIFIER_KEYWORDS.has(precedingWord(content, j + 1));
 }
 
 /**
@@ -249,7 +311,15 @@ class Scanner {
     }
     const end = closed ? i + 1 : i;
     const rawText = content.slice(start, end);
-    const tag = quote === "'" ? STRING_SINGLE_TAG : STRING_DOUBLE_TAG;
+    const isModuleSpecifier = isModuleSpecifierContext(content, start);
+    const tag =
+      quote === "'"
+        ? isModuleSpecifier
+          ? STRING_SINGLE_MODULE_TAG
+          : STRING_SINGLE_TAG
+        : isModuleSpecifier
+          ? STRING_DOUBLE_MODULE_TAG
+          : STRING_DOUBLE_TAG;
     const { text, map } = stripDelimited(rawText, 1, 1, closed);
     this.out.push({ text, rawText, map, range: [start, end], tags: tag });
     this.i = end;

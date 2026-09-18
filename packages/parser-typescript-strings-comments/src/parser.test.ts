@@ -196,6 +196,57 @@ describe('typescript-strings-comments parser', () => {
     });
   });
 
+  describe('module-specifiers.ts', () => {
+    // isModuleSpecifierContext tags the string in an import/export/require/dynamic-import statement with
+    // the whole module/module.specifier/module.specifier.literal chain, plus ".module" appended to its own
+    // quote-style tag - same convention as @cspell/parser-typescript - so customizePlugin can filter module
+    // specifiers out independently of ordinary strings.
+    const parsedTexts = parseFixture('module-specifiers.ts');
+    const MODULE_SINGLE_QUOTE_TAGS = {
+      string: true,
+      'string.singleQuote': true,
+      'string.singleQuote.module': true,
+      module: true,
+      'module.specifier': true,
+      'module.specifier.literal': true,
+    };
+
+    it.each([
+      ['./mod.js', 'a default import'],
+      ['prettier', 'a named import of a bare package specifier'],
+      ['./namespace.js', 'a namespace import'],
+      ['./side-effect.js', 'a bare side-effect import'],
+      ['./star.js', 'an export * from'],
+      ['./dynamic.js', 'a dynamic import()'],
+      ['./required.js', 'a require()'],
+    ])('tags %j (%s) with the module.specifier.literal chain', (text) => {
+      expect(byText(parsedTexts, text)?.tags).toEqual(MODULE_SINGLE_QUOTE_TAGS);
+    });
+
+    it('tags the module specifier of a re-export ("export { x } from ...") the same way', () => {
+      // ./mod.js appears twice (the import and the re-export) - just confirm every occurrence is tagged.
+      const occurrences = parsedTexts.filter((p) => p.text === './mod.js');
+      expect(occurrences).toHaveLength(2);
+      for (const occurrence of occurrences) {
+        expect(occurrence.tags).toEqual(MODULE_SINGLE_QUOTE_TAGS);
+      }
+    });
+
+    it('does not tag unrelated strings that merely look similar: "from"/"require" as ordinary identifiers', () => {
+      // "from" used as a variable name, a function merely named like "require", and a ".from(...)" method
+      // call are all real, legal JS/TS that must be spell checked as plain strings, not module specifiers.
+      expect(byText(parsedTexts, 'not a module specifier')?.tags).toEqual({
+        string: true,
+        'string.singleQuote': true,
+      });
+      expect(byText(parsedTexts, './not-a-specifier.js')?.tags).toEqual({
+        string: true,
+        'string.singleQuote': true,
+      });
+      expect(byText(parsedTexts, '2024-01-01')?.tags).toEqual({ string: true, 'string.singleQuote': true });
+    });
+  });
+
   describe('canPrecedeString/sawSlash fallback (for regexes tryScanRegexLiteral does not attempt)', () => {
     it('is not thrown off by an unrelated division earlier on the same line as a regex with a contraction', () => {
       // Regression coverage: sawSlash must be sticky, not toggled per "/" - a single division operator is

@@ -99,20 +99,32 @@ parsers can't share one.
   including any quote characters inside, rather than trying to check them like an ordinary string. A comment
   inside a `RegExp(...)` call's argument list is still recognized normally; only the string arguments
   themselves (pattern and, if given, flags) are skipped.
+- **A string used as a module specifier is still spell checked by default, but tagged so it can be filtered
+  out.** `import x from './mod.js'`, `import './side-effect.js'`, `export { x } from './mod.js'`, a dynamic
+  `import('./mod.js')`, and `require('./mod.js')` all get the `module`/`module.specifier`/
+  `module.specifier.literal` tags on their specifier string, in addition to its usual string tags - the same
+  convention `@cspell/parser-typescript` uses. Unlike regex patterns, module specifiers aren't excluded
+  outright, since a relative path (`./mod.js`) or package name (`prettier`) is sometimes still worth
+  checking - `customizePlugin` is how you opt out of them, per file type, if you'd rather not.
 - `plugin.parsers` is the list of parsers a cspell plugin module exposes; a plugin can expose more than one.
 
 ## Tags
 
-| Tag                      | Meaning                                                                              |
-| ------------------------ | ------------------------------------------------------------------------------------ |
-| `comment`                | Any comment                                                                          |
-| `comment.line`           | A `//` line comment                                                                  |
-| `comment.block`          | A `/* ... */` block comment                                                          |
-| `comment.block.doc`      | A `/** ... */` doc comment (JSDoc-style)                                             |
-| `string`                 | Any string-like literal                                                              |
-| `string.singleQuote`     | A `'...'` string literal                                                             |
-| `string.doubleQuote`     | A `"..."` string literal                                                             |
-| `string.templateLiteral` | A literal text fragment of a template string (`` `...` ``), excluding `${...}` holes |
+| Tag                         | Meaning                                                                                                                     |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `comment`                   | Any comment                                                                                                                 |
+| `comment.line`              | A `//` line comment                                                                                                         |
+| `comment.block`             | A `/* ... */` block comment                                                                                                 |
+| `comment.block.doc`         | A `/** ... */` doc comment (JSDoc-style)                                                                                    |
+| `string`                    | Any string-like literal                                                                                                     |
+| `string.singleQuote`        | A `'...'` string literal                                                                                                    |
+| `string.doubleQuote`        | A `"..."` string literal                                                                                                    |
+| `string.singleQuote.module` | A `'...'` string literal that is also a module specifier                                                                    |
+| `string.doubleQuote.module` | A `"..."` string literal that is also a module specifier                                                                    |
+| `string.templateLiteral`    | A literal text fragment of a template string (`` `...` ``), excluding `${...}` holes                                        |
+| `module`                    | Any module specifier string                                                                                                 |
+| `module.specifier`          | Any module specifier string (same as `module`, for a more specific filter)                                                  |
+| `module.specifier.literal`  | The module specifier string of an `import`/`export ... from` statement, a dynamic `import('...')`, or a `require(...)` call |
 
 ## Known limitations
 

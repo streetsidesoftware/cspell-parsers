@@ -140,6 +140,30 @@ It's also deliberately **not** reset right after `scanQuotedString` accepts a qu
 that call site's own comment for the specific regex shape (`/"quoted"|it's/`) that would otherwise slip
 through.
 
+## Module specifiers
+
+`isModuleSpecifierContext(content, quoteIndex)` tags a string as a module specifier using the same
+"grammar forces adjacency" reasoning as `isDivisionContext`/`tryScanRegExpCallArgs`, rather than any real
+understanding of import/export/call syntax: none of `import x from 'y'`, `import 'y'`,
+`export { x } from 'y'`, `import('y')`, or `require('y')` allow anything but whitespace between the
+relevant keyword (`from`, a bare `import`) or call name (`import`, `require`) and the specifier string, so
+checking that adjacency is enough to identify them without parsing the surrounding statement at all.
+
+This is why `const from = 'y'` (a variable literally named `from`) and `myRequire('y')` (an unrelated
+function that merely contains "require") are both safely left untagged: in the first, the `=` sits between
+`from` and the string; in the second, `precedingWord` naturally returns the whole word `myRequire`, not the
+suffix `require`, since it scans backward through every contiguous identifier character. Per the request this
+was built from, this detection deliberately isn't exhaustive - missing a real module specifier just means
+it's spell checked like any other string, never that anything is misread, so there was no need to chase
+every edge case (template-literal specifiers, `import.meta`, re-exports of a re-export, ...) the way the
+regex-vs-division ambiguity above did.
+
+Unlike a regex literal or a `RegExp(...)` call's arguments, a module specifier is **not** excluded from
+spell checking outright - it gets extra tags (`module`/`module.specifier`/`module.specifier.literal`, plus
+`.module` appended to its own quote-style tag, matching `@cspell/parser-typescript`'s convention exactly) so
+`customizePlugin` can filter it out per consumer, since a relative path or package name is sometimes still
+worth checking and sometimes isn't.
+
 ## Testing
 
 - `parser.test.ts` reads fixtures out of `fixtures/` (via `readFixture`/`parseFixture` helpers) rather than
