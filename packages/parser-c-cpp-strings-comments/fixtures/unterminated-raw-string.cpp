@@ -1,0 +1,1 @@
+const char *pattern = R"DELIM(this raw string never finds its closer

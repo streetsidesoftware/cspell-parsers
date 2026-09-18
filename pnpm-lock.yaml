@@ -233,6 +233,21 @@ importers:
         specifier: 'catalog:'
         version: 10.3.3
 
+  packages/parser-c-cpp-strings-comments:
+    devDependencies:
+      '@cspell/cspell-types':
+        specifier: 'catalog:'
+        version: 10.3.3
+      '@internal/utils':
+        specifier: workspace:*
+        version: link:../internal-utils
+
+  packages/parser-c-cpp-strings-comments/samples:
+    devDependencies:
+      '@cspell/parser-c-cpp-strings-comments':
+        specifier: workspace:*
+        version: link:..
+
   packages/parser-example:
     devDependencies:
       '@cspell/cspell-types':
