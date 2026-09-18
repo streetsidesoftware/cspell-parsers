@@ -127,6 +127,10 @@ class Scanner {
 
       if ((c === '"' || c === "'") && (!sawSlash || canPrecedeString(content[this.i - 1]))) {
         this.scanQuotedString(c);
+        // Deliberately not `sawSlash = false` here: an unrecognized regex can contain a quote pair
+        // canPrecedeString accepts as a real string (e.g. the "quoted" in `` /"quoted"|it's/ ``, right
+        // after the regex's own opening `/`) followed - still inside that same regex, no new `/` yet -
+        // by a genuinely risky quote. Clearing `sawSlash` here would stop guarding that one.
         continue;
       }
 

@@ -155,6 +155,19 @@ describe('typescript-strings-comments parser', () => {
       const parsed = [...parse(content, 'file.ts').parsedTexts];
       expect(byText(parsed, 'real string')?.tags).toEqual({ string: true, 'string.singleQuote': true });
     });
+
+    it('does not clear sawSlash after a quote it accepted mid-regex, if still inside the same regex', () => {
+      // Regression coverage: sawSlash must NOT reset to false after successfully scanning a quoted string.
+      // A regex this scanner doesn't recognize can contain a quote pair that canPrecedeString accepts as a
+      // real string (e.g. the "quoted" below, immediately preceded by the regex's own opening "/", which
+      // canPrecedeString treats as safe) followed - still inside that same regex, with no new "/" in
+      // between - by a genuinely risky quote (the apostrophe in "it's", preceded by "t"). Clearing sawSlash
+      // right after the accepted "quoted" would stop guarding that apostrophe, letting it run away again.
+      const content = "const re = /\"quoted\"|it's/;\n// after\nconst s = 'real string';\n";
+      const parsed = [...parse(content, 'file.ts').parsedTexts];
+      expect(byText(parsed, 'after')?.tags).toEqual({ comment: true, 'comment.line': true });
+      expect(byText(parsed, 'real string')?.tags).toEqual({ string: true, 'string.singleQuote': true });
+    });
   });
 
   describe('unterminated literals ending in a trailing lone backslash', () => {
