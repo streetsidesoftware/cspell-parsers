@@ -281,6 +281,41 @@ describe('strings-comments parser', () => {
     });
   });
 
+  describe('unterminated literals ending in a trailing lone backslash', () => {
+    // Regression coverage for a Copilot review finding on PR #60: an escape-skip that blindly advances two
+    // characters (`i += 2`) can land past `content.length` when the backslash it's skipping is the very
+    // last character in the file, producing a `range`/`map` that doesn't match `rawText`'s actual length.
+    function expectRangeMatchesRawText(p: ParsedText | undefined, content: string): void {
+      expect(p).toBeDefined();
+      expect(p?.range[1]).toBeLessThanOrEqual(content.length);
+      expect((p?.range[1] ?? 0) - (p?.range[0] ?? 0)).toBe(p?.rawText.length);
+    }
+
+    it('a plain double-quoted string (scanQuotedString)', () => {
+      const content = 'const s = "abc\\';
+      const [str] = [...parse(content, 'file.c').parsedTexts];
+      expectRangeMatchesRawText(str, content);
+    });
+
+    it('a JS/TS template literal (scanTemplateLiteral)', () => {
+      const content = 'const s = `abc\\';
+      const [str] = [...parse(content, 'file.ts').parsedTexts];
+      expectRangeMatchesRawText(str, content);
+    });
+
+    it('a C# interpolated string (scanCSharpInterpolatedString)', () => {
+      const content = 'var s = $"abc\\';
+      const [str] = [...parse(content, 'file.cs').parsedTexts];
+      expectRangeMatchesRawText(str, content);
+    });
+
+    it('a Java text block (scanJavaTextBlock)', () => {
+      const content = 'String s = """abc\\';
+      const [str] = [...parse(content, 'file.java').parsedTexts];
+      expectRangeMatchesRawText(str, content);
+    });
+  });
+
   describe('createParser', () => {
     const content = '// a comment\n"a string"\n';
 

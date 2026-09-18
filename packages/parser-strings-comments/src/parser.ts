@@ -108,11 +108,21 @@ function isIdentChar(ch: string | undefined): boolean {
   return !!ch && /[A-Za-z0-9_]/.test(ch);
 }
 
+/**
+ * Advances past a backslash escape (`\x` as one unit) without stepping beyond `content.length` - a trailing
+ * backslash with nothing after it (an unterminated literal ending mid-escape) has nothing left to escape, so
+ * this just lands on the end of `content` instead of one past it. Every backslash-skip in this file goes
+ * through here so a `range`/`map` built from the resulting index never exceeds `content.length`.
+ */
+function skipEscape(content: string, i: number): number {
+  return Math.min(i + 2, content.length);
+}
+
 /** Skips a single `'...'`/`"..."` run (backslash-escaping the next character), used inside PHP's `{$...}`. */
 function skipSimpleQuoted(content: string, start: number, quote: string): number {
   let i = start + 1;
   while (i < content.length && content[i] !== quote) {
-    i += content[i] === '\\' ? 2 : 1;
+    i = content[i] === '\\' ? skipEscape(content, i) : i + 1;
   }
   return i < content.length ? i + 1 : i;
 }
@@ -143,7 +153,7 @@ function skipPhpBraceInterpolation(content: string, start: number): number {
       continue;
     }
     if (c === '\\') {
-      i += 2;
+      i = skipEscape(content, i);
       continue;
     }
     i++;
@@ -345,7 +355,7 @@ class Scanner {
         break;
       }
       if (content[i] === '\\') {
-        i += 2;
+        i = skipEscape(content, i);
         continue;
       }
       if (allowInterpolation && content[i] === '{' && content[i + 1] === '$') {
@@ -375,7 +385,7 @@ class Scanner {
       }
       const c = content[i];
       if (c === '\\') {
-        i += 2;
+        i = skipEscape(content, i);
         continue;
       }
       if (c === '`') {
@@ -510,7 +520,7 @@ class Scanner {
       }
       const c = content[i];
       if (!verbatim && c === '\\') {
-        i += 2;
+        i = skipEscape(content, i);
         continue;
       }
       if (c === '"') {
@@ -591,7 +601,7 @@ class Scanner {
     let closed = false;
     while (i < content.length) {
       if (content[i] === '\\') {
-        i += 2;
+        i = skipEscape(content, i);
         continue;
       }
       if (content[i] === '"' && content[i + 1] === '"' && content[i + 2] === '"') {
