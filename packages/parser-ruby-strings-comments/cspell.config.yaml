@@ -1,0 +1,13 @@
+ignorePaths:
+  - node_modules
+  - fixtures
+  - dist
+
+words:
+  - dedented
+  - dedenting
+  - gsub
+  - heredocs
+  - misdetected
+  - rdoc
+  - unscanned
