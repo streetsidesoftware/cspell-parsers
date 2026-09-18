@@ -1,0 +1,2 @@
+import:
+  - '@cspell/parser-php-strings-comments/recommended'

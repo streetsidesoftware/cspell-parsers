@@ -267,6 +267,21 @@ importers:
         specifier: workspace:*
         version: link:..
 
+  packages/parser-php-strings-comments:
+    devDependencies:
+      '@cspell/cspell-types':
+        specifier: 'catalog:'
+        version: 10.3.3
+      '@internal/utils':
+        specifier: workspace:*
+        version: link:../internal-utils
+
+  packages/parser-php-strings-comments/samples:
+    devDependencies:
+      '@cspell/parser-php-strings-comments':
+        specifier: workspace:*
+        version: link:..
+
   packages/parser-strings-comments:
     devDependencies:
       '@cspell/cspell-types':
