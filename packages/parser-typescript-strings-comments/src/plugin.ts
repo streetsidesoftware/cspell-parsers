@@ -1,5 +1,6 @@
 import type { Plugin } from '@cspell/cspell-types';
 import { customizeParser } from '@internal/utils';
+
 import { parser, type CustomizeParserOptions } from './parser.js';
 
 export { supportedFileTypes } from './parser.js';
@@ -19,11 +20,11 @@ export type CustomizePluginOptions = CustomizeParserOptions;
  * **`cspell.config.mjs`**
  *
  * ```js
- * import { customizePlugin } from '@cspell/parser-typescript-tree-sitter-wasm/plugin';
+ * import { customizePlugin } from '@cspell/parser-typescript-strings-comments/plugin';
  *
  * export default {
- *   plugins: [customizePlugin({ name: 'typescript-comments-only', tags: { '*': false, comment: true } })],
- *   languageSettings: [{ languageId: 'typescript,typescriptreact', parser: 'typescript-comments-only' }],
+ *   plugins: [customizePlugin({ name: 'typescript-only-docs', tags: { '*': false, 'comment.block.doc': true } })], // only check doc comments
+ *   languageSettings: [{ languageId: 'typescript', parser: 'typescript-only-docs' }],
  * };
  * ```
  */

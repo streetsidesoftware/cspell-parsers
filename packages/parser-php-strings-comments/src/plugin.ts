@@ -1,5 +1,6 @@
 import type { Plugin } from '@cspell/cspell-types';
 import { customizeParser } from '@internal/utils';
+
 import { parser, type CustomizeParserOptions } from './parser.js';
 
 export { supportedFileTypes } from './parser.js';
@@ -19,11 +20,11 @@ export type CustomizePluginOptions = CustomizeParserOptions;
  * **`cspell.config.mjs`**
  *
  * ```js
- * import { customizePlugin } from '@cspell/parser-typescript-tree-sitter-wasm/plugin';
+ * import { customizePlugin } from '@cspell/parser-php-strings-comments/plugin';
  *
  * export default {
- *   plugins: [customizePlugin({ name: 'typescript-comments-only', tags: { '*': false, comment: true } })],
- *   languageSettings: [{ languageId: 'typescript,typescriptreact', parser: 'typescript-comments-only' }],
+ *   plugins: [customizePlugin({ name: 'php-no-markup', tags: { '*': true, markup: false } })], // skip HTML outside <?php ?>
+ *   languageSettings: [{ languageId: 'php', parser: 'php-no-markup' }],
  * };
  * ```
  */
