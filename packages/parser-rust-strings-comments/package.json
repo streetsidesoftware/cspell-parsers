@@ -1,0 +1,64 @@
+{
+  "name": "@cspell/parser-rust-strings-comments",
+  "version": "1.0.0",
+  "description": "A strings-and-comments parser plugin for cspell covering Rust.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/streetsidesoftware/cspell-parsers.git",
+    "directory": "packages/parser-rust-strings-comments"
+  },
+  "funding": "https://github.com/streetsidesoftware/cspell?sponsor=1",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "keywords": [
+    "cspell",
+    "parser",
+    "plugin",
+    "rust",
+    "spell",
+    "spellchecker"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./parser": {
+      "types": "./dist/parser.d.ts",
+      "default": "./dist/parser.js"
+    },
+    "./plugin": {
+      "types": "./dist/plugin.d.ts",
+      "default": "./dist/plugin.js"
+    },
+    "./recommended": {
+      "types": "./dist/recommended.d.ts",
+      "default": "./dist/recommended.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "!dist/**/*.map"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "clean": "shx rm -rf dist coverage",
+    "test": "pnpm run test:vitest && pnpm run test:cspell",
+    "test:cspell": "cspell . --no-progress",
+    "test:vitest": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@cspell/cspell-types": "catalog:",
+    "@internal/utils": "workspace:*"
+  },
+  "engines": {
+    "cspell": ">=10.0.0",
+    "node": ">=22.18.0"
+  }
+}

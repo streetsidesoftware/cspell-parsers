@@ -87,6 +87,9 @@
     "packages/parser-php-strings-comments": {
       "component": "@cspell/parser-php-strings-comments"
     },
+    "packages/parser-rust-strings-comments": {
+      "component": "@cspell/parser-rust-strings-comments"
+    },
     "packages/parser-strings-comments": {
       "component": "@cspell/parser-strings-comments"
     },
