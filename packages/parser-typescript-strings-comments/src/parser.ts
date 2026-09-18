@@ -179,19 +179,22 @@ function isModuleSpecifierContext(content: string, quoteIndex: number): boolean 
 }
 
 /**
- * Scans JavaScript/JSX/TypeScript/TSX source for comments and string/template literals, emitting one
+ * Scans JavaScript/JSX/TypeScript/TSX source for comments and string/template literals, yielding one
  * `ParsedText` per segment and silently skipping everything else (identifiers, keywords, punctuation,
  * numbers, JSX markup) - the same "only emit what should be spell checked" approach as
  * `@cspell/parser-example`, extended to also emit string contents.
+ *
+ * Emits lazily via generators rather than collecting into an array - unlike a tree-sitter-backed parser,
+ * nothing here holds onto a tree or other resource a consumer could leak by not fully draining the result,
+ * so there's no reason to force eager collection.
  */
 class Scanner {
   private i = 0;
-  readonly out: ParsedText[] = [];
 
   constructor(private readonly content: string) {}
 
-  run(): void {
-    this.scanCode(this.content.length, false);
+  *run(): Generator<ParsedText> {
+    yield* this.scanCode(this.content.length, false);
   }
 
   /**
@@ -199,7 +202,7 @@ class Scanner {
    * a `}` at brace-depth 0, having consumed it - used to find the end of a `${...}` interpolation hole
    * without knowing its end index up front.
    */
-  private scanCode(end: number, stopAtUnmatchedBrace: boolean): void {
+  private *scanCode(end: number, stopAtUnmatchedBrace: boolean): Generator<ParsedText> {
     const { content } = this;
     let braceDepth = 0;
     // Sticky, not toggled: sawSlash just means "a bare `/` appeared somewhere since the last reset point
@@ -228,12 +231,12 @@ class Scanner {
       }
 
       if (c === '/' && n === '/') {
-        this.scanLineComment();
+        yield this.scanLineComment();
         sawSlash = false;
         continue;
       }
       if (c === '/' && n === '*') {
-        this.scanBlockComment();
+        yield this.scanBlockComment();
         sawSlash = false;
         continue;
       }
@@ -241,17 +244,18 @@ class Scanner {
         sawSlash = false;
         continue;
       }
-      if (c === 'R' && this.tryScanRegExpCallArgs()) {
-        continue;
+      if (c === 'R') {
+        const consumed = yield* this.tryScanRegExpCallArgs();
+        if (consumed) continue;
       }
       if (c === '`') {
-        this.scanTemplateLiteral();
+        yield* this.scanTemplateLiteral();
         sawSlash = false;
         continue;
       }
 
       if ((c === '"' || c === "'") && (!sawSlash || canPrecedeString(content[this.i - 1]))) {
-        this.scanQuotedString(c);
+        yield this.scanQuotedString(c);
         // Deliberately not `sawSlash = false` here: an unrecognized regex can contain a quote pair
         // canPrecedeString accepts as a real string (e.g. the "quoted" in `` /"quoted"|it's/ ``, right
         // after the regex's own opening `/`) followed - still inside that same regex, no new `/` yet -
@@ -269,18 +273,18 @@ class Scanner {
     }
   }
 
-  private scanLineComment(): void {
+  private scanLineComment(): ParsedText {
     const { content } = this;
     const start = this.i;
     const newlineIndex = content.indexOf('\n', start);
     const end = newlineIndex === -1 ? content.length : newlineIndex;
     const rawText = content.slice(start, end);
     const { text, map } = stripCommentMarkers(rawText);
-    this.out.push({ text, rawText, map, range: [start, end], tags: COMMENT_LINE_TAG });
     this.i = end;
+    return { text, rawText, map, range: [start, end], tags: COMMENT_LINE_TAG };
   }
 
-  private scanBlockComment(): void {
+  private scanBlockComment(): ParsedText {
     const { content } = this;
     const start = this.i;
     const closeIndex = content.indexOf('*/', start + 2);
@@ -288,12 +292,12 @@ class Scanner {
     const rawText = content.slice(start, end);
     const isDoc = rawText.startsWith('/**') && rawText.length >= 5;
     const { text, map } = stripCommentMarkers(rawText);
-    this.out.push({ text, rawText, map, range: [start, end], tags: isDoc ? COMMENT_BLOCK_DOC_TAG : COMMENT_BLOCK_TAG });
     this.i = end;
+    return { text, rawText, map, range: [start, end], tags: isDoc ? COMMENT_BLOCK_DOC_TAG : COMMENT_BLOCK_TAG };
   }
 
   /** A plain `'...'`/`"..."` string. */
-  private scanQuotedString(quote: string): void {
+  private scanQuotedString(quote: string): ParsedText {
     const { content } = this;
     const start = this.i;
     let i = start + 1;
@@ -321,18 +325,18 @@ class Scanner {
           ? STRING_DOUBLE_MODULE_TAG
           : STRING_DOUBLE_TAG;
     const { text, map } = stripDelimited(rawText, 1, 1, closed);
-    this.out.push({ text, rawText, map, range: [start, end], tags: tag });
     this.i = end;
+    return { text, rawText, map, range: [start, end], tags: tag };
   }
 
   /** A template literal, split into `string.templateLiteral` fragments around `${...}` holes. */
-  private scanTemplateLiteral(): void {
+  private *scanTemplateLiteral(): Generator<ParsedText> {
     const { content } = this;
     let i = this.i + 1;
     let fragStart = i;
     for (;;) {
       if (i >= content.length) {
-        this.emitFragment(fragStart, i, STRING_TEMPLATE_TAG);
+        yield* this.emitFragment(fragStart, i, STRING_TEMPLATE_TAG);
         this.i = i;
         return;
       }
@@ -342,16 +346,16 @@ class Scanner {
         continue;
       }
       if (c === '`') {
-        this.emitFragment(fragStart, i, STRING_TEMPLATE_TAG);
+        yield* this.emitFragment(fragStart, i, STRING_TEMPLATE_TAG);
         i++;
         this.i = i;
         return;
       }
       if (c === '$' && content[i + 1] === '{') {
-        this.emitFragment(fragStart, i, STRING_TEMPLATE_TAG);
+        yield* this.emitFragment(fragStart, i, STRING_TEMPLATE_TAG);
         i += 2;
         this.i = i;
-        this.scanCode(content.length, true);
+        yield* this.scanCode(content.length, true);
         i = this.i;
         fragStart = i;
         continue;
@@ -361,10 +365,10 @@ class Scanner {
   }
 
   /** A non-empty `[start, end)` slice of `content`, emitted as-is (no transform, so no `map` needed). */
-  private emitFragment(start: number, end: number, tags: ParsedTags): void {
+  private *emitFragment(start: number, end: number, tags: ParsedTags): Generator<ParsedText> {
     if (end <= start) return;
     const text = this.content.slice(start, end);
-    this.out.push({ text, rawText: text, range: [start, end], tags });
+    yield { text, rawText: text, range: [start, end], tags };
   }
 
   /**
@@ -426,7 +430,7 @@ class Scanner {
    * actually the bare global name (e.g. `MyRegExpUtils`) or isn't followed by `(`, so the caller falls back
    * to treating `R` as an ordinary character.
    */
-  private tryScanRegExpCallArgs(): boolean {
+  private *tryScanRegExpCallArgs(): Generator<ParsedText, boolean> {
     const { content } = this;
     const start = this.i;
     if (isIdentChar(content[start - 1]) || !content.startsWith('RegExp', start)) return false;
@@ -454,11 +458,11 @@ class Scanner {
         continue;
       }
       if (c === '/' && content[this.i + 1] === '/') {
-        this.scanLineComment();
+        yield this.scanLineComment();
         continue;
       }
       if (c === '/' && content[this.i + 1] === '*') {
-        this.scanBlockComment();
+        yield this.scanBlockComment();
         continue;
       }
       if (c === '"' || c === "'") {
@@ -494,9 +498,7 @@ class Scanner {
  * `Scanner` class for the actual scanning logic.
  */
 export function parse(content: string, filename: string): ParseResult {
-  const scanner = new Scanner(content);
-  scanner.run();
-  return { content, filename, parsedTexts: scanner.out };
+  return { content, filename, parsedTexts: new Scanner(content).run() };
 }
 
 export const parser: Parser = {
