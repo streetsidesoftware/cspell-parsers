@@ -223,6 +223,17 @@ describe('typescript-strings-comments parser', () => {
       expect(byText(parsedTexts, text)?.tags).toEqual(MODULE_SINGLE_QUOTE_TAGS);
     });
 
+    it('tags a double-quoted module specifier with the .doubleQuote.module chain, symmetric with single-quoted', () => {
+      expect(byText(parsedTexts, './double-quoted.js')?.tags).toEqual({
+        string: true,
+        'string.doubleQuote': true,
+        'string.doubleQuote.module': true,
+        module: true,
+        'module.specifier': true,
+        'module.specifier.literal': true,
+      });
+    });
+
     it('tags the module specifier of a re-export ("export { x } from ...") the same way', () => {
       // ./mod.js appears twice (the import and the re-export) - just confirm every occurrence is tagged.
       const occurrences = parsedTexts.filter((p) => p.text === './mod.js');

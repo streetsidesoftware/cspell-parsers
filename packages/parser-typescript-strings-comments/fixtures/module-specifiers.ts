@@ -1,4 +1,5 @@
 import x from './mod.js';
+import z from "./double-quoted.js";
 import { y } from 'prettier';
 import * as ns from './namespace.js';
 import './side-effect.js';
