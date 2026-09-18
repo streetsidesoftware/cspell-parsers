@@ -32,7 +32,7 @@ tagged completely normally - there's no separate "expression" scanner to keep in
 
 ### Emitting a segment
 
-Every `out.push(...)` site builds a `ParsedText` from a `[start, end)` range it already knows:
+Every emit site (a `yield` in the `Scanner` generators) builds a `ParsedText` from a `[start, end)` range it already knows:
 
 - Line/block comments reuse `@internal/utils`'s `stripCommentMarkers` directly (it already handles the
   doc-comment gutter-stripping correctly, and always starts with `//` or `/*`).
