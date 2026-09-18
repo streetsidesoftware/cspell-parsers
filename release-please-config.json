@@ -75,6 +75,9 @@
     "packages/parser-javascript": {
       "component": "@cspell/parser-javascript"
     },
+    "packages/parser-strings-comments": {
+      "component": "@cspell/parser-strings-comments"
+    },
     "packages/parser-typescript": {
       "component": "@cspell/parser-typescript"
     },

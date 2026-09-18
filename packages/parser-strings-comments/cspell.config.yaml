@@ -1,0 +1,9 @@
+ignorePaths:
+  - node_modules
+  - fixtures
+  - dist
+
+words:
+  - dedenting
+  - dedents
+  - nowdoc
