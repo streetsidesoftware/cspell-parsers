@@ -111,9 +111,12 @@ parsers can't share one.
 ## Known limitations
 
 This parser is a small hand-written scanner, not a real grammar, which keeps it dependency-free but means
-one corner is intentionally simplified: **regex literals** aren't recognized. A quote character inside a
-regex literal's body (e.g. `/['"]/`) can be mistaken for the start of a string, the same way
-`@cspell/parser-example` already behaves for JavaScript/TypeScript today.
+one corner is intentionally simplified: **regex literals** aren't recognized, so a quote character inside a
+regex literal's body can be mistaken for the start of a string. A quote directly preceded by an identifier
+character or another quote (e.g. the apostrophe in `/don't|won't/`, or either quote in `/[\w"']/`) is
+never mistaken this way, since valid JS/TS syntax could never have a real string start there either - but a
+character class that opens with a quote right after `[` (e.g. `/['"]/`) still can be, since that's
+genuinely ambiguous with a real string starting right after an array literal's bracket (`["real string"]`).
 
 Use this package as a template: copy `src/parser.ts`, `src/plugin.ts`, `src/index.ts`, and `src/recommended.ts`
 into a new package under `packages/` and replace the parsing logic with your own. See the repo root

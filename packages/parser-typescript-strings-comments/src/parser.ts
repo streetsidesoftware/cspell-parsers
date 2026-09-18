@@ -41,6 +41,22 @@ function skipEscape(content: string, i: number): number {
 }
 
 /**
+ * `false` for a character that can never legitimately precede a real string literal's opening quote in valid
+ * JS/TS syntax, directly and unambiguously (no space, no operator): an identifier character (`foo"bar"` isn't
+ * valid) or another quote (`"a"'b'` isn't either - two adjacent primary expressions always need an operator
+ * between them). Seeing one of these right before a `'`/`"` is a strong signal the quote is actually inside a
+ * regex character class this scanner doesn't otherwise recognize (e.g. *both* quotes in `` /[\w"']/ ``: the
+ * `"` follows `\w`'s `w`, and the `'` follows that same `"`), not the start of a real string.
+ *
+ * This can't catch every such case - a class that opens with a quote right after `[` (`` /['"]/ ``) looks
+ * exactly like a real string starting right after an array literal's bracket (`["real string"]`), which *is*
+ * valid, so that one's ambiguous either way and still gets misread. See `README.md`'s "Known limitations".
+ */
+function canPrecedeString(prev: string | undefined): boolean {
+  return prev === undefined || !/[A-Za-z0-9_$'"]/.test(prev);
+}
+
+/**
  * Scans JavaScript/JSX/TypeScript/TSX source for comments and string/template literals, emitting one
  * `ParsedText` per segment and silently skipping everything else (identifiers, keywords, punctuation,
  * numbers, JSX markup) - the same "only emit what should be spell checked" approach as
@@ -95,12 +111,8 @@ class Scanner {
         this.scanTemplateLiteral();
         continue;
       }
-      if (c === '"') {
-        this.scanQuotedString('"');
-        continue;
-      }
-      if (c === "'") {
-        this.scanQuotedString("'");
+      if ((c === '"' || c === "'") && canPrecedeString(content[this.i - 1])) {
+        this.scanQuotedString(c);
         continue;
       }
 

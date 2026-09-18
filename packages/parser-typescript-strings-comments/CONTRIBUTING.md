@@ -63,11 +63,18 @@ per segment. See `README.md`'s [Tags](README.md#tags) table for what each one me
 
 ## Known simplifications
 
-See `README.md`'s [Known limitations](README.md#known-limitations) section for the user-facing note (no
-regex-literal awareness - a quote inside `/['"]/ ` can be mistaken for a string). That's a deliberate scope
-cut shared with `@cspell/parser-example`: correctly disambiguating a regex literal from division requires
-tracking expression context (what token precedes it), which this scanner - like its C-family sibling before
-the split - doesn't do.
+See `README.md`'s [Known limitations](README.md#known-limitations) section for the user-facing note: this
+scanner has no regex-literal awareness at all - correctly disambiguating a regex literal from division
+requires tracking expression context (what token precedes it), which this scanner, like its C-family sibling
+before the split, doesn't do. `canPrecedeString()` is a narrow, backward-looking mitigation rather than a
+real fix: before treating a `'`/`"` as a real string's opening quote, it checks the one character right
+before it. An identifier character or another quote there can never legitimately precede a real string in
+valid JS/TS (`foo"bar"` and `"a"'b'` are both syntax errors), so seeing one is treated as "probably inside an
+unrecognized regex character class" and the quote is left alone instead of kicking off a runaway "string"
+scan. This covers the common cases (contractions like `don't`, character classes like `[\w"']`) without any
+risk of misreading real code, but it's fundamentally limited to what a single preceding character can tell
+you: a class that opens with a quote right after `[` (`/['"]/`) is truly ambiguous with a real string
+starting right after an array literal's bracket, and still gets misread either way.
 
 ## Testing
 

@@ -125,6 +125,28 @@ describe('typescript-strings-comments parser', () => {
     });
   });
 
+  describe('regex-adjacent-quote.ts', () => {
+    // This scanner doesn't recognize regex literals (see README's "Known limitations"), so a quote inside
+    // one can be mistaken for a string's opening quote. canPrecedeString() mitigates the common cases: a
+    // quote directly preceded by an identifier character or another quote can never be a real string's
+    // start in valid JS/TS, so it's left alone instead of kicking off a runaway "string" that swallows
+    // everything up to the next matching quote in the file.
+    const parsedTexts = parseFixture('regex-adjacent-quote.ts');
+
+    it("does not mistake an apostrophe in a contraction for a string (/don't|won't|can't/)", () => {
+      expect(parsedTexts.some((p) => p.text.includes("don't"))).toBe(false);
+    });
+
+    it('does not mistake either quote in a /[\\w"\'].*/ character class for a string', () => {
+      expect(parsedTexts.some((p) => p.text.includes('\\w'))).toBe(false);
+    });
+
+    it('still recognizes the real string after both regexes, proving neither ran away past it', () => {
+      const str = byText(parsedTexts, 'still recognized as a real string');
+      expect(str?.tags).toEqual({ string: true, 'string.singleQuote': true });
+    });
+  });
+
   describe('unterminated literals ending in a trailing lone backslash', () => {
     // Regression coverage for a Copilot review finding on @cspell/parser-strings-comments PR #60: an
     // escape-skip that blindly advances two characters (`i += 2`) can land past `content.length` when the
