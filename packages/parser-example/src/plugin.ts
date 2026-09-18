@@ -17,14 +17,14 @@ export type CustomizePluginOptions = CustomizeParserOptions;
  * spell checked. Filtering happens in the parser itself, before cspell ever sees the excluded segments, so
  * it works with any cspell version.
  *
- * Usage: **`cspell.config.mjs`** (needs a JS/TS config file - `.mjs`/`.ts`/`.cjs` - since this returns a live
- * `Plugin` object rather than a module-specifier string)
+ * **`cspell.config.mjs`**
+ *
  * ```js
  * import { customizePlugin } from '@cspell/parser-example/plugin';
  *
  * export default {
- *   plugins: [customizePlugin({ tags: { '*': false, 'comment.block.doc': true } })], // only check doc comments
- *   languageSettings: [{ languageId: 'c,cpp', parser: 'c-style-comments' }],
+ *   plugins: [customizePlugin({ name: 'doc-comments-only', tags: { '*': false, 'comment.block.doc': true } })],
+ *   languageSettings: [{ languageId: 'c,cpp', parser: 'doc-comments-only' }],
  * };
  * ```
  */

@@ -16,14 +16,14 @@ export type CustomizePluginOptions = CustomizeParserOptions;
  * spell checked. Filtering happens in the parser itself, before cspell ever sees the excluded segments, so
  * it works with any cspell version.
  *
- * Usage: **`cspell.config.mjs`** (needs a JS/TS config file - `.mjs`/`.ts`/`.cjs` - since this returns a live
- * `Plugin` object rather than a module-specifier string)
+ * **`cspell.config.mjs`**
+ *
  * ```js
  * import { customizePlugin } from '@cspell/parser-javascript/plugin';
  *
  * export default {
- *   plugins: [customizePlugin({ tags: { '*': false, comment: true } })], // only check comments
- *   languageSettings: [{ languageId: 'javascript,javascriptreact', parser: 'javascript' }],
+ *   plugins: [customizePlugin({ name: 'javascript-comments-only', tags: { '*': false, comment: true } })],
+ *   languageSettings: [{ languageId: 'javascript,javascriptreact', parser: 'javascript-comments-only' }],
  * };
  * ```
  */

@@ -17,15 +17,20 @@ export type CustomizePluginOptions = CustomizeParserOptions;
  * spell checked. Filtering happens in the parser itself, before cspell ever sees the excluded segments, so
  * it works with any cspell version.
  *
- * Usage: **`cspell.config.mjs`** (needs a JS/TS config file - `.mjs`/`.ts`/`.cjs` - since this returns a live
- * `Plugin` object rather than a module-specifier string)
+ * **`cspell.config.mjs`**
+ *
  * ```js
  * import { customizePlugin } from '@cspell/parser-strings-comments/plugin';
  *
  * export default {
  *   // only check doc comments (JSDoc/Javadoc/PHPDoc-style "/**" blocks and C#'s "///" lines)
- *   plugins: [customizePlugin({ tags: { '*': false, 'comment.block.doc': true, 'comment.line.doc': true } })],
- *   languageSettings: [{ languageId: 'csharp', parser: 'strings-comments' }],
+ *   plugins: [
+ *     customizePlugin({
+ *       name: 'doc-comments-only',
+ *       tags: { '*': false, 'comment.block.doc': true, 'comment.line.doc': true },
+ *     }),
+ *   ],
+ *   languageSettings: [{ languageId: 'csharp', parser: 'doc-comments-only' }],
  * };
  * ```
  */
