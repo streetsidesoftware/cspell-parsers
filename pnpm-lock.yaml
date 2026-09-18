@@ -295,6 +295,21 @@ importers:
         specifier: workspace:*
         version: link:../internal-utils
 
+  packages/parser-typescript-strings-comments:
+    devDependencies:
+      '@cspell/cspell-types':
+        specifier: 'catalog:'
+        version: 10.3.3
+      '@internal/utils':
+        specifier: workspace:*
+        version: link:../internal-utils
+
+  packages/parser-typescript-strings-comments/samples:
+    devDependencies:
+      '@cspell/parser-typescript-strings-comments':
+        specifier: workspace:*
+        version: link:..
+
   packages/parser-typescript-tree-sitter:
     dependencies:
       tree-sitter:

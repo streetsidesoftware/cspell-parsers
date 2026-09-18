@@ -1,0 +1,84 @@
+# Contributing to @cspell/parser-typescript-strings-comments
+
+This is a contributor-facing walkthrough of how `src/parser.ts` actually works. `README.md` is written for
+someone using the plugin; this file is for someone changing it. See the repo root `CONTRIBUTING.md` for the
+general package shape (`parser.ts`/`plugin.ts`/`index.ts`/`recommended.ts`, `fixtures/`, `samples/`) - this
+file only covers what's specific to this package's parsing logic.
+
+## Shape of the parser
+
+Unlike `@cspell/parser-typescript` (a real tree-sitter grammar), this parser is a single hand-written scanner
+(`Scanner`, a small stateful class holding a mutable cursor `i` over `content`). There's no AST and no
+tokenizer for the language as a whole - `Scanner.scanCode` walks `content` character by character,
+recognizing only the handful of constructs that matter (comments and strings) and silently advancing `i` past
+everything else (identifiers, keywords, punctuation, numbers, JSX markup). Since cspell only ever checks
+what's inside `parsedTexts`, this is how the parser excludes syntax noise: by simply never emitting it, not
+by filtering it out afterwards - the same approach `@cspell/parser-example` uses.
+
+This package started as the JS/TS-family slice of `@cspell/parser-strings-comments`, a single scanner that
+also covered C, C++, C#, Go, Java, and PHP. Splitting each language family into its own package removes the
+`Dialect` branching that combined scanner needed everywhere (`if (dialect === 'php') ...`, `if (dialect ===
+'csharp') ...`) - since this package only ever handles one syntax family, `scanCode` has no dialect checks at
+all, which is most of why it's about half the size.
+
+### `scanCode`'s one exit condition
+
+`scanCode(end, stopAtUnmatchedBrace)` is the core loop, called both at the top level (for the whole file) and
+recursively for a template literal's `${...}` interpolation hole, which doesn't have a known end index up
+front - only "the matching `}`". `stopAtUnmatchedBrace: true` makes `scanCode` track its own brace depth and
+return as soon as it sees a `}` at depth 0, having consumed it. Because this is the exact same function used
+for ordinary code, a string or comment nested inside the hole (e.g. `` `${a ? 'x' : 'y'}` ``) is picked up and
+tagged completely normally - there's no separate "expression" scanner to keep in sync.
+
+### Emitting a segment
+
+Every `out.push(...)` site builds a `ParsedText` from a `[start, end)` range it already knows:
+
+- Line/block comments reuse `@internal/utils`'s `stripCommentMarkers` directly (it already handles the
+  doc-comment gutter-stripping correctly, and always starts with `//` or `/*`).
+- `stripDelimited(rawText, openLen, closeLen, hasClose)` strips a fixed-length open/close delimiter pair
+  (quotes). `hasClose` must come from the scan itself (whether it actually found a real closing delimiter,
+  vs. running off the end of the file) - it can't be inferred from `rawText`'s length alone, since a
+  well-formed literal can end exactly at EOF.
+- `emitFragment(start, end, tags)` - for a template literal's literal fragments, which need no transform at
+  all (`rawText === text`) and are simply skipped if empty (`end <= start`), unlike every other segment kind,
+  which is always emitted even when its text is empty (e.g. `""`, `/**/`).
+
+### Escape handling
+
+`skipEscape(content, i)` clamps a backslash-escape skip (`i + 2`) to `content.length`, so a trailing lone
+backslash right at EOF (an unterminated string/template ending mid-escape) lands on the end of `content`
+instead of one past it. Every backslash-skip in `scanQuotedString`/`scanTemplateLiteral` goes through this -
+without it, the emitted `range`/`map` can exceed `content.length`, inconsistent with the actual `rawText`
+(this was a real bug, found by Copilot's review of `@cspell/parser-strings-comments` PR #60 before this
+package was split out of it - see `parser.test.ts`'s "unterminated literals ending in a trailing lone
+backslash" tests).
+
+## Tags
+
+Same convention as every other package in this repo: a tag is a dot-separated hierarchical name, and every
+segment carries its whole ancestor chain (`comment.block.doc` also carries `comment.block` and `comment`),
+built as module-level constants (`COMMENT_BLOCK_DOC_TAG`, `STRING_TEMPLATE_TAG`, ...) rather than computed
+per segment. See `README.md`'s [Tags](README.md#tags) table for what each one means to a consumer.
+
+## Known simplifications
+
+See `README.md`'s [Known limitations](README.md#known-limitations) section for the user-facing note (no
+regex-literal awareness - a quote inside `/['"]/ ` can be mistaken for a string). That's a deliberate scope
+cut shared with `@cspell/parser-example`: correctly disambiguating a regex literal from division requires
+tracking expression context (what token precedes it), which this scanner - like its C-family sibling before
+the split - doesn't do.
+
+## Testing
+
+- `parser.test.ts` reads fixtures out of `fixtures/` (via `readFixture`/`parseFixture` helpers) rather than
+  embedding source strings inline - a fixture is real, syntactically valid content in its own extension
+  (`.ts`, `.tsx`, `.jsx`), which both exercises real file content and makes intent easier to read than an
+  escaped string literal. `fixtures/` is excluded from `tsc`/ESLint/Prettier (see root `CLAUDE.md`) because a
+  fixture's exact bytes - quote style, spacing, an unterminated literal's missing closing delimiter - are
+  frequently what's being asserted on; don't let a formatter "fix" one.
+- `samples/` is a real, separate end-to-end check: actual cspell configs plus real source files, run for real
+  by `pnpm run test:cspell` (`cspell .` from the package root). `samples/customize` in particular proves the
+  `customizePlugin` tag filter is doing something real (a genuine misspelling in a segment the filter
+  excludes) - sanity-checked by temporarily swapping in the plain `plugin` and confirming `cspell .` actually
+  fails without the filter before restoring it, the way `packages/parser-typescript/samples/customize` does.

@@ -1,0 +1,2 @@
+import:
+  - '@cspell/parser-typescript-strings-comments/recommended'
