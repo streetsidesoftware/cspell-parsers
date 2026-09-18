@@ -12,9 +12,8 @@ over `content`). There's no AST and no tokenizer for the language as a whole - `
 character by character, recognizing only the handful of constructs that matter (comments, string/char
 literals, and C++ raw strings) and silently advancing `i` past everything else (identifiers, keywords,
 punctuation, numbers, preprocessor directives). Since cspell only ever checks what's inside `parsedTexts`,
-this is how the parser excludes syntax noise: by simply never emitting it, not by filtering it out afterwards
-
-- the same approach `@cspell/parser-example` uses.
+this is how the parser excludes syntax noise: by simply never emitting it, not by filtering it out afterwards -
+the same approach `@cspell/parser-example` uses.
 
 This package started as the C/C++ slice of `@cspell/parser-strings-comments`, a single scanner that also
 covered C#, Go, Java, JS/TS, and PHP. Splitting each language family into its own package removes the
@@ -36,8 +35,11 @@ the way the JS/TS and combined packages have.
 
 Every scan method builds a `ParsedText` from a `[start, end)` range it already knows:
 
-- Line/block comments reuse `@internal/utils`'s `stripCommentMarkers` directly (it already handles the
-  doc-comment gutter-stripping correctly, and always starts with `//` or `/*`).
+- Block comments reuse `@internal/utils`'s `stripCommentMarkers` directly (it already handles the doc-comment
+  gutter-stripping correctly, and always starts with `/*`). Line comments use a local `stripLineMarker`
+  instead - the same helper `@cspell/parser-csharp-strings-comments` uses - since a line comment's marker can
+  be one of two lengths here (`//`, or the 3-character `///`/`//!` Doxygen doc marker), unlike
+  `stripCommentMarkers`, which only ever strips a fixed 2-character `//`.
 - `stripDelimited(rawText, openLen, closeLen, hasClose)` strips a fixed-length open/close delimiter pair
   (quotes, or a raw string's `R"delim(`/`)delim"`). `hasClose` must come from the scan itself (whether it
   actually found a real closing delimiter, vs. running off the end of the file) - it can't be inferred from

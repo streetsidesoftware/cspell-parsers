@@ -4,6 +4,7 @@ import type { TagFilterOptions } from '@internal/utils';
 
 const COMMENT_TAG: ParsedTags = { comment: true };
 const COMMENT_LINE_TAG: ParsedTags = { ...COMMENT_TAG, 'comment.line': true };
+const COMMENT_LINE_DOC_TAG: ParsedTags = { ...COMMENT_LINE_TAG, 'comment.line.doc': true };
 const COMMENT_BLOCK_TAG: ParsedTags = { ...COMMENT_TAG, 'comment.block': true };
 const COMMENT_BLOCK_DOC_TAG: ParsedTags = { ...COMMENT_BLOCK_TAG, 'comment.block.doc': true };
 
@@ -11,6 +12,17 @@ const STRING_TAG: ParsedTags = { string: true };
 const STRING_SINGLE_TAG: ParsedTags = { ...STRING_TAG, 'string.singleQuote': true };
 const STRING_DOUBLE_TAG: ParsedTags = { ...STRING_TAG, 'string.doubleQuote': true };
 const STRING_RAW_TAG: ParsedTags = { ...STRING_TAG, 'string.raw': true };
+
+/**
+ * Strips a line comment's marker (`//`, or a Doxygen doc marker - `///` or `//!`) - and one following space,
+ * if present - from `rawText`. Unlike `@internal/utils`'s `stripCommentMarkers`, this takes the marker's
+ * length explicitly, since this scanner has two possible line-comment marker lengths, not just one.
+ */
+function stripLineMarker(rawText: string, markerLen: number): { text: string; map: SourceMap } {
+  let skip = markerLen;
+  if (rawText[skip] === ' ') skip++;
+  return { text: rawText.slice(skip), map: [skip, 0] };
+}
 
 /**
  * Strips a fixed-length opening/closing delimiter pair (quotes, or a raw string's `R"delim(`/`)delim"`) from
@@ -92,15 +104,23 @@ class Scanner {
     }
   }
 
+  /**
+   * A `//` line comment, or a Doxygen doc-comment line - `///` (but not a `////`-or-more separator line) or
+   * `//!`.
+   */
   private scanLineComment(): ParsedText {
     const { content } = this;
     const start = this.i;
+    const isTripleSlash = content[start + 2] === '/' && content[start + 3] !== '/';
+    const isBangSlash = content[start + 2] === '!';
+    const isDoc = isTripleSlash || isBangSlash;
+    const markerLen = isDoc ? 3 : 2;
     const newlineIndex = content.indexOf('\n', start);
     const end = newlineIndex === -1 ? content.length : newlineIndex;
     const rawText = content.slice(start, end);
-    const { text, map } = stripCommentMarkers(rawText);
+    const { text, map } = stripLineMarker(rawText, markerLen);
     this.i = end;
-    return { text, rawText, map, range: [start, end], tags: COMMENT_LINE_TAG };
+    return { text, rawText, map, range: [start, end], tags: isDoc ? COMMENT_LINE_DOC_TAG : COMMENT_LINE_TAG };
   }
 
   private scanBlockComment(): ParsedText {

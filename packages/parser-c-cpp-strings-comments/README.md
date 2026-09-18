@@ -61,7 +61,8 @@ sees them.
 import { customizePlugin } from '@cspell/parser-c-cpp-strings-comments/plugin';
 
 export default {
-  plugins: [customizePlugin({ tags: { '*': false, 'comment.block.doc': true } })], // only check doc comments
+  // only check Doxygen doc comments - "///"/"//!" lines and "/** ... */" blocks
+  plugins: [customizePlugin({ tags: { '*': false, 'comment.line.doc': true, 'comment.block.doc': true } })],
   languageSettings: [
     {
       languageId: 'cpp',
@@ -88,8 +89,8 @@ parsers can't share one.
 - Every segment is tagged with a dot-separated tag, plus every ancestor of it (`comment.block.doc` also
   carries `comment` and `comment.block`) - `customizePlugin` can filter which segments get spell checked
   using these tags, at any level of specificity (just `comment`, or the more specific `comment.block.doc`).
-- C and C++ have no triple-slash doc-comment convention (unlike C#), so `comment.line` never gets a `.doc`
-  variant here - only a `/** ... */` block comment does.
+- A Doxygen-style doc-comment line - `///` (but not a `////`-or-more separator line) or `//!` - is tagged
+  `comment.line.doc`; an ordinary `//` line comment is just `comment.line`.
 - **C++11 raw strings (`R"delim(...)delim"`, with an optional `u8`/`u`/`U`/`L` encoding prefix) are
   recognized and their contents spell checked without treating anything inside as an escape sequence or
   comment marker.** `delim` can be 0-16 characters, and the closing sequence must match it exactly
@@ -103,6 +104,7 @@ parsers can't share one.
 | -------------------- | ------------------------------------------------- |
 | `comment`            | Any comment                                       |
 | `comment.line`       | A `//` line comment                               |
+| `comment.line.doc`   | A Doxygen-style `///` or `//!` doc-comment line   |
 | `comment.block`      | A `/* ... */` block comment                       |
 | `comment.block.doc`  | A `/** ... */` doc comment (Doxygen-style)        |
 | `string`             | Any string-like literal                           |

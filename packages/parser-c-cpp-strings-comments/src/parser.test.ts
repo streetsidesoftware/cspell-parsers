@@ -148,6 +148,43 @@ describe('c-cpp-strings-comments parser', () => {
     });
   });
 
+  describe('Doxygen line-doc comments ("///" and "//!")', () => {
+    it('tags a "///" line as comment.line.doc', () => {
+      const content = '/// a doc comment\n';
+      const parsed = [...parse(content, 'file.c').parsedTexts];
+      expect(byText(parsed, 'a doc comment')?.tags).toEqual({
+        comment: true,
+        'comment.line': true,
+        'comment.line.doc': true,
+      });
+    });
+
+    it('tags a "//!" line as comment.line.doc', () => {
+      const content = '//! a doc comment\n';
+      const parsed = [...parse(content, 'file.c').parsedTexts];
+      expect(byText(parsed, 'a doc comment')?.tags).toEqual({
+        comment: true,
+        'comment.line': true,
+        'comment.line.doc': true,
+      });
+    });
+
+    it('does not tag a "////" separator line (four-or-more slashes) as a doc comment', () => {
+      const content = '//// a plain separator, not a doc comment\n';
+      const parsed = [...parse(content, 'file.c').parsedTexts];
+      const line = parsed[0];
+      // The marker consumed is only "//", so the text still starts with the extra "//".
+      expect(line?.text.startsWith('//')).toBe(true);
+      expect(line?.tags).toEqual({ comment: true, 'comment.line': true });
+    });
+
+    it('tags a plain "//" comment as comment.line, not comment.line.doc', () => {
+      const content = '// a plain comment\n';
+      const parsed = [...parse(content, 'file.c').parsedTexts];
+      expect(byText(parsed, 'a plain comment')?.tags).toEqual({ comment: true, 'comment.line': true });
+    });
+  });
+
   describe('unterminated literals ending in a trailing lone backslash', () => {
     // Regression coverage for a Copilot review finding on @cspell/parser-strings-comments PR #60: an
     // escape-skip that blindly advances two characters (`i += 2`) can land past `content.length` when the
