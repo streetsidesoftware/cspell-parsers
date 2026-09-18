@@ -173,11 +173,19 @@ commits. Merging that PR tags the root package (`cspell-parsers@x.y.z`, from the
 `tag-separator: "@"` / `include-v-in-tag: false` settings control that format), which is the tag
 `.github/workflows/publish.yml` listens for to run `lerna publish from-package --no-private`; lerna publishes
 every workspace package whose version changed and skips `private: true` ones regardless of whether they're in
-`release-please-config.json`. So only **publishable** packages need an entry in both
-`release-please-config.json`'s `packages` map and `.release-please-manifest.json` (so their version/changelog
-is tracked and they end up in the release PR) — private/internal packages don't need either, since lerna would
-skip them anyway. The `"."` entry must always stay: it's what produces the tag that triggers the publish
-workflow, independent of whether the root package itself is published (it's `private: true` and never is).
+`release-please-config.json`. So only **publishable** packages need an entry in `release-please-config.json`'s
+`packages` map (so their version/changelog is tracked and they end up in the release PR) — private/internal
+packages don't need one, since lerna would skip them anyway. The `"."` entry must always stay: it's what
+produces the tag that triggers the publish workflow, independent of whether the root package itself is
+published (it's `private: true` and never is).
+
+**Do not add a brand-new package to `.release-please-manifest.json`** — only to `release-please-config.json`.
+The manifest records each package's _last released_ version, and release-please computes the next release as
+a bump from whatever's there; pre-seeding it (e.g. at `"1.0.0"`) for a package that's never actually shipped
+makes release-please treat that version as already-released, so the package's real first publish lands above
+`1.0.0` instead of at it. release-please adds its own manifest entry automatically the first time it actually
+releases the package - config-only registration is enough for it to pick the package up and bootstrap it at
+`1.0.0` itself.
 
 `README.md` is written for someone **installing and using** the parser as a cspell plugin, not for a
 contributor reading the source. Lead with the couple of lines needed to add it to a cspell config (the

@@ -114,11 +114,15 @@ lint-ci`/`pnpm test` pass, since it auto-fixes what it can rather than just repo
    there that it needs a JS/TS cspell config (`.mjs`/`.ts`/`.cjs`), not `.json`/`.jsonc`/`.yaml`.
 7. Run `pnpm install` from the repo root to link the new package(s) into the workspace.
 8. If the new package is publishable to npm (not `private: true`), add it to `release-please-config.json`'s
-   `packages` map (`"packages/<your-parser-name>": {}`) and to `.release-please-manifest.json`
-   (`"packages/<your-parser-name>": "1.0.0"`) so release-please tracks its version/changelog and includes it
-   in release PRs. Private/internal packages don't need either entry — the root `"."` entry is the one that
-   must stay, since its version bump is what tags the release and triggers the publish workflow (see
-   `CLAUDE.md`'s "Release and publish flow" note).
+   `packages` map (`"packages/<your-parser-name>": { "component": "@cspell/<your-parser-name>" }`) so
+   release-please tracks its version/changelog and includes it in release PRs. **Do not** also add it to
+   `.release-please-manifest.json` — that file records each package's _last released_ version, and
+   release-please bootstraps its own entry there the first time it actually publishes the package. Seeding it
+   yourself (e.g. at `"1.0.0"`) makes release-please treat that version as already-released, so the real first
+   publish lands above `1.0.0` instead of at it. Private/internal packages don't need a
+   `release-please-config.json` entry either — the root `"."` entry is the one that must stay, since its
+   version bump is what tags the release and triggers the publish workflow (see `CLAUDE.md`'s "Release and
+   publish flow" note).
 
 ## Before submitting a pull request
 
