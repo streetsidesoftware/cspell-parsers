@@ -77,6 +77,22 @@ for every tag this parser can emit.
 registering more than one customized copy of this parser, since cspell selects a parser by name and two
 parsers can't share one.
 
+## Tags
+
+| Tag                  | Meaning                                                      |
+| -------------------- | ------------------------------------------------------------ |
+| `comment`            | Any comment                                                  |
+| `comment.line`       | A `#` line comment                                           |
+| `comment.block`      | An `=begin` ... `=end` block comment                         |
+| `string`             | Any string-like literal                                      |
+| `string.singleQuote` | A `'...'` string literal                                     |
+| `string.doubleQuote` | A `"..."` string literal (including interpolated fragments)  |
+| `string.heredoc`     | A `<<~ID`/`<<-ID`/`<<ID` heredoc body (any of its fragments) |
+
+Regex literals (`/pattern/flags`) never appear in this table at all: nothing is ever emitted for one (see
+"How it works" and "Known limitations"), so there's no tag to filter it by - it's already excluded
+unconditionally.
+
 ## How it works
 
 - `parser.parse(content, filename)` returns a `ParseResult` containing one or more `ParsedText` entries.
@@ -97,22 +113,6 @@ parsers can't share one.
   without ever emitting a `ParsedText` for it. This is a deliberate product decision, not just an
   implementation gap.
 - `plugin.parsers` is the list of parsers a cspell plugin module exposes; a plugin can expose more than one.
-
-## Tags
-
-| Tag                  | Meaning                                                      |
-| -------------------- | ------------------------------------------------------------ |
-| `comment`            | Any comment                                                  |
-| `comment.line`       | A `#` line comment                                           |
-| `comment.block`      | An `=begin` ... `=end` block comment                         |
-| `string`             | Any string-like literal                                      |
-| `string.singleQuote` | A `'...'` string literal                                     |
-| `string.doubleQuote` | A `"..."` string literal (including interpolated fragments)  |
-| `string.heredoc`     | A `<<~ID`/`<<-ID`/`<<ID` heredoc body (any of its fragments) |
-
-Regex literals (`/pattern/flags`) never appear in this table at all: nothing is ever emitted for one (see
-"How it works" and "Known limitations"), so there's no tag to filter it by - it's already excluded
-unconditionally.
 
 ## Known limitations
 
@@ -200,16 +200,6 @@ Please show your support through one of the following sites:
 </p>
 
 <!--- @@inject-end: ../../static/sponsor.md --->
-
-## CSpell for Enterprise
-
-<!--- @@inject: ../../static/tidelift.md --->
-
-Available as part of the Tidelift Subscription.
-
-The maintainers of cspell and thousands of other packages are working with Tidelift to deliver commercial support and maintenance for the open source packages you use to build your applications. Save time, reduce risk, and improve code health, while paying the maintainers of the exact packages you use. [Learn more.](https://tidelift.com/subscription/pkg/npm-cspell?utm_source=npm-cspell&utm_medium=referral&utm_campaign=enterprise&utm_term=repo)
-
-<!--- @@inject-end: ../../static/tidelift.md --->
 
 <!--- @@inject: ../../static/footer.md --->
 
