@@ -72,6 +72,9 @@
     "packages/parser-example": {
       "component": "@cspell/parser-example"
     },
+    "packages/parser-java-strings-comments": {
+      "component": "@cspell/parser-java-strings-comments"
+    },
     "packages/parser-javascript": {
       "component": "@cspell/parser-javascript"
     },
