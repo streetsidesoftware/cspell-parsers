@@ -179,13 +179,19 @@ packages don't need one, since lerna would skip them anyway. The `"."` entry mus
 produces the tag that triggers the publish workflow, independent of whether the root package itself is
 published (it's `private: true` and never is).
 
-**Do not add a brand-new package to `.release-please-manifest.json`** — only to `release-please-config.json`.
-The manifest records each package's _last released_ version, and release-please computes the next release as
-a bump from whatever's there; pre-seeding it (e.g. at `"1.0.0"`) for a package that's never actually shipped
-makes release-please treat that version as already-released, so the package's real first publish lands above
-`1.0.0` instead of at it. release-please adds its own manifest entry automatically the first time it actually
-releases the package - config-only registration is enough for it to pick the package up and bootstrap it at
-`1.0.0` itself.
+**Never hand-edit `release-please-config.json`'s `packages` map.** `pnpm exec fix-release-please-config`
+(part of `pnpm run lint`, and checked read-only by `pnpm run lint-ci`'s `--dry-run` pass) regenerates it from
+every `packages/parser*/package.json`, adding an entry for any package whose name doesn't start with
+`@internal`. A new publishable package gets picked up automatically the next time `pnpm run lint` runs —
+just run it before committing, same as for `package.json` itself (see `fix-package-json`, above).
+
+**Never add a brand-new package to `.release-please-manifest.json`, by hand or otherwise** — nothing in this
+repo should. The manifest records each package's _last released_ version, and release-please computes the
+next release as a bump from whatever's there; seeding it (e.g. at `"1.0.0"`) for a package that's never
+actually shipped makes release-please treat that version as already-released, so the package's real first
+publish lands above `1.0.0` instead of at it. release-please adds its own manifest entry automatically the
+first time it actually releases the package - the `release-please-config.json` entry alone is enough for it
+to pick the package up and bootstrap it at `1.0.0` itself.
 
 `README.md` is written for someone **installing and using** the parser as a cspell plugin, not for a
 contributor reading the source. Lead with the couple of lines needed to add it to a cspell config (the
