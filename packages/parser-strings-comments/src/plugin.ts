@@ -9,13 +9,25 @@ export const plugin: Plugin = {
   parsers: [parser],
 };
 
-/** Options for {@link customizePlugin}: which tagged segments to keep. */
+/** Options for {@link customizePlugin}: the parser's name, and which tagged segments to keep. */
 export type CustomizePluginOptions = CustomizeParserOptions;
 
 /**
- * Returns a copy of `plugin` whose parser filters segments by `options.tags` before emitting them,
- * matching a segment's tags hierarchically, without depending on cspell to support that filtering
- * natively, and whose parser is renamed to `options.name` when given.
+ * Create a customized copy of {@link plugin} - rename its parser and/or choose which tagged segments get
+ * spell checked. Filtering happens in the parser itself, before cspell ever sees the excluded segments, so
+ * it works with any cspell version.
+ *
+ * Usage: **`cspell.config.mjs`** (needs a JS/TS config file - `.mjs`/`.ts`/`.cjs` - since this returns a live
+ * `Plugin` object rather than a module-specifier string)
+ * ```js
+ * import { customizePlugin } from '@cspell/parser-strings-comments/plugin';
+ *
+ * export default {
+ *   // only check doc comments (JSDoc/Javadoc/PHPDoc-style "/**" blocks and C#'s "///" lines)
+ *   plugins: [customizePlugin({ tags: { '*': false, 'comment.block.doc': true, 'comment.line.doc': true } })],
+ *   languageSettings: [{ languageId: 'csharp', parser: 'strings-comments' }],
+ * };
+ * ```
  */
 export function customizePlugin(options: CustomizePluginOptions): Plugin {
   return { ...plugin, parsers: [customizeParser(parser, options)] };
