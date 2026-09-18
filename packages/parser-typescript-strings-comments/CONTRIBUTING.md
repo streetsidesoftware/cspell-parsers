@@ -61,20 +61,68 @@ segment carries its whole ancestor chain (`comment.block.doc` also carries `comm
 built as module-level constants (`COMMENT_BLOCK_DOC_TAG`, `STRING_TEMPLATE_TAG`, ...) rather than computed
 per segment. See `README.md`'s [Tags](README.md#tags) table for what each one means to a consumer.
 
-## Known simplifications
+## Regex literals and `RegExp(...)` calls
 
-See `README.md`'s [Known limitations](README.md#known-limitations) section for the user-facing note: this
-scanner has no regex-literal awareness at all - correctly disambiguating a regex literal from division
-requires tracking expression context (what token precedes it), which this scanner, like its C-family sibling
-before the split, doesn't do. `canPrecedeString()` is a narrow, backward-looking mitigation rather than a
-real fix: before treating a `'`/`"` as a real string's opening quote, it checks the one character right
-before it. An identifier character or another quote there can never legitimately precede a real string in
-valid JS/TS (`foo"bar"` and `"a"'b'` are both syntax errors), so seeing one is treated as "probably inside an
-unrecognized regex character class" and the quote is left alone instead of kicking off a runaway "string"
-scan. This covers the common cases (contractions like `don't`, character classes like `[\w"']`) without any
-risk of misreading real code, but it's fundamentally limited to what a single preceding character can tell
-you: a class that opens with a quote right after `[` (`/['"]/`) is truly ambiguous with a real string
-starting right after an array literal's bracket, and still gets misread either way.
+Regex patterns aren't prose - per the user request this was built from, they're deliberately never spell
+checked, the same way keywords and punctuation never are. Two mechanisms cooperate to make that work, from
+most to least precise:
+
+### `tryScanRegexLiteral` + `isDivisionContext` (the primary mechanism)
+
+`/pattern/flags` and division (`a / b`) share the same leading character, which a scanner without full
+expression parsing can't tell apart by looking at the `/` alone. `isDivisionContext(content, slashIndex)`
+resolves it the same way a real JS tokenizer does: by looking at whatever significant character (skipping
+inline whitespace) comes right before the `/`. An identifier/number that isn't one of
+`REGEX_CONTEXT_KEYWORDS`, a `)`, a `]`, or a `}` means a value was already produced there, so `/` must be
+division; anything else (an operator, `(`, `,`, `=`, the start of the file, a keyword like `return` or
+`typeof`, ...) means an expression is still expected, so `/` can only be a regex's opening delimiter.
+
+When `isDivisionContext` says "not division," `tryScanRegexLiteral` attempts to actually scan the regex body
+
+- tracking `[...]` character-class depth (so an unescaped `/` inside a class, or a `]` that would otherwise
+  look like it ends the class early, doesn't end the regex prematurely) and backslash escapes (via the same
+  `skipEscape` strings/templates use) - up to a closing `/` and its trailing flag letters. Finding one means
+  skipping the whole regex as a single opaque unit, exactly like any other code this scanner doesn't check:
+  nothing inside it, including every quote character, ever reaches the string dispatch at all. This is what
+  actually fixes the regex/quote ambiguity, including the one case a per-character heuristic alone can never
+  resolve: a class that opens with a quote right after `[` (`/['"]/`) is textually identical to a real
+  string starting right after an array literal's bracket (`["real string"]`) - only knowing that a regex is
+  actually expected at that position (via `isDivisionContext`) breaks the tie.
+
+**`}` is deliberately biased toward "division," not "regex."** It's genuinely ambiguous - it closes both a
+block statement (after which a real regex commonly follows: `if (x) {}\n/regex/.test(y)`) and an object
+literal (after which `/` is real division: `{a: 1} / 2`) - and the two failure modes aren't symmetric.
+Treating `}` as division-like and getting it wrong just means a real regex isn't recognized, falling back to
+the character-level mitigation below (a fine outcome). Treating `}` as regex-context and getting _that_
+wrong is worse: `tryScanRegexLiteral` would then attempt to parse real division as a regex, scanning ahead
+for the next unrelated `/` in the file as if it were the closing delimiter and silently swallowing whatever
+real string or comment happened to sit in between (see `parser.test.ts`'s "treats a same-line `}`..." test,
+which reproduces exactly this and fails if `}` is removed from `isDivisionContext`'s check - the fixture's
+own equivalent case doesn't catch it, since its statements are on separate lines and `tryScanRegexLiteral`
+already bails out at the first newline it meets, for unrelated reasons).
+
+`tryScanRegExpCallArgs` (detected via a plain `c === 'R'` check, since `scanCode` doesn't otherwise tokenize
+identifiers) handles the same "not spell check the pattern" intent for `RegExp(...)`/`new RegExp(...)`,
+where the pattern is an ordinary string argument rather than special syntax. It requires a word boundary on
+both sides of the literal text `RegExp` (so `MyRegExpUtils(...)` and `RegExp2` are correctly left alone),
+then scans the whole argument list tracking paren depth - not just the first argument - skipping every
+string literal it finds via `skipQuotedStringSilently` (identical to `scanQuotedString`'s boundary-finding,
+just without emitting anything) while still recognizing comments inside the call normally via the ordinary
+`scanLineComment`/`scanBlockComment`.
+
+### `canPrecedeString` + `sawSlash` (the fallback, for what the primary mechanism misses)
+
+See `README.md`'s [Known limitations](README.md#known-limitations) for the user-facing summary of when this
+still matters: mainly right after a keyword not in `REGEX_CONTEXT_KEYWORDS`, or right after a `}` that was
+actually closing a block statement rather than an object literal. `canPrecedeString` is a narrow,
+backward-looking mitigation rather than a real fix: before treating a `'`/`"` as a real string's opening
+quote, it checks the one character right before it. An identifier character or another quote there can never
+legitimately precede a real string in valid JS/TS (`foo"bar"` and `"a"'b'` are both syntax errors), so seeing
+one is treated as "probably inside an unrecognized regex character class" and the quote is left alone
+instead of kicking off a runaway "string" scan. This covers the common cases (contractions like `don't`,
+character classes like `[\w"']`) without any risk of misreading real code, but it's fundamentally limited to
+what a single preceding character can tell you: a class that opens with a quote right after `[` (`/['"]/`)
+is truly ambiguous with a real string - the primary mechanism above is what actually resolves that one.
 
 `scanCode` only calls `canPrecedeString` once it's seen a bare `/` since the last reset point
 (`sawSlash`) - regex literals are rare, so this skips a regex test entirely for the overwhelming majority of
@@ -84,7 +132,13 @@ to `false` on a second `/`. Toggling was tried first and is wrong: a division is
 `a / b; const re = /don't/;` would toggle "on" for the division and then immediately toggle back "off" at the
 regex's own opening `/`, turning the guard off right where it's needed and reintroducing the original bug for
 that (common) pattern - see `parser.test.ts`'s "is not thrown off by an unrelated division..." test, which
-fails against a toggled implementation.
+fails against a toggled implementation. (In practice `tryScanRegexLiteral` now recognizes that exact case
+directly, independent of `sawSlash` entirely - this test was kept as regression coverage for the fallback
+mechanism itself, in case a future change stops the regex from being recognized as one.)
+
+It's also deliberately **not** reset right after `scanQuotedString` accepts a quote as a real string - see
+that call site's own comment for the specific regex shape (`/"quoted"|it's/`) that would otherwise slip
+through.
 
 ## Testing
 

@@ -40,6 +40,10 @@ function skipEscape(content: string, i: number): number {
   return Math.min(i + 2, content.length);
 }
 
+function isIdentChar(ch: string | undefined): boolean {
+  return !!ch && /[A-Za-z0-9_$]/.test(ch);
+}
+
 /**
  * `false` for a character that can never legitimately precede a real string literal's opening quote in valid
  * JS/TS syntax, directly and unambiguously (no space, no operator): an identifier character (`foo"bar"` isn't
@@ -58,6 +62,58 @@ function skipEscape(content: string, i: number): number {
  */
 function canPrecedeString(prev: string | undefined): boolean {
   return prev === undefined || !/[A-Za-z0-9_$'"]/.test(prev);
+}
+
+/**
+ * Keywords after which a `/` is unambiguously the start of a regex literal, never division - there's no
+ * operand for division to act on yet at these points, only an expression's worth of space. Lets
+ * `isDivisionContext` see past a keyword that (like any identifier) ends in a word character - e.g. the `n`
+ * of `return` - to the expression position that actually follows it.
+ */
+const REGEX_CONTEXT_KEYWORDS = new Set([
+  'return',
+  'typeof',
+  'instanceof',
+  'in',
+  'of',
+  'new',
+  'delete',
+  'void',
+  'throw',
+  'case',
+  'do',
+  'else',
+  'yield',
+  'await',
+  'default',
+  'extends',
+]);
+
+/**
+ * `true` if the nearest significant character before `content[slashIndex]` (a `/`) already produced a value
+ * - an identifier/number that isn't one of {@link REGEX_CONTEXT_KEYWORDS}, a `)`, a `]`, or a `}` - meaning
+ * this `/` is a division/modulo-style operator, not the start of a regex literal. This is the same "what
+ * token precedes it" context a real JS parser uses to resolve the identical ambiguity. It isn't exhaustive
+ * (a user identifier that shadows a keyword, ASI edge cases, ... aren't covered), but it's deliberately
+ * biased toward false negatives over false positives: `}` is genuinely ambiguous (it closes both a block
+ * statement, after which a real regex commonly *does* follow, and an object literal, after which `/` would
+ * be division), and it's treated as division-like here because that failure mode is the safe one - getting
+ * it wrong just means `tryScanRegexLiteral` doesn't attempt a regex where one exists, falling back to the
+ * character-level `canPrecedeString` mitigation instead. Treating `}` as expression-position instead would
+ * risk the opposite: `tryScanRegexLiteral` succeeding on a real division by scanning ahead to the next
+ * unrelated `/` in the file as if it were a closing delimiter, silently swallowing whatever real code -
+ * including a genuine string or comment - sat in between.
+ */
+function isDivisionContext(content: string, slashIndex: number): boolean {
+  let j = slashIndex - 1;
+  while (j >= 0 && (content[j] === ' ' || content[j] === '\t')) j--;
+  if (j < 0) return false;
+  const ch = content[j];
+  if (ch === ')' || ch === ']' || ch === '}') return true;
+  if (!/[A-Za-z0-9_$]/.test(ch)) return false;
+  let wordStart = j;
+  while (wordStart > 0 && /[A-Za-z0-9_$]/.test(content[wordStart - 1])) wordStart--;
+  return !REGEX_CONTEXT_KEYWORDS.has(content.slice(wordStart, j + 1));
 }
 
 /**
@@ -117,6 +173,13 @@ class Scanner {
       if (c === '/' && n === '*') {
         this.scanBlockComment();
         sawSlash = false;
+        continue;
+      }
+      if (c === '/' && !isDivisionContext(content, this.i) && this.tryScanRegexLiteral()) {
+        sawSlash = false;
+        continue;
+      }
+      if (c === 'R' && this.tryScanRegExpCallArgs()) {
         continue;
       }
       if (c === '`') {
@@ -232,6 +295,127 @@ class Scanner {
     if (end <= start) return;
     const text = this.content.slice(start, end);
     this.out.push({ text, rawText: text, range: [start, end], tags });
+  }
+
+  /**
+   * Attempts to scan a regex literal starting at `this.i` (a `/` that `isDivisionContext` says isn't
+   * division) and, on success, skips the whole thing - delimiters, body, and flags - as a single opaque
+   * unit, exactly like any other code this scanner doesn't check. This is what actually fixes the
+   * regex/quote ambiguity `canPrecedeString` can only mitigate: once the whole regex is consumed in one
+   * step, nothing inside it - including a `[...]` class that opens with a quote right after `[`
+   * (`` /['"]/ ``, `canPrecedeString`'s one remaining gap) - ever reaches the per-character quote dispatch
+   * at all.
+   *
+   * Returns `false` (consuming nothing) if what follows isn't a validly-shaped regex body before a newline
+   * or the end of the file - almost always because this actually was division and `isDivisionContext` got
+   * it wrong (e.g. following a keyword not in `REGEX_CONTEXT_KEYWORDS`) - so the caller falls back to
+   * treating `/` as an ordinary character.
+   */
+  private tryScanRegexLiteral(): boolean {
+    const { content } = this;
+    const start = this.i;
+    let i = start + 1;
+    let inClass = false;
+    while (i < content.length) {
+      const ch = content[i];
+      if (ch === '\n') return false;
+      if (ch === '\\') {
+        i = skipEscape(content, i);
+        continue;
+      }
+      if (ch === '[') {
+        inClass = true;
+        i++;
+        continue;
+      }
+      if (ch === ']') {
+        inClass = false;
+        i++;
+        continue;
+      }
+      if (ch === '/' && !inClass) {
+        i++;
+        while (i < content.length && /[A-Za-z]/.test(content[i])) i++;
+        this.i = i;
+        return true;
+      }
+      i++;
+    }
+    return false;
+  }
+
+  /**
+   * `RegExp(...)`/`new RegExp(...)` builds a regex from string arguments at runtime - those strings are
+   * pattern/flags, not prose, so - like a regex literal's own body - they're never meant to be spell
+   * checked (see README's "Known limitations"). Detects the call starting at `this.i` (positioned at the
+   * `R` of "RegExp", with a word boundary on both ends so this can't misfire partway through a longer
+   * identifier like `MyRegExpUtils`) and, on success, scans the whole argument list, skipping every string
+   * literal inside without emitting it - covering both a `RegExp("pattern")`'s pattern and, since this
+   * doesn't stop at the first argument, a two-argument `RegExp("pattern", "flags")`'s flags too - while
+   * still recognizing comments inside normally. Returns `false` (consuming nothing) if "RegExp" isn't
+   * actually the bare global name (e.g. `MyRegExpUtils`) or isn't followed by `(`, so the caller falls back
+   * to treating `R` as an ordinary character.
+   */
+  private tryScanRegExpCallArgs(): boolean {
+    const { content } = this;
+    const start = this.i;
+    if (isIdentChar(content[start - 1]) || !content.startsWith('RegExp', start)) return false;
+    let i = start + 'RegExp'.length;
+    if (isIdentChar(content[i])) return false;
+    while (content[i] === ' ' || content[i] === '\t' || content[i] === '\n') i++;
+    if (content[i] !== '(') return false;
+
+    this.i = i + 1;
+    let parenDepth = 0;
+    while (this.i < content.length) {
+      const c = content[this.i];
+      if (c === '(') {
+        parenDepth++;
+        this.i++;
+        continue;
+      }
+      if (c === ')') {
+        if (parenDepth === 0) {
+          this.i++;
+          return true;
+        }
+        parenDepth--;
+        this.i++;
+        continue;
+      }
+      if (c === '/' && content[this.i + 1] === '/') {
+        this.scanLineComment();
+        continue;
+      }
+      if (c === '/' && content[this.i + 1] === '*') {
+        this.scanBlockComment();
+        continue;
+      }
+      if (c === '"' || c === "'") {
+        this.skipQuotedStringSilently(c);
+        continue;
+      }
+      this.i++;
+    }
+    return true; // ran off the end of the file mid-call; nothing more to do either way
+  }
+
+  /** Like `scanQuotedString`, but doesn't emit a `ParsedText` - used for RegExp's pattern/flags arguments. */
+  private skipQuotedStringSilently(quote: string): void {
+    const { content } = this;
+    let i = this.i + 1;
+    while (i < content.length) {
+      if (content[i] === quote) {
+        i++;
+        break;
+      }
+      if (content[i] === '\\') {
+        i = skipEscape(content, i);
+        continue;
+      }
+      i++;
+    }
+    this.i = i;
   }
 }
 

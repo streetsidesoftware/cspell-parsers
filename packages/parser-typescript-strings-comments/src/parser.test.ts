@@ -1,3 +1,4 @@
+// cspell:ignore myreturn
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -125,32 +126,83 @@ describe('typescript-strings-comments parser', () => {
     });
   });
 
-  describe('regex-adjacent-quote.ts', () => {
-    // This scanner doesn't recognize regex literals (see README's "Known limitations"), so a quote inside
-    // one can be mistaken for a string's opening quote. canPrecedeString() mitigates the common cases: a
-    // quote directly preceded by an identifier character or another quote can never be a real string's
-    // start in valid JS/TS, so it's left alone instead of kicking off a runaway "string" that swallows
-    // everything up to the next matching quote in the file.
-    const parsedTexts = parseFixture('regex-adjacent-quote.ts');
+  describe('regex-literals.ts', () => {
+    // tryScanRegexLiteral (gated by isDivisionContext) recognizes a real regex literal and skips it as one
+    // opaque unit, so nothing inside it - including its quote characters - ever reaches the string dispatch
+    // at all. canPrecedeString/sawSlash (see their own doc comments) remain a fallback for the cases this
+    // can't tell apart from division (see README's "Known limitations"), but every case in this fixture is
+    // fully and cleanly recognized as a regex, with nothing spurious emitted from inside any of them.
+    const parsedTexts = parseFixture('regex-literals.ts');
 
-    it("does not mistake an apostrophe in a contraction for a string (/don't|won't|can't/)", () => {
-      expect(parsedTexts.some((p) => p.text.includes("don't"))).toBe(false);
+    it("emits only the file's // comments and its two real strings - nothing from inside any regex", () => {
+      // Every regex body in the fixture (a contraction, a class opening right after "[", a class containing
+      // a literal "/", an escaped "/", and one with flags) must contribute nothing at all: if any of them
+      // were misread, either a spurious fragment of its body would show up as a "string", or - worse - it
+      // would run away and swallow real content past it, changing this count.
+      const nonComments = parsedTexts.filter((p) => !p.tags?.comment);
+      expect(nonComments).toHaveLength(2);
+      expect(nonComments[0]).toMatchObject({
+        text: 'still a real string',
+        tags: { string: true, 'string.singleQuote': true },
+      });
     });
 
-    it('does not mistake either quote in a /[\\w"\'].*/ character class for a string', () => {
-      expect(parsedTexts.some((p) => p.text.includes('\\w'))).toBe(false);
+    it('recognizes a regex right after "return", even though "return" ends in an identifier character', () => {
+      // If this weren't recognized, the apostrophe in "it's a regex" would at best be caught by the
+      // canPrecedeString fallback (preceded by "s", an identifier char - safe) or at worst run away; either
+      // way something other than exactly the two real strings above would show up as non-comment text.
+      const nonComments = parsedTexts.filter((p) => !p.tags?.comment);
+      expect(nonComments).toHaveLength(2);
     });
 
-    it('still recognizes the real string after both regexes, proving neither ran away past it', () => {
-      const str = byText(parsedTexts, 'still recognized as a real string');
+    it('does not mistake ordinary division, or an identifier merely ending in keyword letters, for a regex', () => {
+      // divisionAfter{Identifier,Number,Call,Paren,Bracket} and divisionAfterKeywordLikeIdentifier
+      // ("myreturn / 2", not the "return" keyword) must all be left as ordinary code. If any "/" among them
+      // were wrongly treated as a regex-start, tryScanRegexLiteral would scan ahead for the next unrelated
+      // "/" as if it were the closing delimiter, potentially swallowing everything up to and including
+      // `trailingRegex`'s own "/pattern/" - again changing the non-comment count asserted above.
+      const nonComments = parsedTexts.filter((p) => !p.tags?.comment);
+      expect(nonComments).toHaveLength(2);
+    });
+
+    it("skips both arguments of a new RegExp('pattern', 'flags') call - the pattern and the flags", () => {
+      expect(parsedTexts.some((p) => p.text.includes("don't|won't"))).toBe(false);
+      expect(parsedTexts.some((p) => p.text === 'gi')).toBe(false);
+    });
+
+    it('still recognizes a comment inside a RegExp(...) call, even though the string argument is skipped', () => {
+      expect(parsedTexts.some((p) => p.text.includes('not spell checked, but this comment still is'))).toBe(true);
+      expect(parsedTexts.some((p) => p.text.includes('another pattern'))).toBe(false);
+    });
+
+    it('does not mistake a longer identifier merely containing "RegExp" for the global constructor', () => {
+      const str = byText(parsedTexts, 'this string is checked normally');
       expect(str?.tags).toEqual({ string: true, 'string.singleQuote': true });
     });
 
+    it('treats a same-line "}" as division-like, so a real string right after it is never swallowed', () => {
+      // Regression coverage: "}" closes both a block statement (often followed by a real regex) and an
+      // object literal (often followed by division) - genuinely ambiguous. Defaulting to "division" is the
+      // safe choice: getting it wrong just misses a regex (falls back to the character-level heuristic),
+      // whereas defaulting to "regex" risks tryScanRegexLiteral succeeding on real division ("{ a: 1 } / 2")
+      // by scanning ahead to the next unrelated "/" - here, `/pattern/`'s own opening delimiter - as if it
+      // were the closing one, silently swallowing "should be checked" in between. This must happen on one
+      // line: a newline before reaching that unrelated "/" would already make tryScanRegexLiteral bail out
+      // on its own (regexes can't span a line), which is exactly why this fixture's own equivalent case
+      // (spread across separate lines) doesn't actually exercise this - this inline case does.
+      const content = 'const x = { a: 1 } / 2; const s = "should be checked"; const re = /pattern/;\n';
+      const parsed = [...parse(content, 'file.ts').parsedTexts];
+      expect(byText(parsed, 'should be checked')?.tags).toEqual({ string: true, 'string.doubleQuote': true });
+    });
+  });
+
+  describe('canPrecedeString/sawSlash fallback (for regexes tryScanRegexLiteral does not attempt)', () => {
     it('is not thrown off by an unrelated division earlier on the same line as a regex with a contraction', () => {
-      // Regression coverage: sawSlash (scanCode's gate for canPrecedeString, see its doc comment) must be
-      // sticky rather than toggled per "/" - a single division operator is an unpaired "/" that would
-      // otherwise cancel out against the regex's own opening "/" and turn the guard off right where it's
-      // needed.
+      // Regression coverage: sawSlash must be sticky, not toggled per "/" - a single division operator is
+      // an unpaired "/" that would otherwise cancel out against a later "/" and turn the guard off right
+      // where it's needed. (tryScanRegexLiteral now handles this exact case directly too, since the
+      // division and the regex are independently context-checked - this test guards the fallback path
+      // itself in case some future change stops the regex from being recognized as one.)
       const content = "const x = a / b; const re = /don't/; const s = 'real string';\n";
       const parsed = [...parse(content, 'file.ts').parsedTexts];
       expect(byText(parsed, 'real string')?.tags).toEqual({ string: true, 'string.singleQuote': true });

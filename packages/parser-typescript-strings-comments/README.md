@@ -93,6 +93,12 @@ parsers can't share one.
 - A template literal is split into one `ParsedText` per literal fragment around each `${...}` hole; the
   hole's own contents are recursively scanned the same way as the rest of the file, so a string or comment
   nested inside an interpolation (e.g. a ternary's string branches) still gets picked up and tagged normally.
+- **Regex literals (`/pattern/flags`) and `RegExp(...)`/`new RegExp(...)` calls are never spell checked.** A
+  regex pattern isn't prose - it's rare for its content, or a `RegExp` constructor's string arguments, to be
+  something a spell checker should flag - so this parser recognizes both forms and skips them entirely,
+  including any quote characters inside, rather than trying to check them like an ordinary string. A comment
+  inside a `RegExp(...)` call's argument list is still recognized normally; only the string arguments
+  themselves (pattern and, if given, flags) are skipped.
 - `plugin.parsers` is the list of parsers a cspell plugin module exposes; a plugin can expose more than one.
 
 ## Tags
@@ -110,13 +116,22 @@ parsers can't share one.
 
 ## Known limitations
 
-This parser is a small hand-written scanner, not a real grammar, which keeps it dependency-free but means
-one corner is intentionally simplified: **regex literals** aren't recognized, so a quote character inside a
-regex literal's body can be mistaken for the start of a string. A quote directly preceded by an identifier
-character or another quote (e.g. the apostrophe in `/don't|won't/`, or either quote in `/[\w"']/`) is
-never mistaken this way, since valid JS/TS syntax could never have a real string start there either - but a
-character class that opens with a quote right after `[` (e.g. `/['"]/`) still can be, since that's
-genuinely ambiguous with a real string starting right after an array literal's bracket (`["real string"]`).
+This parser is a small hand-written scanner, not a real grammar, which keeps it dependency-free but means it
+resolves the regex-literal-vs-division ambiguity (`/pattern/` vs. `a / b`) with a lightweight heuristic
+rather than full expression tracking: it looks at whatever significant character comes right before the `/`
+(an identifier, a keyword, `)`, `]`, `}`, ...) the same way a real JS parser's tokenizer does. This correctly
+recognizes a regex literal in the overwhelming majority of real code, including every case that would
+previously have been misread as a string (a quote character anywhere in the body, e.g. `/don't/`, `/[\w"']/`,
+or even `/['"]/`, which is genuinely ambiguous with a real string starting right after an array literal's
+bracket and was never fixable by looking at quote characters alone).
+
+The heuristic can still occasionally miss a real regex - most likely right after a keyword this parser
+doesn't know introduces an expression, or right after `}` (deliberately always treated as division-like,
+since that closes both a block statement, where a regex often follows, and an object literal, where `/`
+would be real division - see `CONTRIBUTING.md` for why getting `}` wrong in the _other_ direction is the
+worse failure). When it does miss one, a quote inside that regex falls back to a narrower, per-character
+mitigation: a quote directly preceded by an identifier character or another quote is still never mistaken
+for a real string's start, since valid JS/TS syntax could never have one begin there either.
 
 Use this package as a template: copy `src/parser.ts`, `src/plugin.ts`, `src/index.ts`, and `src/recommended.ts`
 into a new package under `packages/` and replace the parsing logic with your own. See the repo root
