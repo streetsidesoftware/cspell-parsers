@@ -248,6 +248,21 @@ importers:
         specifier: workspace:*
         version: link:..
 
+  packages/parser-go-strings-comments:
+    devDependencies:
+      '@cspell/cspell-types':
+        specifier: 'catalog:'
+        version: 10.3.3
+      '@internal/utils':
+        specifier: workspace:*
+        version: link:../internal-utils
+
+  packages/parser-go-strings-comments/samples:
+    devDependencies:
+      '@cspell/parser-go-strings-comments':
+        specifier: workspace:*
+        version: link:..
+
   packages/parser-javascript:
     dependencies:
       '@cspell/parser-typescript':
