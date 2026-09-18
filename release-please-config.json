@@ -72,17 +72,32 @@
     "packages/parser-c-cpp-strings-comments": {
       "component": "@cspell/parser-c-cpp-strings-comments"
     },
+    "packages/parser-csharp-strings-comments": {
+      "component": "@cspell/parser-csharp-strings-comments"
+    },
     "packages/parser-example": {
       "component": "@cspell/parser-example"
     },
+    "packages/parser-go-strings-comments": {
+      "component": "@cspell/parser-go-strings-comments"
+    },
+    "packages/parser-java-strings-comments": {
+      "component": "@cspell/parser-java-strings-comments"
+    },
     "packages/parser-javascript": {
       "component": "@cspell/parser-javascript"
+    },
+    "packages/parser-php-strings-comments": {
+      "component": "@cspell/parser-php-strings-comments"
     },
     "packages/parser-strings-comments": {
       "component": "@cspell/parser-strings-comments"
     },
     "packages/parser-typescript": {
       "component": "@cspell/parser-typescript"
+    },
+    "packages/parser-typescript-strings-comments": {
+      "component": "@cspell/parser-typescript-strings-comments"
     },
     "packages/parser-typescript-tree-sitter": {
       "component": "@cspell/parser-typescript-tree-sitter"

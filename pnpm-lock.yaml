@@ -248,6 +248,21 @@ importers:
         specifier: workspace:*
         version: link:..
 
+  packages/parser-csharp-strings-comments:
+    devDependencies:
+      '@cspell/cspell-types':
+        specifier: 'catalog:'
+        version: 10.3.3
+      '@internal/utils':
+        specifier: workspace:*
+        version: link:../internal-utils
+
+  packages/parser-csharp-strings-comments/samples:
+    devDependencies:
+      '@cspell/parser-csharp-strings-comments':
+        specifier: workspace:*
+        version: link:..
+
   packages/parser-example:
     devDependencies:
       '@cspell/cspell-types':
@@ -260,6 +275,36 @@ importers:
   packages/parser-example/samples:
     devDependencies:
       '@cspell/parser-example':
+        specifier: workspace:*
+        version: link:..
+
+  packages/parser-go-strings-comments:
+    devDependencies:
+      '@cspell/cspell-types':
+        specifier: 'catalog:'
+        version: 10.3.3
+      '@internal/utils':
+        specifier: workspace:*
+        version: link:../internal-utils
+
+  packages/parser-go-strings-comments/samples:
+    devDependencies:
+      '@cspell/parser-go-strings-comments':
+        specifier: workspace:*
+        version: link:..
+
+  packages/parser-java-strings-comments:
+    devDependencies:
+      '@cspell/cspell-types':
+        specifier: 'catalog:'
+        version: 10.3.3
+      '@internal/utils':
+        specifier: workspace:*
+        version: link:../internal-utils
+
+  packages/parser-java-strings-comments/samples:
+    devDependencies:
+      '@cspell/parser-java-strings-comments':
         specifier: workspace:*
         version: link:..
 
@@ -279,6 +324,21 @@ importers:
   packages/parser-javascript/samples:
     devDependencies:
       '@cspell/parser-javascript':
+        specifier: workspace:*
+        version: link:..
+
+  packages/parser-php-strings-comments:
+    devDependencies:
+      '@cspell/cspell-types':
+        specifier: 'catalog:'
+        version: 10.3.3
+      '@internal/utils':
+        specifier: workspace:*
+        version: link:../internal-utils
+
+  packages/parser-php-strings-comments/samples:
+    devDependencies:
+      '@cspell/parser-php-strings-comments':
         specifier: workspace:*
         version: link:..
 
@@ -309,6 +369,21 @@ importers:
       '@internal/utils':
         specifier: workspace:*
         version: link:../internal-utils
+
+  packages/parser-typescript-strings-comments:
+    devDependencies:
+      '@cspell/cspell-types':
+        specifier: 'catalog:'
+        version: 10.3.3
+      '@internal/utils':
+        specifier: workspace:*
+        version: link:../internal-utils
+
+  packages/parser-typescript-strings-comments/samples:
+    devDependencies:
+      '@cspell/parser-typescript-strings-comments':
+        specifier: workspace:*
+        version: link:..
 
   packages/parser-typescript-tree-sitter:
     dependencies:
