@@ -17,6 +17,7 @@ function footer() {
 $arr = ['key' => 'value'];
 $name = "world";
 $greeting = "Hello, {$arr['key']}! Welcome, $name.";
+$greeting2 = "Nested: {$arr["key"]}! Done.";
 
 $heredoc = <<<EOT
     Hello, {$name}!

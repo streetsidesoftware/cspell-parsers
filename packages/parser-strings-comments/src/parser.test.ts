@@ -270,6 +270,15 @@ describe('strings-comments parser', () => {
       expect(heredoc?.text).toContain('EOTHING');
     });
 
+    it('resolves a {$...} hole whose nested quote matches the outer delimiter (a real risk of ending early)', () => {
+      // Unlike the {$arr['key']} case above - where a nested "'" could never end a "..."-delimited string
+      // regardless of whether the interpolation-skip logic runs - this one nests a "\"" inside a "..."
+      // string, which *would* be mistaken for the closing quote without skipPhpBraceInterpolation/
+      // skipSimpleQuoted actually working.
+      const greeting2 = byText(parsedTexts, 'Nested: {$arr["key"]}! Done.');
+      expect(greeting2?.tags).toEqual({ string: true, 'string.doubleQuote': true });
+    });
+
     it('extracts a nowdoc body, tagged separately from heredoc', () => {
       const nowdoc = parsedTexts.find((p) => p.tags?.['string.nowdoc']);
       expect(nowdoc?.text).toContain('No $interpolation happens in here.');
