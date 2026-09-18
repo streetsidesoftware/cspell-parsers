@@ -17,14 +17,14 @@ export type CustomizePluginOptions = CustomizeParserOptions;
  * spell checked. Filtering happens in the parser itself, before cspell ever sees the excluded segments, so
  * it works with any cspell version.
  *
- * Usage: **`cspell.config.mjs`** (needs a JS/TS config file - `.mjs`/`.ts`/`.cjs` - since this returns a live
- * `Plugin` object rather than a module-specifier string)
+ * **`cspell.config.mjs`**
+ *
  * ```js
  * import { customizePlugin } from '@cspell/parser-typescript-strings-comments/plugin';
  *
  * export default {
- *   plugins: [customizePlugin({ tags: { '*': false, 'comment.block.doc': true } })], // only check doc comments
- *   languageSettings: [{ languageId: 'typescript', parser: 'typescript-strings-comments' }],
+ *   plugins: [customizePlugin({ name: 'typescript-only-docs', tags: { '*': false, 'comment.block.doc': true } })], // only check doc comments
+ *   languageSettings: [{ languageId: 'typescript', parser: 'typescript-only-docs' }],
  * };
  * ```
  */
