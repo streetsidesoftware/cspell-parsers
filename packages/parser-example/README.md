@@ -6,9 +6,9 @@ It implements cspell's [`Parser`](https://www.npmjs.com/package/@cspell/cspell-t
 [`Plugin`](https://www.npmjs.com/package/@cspell/cspell-types) so it can be wired into a cspell configuration.
 
 The example parser extracts C-style comments - `//` line comments and `/*`-delimited block comments - out of
-arbitrary source text, so only comment text (not code) gets spell checked, while keeping the reported offsets
-relative to the original file. It skips over quoted string contents, so a comment marker inside a string
-literal (`"see http://example.com"`) isn't mistaken for the start of a real comment.
+arbitrary source text, so only comment text (not code) gets spell checked. It skips over quoted string
+contents, so a comment marker inside a string literal (`"see http://example.com"`) isn't mistaken for the
+start of a real comment.
 
 ## Usage
 
@@ -55,8 +55,8 @@ plugin in yourself and choose the language IDs to use it for:
 By default every comment the parser emits gets spell checked. To check only some of them — for example, only
 doc comments — use `customizePlugin` instead of the plain `plugin` export. It takes a
 `CustomizePluginOptions` object — `tags: TagFilterOptions` and `name` are both optional, and omitting `tags`
-keeps everything — and returns a `Plugin` whose parser filters segments by tag itself, before cspell ever
-sees them.
+keeps everything — and returns a `Plugin` that only spell checks the tagged segments you keep. This filtering
+works with any cspell version.
 
 ```js
 // cspell.config.mjs — customizePlugin returns a live Plugin object, so it needs a JS/TS config file
@@ -92,9 +92,12 @@ share one.
 | `comment.block`     | A `/* ... */` block comment |
 | `comment.block.doc` | A `/** ... */` doc comment  |
 
-Use this package as a template: copy `src/parser.ts`, `src/plugin.ts`, `src/index.ts`, and `src/recommended.ts`
-into a new package under `packages/` and replace the parsing logic with your own. See the repo root
-`CONTRIBUTING.md` for the full steps.
+## Using this package as a template
+
+This package doubles as a minimal starting point for a new parser package in this repo. To build one, copy
+`src/parser.ts`, `src/plugin.ts`, `src/index.ts`, and `src/recommended.ts` into a new package under
+`packages/` and replace the parsing logic with your own. See the repo root `CONTRIBUTING.md` for the full
+steps.
 
 ## Requirements
 
