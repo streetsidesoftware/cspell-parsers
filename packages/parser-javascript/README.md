@@ -55,8 +55,8 @@ For TypeScript, TSX, or a single plugin that covers all four, use
 By default every segment the parser emits gets spell checked. To check only some of them — for example, only
 comments, or only string content — use `customizePlugin` instead of the plain `plugin` export. It takes a
 `CustomizePluginOptions` object — `tags: TagFilterOptions` and `name` are both optional, and omitting `tags`
-keeps everything — and returns a `Plugin` whose parser filters segments by tag itself, before cspell ever
-sees them.
+keeps everything — and returns a `Plugin` that only spell checks the tags you keep. This works with any
+cspell version.
 
 ```js
 // cspell.config.mjs — customizePlugin returns a live Plugin object, so it needs a JS/TS config file
