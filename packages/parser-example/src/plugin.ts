@@ -13,8 +13,8 @@ export const plugin: Plugin = {
 export type CustomizePluginOptions = CustomizeParserOptions;
 
 /**
- * Returns a version of {@link plugin} to register instead: rename its parser and/or choose which tagged
- * segments get spell checked. This filtering works with any cspell version.
+ * Create a customized copy of {@link plugin} - rename its parser and/or choose which tagged segments get
+ * spell checked. Works with any cspell version.
  *
  * **`cspell.config.mjs`**
  *
