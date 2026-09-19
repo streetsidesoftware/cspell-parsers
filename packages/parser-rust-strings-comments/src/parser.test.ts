@@ -184,6 +184,23 @@ describe('rust-strings-comments parser', () => {
       expect(literal?.tags).toEqual({ string: true, 'string.singleQuote': true });
     });
 
+    it('tags a byte-escape char literal ("\'\\x41\'") as string.singleQuote', () => {
+      // Regression coverage: a fixed-length-2-char-escape assumption (reusing the generic skipEscape,
+      // fine for a "..." string's boundary-finding) would land on "4", not the closing "'", and fail to
+      // recognize this 4-character escape as a char literal at all.
+      const literal = parsedTexts.find((p) => p.rawText === String.raw`'\x41'`);
+      expect(literal).toBeDefined();
+      expect(literal?.tags).toEqual({ string: true, 'string.singleQuote': true });
+    });
+
+    it('tags a unicode-escape char literal ("\'\\u{1F600}\'") as string.singleQuote', () => {
+      // Regression coverage: same underlying issue as the \x41 case above, but for a variable-length
+      // (4-9 character) brace-delimited escape.
+      const literal = parsedTexts.find((p) => p.rawText === String.raw`'\u{1F600}'`);
+      expect(literal).toBeDefined();
+      expect(literal?.tags).toEqual({ string: true, 'string.singleQuote': true });
+    });
+
     it('tags a byte-char literal ("b\'x\'") as string.singleQuote', () => {
       const literal = parsedTexts.find((p) => p.rawText === "b'x'");
       expect(literal).toBeDefined();
@@ -193,6 +210,12 @@ describe('rust-strings-comments parser', () => {
 
     it('tags an escape-based byte-char literal ("b\'\\n\'") as string.singleQuote', () => {
       const literal = parsedTexts.find((p) => p.rawText === String.raw`b'\n'`);
+      expect(literal).toBeDefined();
+      expect(literal?.tags).toEqual({ string: true, 'string.singleQuote': true });
+    });
+
+    it('tags a byte-escape byte-char literal ("b\'\\x41\'") as string.singleQuote', () => {
+      const literal = parsedTexts.find((p) => p.rawText === String.raw`b'\x41'`);
       expect(literal).toBeDefined();
       expect(literal?.tags).toEqual({ string: true, 'string.singleQuote': true });
     });

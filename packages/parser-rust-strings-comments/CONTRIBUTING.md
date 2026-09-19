@@ -88,23 +88,22 @@ another lifetime or char literal) as this one's close.
 characters immediately after the opening `'` (or `b'`), never scanning forward speculatively:
 
 1. If the character right after the quote is `\` (backslash): this can only be an escape-based char literal.
-   Skip one generic 2-character escape unit via `skipEscape`, then check whether the very next character is
-   `'`. If it is, this is a char literal - emit it (`literalStart` through that closing `'`, inclusive). If
-   it isn't, this wasn't a valid escape-based char literal after all - return `undefined` (consuming
-   nothing), and the caller treats the opening `'` as an ordinary skipped character.
+   Resolve the escape's exact length via `charLiteralEscapeLength` - `2` for a simple escape (`\n`, `\t`,
+   `\r`, `\\`, `\'`, `\"`, `\0`), `4` for a byte escape (`\xHH`, exactly two hex digits), or the full
+   `\u{H...H}` span (1-6 hex digits between braces) for a Unicode escape - then check whether the character
+   immediately after it is `'`. If it is, this is a char literal - emit it (`literalStart` through that
+   closing `'`, inclusive). If the escape isn't recognized, or isn't immediately followed by `'`, this wasn't
+   a valid escape-based char literal after all - return `undefined` (consuming nothing), and the caller
+   treats the opening `'` as an ordinary skipped character.
 
-   The _generic_ 2-character escape skip is enough even for a brace-delimited unicode escape like
-   `\u{1F600}` - not because it correctly re-scans the whole escape, but because if the character right after
-   the 2-character skip isn't `'`, this method simply doesn't recognize the construct as a char literal at
-   all (rather than mis-scanning it as one). Concretely: for `'\u{1F600}'`, `skipEscape` lands right after
-   `\u`, at `{`; since `content[afterEscape]` is `{`, not `'`, this returns `undefined`. The caller then
-   advances past the opening `'` by exactly one character (see step 3 below), and every character of
-   `\u{1F600}` gets skipped one at a time as ordinary code by the scanner's default fallthrough (none of
-   `\`, `u`, `{`, `1`, `F`, `6`, `0`, `0`, `}` trigger any special handling on their own) until the real
-   closing `'` is reached - which is then itself re-examined fresh, as its own potential char-literal or
-   lifetime start. Nothing is emitted for this literal's content (there's no prose in a lone unicode escape
-   to spell check anyway), but nothing downstream is corrupted either - which is what "works out correctly"
-   means here, and why no more elaborate escape-aware lookahead is needed.
+   This can't reuse the generic 2-character `skipEscape` (fine for a `"..."` string, which only needs to
+   find _a_ boundary, not measure any one escape precisely): assuming every escape is exactly 2 characters
+   long is wrong for `\xHH` (4 characters) and `\u{...}` (4-9 characters, depending on how many hex digits),
+   both of which are real, common Rust syntax - not edge cases worth leaving unrecognized. An earlier version
+   of this method made exactly that assumption, which silently failed to recognize `'\x41'` and
+   `'\u{1F600}'` as char literals at all (nothing was emitted for their content, and nothing downstream was
+   corrupted either, since the disambiguation's failure mode is always "fall through to ordinary code," never
+   "misread real code" - but the content still went unchecked, which `charLiteralEscapeLength` now fixes).
 
 2. Else (the character right after the quote isn't `\`): check whether the character **two** positions past
    the opening `'` is `'`. If so, this is a plain one-character literal (`'a'`, `'0'`, ...) - emit it (exactly

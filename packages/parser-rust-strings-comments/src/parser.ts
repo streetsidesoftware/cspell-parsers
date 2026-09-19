@@ -66,6 +66,37 @@ function skipEscape(content: string, i: number): number {
   return Math.min(i + 2, content.length);
 }
 
+/**
+ * The length (including the backslash) of a valid Rust char/byte-char-literal escape sequence starting at
+ * `content[i]` (a `\`), or `undefined` if what follows isn't one of Rust's recognized escape forms. Unlike
+ * the generic 2-char `skipEscape` - fine for skipping *past* an escape inside a `"..."` string, where only
+ * finding the boundary matters, not the escape's exact shape - `tryScanCharLiteral` needs to know precisely
+ * how long the escape is, since a char literal must be exactly one escape sequence followed immediately by
+ * its closing `'`. Assuming every escape is 2 characters (as this scanner originally did, reusing
+ * `skipEscape` here too) silently fails to recognize `\x41`'s 4-character byte escape or `\u{1F600}`'s
+ * variable-length (4-9 character) Unicode escape as valid char literals at all - both are real, common Rust
+ * syntax, not edge cases worth leaving unrecognized.
+ */
+function charLiteralEscapeLength(content: string, i: number): number | undefined {
+  const c = content[i + 1];
+  if (c === undefined) return undefined;
+  if ('nrt\\\'"0'.includes(c)) return 2;
+  if (c === 'x') {
+    return /^[0-9a-fA-F]{2}/.test(content.slice(i + 2, i + 4)) ? 4 : undefined;
+  }
+  if (c === 'u') {
+    if (content[i + 2] !== '{') return undefined;
+    let j = i + 3;
+    let hexDigits = 0;
+    while (hexDigits < 6 && /[0-9a-fA-F]/.test(content[j] ?? '')) {
+      j++;
+      hexDigits++;
+    }
+    return hexDigits > 0 && content[j] === '}' ? j + 1 - i : undefined;
+  }
+  return undefined;
+}
+
 function isIdentChar(ch: string | undefined): boolean {
   return !!ch && /[A-Za-z0-9_]/.test(ch);
 }
@@ -256,12 +287,14 @@ class Scanner {
 
     let closeAt: number | undefined;
     if (content[afterQuote] === '\\') {
-      // An escape-based char literal (`'\n'`, `'\''`, `'\u{1F600}'`, ...): skip one generic 2-char escape
-      // unit and require the very next character to be the closing `'`. The generic skip is sufficient even
-      // for a brace-delimited unicode escape - if what follows isn't immediately `'`, this just isn't
-      // recognized as a char literal at all (see this method's doc comment), not mis-scanned as one.
-      const afterEscape = skipEscape(content, afterQuote);
-      if (content[afterEscape] === "'") closeAt = afterEscape;
+      // An escape-based char literal (`'\n'`, `'\''`, `'\x41'`, `'\u{1F600}'`, ...): resolve the escape's
+      // exact length via charLiteralEscapeLength (simple escapes are 2 characters, `\xHH` is 4, `\u{...}` is
+      // variable) and require the very next character after it to be the closing `'`. If the escape isn't
+      // recognized, or isn't immediately followed by `'`, this just isn't a char literal at all (see this
+      // method's doc comment), not mis-scanned as one.
+      const escapeLen = charLiteralEscapeLength(content, afterQuote);
+      const afterEscape = escapeLen === undefined ? undefined : afterQuote + escapeLen;
+      if (afterEscape !== undefined && content[afterEscape] === "'") closeAt = afterEscape;
     } else if (content[afterQuote + 1] === "'") {
       // A plain one-character literal (`'a'`, `'0'`, ...).
       closeAt = afterQuote + 1;
