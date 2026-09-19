@@ -92,12 +92,6 @@ parsers can't share one.
 
 ## How it works
 
-- `parser.parse(content, filename)` returns a `ParseResult` containing one or more `ParsedText` entries.
-- Each `ParsedText.range` is the `[start, end]` offset of that segment in the original `content`, which is how
-  cspell maps spelling issues found in the parsed text back to the right place in the source file.
-- Every segment is tagged with a dot-separated tag, plus every ancestor of it (`string.singleQuote` also
-  carries `string`) - `customizePlugin` can filter which segments get spell checked using these tags, at any
-  level of specificity.
 - Python has no block-comment syntax at all - only `#` to end of line.
 - A string's prefix (`r`, `u`, `f`, `b`, or a 2-letter raw/f-string/bytes combination such as `rb`/`rf`, in
   either letter order and any case) is optional and, when present, must sit directly against its opening
@@ -120,7 +114,6 @@ parsers can't share one.
   `{{`/`}}` is a literal brace, not a hole.
 - **A triple-quoted string is never treated differently based on whether it's a "docstring"** (the first
   statement in a module/class/function body) - see [Known limitations](#known-limitations).
-- `plugin.parsers` is the list of parsers a cspell plugin module exposes; a plugin can expose more than one.
 
 ## Known limitations
 
