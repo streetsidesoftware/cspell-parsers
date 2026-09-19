@@ -66,16 +66,25 @@ describe('rust-strings-comments parser', () => {
       expect(comment?.tags).toEqual({ comment: true, 'comment.block': true, 'comment.block.doc': true });
     });
 
-    it('tags a plain double-quoted string as string.doubleQuote', () => {
+    it('tags a plain string with the bare string tag - no doubleQuote annotation needed', () => {
+      // Rust only ever uses " for strings (' is exclusively char literals, never emitted at all), so
+      // there's no quote-style ambiguity to disambiguate the way string.singleQuote/.doubleQuote do in
+      // languages with two interchangeable quote characters.
       const str = byText(parsedTexts, 'see http://example.com');
       expect(str?.rawText).toBe('"see http://example.com"');
-      expect(str?.tags).toEqual({ string: true, 'string.doubleQuote': true });
+      expect(str?.tags).toEqual({ string: true });
     });
 
     it('treats a backslash-escaped quote as staying inside the string', () => {
       const str = byText(parsedTexts, 'she said \\"hi\\" then left');
       expect(str).toBeDefined();
-      expect(str?.tags).toEqual({ string: true, 'string.doubleQuote': true });
+      expect(str?.tags).toEqual({ string: true });
+    });
+
+    it('tags a byte string (b"...") as string.binary', () => {
+      const str = byText(parsedTexts, 'binary payload marker');
+      expect(str?.rawText).toBe('b"binary payload marker"');
+      expect(str?.tags).toEqual({ string: true, 'string.binary': true });
     });
 
     it('does not emit anything for a char literal ("\'A\'") - char literals are never spell checked', () => {
@@ -134,10 +143,10 @@ describe('rust-strings-comments parser', () => {
       expect(str?.tags).toEqual({ string: true, 'string.raw': true });
     });
 
-    it('recognizes a byte raw string (br"...") the same way as a plain raw string', () => {
+    it('recognizes a byte raw string (br"...") the same way as a plain raw string, tagged string.binary.raw', () => {
       const str = byText(parsedTexts, 'byte raw string, no escapes \\ here either');
       expect(str?.rawText).toBe('br"byte raw string, no escapes \\ here either"');
-      expect(str?.tags).toEqual({ string: true, 'string.raw': true });
+      expect(str?.tags).toEqual({ string: true, 'string.binary': true, 'string.binary.raw': true });
     });
   });
 
@@ -184,7 +193,7 @@ describe('rust-strings-comments parser', () => {
     });
 
     it('still tags the ordinary "hello" string literal correctly alongside the lifetime on the same line', () => {
-      expect(byText(parsedTexts, 'hello')?.tags).toEqual({ string: true, 'string.doubleQuote': true });
+      expect(byText(parsedTexts, 'hello')?.tags).toEqual({ string: true });
     });
 
     it('KNOWN LIMITATION: a char literal containing a quote ("\'"\'") can cause a real string right after it to be misread', () => {
@@ -250,7 +259,7 @@ describe('rust-strings-comments parser', () => {
       // read as a zero-hash raw-string prefix (r"data") instead of the last letter of the identifier.
       const content = 'author"data"\n';
       const parsed = [...parse(content, 'file.rs').parsedTexts];
-      expect(byText(parsed, 'data')?.tags).toEqual({ string: true, 'string.doubleQuote': true });
+      expect(byText(parsed, 'data')?.tags).toEqual({ string: true });
     });
 
     it('does not mistake an identifier ending in "b" immediately before a quote for a byte-string prefix', () => {
@@ -258,7 +267,7 @@ describe('rust-strings-comments parser', () => {
       // read as a byte-string prefix (b"data") instead of the last letter of the identifier.
       const content = 'verb"data"\n';
       const parsed = [...parse(content, 'file.rs').parsedTexts];
-      expect(byText(parsed, 'data')?.tags).toEqual({ string: true, 'string.doubleQuote': true });
+      expect(byText(parsed, 'data')?.tags).toEqual({ string: true });
     });
   });
 

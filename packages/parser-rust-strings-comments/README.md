@@ -85,16 +85,17 @@ parsers can't share one.
 
 ## Tags
 
-| Tag                  | Meaning                                                                              |
-| -------------------- | ------------------------------------------------------------------------------------ |
-| `comment`            | Any comment                                                                          |
-| `comment.line`       | A `//` line comment                                                                  |
-| `comment.line.doc`   | A `///` outer doc comment or `//!` inner doc comment line                            |
-| `comment.block`      | A `/* ... */` block comment (including a nested one)                                 |
-| `comment.block.doc`  | A `/** ... */` outer doc block or `/*! ... */` inner doc block                       |
-| `string`             | Any string-like literal                                                              |
-| `string.doubleQuote` | A `"..."` string literal or `b"..."` byte string literal                             |
-| `string.raw`         | A raw string literal (`r"..."`, `r#"..."#`, ...) or byte raw string (`br"..."`, ...) |
+| Tag                 | Meaning                                                                             |
+| ------------------- | ----------------------------------------------------------------------------------- |
+| `comment`           | Any comment                                                                         |
+| `comment.line`      | A `//` line comment                                                                 |
+| `comment.line.doc`  | A `///` outer doc comment or `//!` inner doc comment line                           |
+| `comment.block`     | A `/* ... */` block comment (including a nested one)                                |
+| `comment.block.doc` | A `/** ... */` outer doc block or `/*! ... */` inner doc block                      |
+| `string`            | Any string-like literal, including a plain `"..."` string                           |
+| `string.binary`     | A `b"..."` byte string literal (also carried by `string.binary.raw`)                |
+| `string.raw`        | A raw string literal (`r"..."`, `r#"..."#`, ...) - not a byte raw string, see below |
+| `string.binary.raw` | A byte raw string literal (`br"..."`, `br#"..."#`, ...)                             |
 
 ## How it works
 
@@ -106,6 +107,12 @@ parsers can't share one.
   these tags, at any level of specificity (just `comment`, or the more specific `comment.block.doc`).
 - Rust has no string interpolation, so unlike some other languages this repo covers, nothing here ever splits
   into more than one `ParsedText` fragment per literal.
+- **String tags describe the string's _kind_, not its quote style.** Rust only ever uses `"` for strings, so
+  there's no `string.singleQuote`/`.doubleQuote` distinction to make the way some other languages in this
+  repo do. Instead a plain `"..."` string gets just the bare `string` tag, and each other kind adds its own
+  descriptor: `string.binary` for a `b"..."` byte string, `string.raw` for a raw string, and
+  `string.binary.raw` for a byte raw string (carrying `string.binary` as an ancestor too, so filtering on
+  `string.binary` alone matches both).
 - **Char literals (`'a'`, `'\n'`, `'\x41'`, `'\u{1F600}'`, and their `b'...'` byte-char equivalents) and
   lifetimes/labels (`'a`, `'static`, `'_`) are never spell checked and get no special recognition at all.** A
   bare `'` is simply left as ordinary, unrecognized code - a single character or escape sequence has no prose

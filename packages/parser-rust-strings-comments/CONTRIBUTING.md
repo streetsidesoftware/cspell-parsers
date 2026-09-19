@@ -206,6 +206,17 @@ segment carries its whole ancestor chain (`comment.block.doc` also carries `comm
 built as module-level constants (`COMMENT_BLOCK_DOC_TAG`, `STRING_RAW_TAG`, ...) rather than computed per
 segment. See `README.md`'s [Tags](README.md#tags) table for what each one means to a consumer.
 
+String tags are a deliberate departure from the `string.singleQuote`/`string.doubleQuote` pattern used by
+every other package in this repo: since Rust only ever uses `"` for strings (`'` is exclusively char
+literals, never emitted - see above), quote style carries no information worth tagging. Instead the tags
+describe the string's _kind_: `scanQuotedString` picks `STRING_TAG` (plain) or `STRING_BINARY_TAG` (byte,
+`b"..."`) based on whether it was called for a `b`-prefixed literal; `tryScanRawString` picks `STRING_RAW_TAG`
+or `STRING_BINARY_RAW_TAG` the same way. `STRING_BINARY_RAW_TAG` is built by spreading `STRING_BINARY_TAG`
+(not `STRING_TAG` directly), so it carries `string.binary` as an ancestor alongside `string` - filtering on
+`string.binary` alone therefore matches both a plain byte string and a byte raw string, the same hierarchical
+filtering `customizePlugin` already relies on everywhere else. If C-string literals (`c"..."`, `cr"..."#`)
+are ever added (see "Known limitations"), follow the same pattern: `string.c` and `string.c.raw`.
+
 ## Testing
 
 - `parser.test.ts` reads fixtures out of `fixtures/` (via `readFixture`/`parseFixture` helpers) rather than

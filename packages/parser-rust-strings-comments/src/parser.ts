@@ -8,9 +8,21 @@ const COMMENT_LINE_DOC_TAG: ParsedTags = { ...COMMENT_LINE_TAG, 'comment.line.do
 const COMMENT_BLOCK_TAG: ParsedTags = { ...COMMENT_TAG, 'comment.block': true };
 const COMMENT_BLOCK_DOC_TAG: ParsedTags = { ...COMMENT_BLOCK_TAG, 'comment.block.doc': true };
 
+/**
+ * Rust only ever uses `"` for strings (`'` is exclusively char literals, which this parser never emits at
+ * all - see below), so there's no quote-style ambiguity to tag the way `string.singleQuote`/`.doubleQuote`
+ * disambiguate a language with two interchangeable quote characters. Instead these tags describe the string's
+ * *kind* - plain, byte (`b"..."`), raw (`r"..."`), or byte-raw (`br"..."`) - hierarchically, the same
+ * dot-path convention used everywhere else in this repo: `string.binary.raw` carries `string.binary` (and
+ * `string`) as ancestors, so filtering on `string.binary` alone matches both a plain byte string and a raw
+ * byte string. A plain `"..."` string needs no extra descriptor beyond the base `string` tag. (A future
+ * `c"..."` C-string, if added - see CONTRIBUTING.md - would follow the same pattern as `string.c`, and a raw
+ * one as `string.c.raw`.)
+ */
 const STRING_TAG: ParsedTags = { string: true };
-const STRING_DOUBLE_TAG: ParsedTags = { ...STRING_TAG, 'string.doubleQuote': true };
+const STRING_BINARY_TAG: ParsedTags = { ...STRING_TAG, 'string.binary': true };
 const STRING_RAW_TAG: ParsedTags = { ...STRING_TAG, 'string.raw': true };
+const STRING_BINARY_RAW_TAG: ParsedTags = { ...STRING_BINARY_TAG, 'string.binary.raw': true };
 
 /**
  * Strips a line comment's marker (`//`, or a doc marker - `///` or `//!`) - and one following space, if
@@ -188,14 +200,15 @@ class Scanner {
   }
 
   /**
-   * A plain `"..."` string, or a `b"..."` byte string - both use the same ordinary backslash-escape rules
-   * and the same tag (no separate "bytes" tag, the same simplification already used for Python's
-   * `b`-prefixed strings elsewhere in this repo). `literalStart` is where the emitted segment begins - the
-   * `"` itself, or the `b` right before it for a byte string.
+   * A plain `"..."` string, or a `b"..."` byte string - both use the same ordinary backslash-escape rules,
+   * differing only in which tag they get (`string` alone for plain, `string.binary` for a byte string).
+   * `literalStart` is where the emitted segment begins - the `"` itself, or the `b` right before it for a
+   * byte string.
    */
   private scanQuotedString(literalStart: number): ParsedText {
     const { content } = this;
-    const quoteStart = content[literalStart] === 'b' ? literalStart + 1 : literalStart;
+    const isByte = content[literalStart] === 'b';
+    const quoteStart = isByte ? literalStart + 1 : literalStart;
     let i = quoteStart + 1;
     let closed = false;
     while (i < content.length) {
@@ -214,7 +227,7 @@ class Scanner {
     const openLen = quoteStart - literalStart + 1;
     const { text, map } = stripDelimited(rawText, openLen, 1, closed);
     this.i = end;
-    return { text, rawText, map, range: [literalStart, end], tags: STRING_DOUBLE_TAG };
+    return { text, rawText, map, range: [literalStart, end], tags: isByte ? STRING_BINARY_TAG : STRING_TAG };
   }
 
   /**
@@ -238,7 +251,11 @@ class Scanner {
     if (isIdentChar(content[start - 1])) return undefined;
 
     let j = start;
-    if (content[j] === 'b') j++;
+    let isByte = false;
+    if (content[j] === 'b') {
+      isByte = true;
+      j++;
+    }
     if (content[j] !== 'r') return undefined;
     j++;
 
@@ -258,7 +275,7 @@ class Scanner {
     const rawText = content.slice(start, end);
     const { text, map } = stripDelimited(rawText, openLen, closer.length, closed);
     this.i = end;
-    return { text, rawText, map, range: [start, end], tags: STRING_RAW_TAG };
+    return { text, rawText, map, range: [start, end], tags: isByte ? STRING_BINARY_RAW_TAG : STRING_RAW_TAG };
   }
 }
 

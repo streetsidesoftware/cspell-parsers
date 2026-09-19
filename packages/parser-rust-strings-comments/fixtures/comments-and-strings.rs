@@ -34,3 +34,7 @@ pub fn escaped() -> &'static str {
 pub fn initial() -> char {
     'A'
 }
+
+pub fn magic_bytes() -> &'static [u8] {
+    b"binary payload marker"
+}
