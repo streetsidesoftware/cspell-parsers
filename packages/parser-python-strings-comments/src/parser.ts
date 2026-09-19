@@ -315,8 +315,9 @@ class Scanner {
 }
 
 /**
- * Extracts comments and string literals from Python source. See the `Scanner` class for the actual scanning
- * logic.
+ * Extracts comments and string literals from Python source into the `ParseResult` cspell uses to spell
+ * check just those parts of the file. Most consumers should register the exported {@link parser} (or a
+ * {@link createParser} customization) with cspell rather than calling this directly.
  */
 export function parse(content: string, filename: string): ParseResult {
   return { content, filename, parsedTexts: new Scanner(content).run() };
@@ -338,8 +339,9 @@ export interface CustomizeParserOptions {
 }
 
 /**
- * Create a customized copy of {@link parser}, optionally renamed and/or filtered by tag - the name matters
- * once more than one customized copy is registered, since cspell selects a parser by name via the
+ * Returns a {@link Parser} that only spell checks the tagged segments you choose (see the Tags table in
+ * `README.md` for what's available) and, optionally, registers it under a different name - useful once
+ * more than one customized parser is registered, since cspell selects a parser by name via the
  * [`parser`](https://cspell.org/docs/api/cspell-types/interfaces/CSpellSettings#parser) setting.
  *
  * ```ts

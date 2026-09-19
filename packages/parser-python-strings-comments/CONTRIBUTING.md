@@ -74,6 +74,15 @@ twelve combinations as named constants - `isRaw`/`isInterpolated` are known once
 few extra object spreads, not a per-character cost. See `README.md`'s [Tags](README.md#tags) table for what
 each tag means to a consumer.
 
+## Why `customizePlugin`/`createParser` work with any cspell version
+
+Both are thin wrappers around `@internal/utils`'s `customizeParser`, which filters `parsedTexts` by tag
+inside the parser itself, before `ParseResult` is ever handed back to cspell. Filtering happens on this
+package's side of the `Parser` contract, not cspell's, so it works regardless of whether the installed
+cspell version has (or ever adds) its own notion of tag-based filtering - there's no version dependency to
+track. See `@internal/utils`'s `compileTagFilter`/`customizeParser` (`packages/internal-utils/src/customize.ts`)
+for the filtering engine itself.
+
 ## Known limitation: no docstring detection
 
 A "docstring" is a triple-quoted string that happens to be the first statement in a module, class, or
@@ -95,5 +104,12 @@ tag regardless of position - see `parser.test.ts`'s docstring test and `README.m
   `Wlecome`, inside an f-string fragment excluded by `{ '*': true, 'string.interpolated': false }`) -
   sanity-checked by temporarily swapping in the plain `plugin` and confirming `cspell .` fails without the
   filter, then restoring it.
+
+## Using this package as a template
+
+This package is a reasonable starting point for a new `-strings-comments` parser: copy `src/parser.ts`,
+`src/plugin.ts`, `src/index.ts`, and `src/recommended.ts` into a new package under `packages/` and replace
+the parsing logic with your own. See the repo root `CONTRIBUTING.md`'s "Adding a new parser package" section
+for the full steps, and `packages/parser-typescript` for the canonical, more fully-featured template.
 
 <!-- cspell:ignore numbr Wlecome -->
