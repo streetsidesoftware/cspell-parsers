@@ -81,10 +81,10 @@ describe('rust-strings-comments parser', () => {
       expect(str?.tags).toEqual({ string: true });
     });
 
-    it('tags a byte string (b"...") as string.binary', () => {
+    it('tags a byte string (b"...") as string.byte', () => {
       const str = byText(parsedTexts, 'binary payload marker');
       expect(str?.rawText).toBe('b"binary payload marker"');
-      expect(str?.tags).toEqual({ string: true, 'string.binary': true });
+      expect(str?.tags).toEqual({ string: true, 'string.byte': true });
     });
 
     it('does not emit anything for a char literal ("\'A\'") - char literals are never spell checked', () => {
@@ -143,10 +143,10 @@ describe('rust-strings-comments parser', () => {
       expect(str?.tags).toEqual({ string: true, 'string.raw': true });
     });
 
-    it('recognizes a byte raw string (br"...") the same way as a plain raw string, tagged string.binary.raw', () => {
+    it('recognizes a byte raw string (br"...") the same way as a plain raw string, tagged string.byte.raw', () => {
       const str = byText(parsedTexts, 'byte raw string, no escapes \\ here either');
       expect(str?.rawText).toBe('br"byte raw string, no escapes \\ here either"');
-      expect(str?.tags).toEqual({ string: true, 'string.binary': true, 'string.binary.raw': true });
+      expect(str?.tags).toEqual({ string: true, 'string.byte': true, 'string.byte.raw': true });
     });
   });
 
@@ -154,8 +154,9 @@ describe('rust-strings-comments parser', () => {
     // Neither a char/byte-char literal nor a lifetime/label gets any special handling - a bare "'" is just
     // ordinary, unrecognized code, exactly like any other punctuation this scanner doesn't check. Char
     // literals have no prose worth spell checking, so there's nothing to gain from parsing their shape - see
-    // README.md's "How it works"/"Known limitations" and CONTRIBUTING.md for the full rationale, including
-    // the one real trade-off this simplification makes (tested below).
+    // README.md's "How it works" and CONTRIBUTING.md for the full rationale. The one exception is '"' (see
+    // below), which run() special-cases just enough to skip safely, without reintroducing general
+    // char-literal recognition.
     const parsedTexts = parseFixture('lifetimes-vs-chars.rs');
 
     it.each([
@@ -196,18 +197,17 @@ describe('rust-strings-comments parser', () => {
       expect(byText(parsedTexts, 'hello')?.tags).toEqual({ string: true });
     });
 
-    it('KNOWN LIMITATION: a char literal containing a quote ("\'"\'") can cause a real string right after it to be misread', () => {
-      // Since char literals aren't specially recognized, a char literal containing a '"' (e.g. '"') is just
-      // ordinary code - so the "\"" right after its opening "'" looks exactly like the start of a real
-      // string to scanQuotedString, which then scans past the literal's actual closing "'" looking for
-      // another "\"", swallowing whatever real code (here, the genuine string that follows) sits in between.
-      // This is a deliberate, accepted trade-off (see README.md's "Known limitations") in exchange for not
-      // needing any char-literal-vs-lifetime disambiguation logic at all - this test locks in that trade-off
-      // rather than silently losing coverage of it.
+    it('a char literal containing a quote ("\'"\'") is skipped as one unit, so a real string right after it is still recognized', () => {
+      // '"' is a special case: without recognizing it as a single unit, the "\"" right after its opening "'"
+      // would look exactly like the start of a real string to scanQuotedString, which would then scan past
+      // the literal's actual closing "'" looking for another "\"", swallowing whatever real code (here, the
+      // genuine string that follows) sits in between. run() special-cases exactly this one shape (a "'"
+      // immediately followed by a "\"") and skips over it, without reintroducing general char-literal
+      // recognition for every other form (which is still unnecessary, since nothing else needs it).
       const content = readFixture('lifetimes-vs-chars.rs');
       const parsed = [...parse(content, 'file.rs').parsedTexts];
       const str = parsed.find((p) => p.text === 'a real string that must still be recognized correctly');
-      expect(str).toBeUndefined();
+      expect(str?.tags).toEqual({ string: true });
     });
   });
 

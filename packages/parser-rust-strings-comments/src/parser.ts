@@ -13,16 +13,16 @@ const COMMENT_BLOCK_DOC_TAG: ParsedTags = { ...COMMENT_BLOCK_TAG, 'comment.block
  * all - see below), so there's no quote-style ambiguity to tag the way `string.singleQuote`/`.doubleQuote`
  * disambiguate a language with two interchangeable quote characters. Instead these tags describe the string's
  * *kind* - plain, byte (`b"..."`), raw (`r"..."`), or byte-raw (`br"..."`) - hierarchically, the same
- * dot-path convention used everywhere else in this repo: `string.binary.raw` carries `string.binary` (and
- * `string`) as ancestors, so filtering on `string.binary` alone matches both a plain byte string and a raw
+ * dot-path convention used everywhere else in this repo: `string.byte.raw` carries `string.byte` (and
+ * `string`) as ancestors, so filtering on `string.byte` alone matches both a plain byte string and a raw
  * byte string. A plain `"..."` string needs no extra descriptor beyond the base `string` tag. (A future
  * `c"..."` C-string, if added - see CONTRIBUTING.md - would follow the same pattern as `string.c`, and a raw
  * one as `string.c.raw`.)
  */
 const STRING_TAG: ParsedTags = { string: true };
-const STRING_BINARY_TAG: ParsedTags = { ...STRING_TAG, 'string.binary': true };
+const STRING_BYTE_TAG: ParsedTags = { ...STRING_TAG, 'string.byte': true };
 const STRING_RAW_TAG: ParsedTags = { ...STRING_TAG, 'string.raw': true };
-const STRING_BINARY_RAW_TAG: ParsedTags = { ...STRING_BINARY_TAG, 'string.binary.raw': true };
+const STRING_BYTE_RAW_TAG: ParsedTags = { ...STRING_BYTE_TAG, 'string.byte.raw': true };
 
 /**
  * Strips a line comment's marker (`//`, or a doc marker - `///` or `//!`) - and one following space, if
@@ -88,12 +88,14 @@ function isIdentChar(ch: string | undefined): boolean {
  * string contents.
  *
  * **Char literals (`'a'`, `'\n'`, ...), byte-char literals (`b'x'`, ...), and lifetimes/labels (`'a`,
- * `'static`, `'_`, ...) are not specially recognized at all** - a bare `'` is simply treated as ordinary,
+ * `'static`, `'_`, ...) are not generally recognized at all** - a bare `'` is simply treated as ordinary,
  * unrecognized code, exactly like any other punctuation this scanner doesn't check. This is a deliberate
  * simplification, not an oversight: char literals have no prose worth spell checking, so there's no need to
- * parse their shape just to decide not to emit them. See `README.md`'s "Known limitations" for the one real
- * consequence of this choice: a char literal containing a `"` (e.g. `'"'`) can cause a real string right
- * after it to be misread.
+ * parse their shape just to decide not to emit them. The one exception is `'"'` (see `run()`'s dedicated
+ * check for it below): without recognizing that specific shape as a single unit, the `"` right after its
+ * opening `'` would look exactly like the start of a real string, running on past the literal's actual
+ * closing `'` and potentially swallowing real code - see `README.md`'s "Known limitations" for the full
+ * rationale.
  *
  * Rust has no template-literal-style interpolation, so - unlike the JS/TS-family scanner in this repo - no
  * construct here ever splits into multiple fragments; each emitting scan method emits exactly one
@@ -132,6 +134,21 @@ class Scanner {
           yield rawString;
           continue;
         }
+      }
+
+      // A '"' char literal is the one shape that needs its own check, even though char literals otherwise
+      // get no special recognition at all (see the class doc comment above): a bare "'" immediately followed
+      // by a '"' can only be this literal (no lifetime can start with a '"' right after the tick - a
+      // lifetime always continues with an identifier character), so this is unambiguous, not a heuristic.
+      // Skipping it as one unit here keeps its embedded '"' from being misread by scanQuotedString below as
+      // the start of a real string, which would otherwise scan right past this literal's actual closing "'"
+      // looking for another '"' - potentially swallowing real code (including a genuine string) in between.
+      if (c === "'" && n === '"') {
+        this.i += 2;
+        if (content[this.i] === "'") {
+          this.i++;
+        }
+        continue;
       }
 
       if (c === '"') {
@@ -201,7 +218,7 @@ class Scanner {
 
   /**
    * A plain `"..."` string, or a `b"..."` byte string - both use the same ordinary backslash-escape rules,
-   * differing only in which tag they get (`string` alone for plain, `string.binary` for a byte string).
+   * differing only in which tag they get (`string` alone for plain, `string.byte` for a byte string).
    * `literalStart` is where the emitted segment begins - the `"` itself, or the `b` right before it for a
    * byte string.
    */
@@ -227,7 +244,7 @@ class Scanner {
     const openLen = quoteStart - literalStart + 1;
     const { text, map } = stripDelimited(rawText, openLen, 1, closed);
     this.i = end;
-    return { text, rawText, map, range: [literalStart, end], tags: isByte ? STRING_BINARY_TAG : STRING_TAG };
+    return { text, rawText, map, range: [literalStart, end], tags: isByte ? STRING_BYTE_TAG : STRING_TAG };
   }
 
   /**
@@ -275,7 +292,7 @@ class Scanner {
     const rawText = content.slice(start, end);
     const { text, map } = stripDelimited(rawText, openLen, closer.length, closed);
     this.i = end;
-    return { text, rawText, map, range: [start, end], tags: isByte ? STRING_BINARY_RAW_TAG : STRING_RAW_TAG };
+    return { text, rawText, map, range: [start, end], tags: isByte ? STRING_BYTE_RAW_TAG : STRING_RAW_TAG };
   }
 }
 

@@ -84,21 +84,24 @@ An earlier version of this parser disambiguated between the two with a small loo
 (`tryScanCharLiteral`), so a char literal could be recognized and silently consumed (never emitted - see
 above) without a naive forward scan misreading a lifetime as an unterminated char literal.
 
-That disambiguation logic has been removed entirely, by design: since char literals are never spell checked
-anyway, there's nothing to gain from correctly recognizing their shape - a bare `'` (whether it starts a
-char literal or a lifetime) is now just left as ordinary, unrecognized code, and `run()` advances past it one
-character at a time like any other punctuation.
+That general disambiguation logic has been removed, by design: since char literals are never spell checked
+anyway, there's nothing to gain from correctly recognizing most of their shapes - a bare `'` (whether it
+starts a char literal or a lifetime) is now just left as ordinary, unrecognized code, and `run()` advances
+past it one character at a time like any other punctuation.
 
-**The trade-off**: without that recognition, a char literal containing a `"` (e.g. `'"'`) is no longer
-consumed as one unit, so the `"` right after its opening `'` looks exactly like the start of a real string to
+**The one exception: `'"'`.** Without any recognition, a char literal containing a `"` is no longer consumed
+as one unit, so the `"` right after its opening `'` looks exactly like the start of a real string to
 `scanQuotedString` - which then scans past the literal's actual closing `'` looking for another `"`,
-potentially swallowing real code (including a genuine string) in between. This is accepted as a rare,
-documented limitation (see `README.md`'s "Known limitations") rather than a reason to keep the disambiguation
-logic around. `fixtures/lifetimes-vs-chars.rs`'s `quote_char_then_real_string` function and its corresponding
-"KNOWN LIMITATION" test in `parser.test.ts` lock in this exact trade-off, so it stays visible and intentional
-rather than turning into a silent, unexplained regression.
+potentially swallowing real code (including a genuine string) in between. Unlike the general
+char-literal-vs-lifetime case, this one shape is unambiguous to detect with a single character of lookahead:
+a `'` immediately followed by `"` can only be this literal, never a lifetime (a lifetime always continues
+with an identifier character, never `"`). `run()` special-cases exactly this: seeing `'` then `"`, it skips
+two characters, then a third if the next character is `'` (the literal's closing quote) - consuming the whole
+`'"'` as one unit without reintroducing a general char-literal parser. `fixtures/lifetimes-vs-chars.rs`'s
+`quote_char_then_real_string` function and its corresponding test in `parser.test.ts` prove a real string
+right after a `'"'` char literal is still recognized correctly.
 
-`fixtures/lifetimes-vs-chars.rs` still exercises the ordinary case in both directions - real char/byte-char
+`fixtures/lifetimes-vs-chars.rs` also exercises the ordinary case in both directions - real char/byte-char
 literals (`'a'`, `'\n'`, `'\''`, `'\x41'`, `'\u{1F600}'`, `b'x'`, `b'\n'`, `b'\x41'`) and real lifetime usages
 (`Wrapper<'a>`, `&'a str`, `fn longest<'a>`, `&'static str`, `&'_ str`) - confirming neither one is ever
 emitted, alongside a real string on the same line as a lifetime to confirm that's still recognized normally.
@@ -194,10 +197,10 @@ inside one is just a literal character, per Rust's grammar.
   extension of `tryScanRawString`'s machinery (a `c`/`cr` prefix alongside today's bare/`r`/`b`/`br` ones), but
   were left out of this first version to keep scope tight. If you add them, extend
   `fixtures/raw-strings.rs` and `parser.test.ts` alongside `tryScanRawString`.
-- **Char literals and lifetimes get no special recognition at all** (see "Char literals and lifetimes: no
-  special handling at all" above) - a deliberate simplification, not an oversight. The one accepted
-  consequence: a char literal containing a `"` (e.g. `'"'`) can cause a real string right after it to be
-  misread, since nothing consumes the char literal as a single unit anymore.
+- **Char literals and lifetimes get no general recognition at all** (see "Char literals and lifetimes: no
+  special handling at all" above) - a deliberate simplification, not an oversight, with one narrow exception:
+  a `'"'` char literal is specifically detected and skipped as a unit, since that's the one shape that would
+  otherwise cause a real string right after it to be misread.
 
 ## Tags
 
@@ -209,11 +212,11 @@ segment. See `README.md`'s [Tags](README.md#tags) table for what each one means 
 String tags are a deliberate departure from the `string.singleQuote`/`string.doubleQuote` pattern used by
 every other package in this repo: since Rust only ever uses `"` for strings (`'` is exclusively char
 literals, never emitted - see above), quote style carries no information worth tagging. Instead the tags
-describe the string's _kind_: `scanQuotedString` picks `STRING_TAG` (plain) or `STRING_BINARY_TAG` (byte,
+describe the string's _kind_: `scanQuotedString` picks `STRING_TAG` (plain) or `STRING_BYTE_TAG` (byte,
 `b"..."`) based on whether it was called for a `b`-prefixed literal; `tryScanRawString` picks `STRING_RAW_TAG`
-or `STRING_BINARY_RAW_TAG` the same way. `STRING_BINARY_RAW_TAG` is built by spreading `STRING_BINARY_TAG`
-(not `STRING_TAG` directly), so it carries `string.binary` as an ancestor alongside `string` - filtering on
-`string.binary` alone therefore matches both a plain byte string and a byte raw string, the same hierarchical
+or `STRING_BYTE_RAW_TAG` the same way. `STRING_BYTE_RAW_TAG` is built by spreading `STRING_BYTE_TAG`
+(not `STRING_TAG` directly), so it carries `string.byte` as an ancestor alongside `string` - filtering on
+`string.byte` alone therefore matches both a plain byte string and a byte raw string, the same hierarchical
 filtering `customizePlugin` already relies on everywhere else. If C-string literals (`c"..."`, `cr"..."#`)
 are ever added (see "Known limitations"), follow the same pattern: `string.c` and `string.c.raw`.
 
@@ -228,7 +231,8 @@ are ever added (see "Known limitations"), follow the same pattern: `string.c` an
 - `fixtures/nested-comments.rs` and `fixtures/unterminated.rs` specifically exercise block-comment nesting
   depth, including through an unterminated comment.
 - `fixtures/lifetimes-vs-chars.rs` covers char literals and lifetimes never being emitted, in both
-  directions, in the same file - including the accepted `'"'` known-limitation case.
+  directions, in the same file - including the `'"'` special case, proving a real string right after it is
+  still recognized correctly.
 - `fixtures/raw-strings.rs` covers the `#`-count delimiter matching, including a body containing a shorter,
   non-matching `#`-run that must not close a longer-delimited raw string early.
 - `samples/` is a real, separate end-to-end check: actual cspell configs plus real source files, run for real

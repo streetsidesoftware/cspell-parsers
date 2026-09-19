@@ -93,9 +93,9 @@ parsers can't share one.
 | `comment.block`     | A `/* ... */` block comment (including a nested one)                                |
 | `comment.block.doc` | A `/** ... */` outer doc block or `/*! ... */` inner doc block                      |
 | `string`            | Any string-like literal, including a plain `"..."` string                           |
-| `string.binary`     | A `b"..."` byte string literal (also carried by `string.binary.raw`)                |
+| `string.byte`       | A `b"..."` byte string literal (also carried by `string.byte.raw`)                  |
 | `string.raw`        | A raw string literal (`r"..."`, `r#"..."#`, ...) - not a byte raw string, see below |
-| `string.binary.raw` | A byte raw string literal (`br"..."`, `br#"..."#`, ...)                             |
+| `string.byte.raw`   | A byte raw string literal (`br"..."`, `br#"..."#`, ...)                             |
 
 ## How it works
 
@@ -110,14 +110,15 @@ parsers can't share one.
 - **String tags describe the string's _kind_, not its quote style.** Rust only ever uses `"` for strings, so
   there's no `string.singleQuote`/`.doubleQuote` distinction to make the way some other languages in this
   repo do. Instead a plain `"..."` string gets just the bare `string` tag, and each other kind adds its own
-  descriptor: `string.binary` for a `b"..."` byte string, `string.raw` for a raw string, and
-  `string.binary.raw` for a byte raw string (carrying `string.binary` as an ancestor too, so filtering on
-  `string.binary` alone matches both).
+  descriptor: `string.byte` for a `b"..."` byte string, `string.raw` for a raw string, and
+  `string.byte.raw` for a byte raw string (carrying `string.byte` as an ancestor too, so filtering on
+  `string.byte` alone matches both).
 - **Char literals (`'a'`, `'\n'`, `'\x41'`, `'\u{1F600}'`, and their `b'...'` byte-char equivalents) and
-  lifetimes/labels (`'a`, `'static`, `'_`) are never spell checked and get no special recognition at all.** A
+  lifetimes/labels (`'a`, `'static`, `'_`) are never spell checked and get no general recognition at all.** A
   bare `'` is simply left as ordinary, unrecognized code - a single character or escape sequence has no prose
-  worth checking, so there's no need to parse a char literal's shape just to decide not to emit it. See
-  "Known limitations" for the one real trade-off this makes.
+  worth checking, so there's no need to parse a char literal's shape just to decide not to emit it. The one
+  exception is `'"'` (a char literal whose content is a `"`), which is specifically recognized and skipped as
+  a unit - see "Known limitations" for why that one case needs its own handling.
 - `plugin.parsers` is the list of parsers a cspell plugin module exposes; a plugin can expose more than one.
 
 ## Known limitations
@@ -130,16 +131,15 @@ with a few deliberate, documented scope limits:
   first version - a `c"..."` literal is simply not recognized as anything special (it falls through as
   ordinary skipped code), so its content is never spell checked. Add support if you need it - see
   `CONTRIBUTING.md`.
-- **Char literals and lifetimes get no special recognition at all - a bare `'` is always just ordinary code.**
-  This is a deliberate simplification: since char literals are never spell checked, there's nothing to gain
-  from correctly parsing their shape. The one real consequence: **a char literal containing a `"` (e.g.
-  `'"'`) can cause a real string right after it to be misread.** Without any recognition of the char literal
-  as a single unit, the `"` right after its opening `'` looks exactly like the start of a real string, which
-  then scans past the literal's actual closing `'` looking for another `"` - potentially swallowing real code
-  (including a genuine string) in between. This is rare in practice (a `"` char literal is uncommon, and
-  usually appears in code that also has few nearby strings to swallow), and is accepted as the cost of not
-  needing any char-literal-vs-lifetime disambiguation logic at all - see `CONTRIBUTING.md` for the full
-  rationale.
+- **Char literals and lifetimes get no general recognition at all - a bare `'` is otherwise always just
+  ordinary code.** This is a deliberate simplification: since char literals are never spell checked, there's
+  nothing to gain from correctly parsing their shape. The one exception is `'"'` (a char literal whose
+  content is a `"`): without recognizing it as a single unit, the `"` right after its opening `'` would look
+  exactly like the start of a real string, which would then scan past the literal's actual closing `'`
+  looking for another `"` - potentially swallowing real code (including a genuine string) in between. This
+  one shape is specifically detected and skipped as a unit to avoid that; every other char literal and every
+  lifetime still gets no special handling, since nothing else risks the same failure mode - see
+  `CONTRIBUTING.md` for the full rationale.
 - **Nested block comments are fully supported** (`/* /* nested */ still open */` is tracked as one comment,
   per Rust's actual grammar), unlike every C-family language covered elsewhere in this repo.
 
