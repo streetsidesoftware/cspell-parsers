@@ -555,7 +555,8 @@ export interface CustomizeParserOptions {
 }
 
 /**
- * Create a parser for TypeScript, TSX, JavaScript, and JSX files.
+ * Create a parser for TypeScript, TSX, JavaScript, and JSX files. You can set the name of the parser and
+ * filter on the tags if desired.
  *
  * The name is used to select the parser via the
  * [cspell `parser`](https://cspell.org/docs/api/cspell-types/interfaces/CSpellSettings#parser) setting.
