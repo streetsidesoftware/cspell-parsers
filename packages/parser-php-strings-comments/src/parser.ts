@@ -368,7 +368,7 @@ export interface CustomizeParserOptions {
 }
 
 /**
- * Create a parser for PHP files, optionally renamed and/or tag-filtered.
+ * Create a parser for PHP files. You can set the name of the parser and filter on the tags if desired.
  *
  * The name is used to select the parser via the
  * [cspell `parser`](https://cspell.org/docs/api/cspell-types/interfaces/CSpellSettings#parser) setting.
