@@ -173,7 +173,6 @@ describe('c-cpp-strings-comments parser', () => {
       const content = '//// a plain separator, not a doc comment\n';
       const parsed = [...parse(content, 'file.c').parsedTexts];
       const line = parsed[0];
-      // The marker consumed is only "//", so the text still starts with the extra "//".
       expect(line?.text.startsWith('//')).toBe(true);
       expect(line?.tags).toEqual({ comment: true, 'comment.line': true });
     });

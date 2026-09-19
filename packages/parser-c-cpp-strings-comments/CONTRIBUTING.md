@@ -5,6 +5,11 @@ someone using the plugin; this file is for someone changing it. See the repo roo
 general package shape (`parser.ts`/`plugin.ts`/`index.ts`/`recommended.ts`, `fixtures/`, `samples/`) - this
 file only covers what's specific to this package's parsing logic.
 
+This package can also serve as a starting point for a new parser package: copy `src/parser.ts`,
+`src/plugin.ts`, `src/index.ts`, and `src/recommended.ts` into a new package under `packages/` and replace the
+parsing logic with your own. See the repo root `CONTRIBUTING.md`'s "Adding a new parser package" for the full
+steps.
+
 ## Shape of the parser
 
 This parser is a single hand-written scanner (`Scanner`, a small stateful class holding a mutable cursor `i`
@@ -12,7 +17,7 @@ over `content`). There's no AST and no tokenizer for the language as a whole - `
 character by character, recognizing only the handful of constructs that matter (comments, string/char
 literals, and C++ raw strings) and silently advancing `i` past everything else (identifiers, keywords,
 punctuation, numbers, preprocessor directives). Since cspell only ever checks what's inside `parsedTexts`,
-this is how the parser excludes syntax noise: by simply never emitting it, not by filtering it out afterwards -
+this is how the parser excludes syntax noise: by never emitting it, not by filtering it out afterwards -
 the same approach `@cspell/parser-example` uses.
 
 This package started as the C/C++ slice of `@cspell/parser-strings-comments`, a single scanner that also
@@ -33,7 +38,10 @@ the way the JS/TS and combined packages have.
 
 ### Emitting a segment
 
-Every scan method builds a `ParsedText` from a `[start, end)` range it already knows:
+Every scan method builds a `ParsedText` from a `[start, end)` range it already knows. `ParsedText.range` is
+the `[start, end]` offset of that segment in the original `content`, which is how cspell maps spelling issues
+found in the parsed text back to the right place in the source file - getting this right for every construct
+(including the unterminated/EOF cases below) is the core correctness concern of this scanner.
 
 - Block comments reuse `@internal/utils`'s `stripCommentMarkers` directly (it already handles the doc-comment
   gutter-stripping correctly, and always starts with `/*`). Line comments use a local `stripLineMarker`

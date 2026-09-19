@@ -161,13 +161,10 @@ class Scanner {
   }
 
   /**
-   * A C++11 raw string: an optional `u8`/`u`/`U`/`L` encoding prefix, then `R"delim(...)delim"`, where
-   * `delim` is 0-16 characters up to the `(`. Requires a non-identifier character (or start of file)
-   * immediately before the prefix, so this can't misfire partway through an ordinary identifier that happens
-   * to end in `R`. Returns `undefined` (consuming nothing) if the pattern doesn't actually match, so the
-   * caller falls through to treating `R`/the prefix letter as an ordinary skipped character. This applies
-   * equally to `.c` and `.cpp` files - real C code simply never contains this pattern, so it's safe to always
-   * attempt it.
+   * A C++11 raw string: optional `u8`/`u`/`U`/`L` prefix, then `R"delim(...)delim"` (`delim` up to 16 chars).
+   * Requires a non-identifier character before the prefix so this can't misfire mid-identifier (e.g. one
+   * ending in `R`). Returns `undefined` without consuming input on a non-match. Safe to always attempt on
+   * `.c` files too - real C never contains this syntax.
    */
   private tryScanCppRawString(): ParsedText | undefined {
     const { content } = this;
@@ -197,8 +194,9 @@ class Scanner {
 }
 
 /**
- * Extracts comments and string/char/raw-string literals from C/C++ source. See the `Scanner` class for the
- * actual scanning logic.
+ * Extracts comments and string/char/raw-string literals from C/C++ source, so cspell only ever spell checks
+ * that content - never identifiers, keywords, or punctuation. Most consumers won't call this directly; use
+ * the `parser`/`plugin` exports, or the `recommended`/`index` settings modules, to wire it into cspell.
  */
 export function parse(content: string, filename: string): ParseResult {
   return { content, filename, parsedTexts: new Scanner(content).run() };
@@ -213,13 +211,9 @@ export const supportedFileTypes: string[] = ['c', 'cpp'];
 
 /** Options for {@link createParser}: the parser's name, and which tagged segments to keep. */
 export interface CustomizeParserOptions {
-  /**
-   * Set the name of the parser.
-   */
+  /** Overrides the registered parser name (default: `c-cpp-strings-comments`). */
   name?: string;
-  /**
-   * Define which tagged segments to keep. Omit to keep everything.
-   */
+  /** Which tagged segments to keep; omitting keeps everything. */
   tags?: TagFilterOptions;
 }
 

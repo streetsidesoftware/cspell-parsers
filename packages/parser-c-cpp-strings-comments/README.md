@@ -52,8 +52,8 @@ plugin in yourself and choose the language IDs to use it for:
 By default every comment/string the parser emits gets spell checked. To check only some of them - for
 example, only doc comments - use `customizePlugin` instead of the plain `plugin` export. It takes a
 `CustomizePluginOptions` object - `tags: TagFilterOptions` and `name` are both optional, and omitting `tags`
-keeps everything - and returns a `Plugin` whose parser filters segments by tag itself, before cspell ever
-sees them.
+keeps everything - and returns a `Plugin` that only spell checks segments matching the filter. This works
+with any cspell version, since the filtering doesn't rely on cspell itself supporting it.
 
 ```js
 // cspell.config.mjs — customizePlugin returns a live Plugin object, so it needs a JS/TS config file
@@ -95,23 +95,6 @@ parsers can't share one.
 | `string.doubleQuote` | A `"..."` string literal                          |
 | `string.raw`         | A C++11 raw string literal (`R"delim(...)delim"`) |
 
-## How it works
-
-- `parser.parse(content, filename)` returns a `ParseResult` containing one or more `ParsedText` entries.
-- Each `ParsedText.range` is the `[start, end]` offset of that segment in the original `content`, which is how
-  cspell maps spelling issues found in the parsed text back to the right place in the source file.
-- Every segment is tagged with a dot-separated tag, plus every ancestor of it (`comment.block.doc` also
-  carries `comment` and `comment.block`) - `customizePlugin` can filter which segments get spell checked
-  using these tags, at any level of specificity (just `comment`, or the more specific `comment.block.doc`).
-- A Doxygen-style doc-comment line - `///` (but not a `////`-or-more separator line) or `//!` - is tagged
-  `comment.line.doc`; an ordinary `//` line comment is just `comment.line`.
-- **C++11 raw strings (`R"delim(...)delim"`, with an optional `u8`/`u`/`U`/`L` encoding prefix) are
-  recognized and their contents spell checked without treating anything inside as an escape sequence or
-  comment marker.** `delim` can be 0-16 characters, and the closing sequence must match it exactly
-  (`)delim"`), so a near-miss inside the body (e.g. `)DEL` when the real delimiter is `DELIM`) doesn't end the
-  string early. Real C code never contains this syntax, so recognizing it is harmless there.
-- `plugin.parsers` is the list of parsers a cspell plugin module exposes; a plugin can expose more than one.
-
 ## Known limitations
 
 This parser is a small hand-written scanner, not a real grammar, which keeps it dependency-free. It doesn't
@@ -119,10 +102,6 @@ track preprocessor directives (`#if 0` / conditional-compilation blocks are scan
 a comment or string inside a disabled preprocessor branch is still spell checked as if it were live code. It also has no
 special handling of multi-line string continuations via a trailing `\` at end-of-line outside of a literal -
 only backslash escapes _inside_ a string/char literal are recognized.
-
-Use this package as a template: copy `src/parser.ts`, `src/plugin.ts`, `src/index.ts`, and `src/recommended.ts`
-into a new package under `packages/` and replace the parsing logic with your own. See the repo root
-`CONTRIBUTING.md` for the full steps.
 
 ## Requirements
 
