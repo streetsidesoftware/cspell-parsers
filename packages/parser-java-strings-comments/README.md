@@ -90,16 +90,6 @@ parsers can't share one.
 | `string.doubleQuote` | A `"..."` string literal            |
 | `string.textBlock`   | A `"""..."""` text block (Java 15+) |
 
-## How it works
-
-- `parser.parse(content, filename)` returns a `ParseResult` containing one or more `ParsedText` entries.
-- Each `ParsedText.range` is the `[start, end]` offset of that segment in the original `content`, which is how
-  cspell maps spelling issues found in the parsed text back to the right place in the source file.
-- Every segment is tagged with a dot-separated tag, plus every ancestor of it (`comment.block.doc` also
-  carries `comment` and `comment.block`) - `customizePlugin` can filter which segments get spell checked
-  using these tags, at any level of specificity (just `comment`, or the more specific `comment.block.doc`).
-- `plugin.parsers` is the list of parsers a cspell plugin module exposes; a plugin can expose more than one.
-
 ## Known limitations
 
 This parser is a small hand-written scanner, not a real grammar. It doesn't build an AST, so it can't tell
