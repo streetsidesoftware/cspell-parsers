@@ -1,9 +1,12 @@
 # Contributing to @cspell/parser-typescript
 
-This is a contributor-facing walkthrough of how `src/parser.ts` actually works. `README.md` is written for
-someone using the plugin; this file is for someone changing it. See the repo root `CONTRIBUTING.md` for the
-general package shape (`parser.ts`/`plugin.ts`/`index.ts`/`recommended.ts`, `fixtures/`, `samples/`) — this
-file only covers what's specific to this package's parsing logic.
+This package is a thin alias: `src/parser.ts` re-exports `parse`/`parser`/`supportedFileTypes`/`createParser`
+from `@cspell/parser-typescript-tree-sitter`, its one production dependency. `plugin.ts`/`index.ts`/
+`recommended.ts` are the ordinary wiring layer described in the repo root `CONTRIBUTING.md`. The actual
+parsing logic lives in `packages/parser-typescript-tree-sitter`, and root `CONTRIBUTING.md` points here for
+the tagging convention below because the two packages are kept in sync - see
+`packages/parser-typescript-tree-sitter/CONTRIBUTING.md` for the up-to-date, authoritative version of what
+follows.
 
 ## Shape of the parser
 
@@ -35,7 +38,8 @@ import/export/member-access related.
 > This parser used to also emit a TextMate-style `scope: ScopeChain` on every segment, built from a set of
 > node-type-to-scope-name lookup tables threaded through `walk` alongside `bindingScope`. It was removed
 > since cspell's spell checker only reads `tags`, not `scope` - see
-> [`docs/adding-back-scope.md`](docs/adding-back-scope.md) if it's ever needed again.
+> [`parser-typescript-tree-sitter/docs/adding-back-scope.md`](../parser-typescript-tree-sitter/docs/adding-back-scope.md)
+> if it's ever needed again.
 
 ### Declaration names
 
@@ -141,6 +145,11 @@ binding patterns (`function f({ a, b })`) are simply not detected as shadowing n
 correctly, they just won't shadow an import of the same name).
 
 ## Testing
+
+`fixtures/`, `parser.test.ts`, and `samples/` here are copies of the tree-sitter package's, run against this
+package's own `parser`/`plugin` exports - they exist to catch the re-export/alias wiring breaking, not to
+independently cover the parsing logic (that coverage lives in `parser-typescript-tree-sitter`, and should stay
+the primary place to add a new case).
 
 - `parser.test.ts` reads fixtures out of `fixtures/` (via `readFixture`/`parseFixture` helpers) rather than
   embedding source strings inline - a fixture is real, syntactically valid (TypeScript-shaped) content, which
