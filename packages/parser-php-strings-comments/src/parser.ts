@@ -345,8 +345,8 @@ class Scanner {
 }
 
 /**
- * Extracts comments, strings, heredoc/nowdoc bodies, and markup pass-through segments from PHP source. See
- * the `Scanner` class for the actual scanning logic.
+ * Parses PHP source and returns only its comments, string/heredoc/nowdoc literals, and the HTML markup
+ * surrounding `<?php ... ?>` regions - identifiers, keywords, and punctuation are skipped entirely.
  */
 export function parse(content: string, filename: string): ParseResult {
   return { content, filename, parsedTexts: new Scanner(content).run() };
