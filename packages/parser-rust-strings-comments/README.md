@@ -6,11 +6,12 @@ It implements cspell's [`Parser`](https://www.npmjs.com/package/@cspell/cspell-t
 [`Plugin`](https://www.npmjs.com/package/@cspell/cspell-types) so it can be wired into a cspell configuration.
 
 Unlike [`@cspell/parser-example`](https://www.npmjs.com/package/@cspell/parser-example) (comments only), this
-parser only ever emits comments and string-like literals - never identifiers, keywords, or punctuation -
-using a small hand-written scanner rather than a real grammar. It understands Rust's several string and
-comment forms: plain `'...'` char literals, `"..."` strings, `b'...'`/`b"..."` byte forms, raw strings
-(`r"..."`, `r#"..."#`, ...), line comments (`//`, `///`, `//!`), and block comments (`/* */`, `/** */`,
-`/*! */`) - including Rust's nested block comments.
+parser only ever emits comments and string-like literals - never identifiers, keywords, punctuation, or char
+literals - using a small hand-written scanner rather than a real grammar. It understands Rust's several
+string and comment forms: `"..."` strings, `b"..."` byte strings, raw strings (`r"..."`, `r#"..."#`, ...),
+line comments (`//`, `///`, `//!`), and block comments (`/* */`, `/** */`, `/*! */`) - including Rust's nested
+block comments. Char literals (`'...'`, `b'...'`) are recognized (so they're never mistaken for something
+else) but never spell checked - see "How it works" below.
 
 ## Usage
 
@@ -92,7 +93,6 @@ parsers can't share one.
 | `comment.block`      | A `/* ... */` block comment (including a nested one)                                 |
 | `comment.block.doc`  | A `/** ... */` outer doc block or `/*! ... */` inner doc block                       |
 | `string`             | Any string-like literal                                                              |
-| `string.singleQuote` | A `'...'` char literal or `b'...'` byte-char literal                                 |
 | `string.doubleQuote` | A `"..."` string literal or `b"..."` byte string literal                             |
 | `string.raw`         | A raw string literal (`r"..."`, `r#"..."#`, ...) or byte raw string (`br"..."`, ...) |
 
@@ -106,6 +106,10 @@ parsers can't share one.
   these tags, at any level of specificity (just `comment`, or the more specific `comment.block.doc`).
 - Rust has no string interpolation, so unlike some other languages this repo covers, nothing here ever splits
   into more than one `ParsedText` fragment per literal.
+- **Char literals (`'a'`, `'\n'`, `'\x41'`, `'\u{1F600}'`, and their `b'...'` byte-char equivalents) are never
+  spell checked.** A single character or escape sequence has no prose worth checking, so this parser
+  recognizes the shape of a char literal - distinguishing it from Rust's unrelated `'a` lifetime/label syntax
+  - and skips over it entirely, the same way a regex literal is skipped in this repo's JS/TS-family parser.
 - `plugin.parsers` is the list of parsers a cspell plugin module exposes; a plugin can expose more than one.
 
 ## Known limitations
@@ -122,7 +126,8 @@ with a few deliberate, documented scope limits:
   forward speculatively (a lifetime has no closing quote to find), so it's a strictly local decision - see
   `CONTRIBUTING.md` for the exact algorithm. This correctly handles every real Rust char literal and lifetime
   form, but an escape sequence whose closing `'` isn't immediately where expected (essentially, invalid Rust)
-  is simply not recognized as a char literal at all, rather than mis-scanned as one.
+  is simply not recognized as a char literal at all - it's treated as an ordinary character instead of being
+  skipped as one unit, which is harmless either way since char literals are never spell checked regardless.
 - **Nested block comments are fully supported** (`/* /* nested */ still open */` is tracked as one comment,
   per Rust's actual grammar), unlike every C-family language covered elsewhere in this repo.
 

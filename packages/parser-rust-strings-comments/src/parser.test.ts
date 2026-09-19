@@ -78,10 +78,8 @@ describe('rust-strings-comments parser', () => {
       expect(str?.tags).toEqual({ string: true, 'string.doubleQuote': true });
     });
 
-    it('tags a single-quoted char literal as string.singleQuote', () => {
-      const str = byText(parsedTexts, 'A');
-      expect(str?.rawText).toBe("'A'");
-      expect(str?.tags).toEqual({ string: true, 'string.singleQuote': true });
+    it('does not emit anything for a char literal ("\'A\'") - char literals are never spell checked', () => {
+      expect(parsedTexts.some((p) => p.rawText === "'A'")).toBe(false);
     });
   });
 
@@ -163,61 +161,65 @@ describe('rust-strings-comments parser', () => {
       expect(parsedTexts.some((p) => p.range[0] === tickIndex)).toBe(false);
     });
 
-    it('tags a real char literal ("\'a\'") as string.singleQuote', () => {
+    it('does not emit anything for a real char literal ("\'a\'") - char literals are never spell checked', () => {
       const content = readFixture('lifetimes-vs-chars.rs');
       const parsed = [...parse(content, 'file.rs').parsedTexts];
-      const literal = parsed.find((p) => p.rawText === "'a'");
-      expect(literal).toBeDefined();
-      expect(literal?.text).toBe('a');
-      expect(literal?.tags).toEqual({ string: true, 'string.singleQuote': true });
+      expect(parsed.some((p) => p.rawText === "'a'")).toBe(false);
     });
 
-    it('tags an escape-based char literal ("\'\\n\'") as string.singleQuote', () => {
-      const literal = parsedTexts.find((p) => p.rawText === String.raw`'\n'`);
-      expect(literal).toBeDefined();
-      expect(literal?.tags).toEqual({ string: true, 'string.singleQuote': true });
+    it('does not emit anything for an escape-based char literal ("\'\\n\'")', () => {
+      expect(parsedTexts.some((p) => p.rawText === String.raw`'\n'`)).toBe(false);
     });
 
-    it("tags an escaped-quote char literal (\"'\\''\") as string.singleQuote", () => {
-      const literal = parsedTexts.find((p) => p.rawText === String.raw`'\''`);
-      expect(literal).toBeDefined();
-      expect(literal?.tags).toEqual({ string: true, 'string.singleQuote': true });
+    it("does not emit anything for an escaped-quote char literal (\"'\\''\")", () => {
+      expect(parsedTexts.some((p) => p.rawText === String.raw`'\''`)).toBe(false);
     });
 
-    it('tags a byte-escape char literal ("\'\\x41\'") as string.singleQuote', () => {
+    it('does not emit anything for a byte-escape char literal ("\'\\x41\'"), and still consumes it correctly', () => {
       // Regression coverage: a fixed-length-2-char-escape assumption (reusing the generic skipEscape,
       // fine for a "..." string's boundary-finding) would land on "4", not the closing "'", and fail to
-      // recognize this 4-character escape as a char literal at all.
-      const literal = parsedTexts.find((p) => p.rawText === String.raw`'\x41'`);
-      expect(literal).toBeDefined();
-      expect(literal?.tags).toEqual({ string: true, 'string.singleQuote': true });
+      // recognize this 4-character escape as a char literal at all - meaning the "4" and "1" characters,
+      // and the closing "'", would leak through as unrecognized code instead of being cleanly consumed.
+      const content = readFixture('lifetimes-vs-chars.rs');
+      const literalIndex = content.indexOf(String.raw`'\x41'`);
+      const parsed = [...parse(content, 'file.rs').parsedTexts];
+      expect(parsed.some((p) => p.rawText === String.raw`'\x41'`)).toBe(false);
+      expect(parsed.some((p) => p.range[0] > literalIndex && p.range[0] < literalIndex + 6)).toBe(false);
     });
 
-    it('tags a unicode-escape char literal ("\'\\u{1F600}\'") as string.singleQuote', () => {
+    it('does not emit anything for a unicode-escape char literal ("\'\\u{1F600}\'"), and still consumes it correctly', () => {
       // Regression coverage: same underlying issue as the \x41 case above, but for a variable-length
       // (4-9 character) brace-delimited escape.
-      const literal = parsedTexts.find((p) => p.rawText === String.raw`'\u{1F600}'`);
-      expect(literal).toBeDefined();
-      expect(literal?.tags).toEqual({ string: true, 'string.singleQuote': true });
+      const content = readFixture('lifetimes-vs-chars.rs');
+      const literalIndex = content.indexOf(String.raw`'\u{1F600}'`);
+      const parsed = [...parse(content, 'file.rs').parsedTexts];
+      expect(parsed.some((p) => p.rawText === String.raw`'\u{1F600}'`)).toBe(false);
+      expect(parsed.some((p) => p.range[0] > literalIndex && p.range[0] < literalIndex + 11)).toBe(false);
     });
 
-    it('tags a byte-char literal ("b\'x\'") as string.singleQuote', () => {
-      const literal = parsedTexts.find((p) => p.rawText === "b'x'");
-      expect(literal).toBeDefined();
-      expect(literal?.text).toBe('x');
-      expect(literal?.tags).toEqual({ string: true, 'string.singleQuote': true });
+    it('does not emit anything for a byte-char literal ("b\'x\'")', () => {
+      expect(parsedTexts.some((p) => p.rawText === "b'x'")).toBe(false);
     });
 
-    it('tags an escape-based byte-char literal ("b\'\\n\'") as string.singleQuote', () => {
-      const literal = parsedTexts.find((p) => p.rawText === String.raw`b'\n'`);
-      expect(literal).toBeDefined();
-      expect(literal?.tags).toEqual({ string: true, 'string.singleQuote': true });
+    it('does not emit anything for an escape-based byte-char literal ("b\'\\n\'")', () => {
+      expect(parsedTexts.some((p) => p.rawText === String.raw`b'\n'`)).toBe(false);
     });
 
-    it('tags a byte-escape byte-char literal ("b\'\\x41\'") as string.singleQuote', () => {
-      const literal = parsedTexts.find((p) => p.rawText === String.raw`b'\x41'`);
-      expect(literal).toBeDefined();
-      expect(literal?.tags).toEqual({ string: true, 'string.singleQuote': true });
+    it('does not emit anything for a byte-escape byte-char literal ("b\'\\x41\'")', () => {
+      expect(parsedTexts.some((p) => p.rawText === String.raw`b'\x41'`)).toBe(false);
+    });
+
+    it('recognizing a char literal containing a quote ("\'"\'") keeps a real string right after it from being misread', () => {
+      // This is *why* char literals still need to be recognized and consumed, even though nothing is
+      // emitted for them: if the opening "'" of '"' were just treated as an ordinary skipped character (as
+      // it must be for a lifetime), the "\"" right after it would look exactly like the start of a real
+      // string to scanQuotedString - which would then scan forward past the literal's closing "'" looking
+      // for a "closing" quote, potentially swallowing real code (here, the genuine string right after it)
+      // before finding one.
+      const content = readFixture('lifetimes-vs-chars.rs');
+      const parsed = [...parse(content, 'file.rs').parsedTexts];
+      const str = parsed.find((p) => p.text === 'a real string that must still be recognized correctly');
+      expect(str?.tags).toEqual({ string: true, 'string.doubleQuote': true });
     });
 
     it('does not emit anything for the "\'static" lifetime', () => {

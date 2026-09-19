@@ -21,3 +21,10 @@ pub fn byte_classify(b: u8) -> bool {
 }
 
 pub fn underscore_lifetime(_value: &'_ str) {}
+
+pub fn quote_char_then_real_string() -> (char, &'static str) {
+    (
+        '"',
+        "a real string that must still be recognized correctly",
+    )
+}

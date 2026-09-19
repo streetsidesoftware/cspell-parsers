@@ -9,7 +9,6 @@ const COMMENT_BLOCK_TAG: ParsedTags = { ...COMMENT_TAG, 'comment.block': true };
 const COMMENT_BLOCK_DOC_TAG: ParsedTags = { ...COMMENT_BLOCK_TAG, 'comment.block.doc': true };
 
 const STRING_TAG: ParsedTags = { string: true };
-const STRING_SINGLE_TAG: ParsedTags = { ...STRING_TAG, 'string.singleQuote': true };
 const STRING_DOUBLE_TAG: ParsedTags = { ...STRING_TAG, 'string.doubleQuote': true };
 const STRING_RAW_TAG: ParsedTags = { ...STRING_TAG, 'string.raw': true };
 
@@ -102,14 +101,19 @@ function isIdentChar(ch: string | undefined): boolean {
 }
 
 /**
- * Scans Rust source for comments and string/char literals, yielding one `ParsedText` per segment and
- * silently skipping everything else (identifiers, keywords, punctuation, numbers, lifetimes) - the same
- * "only emit what should be spell checked" approach as `@cspell/parser-example`, extended to also emit
+ * Scans Rust source for comments and string literals, yielding one `ParsedText` per segment and silently
+ * skipping everything else (identifiers, keywords, punctuation, numbers, lifetimes, char literals) - the
+ * same "only emit what should be spell checked" approach as `@cspell/parser-example`, extended to also emit
  * string contents.
  *
+ * **Char literals (`'a'`, `'\n'`, `'\x41'`, `'\u{1F600}'`, and their `b'...'` byte-char equivalents) are
+ * recognized and consumed, but never spell checked** - a single character or escape sequence has no prose
+ * worth checking, so `tryScanCharLiteral` only needs to find where one ends, not emit anything for it. See
+ * `README.md`'s "How it works" for why recognizing the shape still matters even though nothing is emitted.
+ *
  * Rust has no template-literal-style interpolation, so - unlike the JS/TS-family scanner in this repo - no
- * construct here ever splits into multiple fragments; each scan method emits exactly one `ParsedText`. It
- * does have two wrinkles no other language in this repo has needed yet, both covered in detail in
+ * construct here ever splits into multiple fragments; each emitting scan method emits exactly one
+ * `ParsedText`. It has two wrinkles no other language in this repo has needed yet, both covered in detail in
  * `CONTRIBUTING.md`:
  *
  * - Block comments nest (`/* /* nested *\/ still open *\/` is ONE comment) - `scanBlockComment` tracks a
@@ -161,11 +165,7 @@ class Scanner {
       }
 
       if (c === "'") {
-        const charLiteral = this.tryScanCharLiteral(this.i);
-        if (charLiteral) {
-          yield charLiteral;
-          continue;
-        }
+        if (this.tryScanCharLiteral(this.i)) continue;
         // Not a char literal after all - a lifetime/label (`'a`, `'static`, `'_`, ...) has no closing quote
         // to skip to. Treat the `'` itself as an ordinary skipped character; the identifier that follows it
         // is already skipped normally by the fallthrough below, with no special handling needed.
@@ -173,11 +173,7 @@ class Scanner {
         continue;
       }
       if (c === 'b' && n === "'" && !isIdentChar(content[this.i - 1])) {
-        const charLiteral = this.tryScanCharLiteral(this.i);
-        if (charLiteral) {
-          yield charLiteral;
-          continue;
-        }
+        if (this.tryScanCharLiteral(this.i)) continue;
         // There's no "byte lifetime" - a `b` immediately followed by `'` is unambiguously either a
         // byte-char-literal start or nothing. It wasn't one, so just skip the `b`; the next iteration
         // re-examines the `'` itself via the plain case just above.
@@ -276,11 +272,19 @@ class Scanner {
    * (byte-char literal) starting at `literalStart` - see CONTRIBUTING.md for the full write-up. A char
    * literal is always exactly one character, or one escape sequence, then a closing `'` - checked by
    * looking at what's immediately ahead, never by scanning forward speculatively (a lifetime has no closing
-   * quote at all, so scanning forward for one could run away across the rest of the file). Returns
-   * `undefined` (consuming nothing) when it isn't a char literal, so the caller treats the opening `'`/`b`
-   * as an ordinary character.
+   * quote at all, so scanning forward for one could run away across the rest of the file).
+   *
+   * Char literals are never spell checked (there's no prose in a single character or escape sequence worth
+   * checking), so on a match this only advances `this.i` past the literal - it doesn't build a `ParsedText`
+   * at all. Recognizing the shape still matters even though nothing is emitted: a char literal can contain a
+   * `"` (e.g. `'"'`) that, if not consumed as part of this literal, would otherwise be misread by
+   * `scanQuotedString` as the start of a real string, consuming real code after it while looking for a
+   * closing quote that isn't there.
+   *
+   * Returns `false` (consuming nothing) when it isn't a char literal, so the caller treats the opening
+   * `'`/`b` as an ordinary character.
    */
-  private tryScanCharLiteral(literalStart: number): ParsedText | undefined {
+  private tryScanCharLiteral(literalStart: number): boolean {
     const { content } = this;
     const quoteStart = content[literalStart] === 'b' ? literalStart + 1 : literalStart;
     const afterQuote = quoteStart + 1;
@@ -299,14 +303,10 @@ class Scanner {
       // A plain one-character literal (`'a'`, `'0'`, ...).
       closeAt = afterQuote + 1;
     }
-    if (closeAt === undefined) return undefined;
+    if (closeAt === undefined) return false;
 
-    const end = closeAt + 1;
-    const rawText = content.slice(literalStart, end);
-    const openLen = quoteStart - literalStart + 1;
-    const { text, map } = stripDelimited(rawText, openLen, 1, true);
-    this.i = end;
-    return { text, rawText, map, range: [literalStart, end], tags: STRING_SINGLE_TAG };
+    this.i = closeAt + 1;
+    return true;
   }
 
   /**
@@ -355,8 +355,8 @@ class Scanner {
 }
 
 /**
- * Extracts comments and string/char literals from Rust source. See the `Scanner` class for the actual
- * scanning logic.
+ * Extracts comments and string literals from Rust source (char literals are recognized but never spell
+ * checked). See the `Scanner` class for the actual scanning logic.
  */
 export function parse(content: string, filename: string): ParseResult {
   return { content, filename, parsedTexts: new Scanner(content).run() };

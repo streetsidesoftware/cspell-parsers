@@ -11,9 +11,13 @@ Like `@cspell/parser-go-strings-comments` and `@cspell/parser-csharp-strings-com
 single hand-written scanner (`Scanner`, a small stateful class holding a mutable cursor `i` over `content`).
 There's no AST and no tokenizer for the language as a whole - `Scanner.run` walks `content` character by
 character, recognizing only the handful of constructs that matter (comments and strings) and silently
-advancing `i` past everything else (identifiers, keywords, punctuation, numbers, lifetimes). Since cspell
-only ever checks what's inside `parsedTexts`, this is how the parser excludes syntax noise: by simply never
-emitting it, not by filtering it out afterwards - the same approach `@cspell/parser-example` uses.
+advancing `i` past everything else (identifiers, keywords, punctuation, numbers, lifetimes, char literals).
+Since cspell only ever checks what's inside `parsedTexts`, this is how the parser excludes syntax noise: by
+simply never emitting it, not by filtering it out afterwards - the same approach `@cspell/parser-example`
+uses. Lifetimes and char literals are both recognized well enough to be skipped correctly (see Wrinkle 2
+below for why that recognition matters even though neither is ever spell checked), but neither one ever
+produces a `ParsedText` - there's no tag to filter them by, because nothing is emitted for them in the first
+place.
 
 Rust has no template-literal-style interpolation, so unlike the JS/TS-family scanner in this repo, `run()`
 doesn't need a recursive `scanCode(end, stopAtUnmatchedBrace)` helper - it's a single flat loop, and every
@@ -84,36 +88,46 @@ would be wrong for a lifetime: there's nothing to find, so it would either run a
 file looking for a quote that never comes, or accidentally treat some unrelated, much-later `'` (starting
 another lifetime or char literal) as this one's close.
 
-`tryScanCharLiteral` instead makes a purely **local** decision - it only ever looks at the one or two
-characters immediately after the opening `'` (or `b'`), never scanning forward speculatively:
+**Char literals are never spell checked** - a single character or escape sequence has no prose worth
+checking - so `tryScanCharLiteral` doesn't build a `ParsedText` at all; it only needs to find where a char
+literal ends, so the scanner's cursor lands in the right place afterward. Recognizing the shape still matters
+even though nothing is emitted: a char literal can contain a `"` (e.g. `'"'`), which - if the opening `'`
+were just treated as an ordinary character the way a lifetime's is - would leave the `"` right after it to be
+misread by `scanQuotedString` as the start of a real string, consuming real code after it while looking for a
+closing quote that isn't there. `fixtures/lifetimes-vs-chars.rs`'s `quote_char_then_real_string` function
+exercises exactly this: a `'"'` char literal immediately followed by a genuine string, proving the string is
+still recognized correctly.
+
+`tryScanCharLiteral` makes a purely **local** decision - it only ever looks at the one or two characters
+immediately after the opening `'` (or `b'`), never scanning forward speculatively:
 
 1. If the character right after the quote is `\` (backslash): this can only be an escape-based char literal.
    Resolve the escape's exact length via `charLiteralEscapeLength` - `2` for a simple escape (`\n`, `\t`,
    `\r`, `\\`, `\'`, `\"`, `\0`), `4` for a byte escape (`\xHH`, exactly two hex digits), or the full
    `\u{H...H}` span (1-6 hex digits between braces) for a Unicode escape - then check whether the character
-   immediately after it is `'`. If it is, this is a char literal - emit it (`literalStart` through that
-   closing `'`, inclusive). If the escape isn't recognized, or isn't immediately followed by `'`, this wasn't
-   a valid escape-based char literal after all - return `undefined` (consuming nothing), and the caller
-   treats the opening `'` as an ordinary skipped character.
+   immediately after it is `'`. If it is, this is a char literal - consume it (advance `this.i` past
+   `literalStart` through that closing `'`, inclusive) and return `true`. If the escape isn't recognized, or
+   isn't immediately followed by `'`, this wasn't a valid escape-based char literal after all - return
+   `false` (consuming nothing), and the caller treats the opening `'` as an ordinary skipped character.
 
    This can't reuse the generic 2-character `skipEscape` (fine for a `"..."` string, which only needs to
    find _a_ boundary, not measure any one escape precisely): assuming every escape is exactly 2 characters
    long is wrong for `\xHH` (4 characters) and `\u{...}` (4-9 characters, depending on how many hex digits),
-   both of which are real, common Rust syntax - not edge cases worth leaving unrecognized. An earlier version
-   of this method made exactly that assumption, which silently failed to recognize `'\x41'` and
-   `'\u{1F600}'` as char literals at all (nothing was emitted for their content, and nothing downstream was
-   corrupted either, since the disambiguation's failure mode is always "fall through to ordinary code," never
-   "misread real code" - but the content still went unchecked, which `charLiteralEscapeLength` now fixes).
+   both of which are real, common Rust syntax - not edge cases worth leaving unrecognized. `charLiteralEscapeLength`
+   measures each form precisely so a multi-character escape's closing `'` is found correctly and the whole
+   literal is cleanly consumed, rather than only its first two characters (leaving the rest to leak through as
+   unrecognized code).
 
 2. Else (the character right after the quote isn't `\`): check whether the character **two** positions past
-   the opening `'` is `'`. If so, this is a plain one-character literal (`'a'`, `'0'`, ...) - emit it (exactly
-   3 characters: `'` + 1 char + `'`).
+   the opening `'` is `'`. If so, this is a plain one-character literal (`'a'`, `'0'`, ...) - consume it
+   (exactly 3 characters: `'` + 1 char + `'`) and return `true`.
 
 3. Otherwise, this `'` is not a char literal at all - it's a lifetime or label. **Do not** scan forward
-   looking for a closing quote; there isn't one. `run()` just advances `this.i` by 1 (treating the `'` as an
-   ordinary skipped character, exactly like any other punctuation this scanner doesn't recognize) and lets
-   the normal fallthrough skip the following identifier (`a`, `static`, `_`, ...) character by character, with
-   no special handling needed - lifetimes are never emitted as `ParsedText`s, by construction.
+   looking for a closing quote; there isn't one. Return `false`; `run()` then advances `this.i` by 1 (treating
+   the `'` as an ordinary skipped character, exactly like any other punctuation this scanner doesn't
+   recognize) and lets the normal fallthrough skip the following identifier (`a`, `static`, `_`, ...)
+   character by character, with no special handling needed - lifetimes are never emitted as `ParsedText`s, by
+   construction (and neither are char literals, by design).
 
 A byte-char literal (`b'x'`, `b'\n'`) runs through the exact same three-step algorithm, just starting one
 character later: `tryScanCharLiteral`'s `literalStart` parameter is the position of the `b` (not the `'`),
@@ -123,9 +137,10 @@ if it's nothing, `run()` just skips the `b` by itself and lets the next loop ite
 fresh via the plain (non-byte) case, which then applies the same three-step algorithm on its own.
 
 `fixtures/lifetimes-vs-chars.rs` exercises both directions together - real char/byte-char literals
-(`'a'`, `'\n'`, `'\''`, `b'x'`, `b'\n'`) alongside real lifetime usages (`Wrapper<'a>`, `&'a str`,
-`fn longest<'a>`, `&'static str`, `&'_ str`) - specifically so a regression in either direction (a lifetime
-mis-scanned as a runaway char literal, or a real char literal left unrecognized) shows up as a test failure.
+(`'a'`, `'\n'`, `'\''`, `'\x41'`, `'\u{1F600}'`, `b'x'`, `b'\n'`, `b'\x41'`) alongside real lifetime usages
+(`Wrapper<'a>`, `&'a str`, `fn longest<'a>`, `&'static str`, `&'_ str`) - specifically so a regression in
+either direction (a lifetime mis-scanned as a runaway char literal, or a real char literal left unrecognized
+and its closing `"`-adjacent content leaking into a later string) shows up as a test failure.
 
 ## Doc comments
 
