@@ -357,6 +357,21 @@ importers:
         specifier: workspace:*
         version: link:..
 
+  packages/parser-ruby-strings-comments:
+    devDependencies:
+      '@cspell/cspell-types':
+        specifier: 'catalog:'
+        version: 10.3.3
+      '@internal/utils':
+        specifier: workspace:*
+        version: link:../internal-utils
+
+  packages/parser-ruby-strings-comments/samples:
+    devDependencies:
+      '@cspell/parser-ruby-strings-comments':
+        specifier: workspace:*
+        version: link:..
+
   packages/parser-rust-strings-comments:
     devDependencies:
       '@cspell/cspell-types':
