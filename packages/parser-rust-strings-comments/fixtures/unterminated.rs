@@ -1,0 +1,1 @@
+/* never closed, even with a nested /* inner */ inside it

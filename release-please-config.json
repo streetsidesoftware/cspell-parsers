@@ -93,6 +93,9 @@
     "packages/parser-python-strings-comments": {
       "component": "@cspell/parser-python-strings-comments"
     },
+    "packages/parser-rust-strings-comments": {
+      "component": "@cspell/parser-rust-strings-comments"
+    },
     "packages/parser-strings-comments": {
       "component": "@cspell/parser-strings-comments"
     },
