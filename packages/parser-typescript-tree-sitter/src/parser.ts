@@ -31,6 +31,8 @@ const identifierKindByNodeType: Record<string, IdentifierKind> = {
 const referenceNodeTypes = new Set(['identifier', 'type_identifier']);
 
 type TSLanguage = typeof TypeScriptLanguages.typescript;
+// Cached per language and reused across parse() calls - constructing a TreeSitterParser and loading its
+// native grammar isn't free, and one instance is safe to parse with repeatedly.
 const tsParsers: Map<TSLanguage, TreeSitterParser> = new Map();
 
 function getTreeSitter(lang: TSLanguage): TreeSitterParser {
@@ -55,16 +57,11 @@ function isTsx(filename: string): boolean {
 }
 
 /**
- * Builds a `ParsedTags` object with every dot-separated ancestor of `tag` set to `true`, in addition to
- * `tag` itself - e.g. `hierarchicalTags('comment.block.doc')` is `{ comment: true, 'comment.block': true,
- * 'comment.block.doc': true }`. Emitting the whole chain (rather than requiring a consumer to implement
- * its own dotted-prefix matching) means a consumer can filter on any level - `tags.comment` or
- * `tags['comment.block']` - without needing prefix-matching logic of its own.
+ * Expands `tag` into itself plus every dot-separated ancestor prefix, e.g. `hierarchicalTags('comment.block.doc')`
+ * → `{ comment: true, 'comment.block': true, 'comment.block.doc': true }`, so a consumer can filter at any
+ * level without its own prefix matching.
  *
- * Only used below to build the fixed, module-level tag constants once at load time - never called per
- * emitted segment, since the set of possible tags here is small and known ahead of time. `emit()` runs
- * once per spell-checkable leaf, so allocating a new `ParsedTags` object (and re-splitting a string) on
- * every call would be wasted work; a shared constant is handed out instead.
+ * Called only at module load, to build the constants below - never per emitted segment.
  */
 function hierarchicalTags(tag: string): ParsedTags {
   const segments = tag.split('.');
@@ -82,9 +79,7 @@ const STRING_TEMPLATE_LITERAL_TAG = hierarchicalTags('string.templateLiteral');
 
 /**
  * A module specifier string gets both the usual `string`/`string.singleQuote`/`string.doubleQuote`
- * hierarchy - with `.module` appended, so a consumer filtering on plain `string` still doesn't
- * separately have to know about `module.specifier.literal` - and `module.specifier.literal`, which
- * identifies it as a module specifier regardless of its quote style.
+ * hierarchy (with `.module` appended) and the quote-style-independent `module.specifier.literal`.
  */
 const MODULE_SPECIFIER_LITERAL_TAG = hierarchicalTags('module.specifier.literal');
 const STRING_MODULE_TAG = { ...hierarchicalTags('string.module'), ...MODULE_SPECIFIER_LITERAL_TAG };
@@ -115,9 +110,7 @@ function isDynamicImportCall(node: SyntaxNode): boolean {
 
 /**
  * True when `node` is a `call_expression` whose callee is exactly the identifier `require` - a heuristic,
- * same spirit as `isBareModuleSpecifier`: there's no grammar-level way to know `require` really is Node's
- * module loader rather than some unrelated same-named local function, but treating it as one is right far
- * more often than not.
+ * since the grammar can't distinguish Node's module loader from an unrelated same-named local function.
  */
 function isRequireCall(node: SyntaxNode): boolean {
   if (node.type !== 'call_expression') return false;
@@ -273,15 +266,11 @@ function isExternalObject(node: SyntaxNode, imports: ImportBindings, bindingScop
 }
 
 /**
- * A local declaration (parameter, `const`/`let`/`var`, function, class) can
- * reuse the exact name of an import binding, in which case it shadows that
- * import for the rest of its enclosing function/block: this is a real,
- * locally-authored binding and should be checked like any other, and
- * property access through it is no longer "external". This is a lexical
- * scope chain of just those shadowed names, layered on top of the
- * whole-file `ImportBindings` computed once up front. It does not implement
- * full scoping (no hoisting, no destructuring patterns) - just enough to
- * stop a same-named local from being treated as the import it shadows.
+ * Names that a local declaration (parameter, `const`/`let`/`var`, function, class) shadows an
+ * import with, layered on top of the whole-file `ImportBindings`: a shadowed name is checked like any
+ * other local binding, and property access through it is no longer "external". Not full lexical scoping
+ * - no hoisting, no destructuring patterns - just enough to stop a same-named local from being treated
+ * as the import it shadows.
  */
 interface BindingScope {
   readonly shadowed: ReadonlySet<string>;
@@ -383,10 +372,10 @@ function makeComment(node: SyntaxNode): ParsedText {
 }
 
 /**
- * A `string` node's own children already split its content into `string_fragment` (literal text) and
- * `escape_sequence` (e.g. `\n`, `\u00e9`) nodes - `text` decodes every escape via `decodeStringParts`
- * (so a spell checker sees `café`, not `caf` + a stray `u00e9` token) and strips the surrounding quotes
- * into `rawText`/`map`, the same way `emitComment` strips a comment's delimiters.
+ * A `string` node's children already split its content into `string_fragment` (literal text) and
+ * `escape_sequence` (e.g. `\n`, `\u00e9`) nodes - `decodeStringParts` decodes every escape (so a
+ * spell checker sees `café`, not `caf` + a stray `u00e9` token) and the surrounding quotes are split
+ * into `rawText`/`map`, as `makeComment` does for a comment's delimiters.
  */
 function makeString(node: SyntaxNode, isModuleSpecifier: boolean): ParsedText {
   const rawText = node.text;
@@ -417,11 +406,9 @@ function childrenToStringParts(children: readonly SyntaxNode[]): StringPart[] {
 }
 
 /**
- * Walks the AST, emitting a ParsedText for each spell-checkable leaf
- * (identifiers, string/template contents, comments). `imports` drives
- * excluding names/properties that come from outside this file rather than
- * being authored here, and `bindingScope` overrides that when a local
- * declaration shadows an import (see `BindingScope`).
+ * Walks the AST, yielding a `ParsedText` per spell-checkable leaf (identifiers, string/template
+ * contents, comments). `imports` excludes names/properties from outside this file; `bindingScope`
+ * overrides that where a local declaration shadows an import (see `BindingScope`).
  */
 function* walk(
   node: SyntaxNode,
@@ -541,7 +528,8 @@ export function parse(content: string, filename: string): ParseResult {
   const tree = (tsxMode ? getTsxParser() : getTsParser()).parse(content);
   const imports = collectImportBindings(tree.rootNode);
 
-  // Make it greedy for now so that the parse tree gets released.
+  // Collect eagerly so nothing keeps `tree` - and the native parse-tree memory behind it - alive
+  // after `parse()` returns.
   const parsedTexts = [...walk(tree.rootNode, undefined, imports)];
 
   return { content, filename, parsedTexts };
@@ -567,8 +555,7 @@ export interface CustomizeParserOptions {
 }
 
 /**
- * Create a parser for TypeScript, TSX, JavaScript, and JSX files. You can set the name of the parser and
- * filter on the tags if desired.
+ * Create a parser for TypeScript, TSX, JavaScript, and JSX files.
  *
  * The name is used to select the parser via the
  * [cspell `parser`](https://cspell.org/docs/api/cspell-types/interfaces/CSpellSettings#parser) setting.
