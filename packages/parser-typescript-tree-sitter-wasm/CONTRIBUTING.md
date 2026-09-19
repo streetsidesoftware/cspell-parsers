@@ -5,6 +5,16 @@ someone using the plugin; this file is for someone changing it. See the repo roo
 general package shape (`parser.ts`/`plugin.ts`/`index.ts`/`recommended.ts`, `fixtures/`, `samples/`) — this
 file only covers what's specific to this package's parsing logic.
 
+## WASM initialization
+
+`@vscode/tree-sitter-wasm`'s `Parser.init()`/`Language.load()` are async, but cspell's `Parser` contract
+requires `parse()` to stay synchronous - so this module does its one-time init via top-level await; a
+consumer only ever reaches it through a (necessarily async) dynamic `import()`, so both languages are ready
+by the time that resolves. `resolveWasmFile()` uses `createRequire` to locate the bundled `.wasm` files,
+since they're not resolvable through a static import. Also unlike the native binding: every `SyntaxNode`
+accessor here mints a fresh wrapper object, so node-identity comparisons throughout this file use `.equals()`
+rather than `===`.
+
 ## Shape of the parser
 
 `parse(content, filename)` parses `content` with [tree-sitter](https://tree-sitter.github.io/tree-sitter/)
@@ -19,23 +29,17 @@ then makes a single pass over the whole AST (`walk`), emitting one `ParsedText` 
 
 Everything else - keywords, punctuation, numeric literals, and any node type not covered above - contributes
 nothing to the output. Since cspell only ever checks what's inside `parsedTexts`, this is how the parser
-excludes syntax noise: by simply never emitting it, not by filtering it out afterwards.
+excludes syntax noise: by never emitting it, not by filtering it out afterwards.
 
-`walk` takes three things down through the recursion, alongside the current AST node:
+`walk` is a generator, taking two things down through the recursion alongside the current AST node:
 
 - `bindingScope: BindingScope | undefined` - the shadowing chain (see below).
 - `imports: ImportBindings` - constant for the whole parse.
-- `out: ParsedText[]` - the accumulator.
 
 Most node types fall through to the generic handling at the bottom of `walk` (recurse into
 `namedChildren`); a `switch` at the top special-cases node types that need different treatment: comments,
 strings, template literals, JSX text, `statement_block` (for shadowing), and everything
 import/export/member-access related.
-
-> This parser used to also emit a TextMate-style `scope: ScopeChain` on every segment, built from a set of
-> node-type-to-scope-name lookup tables threaded through `walk` alongside `bindingScope`. It was removed
-> since cspell's spell checker only reads `tags`, not `scope` - see
-> [`docs/adding-back-scope.md`](docs/adding-back-scope.md) if it's ever needed again.
 
 ### Declaration names
 
@@ -61,10 +65,9 @@ prefix-matching logic just to ask "is this any kind of comment?"
 
 The set of possible tags is fixed and known ahead of time, so `hierarchicalTags` is only ever called at
 module load time, to build module-level constants (`STRING_SINGLE_QUOTE_TAG`, `COMMENT_BLOCK_DOC_TAG`,
-`identifierTagByKind.property`, ...) - never per emitted segment. `emit()` runs once per spell-checkable
-leaf in the file, so `quoteTag`/`commentTag` return one of a handful of shared constants rather than
-allocating a fresh object every call, and `identifierTag` was replaced entirely by `identifierTagByKind`, a
-`Record<IdentifierKind, ParsedTags>` indexed directly.
+`identifierTagByKind.property`, ...) - never per emitted segment. `quoteTag`/`commentTag` return one of
+those shared constants rather than allocating a fresh object per leaf, and `identifierTagByKind` (a
+`Record<IdentifierKind, ParsedTags>`) is indexed directly rather than built per identifier.
 
 - Strings (`quoteTag`): `string.singleQuote`, `string.doubleQuote`, or bare `string` for anything else.
   Template literal fragments are tagged `string.templateLiteral` directly at their emit site.
@@ -137,8 +140,8 @@ Two places push a new `BindingScope` frame:
 
 `isShadowed()` walks the chain outward; both the external-name check and `isExternalObject` consult it before
 deciding something is external. This is intentionally not full lexical scoping: no hoisting, and destructured
-binding patterns (`function f({ a, b })`) are simply not detected as shadowing names (they still parse
-correctly, they just won't shadow an import of the same name).
+binding patterns (`function f({ a, b })`) aren't detected as shadowing names (they still parse correctly,
+they just won't shadow an import of the same name).
 
 ## Testing
 

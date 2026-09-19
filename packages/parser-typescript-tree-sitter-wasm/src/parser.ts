@@ -93,14 +93,11 @@ function isTsx(filename: string): boolean {
 /**
  * Builds a `ParsedTags` object with every dot-separated ancestor of `tag` set to `true`, in addition to
  * `tag` itself - e.g. `hierarchicalTags('comment.block.doc')` is `{ comment: true, 'comment.block': true,
- * 'comment.block.doc': true }`. Emitting the whole chain (rather than requiring a consumer to implement
- * its own dotted-prefix matching) means a consumer can filter on any level - `tags.comment` or
- * `tags['comment.block']` - without needing prefix-matching logic of its own.
+ * 'comment.block.doc': true }` - so a consumer can filter on any level (`tags.comment` or
+ * `tags['comment.block']`) without its own prefix-matching logic.
  *
- * Only used below to build the fixed, module-level tag constants once at load time - never called per
- * emitted segment, since the set of possible tags here is small and known ahead of time. `emit()` runs
- * once per spell-checkable leaf, so allocating a new `ParsedTags` object (and re-splitting a string) on
- * every call would be wasted work; a shared constant is handed out instead.
+ * Only called here, to build the module-level tag constants below once at load time - `walk` hands out
+ * these shared constants per leaf rather than rebuilding one on every call.
  */
 function hierarchicalTags(tag: string): ParsedTags {
   const segments = tag.split('.');
@@ -363,7 +360,7 @@ const functionLikeNodeTypes = new Set([
  * plain identifier parameter the identifier actually comes through as `pattern` - `name` is null. Falling
  * back to `pattern` is safe generally: for a destructured parameter, `pattern` resolves to an
  * `object_pattern`/`array_pattern` node rather than an identifier, so callers that only care about a
- * declared identifier name (guarded by `identifierKindByNodeType`) simply ignore it.
+ * declared identifier name (guarded by `identifierKindByNodeType`) ignore it.
  */
 function declarationNameNode(node: SyntaxNode): SyntaxNode | null {
   return node.childForFieldName('name') ?? node.childForFieldName('pattern');
