@@ -361,8 +361,8 @@ class Scanner {
 }
 
 /**
- * Extracts comments and string/character literals from C# source. See the `Scanner` class for the actual
- * scanning logic.
+ * cspell `Parser.parse` implementation for C#: returns the file's comments and string/character literals for
+ * spell checking, skipping everything else (identifiers, keywords, punctuation, numbers).
  */
 export function parse(content: string, filename: string): ParseResult {
   return { content, filename, parsedTexts: new Scanner(content).run() };
