@@ -21,11 +21,10 @@ Everything else - keywords, punctuation, numeric literals, and any node type not
 nothing to the output. Since cspell only ever checks what's inside `parsedTexts`, this is how the parser
 excludes syntax noise: by simply never emitting it, not by filtering it out afterwards.
 
-`walk` takes three things down through the recursion, alongside the current AST node:
+`walk` is a generator (`function*`/`yield`), not an accumulator - it takes the current AST node plus:
 
 - `bindingScope: BindingScope | undefined` - the shadowing chain (see below).
 - `imports: ImportBindings` - constant for the whole parse.
-- `out: ParsedText[]` - the accumulator.
 
 Most node types fall through to the generic handling at the bottom of `walk` (recurse into
 `namedChildren`); a `switch` at the top special-cases node types that need different treatment: comments,
@@ -53,18 +52,13 @@ as the key of the `ParsedTags` object, with `true` as its value (e.g. `'comment.
 category-name key holding a subtype string - this is what lets a consumer match a broad key like
 `comment.block` against a more specific tag like `comment.block.doc`.
 
-`hierarchicalTags(tag)` builds the whole ancestor chain for a dotted tag - e.g.
+`hierarchicalTags(tag)` expands a dotted tag into itself plus every ancestor prefix - e.g.
 `hierarchicalTags('comment.block.doc')` is `{ comment: true, 'comment.block': true, 'comment.block.doc':
-true }` - so every leaf's `tags` object carries all of its ancestors, not just the most specific segment.
-Emitting the whole chain means a consumer can filter on `tags.comment` directly, without needing its own
-prefix-matching logic just to ask "is this any kind of comment?"
+true }` - so a consumer can filter on `tags.comment` directly, without its own prefix-matching logic.
 
-The set of possible tags is fixed and known ahead of time, so `hierarchicalTags` is only ever called at
-module load time, to build module-level constants (`STRING_SINGLE_QUOTE_TAG`, `COMMENT_BLOCK_DOC_TAG`,
-`identifierTagByKind.property`, ...) - never per emitted segment. `emit()` runs once per spell-checkable
-leaf in the file, so `quoteTag`/`commentTag` return one of a handful of shared constants rather than
-allocating a fresh object every call, and `identifierTag` was replaced entirely by `identifierTagByKind`, a
-`Record<IdentifierKind, ParsedTags>` indexed directly.
+The set of possible tags is fixed and known ahead of time, so it's only ever called at module load to build
+module-level constants (`STRING_SINGLE_QUOTE_TAG`, `identifierTagByKind`, ...), never per emitted segment:
+`quoteTag`/`commentTag`/`identifierTagByKind[kind]` just return one of those shared constants.
 
 - Strings (`quoteTag`): `string.singleQuote`, `string.doubleQuote`, or bare `string` for anything else.
   Template literal fragments are tagged `string.templateLiteral` directly at their emit site.
