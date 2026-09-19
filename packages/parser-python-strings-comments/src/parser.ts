@@ -14,11 +14,9 @@ const STRING_RAW_FLAG: ParsedTags = { 'string.raw': true };
 const STRING_INTERPOLATED_FLAG: ParsedTags = { 'string.interpolated': true };
 
 /**
- * Composes a base quote-style tag (`STRING_SINGLE_TAG`/`STRING_DOUBLE_TAG`/`STRING_TRIPLE_TAG`) with the
- * `string.raw`/`string.interpolated` flags that apply to a given prefix - rather than declaring all twelve
- * possible combinations (3 quote styles x raw x interpolated) as their own named constants. `isRaw`/
- * `isInterpolated` are derived once per string literal (from its prefix), not per character, so this is no
- * more expensive than picking one of a dozen precomputed constants would be.
+ * Composes a base quote-style tag with the `string.raw`/`string.interpolated` flags for a given prefix,
+ * instead of declaring all twelve quote/raw/interpolated combinations as separate constants - `isRaw`/
+ * `isInterpolated` are known once per string literal, not per character, so this costs nothing extra.
  */
 function stringTags(base: ParsedTags, isRaw: boolean, isInterpolated: boolean): ParsedTags {
   if (!isRaw && !isInterpolated) return base;
@@ -130,11 +128,7 @@ function isClosingDelimiterAt(content: string, i: number, quote: string, delimLe
 
 /**
  * Scans Python source for comments and string literals, yielding one `ParsedText` per segment and silently
- * skipping everything else (identifiers, keywords, punctuation, numbers, operators) - the same "only emit
- * what should be spell checked" approach as `@cspell/parser-typescript-strings-comments`.
- *
- * Emits lazily via generators rather than collecting into an array, matching every other package in this
- * repo's `-strings-comments` family.
+ * skipping everything else (identifiers, keywords, punctuation, numbers, operators).
  */
 class Scanner {
   private i = 0;
@@ -207,12 +201,7 @@ class Scanner {
     return { text, rawText, map, range: [start, end], tags: COMMENT_LINE_TAG };
   }
 
-  /**
-   * A string literal starting at `this.i` (the first character of its prefix, or its opening quote if
-   * `prefixLen` is 0). Detects whether the delimiter is a triple quote (the next three characters at the
-   * quote position are all the same quote character) or a single one, then dispatches to the plain scan or
-   * the f-string fragment-splitting scan.
-   */
+  /** A string literal at `this.i`: the prefix's first character, or the opening quote when there's no prefix. */
   private *scanString(prefixLen: number, isRaw: boolean, isF: boolean): Generator<ParsedText> {
     const { content } = this;
     const start = this.i;
@@ -232,11 +221,9 @@ class Scanner {
   }
 
   /**
-   * A plain (non-`f`) string's body: scanned straight through to the closing delimiter (or EOF), tracking
-   * backslash escapes the same way for every prefix combination - see `skipEscape`'s doc comment for why a
-   * raw string still needs this. A non-triple string does not stop early at a literal newline (Python's real
-   * grammar would reject one, but this repo's convention - see every other `-strings-comments` package's
-   * `scanQuotedString`/equivalent - is to keep scanning to the matching quote or EOF regardless).
+   * A plain (non-`f`) string's body, scanned to the closing delimiter or EOF (see `skipEscape` for why raw
+   * strings still escape-skip). A non-triple string doesn't stop early at a literal newline - real Python
+   * would reject one, but this parser keeps scanning to the matching quote or EOF regardless.
    */
   private scanPlainStringBody(
     start: number,
@@ -268,11 +255,8 @@ class Scanner {
   }
 
   /**
-   * An `f`-prefixed string's body, split into fragments around `{...}` interpolation holes - mirroring
-   * `@cspell/parser-typescript-strings-comments`'s `scanTemplateLiteral`/`emitFragment`, except Python
-   * f-strings use bare `{`/`}` rather than `${`/`}`, and a doubled `{{`/`}}` is a literal brace rather than a
-   * hole (the same doubling convention `@cspell/parser-strings-comments`'s `scanCSharpInterpolatedString`
-   * uses for C#'s `$"..."`). Applies identically to single/double and triple-quoted f-strings.
+   * An `f`-prefixed string's body, split into fragments around `{...}` interpolation holes. Python f-strings
+   * use bare `{`/`}`; a doubled `{{`/`}}` is a literal brace, not a hole.
    */
   private *scanInterpolatedStringBody(
     start: number,
@@ -331,8 +315,9 @@ class Scanner {
 }
 
 /**
- * Extracts comments and string literals from Python source. See the `Scanner` class for the actual scanning
- * logic.
+ * Extracts comments and string literals from Python source into the `ParseResult` cspell uses to spell
+ * check just those parts of the file. Most consumers should register the exported {@link parser} (or a
+ * {@link createParser} customization) with cspell rather than calling this directly.
  */
 export function parse(content: string, filename: string): ParseResult {
   return { content, filename, parsedTexts: new Scanner(content).run() };
@@ -347,13 +332,9 @@ export const supportedFileTypes: string[] = ['python'];
 
 /** Options for {@link createParser}: the parser's name, and which tagged segments to keep. */
 export interface CustomizeParserOptions {
-  /**
-   * Set the name of the parser.
-   */
+  /** Overrides the parser's registered name. */
   name?: string;
-  /**
-   * Define which tagged segments to keep. Omit to keep everything.
-   */
+  /** Tagged segments to keep; omit to keep everything. */
   tags?: TagFilterOptions;
 }
 
@@ -363,14 +344,11 @@ export interface CustomizeParserOptions {
  * The name is used to select the parser via the
  * [cspell `parser`](https://cspell.org/docs/api/cspell-types/interfaces/CSpellSettings#parser) setting.
  *
- * Usage: **`cspell.config.mts`**
  * ```ts
+ * // cspell.config.mts
  * import { createParser } from '@cspell/parser-python-strings-comments/parser';
  *
- * const parser = createParser({
- *   name: 'strings-only',
- *   tags: { '*': false, string: true },
- * });
+ * const parser = createParser({ name: 'strings-only', tags: { '*': false, string: true } });
  *
  * export default {
  *   plugins: [{ parsers: [parser] }],

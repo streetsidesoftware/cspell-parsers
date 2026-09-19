@@ -77,6 +77,11 @@ below for every tag this parser can emit.
 registering more than one customized copy of this parser, since cspell selects a parser by name and two
 parsers can't share one.
 
+An f-string's `{...}` interpolation holes are scanned like the rest of the file, so a string or comment
+nested inside one keeps its own normal tag rather than `string.interpolated` - filtering out
+`string.interpolated` only skips the surrounding literal text, not anything nested inside a hole. A doubled
+`{{`/`}}` is treated as a literal brace, not a hole.
+
 ## Tags
 
 | Tag                   | Meaning                                                                            |
@@ -89,38 +94,6 @@ parsers can't share one.
 | `string.tripleQuote`  | A `'''...'''` or `"""..."""` string literal                                        |
 | `string.raw`          | Any `r`-prefixed string (`r`, `rb`/`br`, `rf`/`fr`) - composes with the tags above |
 | `string.interpolated` | Any `f`-prefixed string (an f-string) - composes with the tags above               |
-
-## How it works
-
-- `parser.parse(content, filename)` returns a `ParseResult` containing one or more `ParsedText` entries.
-- Each `ParsedText.range` is the `[start, end]` offset of that segment in the original `content`, which is how
-  cspell maps spelling issues found in the parsed text back to the right place in the source file.
-- Every segment is tagged with a dot-separated tag, plus every ancestor of it (`string.singleQuote` also
-  carries `string`) - `customizePlugin` can filter which segments get spell checked using these tags, at any
-  level of specificity.
-- Python has no block-comment syntax at all - only `#` to end of line.
-- A string's prefix (`r`, `u`, `f`, `b`, or a 2-letter raw/f-string/bytes combination such as `rb`/`rf`, in
-  either letter order and any case) is optional and, when present, must sit directly against its opening
-  quote with no space. `u` and no prefix behave identically - it's a legacy Python-2-compatibility marker with
-  no effect today.
-- The delimiter is a triple quote (`'''`/`"""`) only when the three characters starting at the opening quote
-  are all the same quote character; otherwise it's a single quote (`'`/`"`). A triple-quoted string can
-  contain literal newlines and the other quote character, ending only at three matching quote characters in a
-  row; a single/double-quoted string does not stop early at a literal newline (real Python would reject one,
-  but this parser - like every sibling `-strings-comments` package - keeps scanning to the matching quote or
-  the end of the file regardless).
-- **A raw (`r`-prefixed) string still uses the same backslash-escape scanning as every other string form.**
-  Even though a raw string doesn't interpret `\n`/`\t`/etc. as escape sequences, a backslash still "protects"
-  whatever character follows it from ending the string - `r'\''` is invalid/unterminated for exactly this
-  reason, while `r'\\'` correctly contains one literal backslash. Only the _tag_ a raw string gets differs;
-  the scanning algorithm that finds its end doesn't.
-- An `f`-prefixed string (an f-string) is split into one `ParsedText` fragment per literal run of text, around
-  each `{...}` interpolation hole; the hole's own contents are recursively scanned the same way as the rest of
-  the file, so a string or comment nested inside one still gets picked up and tagged normally. A doubled
-  `{{`/`}}` is a literal brace, not a hole.
-- **A triple-quoted string is never treated differently based on whether it's a "docstring"** (the first
-  statement in a module/class/function body) - see [Known limitations](#known-limitations).
-- `plugin.parsers` is the list of parsers a cspell plugin module exposes; a plugin can expose more than one.
 
 ## Known limitations
 
@@ -138,10 +111,6 @@ Two consequences worth knowing about:
   it** (see `CONTRIBUTING.md`), so a prefix always adjacent to its quote is detected correctly; there's no
   attempt to resolve any ambiguity beyond that single check, since Python's grammar doesn't allow anything
   (not even whitespace) between a prefix and its quote.
-
-Use this package as a template: copy `src/parser.ts`, `src/plugin.ts`, `src/index.ts`, and `src/recommended.ts`
-into a new package under `packages/` and replace the parsing logic with your own. See the repo root
-`CONTRIBUTING.md` for the full steps.
 
 ## Requirements
 
