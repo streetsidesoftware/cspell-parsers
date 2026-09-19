@@ -13,9 +13,9 @@ function commentTag(text: string): ParsedTags {
 
 /**
  * Extracts C-style comments - `//` line comments and `/*`-delimited block comments - from
- * arbitrary source text, so only comment text (not code) gets spell checked. A single-pass scan,
- * skipping over quoted string contents so a comment marker inside a string literal isn't mistaken
- * for the start of a real comment.
+ * arbitrary source text, so only comment text (not code) gets spell checked. Quoted string
+ * contents are skipped, so a comment marker inside a string literal isn't mistaken for the
+ * start of a real comment.
  */
 export function parse(content: string, filename: string): ParseResult {
   const parsedTexts: ParsedText[] = [];
@@ -81,7 +81,8 @@ export interface CustomizeParserOptions {
 }
 
 /**
- * Creates a customized copy of {@link parser} - renamed, and/or filtered to only some tagged segments.
+ * Create a parser for C, C++, C#, Java, JavaScript, and TypeScript files. You can set the name of the
+ * parser and filter on the tags if desired.
  *
  * The name is used to select the parser via the
  * [cspell `parser`](https://cspell.org/docs/api/cspell-types/interfaces/CSpellSettings#parser) setting.
