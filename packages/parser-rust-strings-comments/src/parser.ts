@@ -275,7 +275,7 @@ class Scanner {
 
 /**
  * Extracts comments and string literals from Rust source (char literals are recognized but never spell
- * checked). See the `Scanner` class for the actual scanning logic.
+ * checked).
  */
 export function parse(content: string, filename: string): ParseResult {
   return { content, filename, parsedTexts: new Scanner(content).run() };
@@ -296,7 +296,7 @@ export interface CustomizeParserOptions {
 }
 
 /**
- * Create a renamed and/or tag-filtered copy of {@link parser}.
+ * Create a parser for Rust files. You can set the name of the parser and filter on the tags if desired.
  *
  * The name is used to select the parser via the
  * [cspell `parser`](https://cspell.org/docs/api/cspell-types/interfaces/CSpellSettings#parser) setting.

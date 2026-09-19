@@ -173,6 +173,15 @@ and byte-raw/C-raw tags are built by spreading their non-raw counterpart (`STRIN
 `STRING_BYTE_TAG`, not `STRING_TAG`), so filtering on `string.byte` (or `string.c`) alone matches both the
 plain and raw forms.
 
+### Why `customizePlugin`/`createParser` filter in the parser, not via cspell
+
+`customizePlugin` and `createParser` are thin wrappers around `@internal/utils`'s `customizeParser`, which
+wraps `parser.parse()` so excluded segments never appear in the returned `parsedTexts` at all - the filtering
+happens here, before cspell ever sees those segments, rather than relying on cspell's own tag-based `validate`
+filtering. That's what lets `customizePlugin` work with any cspell version, including one too old to filter
+`ParsedText.tags` itself. See `packages/internal-utils/src/customize.ts`'s `customizeParser`/`compileTagFilter`
+for the actual filtering logic.
+
 ## Testing
 
 - `parser.test.ts` reads fixtures out of `fixtures/` (via `readFixture`/`parseFixture` helpers) rather than

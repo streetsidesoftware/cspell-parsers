@@ -99,8 +99,8 @@ parsers can't share one.
 | `string.c`          | A `c"..."` C string literal (also carried by `string.c.raw`)                  |
 | `string.c.raw`      | A C raw string literal (`cr"..."`, `cr#"..."#`, ...)                          |
 
-Rust has no string interpolation, so no string ever splits into more than one `ParsedText` entry, and string
-tags describe a literal's _kind_ (byte/raw/C) rather than quote style, since Rust only ever uses `"`.
+Since Rust only ever uses `"` for strings, string tags describe a literal's _kind_ (byte/raw/C) rather than
+quote style.
 
 ## Known limitations
 
