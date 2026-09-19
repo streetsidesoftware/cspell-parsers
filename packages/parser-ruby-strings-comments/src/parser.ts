@@ -414,8 +414,9 @@ class Scanner {
    * Scans a heredoc's body, given its already-parsed {@link HeredocHeader}, and emits it as one or more
    * `string.heredoc`-tagged fragments (split around `#{...}` holes if `interpolated`, exactly like a
    * double-quoted string, or as a single literal fragment otherwise - see `scanDoubleQuotedString`). The
-   * closing marker is found by matching a whole line (`ID` alone, not immediately followed by another
-   * identifier character, with the line's own leading whitespace allowed before it) - the same
+   * closing marker is found by matching a whole line (`ID` alone, with only leading/trailing whitespace
+   * allowed around it - a body line that merely starts with the marker but continues with anything else,
+   * e.g. `SQL:`, is never mistaken for the terminator) - the same
    * "match a whole line" approach `@cspell/parser-strings-comments`'s PHP heredoc support uses for its own
    * `<<<ID ... ID` closing marker, just with Ruby's different opening syntax.
    *
@@ -428,7 +429,7 @@ class Scanner {
     const { content } = this;
     const { bodyStart, interpolated, markerId } = header;
 
-    const closeRe = new RegExp(`^[ \\t]*${escapeRegExp(markerId)}(?![A-Za-z0-9_])`, 'm');
+    const closeRe = new RegExp(`^[ \\t]*${escapeRegExp(markerId)}[ \\t]*$`, 'm');
     const rest = content.slice(bodyStart);
     const found = closeRe.exec(rest);
     const bodyEnd = found ? bodyStart + found.index : content.length;

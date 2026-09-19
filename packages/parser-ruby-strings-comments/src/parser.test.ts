@@ -124,6 +124,25 @@ describe('ruby-strings-comments parser', () => {
       const fragments = parsedTexts.slice(start, start + 2);
       expect(fragments.map((f) => f.text)).toEqual(['  Quoted double-quoted marker still interpolates: ', '.\n']);
     });
+
+    it('does not treat a body line that merely starts with the marker as the closing terminator', () => {
+      // Regression coverage: the closing-marker regex must be anchored to the end of the line (only
+      // trailing whitespace allowed after the marker) - without that anchor, a body line like "SQL:" would
+      // still match "SQL" followed by a non-identifier character and wrongly close the heredoc early,
+      // even though "SQL" isn't alone on that line.
+      const content =
+        'sql = <<~SQL\n' +
+        '  SQL: this line starts with the marker but keeps going.\n' +
+        '  Still inside the heredoc.\n' +
+        'SQL\n' +
+        'puts sql\n';
+      const parsed = [...parse(content, 'file.rb').parsedTexts];
+      const body = byText(
+        parsed,
+        '  SQL: this line starts with the marker but keeps going.\n  Still inside the heredoc.\n',
+      );
+      expect(body?.tags).toEqual({ string: true, 'string.heredoc': true });
+    });
   });
 
   describe('regex-division.rb', () => {
