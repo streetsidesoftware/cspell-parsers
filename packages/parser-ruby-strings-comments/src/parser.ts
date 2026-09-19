@@ -43,14 +43,10 @@ function stripHashComment(rawText: string): { text: string; map: SourceMap } {
 }
 
 /**
- * Advances past a backslash escape (`\x` as one unit) without stepping beyond `content.length` - a trailing
- * backslash with nothing after it (an unterminated literal ending mid-escape) has nothing left to escape, so
- * this just lands on the end of `content` instead of one past it. Every backslash-skip in this file goes
- * through here, and treating every `\x` as a generic 2-char skip-unit (rather than only the handful Ruby
- * actually interprets specially) is harmless for boundary-finding, the same reasoning `skipEscape` relies on
- * elsewhere in this codebase - it also naturally does the right thing for `\#{`, which Ruby treats as an
- * escaped `#` that can't open interpolation: consuming the backslash and `#` as one unit means the `{`
- * right after is never seen as the second half of a `#{` hole opener.
+ * Advances past a backslash escape (`\x` as one unit), clamped to `content.length` for a trailing backslash
+ * at EOF. Treating every `\x` as a generic 2-char skip-unit - not just the handful Ruby interprets specially
+ * - is harmless for boundary-finding, and also correctly handles `\#{` (an escaped `#` that can't open
+ * interpolation): consuming it as one unit keeps the following `{` from being read as `#{`'s second half.
  */
 function skipEscape(content: string, i: number): number {
   return Math.min(i + 2, content.length);
@@ -69,32 +65,26 @@ function escapeRegExp(value: string): string {
 }
 
 /**
- * `false` for a character that can never legitimately precede a real string literal's opening quote in valid
- * Ruby syntax, directly and unambiguously (no space, no operator): an identifier character (`foo"bar"` isn't
- * valid) or another quote (`"a"'b'` isn't either). Seeing one of these right before a `'`/`"` is a strong
- * signal the quote is actually inside a regex character class this scanner doesn't otherwise recognize (e.g.
- * both quotes in `` /[\w"']/ ``), not the start of a real string. This can't catch every such case - a class
- * that opens with a quote right after `[` (`` /['"]/ ``) looks exactly like a real string starting right
- * after an array literal's bracket, which *is* valid, so that one's still ambiguous either way - see
+ * `false` for a character that can never legitimately precede a real string's opening quote in valid Ruby
+ * (an identifier character - `foo"bar"` isn't valid - or another quote - `"a"'b'` isn't either). Seeing one
+ * right before a `'`/`"` signals the quote is actually inside an unrecognized regex character class (e.g.
+ * both quotes in `` /[\w"']/ ``), not a real string. Doesn't catch every case - a class opening with a quote
+ * right after `[` (`` /['"]/ ``) is genuinely ambiguous with a real string after an array bracket - see
  * `README.md`'s "Known limitations".
  *
- * `scanCode` only calls this once it's seen a bare `/` since the last reset point (`sawSlash`), rather than
- * on every quote in the file - regex literals are rare, so this skips the regex test entirely for the
- * overwhelming majority of quotes, which are nowhere near a `/`.
+ * Only called once a bare `/` has been seen since the last reset point (`sawSlash`) - regex literals are
+ * rare, so this skips the check entirely for the overwhelming majority of quotes.
  */
 function canPrecedeString(prev: string | undefined): boolean {
   return prev === undefined || !/[A-Za-z0-9_'"]/.test(prev);
 }
 
 /**
- * Keywords and common method-call names after which a `/` or `<<` begins a brand-new expression (a regex
- * literal, or a heredoc), never continues a previous value as a binary operator (division, or left-shift/
- * append). Shared between the regex-vs-division and heredoc-vs-left-shift ambiguities below, since both boil
- * down to the exact same question: "did the token just before this one already produce a value?" A handful
- * of very common method names that are frequently called without parens directly on a regex or heredoc
- * argument (`puts`, `print`, `raise`, and Ruby's own regex-oriented `String`/`Enumerable` methods) are
- * included too - this doesn't need to be exhaustive (see `isOperandContext`'s own doc comment), just useful
- * for the common cases.
+ * Keywords and common method names after which `/`, `<<`, or `%` begins a brand-new literal (regex, heredoc,
+ * or percent-literal), never continues a value as a binary operator - shared across all three ambiguities in
+ * {@link isOperandContext} below, since each boils down to "did the token before this one produce a value?"
+ * Not exhaustive by design - just Ruby's own control-flow keywords plus a handful of methods commonly called
+ * without parens directly on a literal argument (`puts`, `raise`, `gsub`, ...).
  */
 const EXPRESSION_START_KEYWORDS = new Set([
   'if',
@@ -126,33 +116,43 @@ const EXPRESSION_START_KEYWORDS = new Set([
 ]);
 
 /**
- * `true` if the nearest significant character before `content[index]` already produced a value - an
- * identifier/number that isn't one of {@link EXPRESSION_START_KEYWORDS}, a `)`, a `]`, or a `}` - meaning the
- * operator starting at `index` (a `/` or a `<<`) is acting on that value (division, or left-shift/append) and
- * not opening a brand-new expression (a regex literal, or a heredoc). This is the same "what token precedes
- * it" context a real Ruby parser's lexer uses to resolve both ambiguities - `/pattern/` vs. `a / b`, and
- * `<<~ID` vs. `arr << x` - since both share the identical shape: a token that can either open a literal or
- * act as a binary operator, decided entirely by what came before it, never by what follows.
+ * `true` if the significant character before `content[index]` already produced a value - a `)`/`]`/`}`, a
+ * closing quote, or an identifier/number not in {@link EXPRESSION_START_KEYWORDS} - meaning the token at
+ * `index` (`/`, `<<`, or `%`) is a binary operator (division, left-shift/append, or modulo) continuing that
+ * value, not opening a new literal (regex, heredoc, or percent-literal). Same "what precedes it" resolution a
+ * real Ruby lexer uses for these ambiguities - all three share the shape of a token that's either a binary
+ * operator or a literal opener, decided only by what came before it.
  *
- * It isn't exhaustive - a method call not in {@link EXPRESSION_START_KEYWORDS} followed directly by a
- * bare regex or heredoc argument (no parens) won't be recognized as introducing one - but it's deliberately
- * biased toward treating an ambiguous `}` as a value (safe direction): getting it wrong there just means a
- * real regex/heredoc isn't recognized (falling back to the character-level `canPrecedeString` mitigation for
- * regexes, or simply leaving `<<`/`<<~`/`<<-` as ordinary code for heredocs) rather than misreading real
- * division/left-shift as the start of a runaway literal that swallows whatever real code follows it. See
- * `README.md`'s "Known limitations".
+ * Not exhaustive - a bare (no-parens) literal argument to a method call outside that keyword set won't be
+ * recognized - and deliberately biased toward treating an ambiguous `}` as a value: getting it wrong there
+ * only misses a literal (safe), vs. misreading real division/append/modulo as a literal opener that swallows
+ * real code after it (unsafe). See `README.md`'s "Known limitations".
  */
 function isOperandContext(content: string, index: number): boolean {
   let j = index - 1;
   while (j >= 0 && (content[j] === ' ' || content[j] === '\t')) j--;
   if (j < 0) return false;
   const ch = content[j];
-  if (ch === ')' || ch === ']' || ch === '}') return true;
+  if (ch === ')' || ch === ']' || ch === '}' || ch === "'" || ch === '"') return true;
   if (!/[A-Za-z0-9_]/.test(ch)) return false;
   let wordStart = j;
   while (wordStart > 0 && /[A-Za-z0-9_]/.test(content[wordStart - 1])) wordStart--;
   return !EXPRESSION_START_KEYWORDS.has(content.slice(wordStart, j + 1));
 }
+
+/** Optional type letter after `%` (`%w`, `%i`, `%q`, `%Q`, `%r`, `%s`, `%x`) - bare `%(...)` has none. */
+const PERCENT_LITERAL_TYPES = new Set(['w', 'W', 'i', 'I', 'q', 'Q', 'r', 's', 'x']);
+
+/**
+ * Delimiter characters this parser recognizes as opening a percent-literal. Ruby actually allows almost any
+ * non-alphanumeric character here, but this stays deliberately narrow - the common bracket pairs, plus a
+ * handful of same-character delimiters seen in real code (`%r{...}` dominates for regex; `%|...|`, `%!...!`
+ * show up occasionally) - rather than "anything non-alphanumeric." A wider set raises the odds of misreading
+ * an unusual modulo expression as a literal opener, which (per {@link isOperandContext}'s doc comment) is the
+ * failure direction that swallows real code; missing an exotic percent-literal delimiter is the safe one.
+ */
+const PERCENT_LITERAL_OPEN_DELIMS = new Set(['(', '[', '{', '<', '|', '!', '#', '/', '~', '^']);
+const PERCENT_LITERAL_CLOSE_FOR_OPEN: Record<string, string> = { '(': ')', '[': ']', '{': '}', '<': '>' };
 
 /** The header info a heredoc opener (`<<~ID`, `<<-ID`, `<<ID`, and their quoted forms) resolves to. */
 interface HeredocHeader {
@@ -165,14 +165,14 @@ interface HeredocHeader {
 }
 
 /**
- * Scans Ruby source for comments and string/heredoc literals, yielding one `ParsedText` per segment and
- * silently skipping everything else (identifiers, keywords, punctuation, numbers, symbols, percent-literals,
- * regex literal bodies) - the same "only emit what should be spell checked" approach as
- * `@cspell/parser-example`, extended to also emit string/heredoc contents.
+ * Scans Ruby source for comments and string/heredoc literals, yielding one `ParsedText` per segment. Regex
+ * literals and percent-literals are recognized and consumed as opaque units but never emitted; everything
+ * else (identifiers, keywords, punctuation, numbers, symbols) is silently skipped - the same "only emit what
+ * should be spell checked" approach as `@cspell/parser-example`, extended to also emit string/heredoc
+ * contents.
  *
  * Emits lazily via generators rather than collecting into an array - nothing here holds onto a tree or other
- * resource a consumer could leak by not fully draining the result, so there's no reason to force eager
- * collection.
+ * resource a consumer could leak by not fully draining the result.
  */
 class Scanner {
   private i = 0;
@@ -191,10 +191,9 @@ class Scanner {
   private *scanCode(end: number, stopAtUnmatchedBrace: boolean): Generator<ParsedText> {
     const { content } = this;
     let braceDepth = 0;
-    // Sticky, not toggled: sawSlash just means "a bare `/` appeared somewhere since the last reset point
-    // (start of scan, a newline, or a recognized #, =begin/=end, heredoc, or quoted-string token)". See
-    // canPrecedeString's doc comment for why this gates it at all, and the TypeScript-family parser this was
-    // ported from for why it's sticky rather than toggled per `/`.
+    // Sticky, not toggled: true once a bare `/` has appeared since the last reset point (start of scan, a
+    // newline, or a recognized token) - see canPrecedeString's doc comment for why, and the TypeScript-family
+    // parser this was ported from for why sticky rather than per-`/` toggling.
     let sawSlash = false;
 
     while (this.i < end) {
@@ -240,6 +239,11 @@ class Scanner {
       }
 
       if (c === '/' && !isOperandContext(content, this.i) && this.tryScanRegexLiteral()) {
+        sawSlash = false;
+        continue;
+      }
+
+      if (c === '%' && !isOperandContext(content, this.i) && this.tryScanPercentLiteral()) {
         sawSlash = false;
         continue;
       }
@@ -508,6 +512,59 @@ class Scanner {
       i++;
     }
     return false;
+  }
+
+  /**
+   * Attempts to scan a percent-literal (`%w[]`, `%i[]`, `%q()`, `%Q{}`, `%r{}`, `%s()`, `%x()`, or a
+   * type-letter-less `%(...)`) starting at `this.i`, and on success skips it as one opaque unit - like a
+   * regex literal, never spell checked (see `README.md`'s "Known limitations"), so no `ParsedText` is
+   * emitted for it. This closes a real correctness gap: an unrecognized percent-literal's embedded quote
+   * (`%w[don't stop]`) would otherwise reach the quote dispatch below and kick off a runaway string scan
+   * that swallows real code after it - see `CONTRIBUTING.md`.
+   *
+   * A bracket-style delimiter (`(`, `[`, `{`, `<`) nests - `%w(foo (bar) baz)` is one literal - so `depth`
+   * tracks further opens, closing only once it returns to 0; a same-character delimiter (`%|...|`) can't
+   * nest, so any occurrence of it closes the literal immediately.
+   *
+   * Returns `false` (consuming nothing) if what follows `%` isn't one of {@link PERCENT_LITERAL_OPEN_DELIMS},
+   * so the caller falls back to treating `%` as ordinary code (division/modulo, most commonly).
+   */
+  private tryScanPercentLiteral(): boolean {
+    const { content } = this;
+    const start = this.i;
+    let j = start + 1;
+    const typeLetter = content[j];
+    const isRegex = typeLetter === 'r';
+    if (typeLetter !== undefined && PERCENT_LITERAL_TYPES.has(typeLetter)) j++;
+
+    const open = content[j];
+    if (!open || !PERCENT_LITERAL_OPEN_DELIMS.has(open)) return false;
+    const close = PERCENT_LITERAL_CLOSE_FOR_OPEN[open] ?? open;
+    const nests = close !== open;
+    j++;
+
+    let depth = 1;
+    while (j < content.length && depth > 0) {
+      const ch = content[j];
+      if (ch === '\\') {
+        j = skipEscape(content, j);
+        continue;
+      }
+      if (nests && ch === open) {
+        depth++;
+      } else if (ch === close) {
+        depth--;
+      }
+      j++;
+    }
+    // depth > 0 here means the loop ran off the end of the file unterminated - j is already content.length,
+    // so this extends the literal to EOF rather than leaving the opener behind with its embedded quote(s)
+    // still live to misread, the same reasoning an unterminated heredoc is extended to EOF for.
+    if (isRegex && depth === 0) {
+      while (j < content.length && /[A-Za-z]/.test(content[j])) j++;
+    }
+    this.i = j;
+    return true;
   }
 }
 

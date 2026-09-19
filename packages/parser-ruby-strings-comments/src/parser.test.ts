@@ -181,6 +181,31 @@ describe('ruby-strings-comments parser', () => {
     });
   });
 
+  describe('percent-literals.rb', () => {
+    // tryScanPercentLiteral (gating: isOperandContext) recognizes %w[]/%i[]/%q()/%Q{}/%r{} and skips each as
+    // one opaque unit, exactly like a regex literal - never emitting anything for it. This exists to close a
+    // real correctness gap, not just to cover more syntax: without it, an embedded quote inside any of these
+    // (e.g. %w[don't stop]) reaches the ordinary quote dispatch and kicks off a runaway string scan that
+    // swallows real code after it - see CONTRIBUTING.md.
+    const parsedTexts = parseFixture('percent-literals.rb');
+
+    it('emits only the comment and the one real string - nothing from inside any percent-literal', () => {
+      const nonComments = parsedTexts.filter((p) => !p.tags?.comment);
+      expect(nonComments).toHaveLength(1);
+      expect(nonComments[0]?.text).toBe('still a real string after every percent-literal above');
+    });
+
+    it('does not swallow the real string that follows a %w[] containing an apostrophe', () => {
+      expect(byText(parsedTexts, "don't stop believing")).toBeUndefined();
+    });
+
+    it('tracks nesting depth so a bracket-delimited literal is not closed early by a nested pair', () => {
+      // %w(foo (bar) baz) is ONE literal - without depth tracking, the first ")" (right after "bar") would
+      // close it early, leaving " baz)" behind as unparsed code.
+      expect(parsedTexts.some((p) => p.text.includes('baz'))).toBe(false);
+    });
+  });
+
   describe('unterminated.rb', () => {
     it('extends an unterminated heredoc body to the end of the file', () => {
       const content = readFixture('unterminated.rb');
@@ -190,6 +215,12 @@ describe('ruby-strings-comments parser', () => {
       expect(body?.text).toBe('  This heredoc never finds its closing marker before the file ends.\n');
       expect(body?.tags).toEqual({ string: true, 'string.heredoc': true });
       expect(body?.range[1]).toBe(content.length);
+    });
+
+    it('extends an unterminated percent-literal to the end of the file without crashing', () => {
+      const content = "words = %w[foo bar\nreal = 'unreachable, but must not throw'";
+      const parsed = [...parse(content, 'file.rb').parsedTexts];
+      expect(parsed).toHaveLength(0);
     });
   });
 
@@ -218,6 +249,18 @@ describe('ruby-strings-comments parser', () => {
       const content = 'puts <<~MSG\n  hello there\nMSG\n';
       const parsed = [...parse(content, 'file.rb').parsedTexts];
       expect(byText(parsed, '  hello there\n')?.tags).toEqual({ string: true, 'string.heredoc': true });
+    });
+
+    it('does not treat "<<" right after a string literal\'s closing quote as a heredoc opener (append)', () => {
+      // Regression coverage: isOperandContext must recognize a closing quote as a value, the same as
+      // ")"/"]"/"}" - without that, "a"<<"b" (ordinary string append, no spaces) reads as a <<"b" heredoc
+      // opener, swallowing everything up to a line containing just "b" as its unscanned body.
+      const content = 's = "a"<<"b"\nreal = \'still a real string\'\n';
+      const parsed = [...parse(content, 'file.rb').parsedTexts];
+      expect(parsed.some((p) => p.tags?.['string.heredoc'])).toBe(false);
+      expect(byText(parsed, 'a')?.tags).toEqual({ string: true, 'string.doubleQuote': true });
+      expect(byText(parsed, 'b')?.tags).toEqual({ string: true, 'string.doubleQuote': true });
+      expect(byText(parsed, 'still a real string')?.tags).toEqual({ string: true, 'string.singleQuote': true });
     });
   });
 

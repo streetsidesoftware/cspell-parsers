@@ -7,7 +7,8 @@ It implements cspell's [`Parser`](https://www.npmjs.com/package/@cspell/cspell-t
 
 Unlike [`@cspell/parser-example`](https://www.npmjs.com/package/@cspell/parser-example) (comments only) or a
 full AST-based parser, this parser only ever emits comments and string/heredoc literals - never identifiers,
-keywords, punctuation, or symbols - using a small hand-written scanner rather than a real grammar.
+keywords, punctuation, symbols, regex literals, or percent-literals (`%w[]`, `%q()`, ...) - using a small
+hand-written scanner rather than a real grammar.
 
 ## Usage
 
@@ -89,9 +90,9 @@ parsers can't share one.
 | `string.doubleQuote` | A `"..."` string literal (including interpolated fragments)  |
 | `string.heredoc`     | A `<<~ID`/`<<-ID`/`<<ID` heredoc body (any of its fragments) |
 
-Regex literals (`/pattern/flags`) never appear in this table at all: nothing is ever emitted for one (see
-"How it works" and "Known limitations"), so there's no tag to filter it by - it's already excluded
-unconditionally.
+Regex literals (`/pattern/flags`) and percent-literals (`%w[]`, `%q()`, `%r{}`, ...) never appear in this
+table: nothing is ever emitted for either, so there's no tag to filter by - both are already excluded
+unconditionally (see "How it works").
 
 ## How it works
 
@@ -104,14 +105,16 @@ unconditionally.
   fragment around each `#{...}` hole; the hole's own contents are recursively scanned the same way as the
   rest of the file, so a string or comment nested inside an interpolation still gets picked up and tagged
   normally.
-- `=begin`/`=end` block comments are only recognized when both markers sit at the very start of a line (column 0) - matching Ruby's own grammar exactly, so a variable or method merely containing the text "=begin"
-  mid-line is never misdetected as opening one.
-- **Regex literals (`/pattern/flags`) are recognized and skipped, but never spell checked at all.** A regex
-  pattern isn't prose - it's rare for its content to be something a spell checker should flag - so, exactly
-  like `@cspell/parser-typescript-strings-comments`'s own documented policy for `RegExp`, this parser
-  recognizes a regex literal and consumes it as a single opaque unit, including any quote characters inside,
-  without ever emitting a `ParsedText` for it. This is a deliberate product decision, not just an
-  implementation gap.
+- `=begin`/`=end` block comments are only recognized when both markers sit at column 0 - matching Ruby's own
+  grammar exactly, so a variable or method merely containing the text "=begin" mid-line is never misdetected
+  as opening one.
+- **Regex literals (`/pattern/flags`) and percent-literals (`%w[]`, `%i[]`, `%q()`, `%Q{}`, `%r{}`, `%s()`,
+  `%x()`) are recognized and skipped, but never spell checked at all.** Neither is prose worth checking, so -
+  exactly like `@cspell/parser-typescript-strings-comments`'s documented policy for `RegExp` - this parser
+  consumes each as a single opaque unit, including any quotes inside it, without ever emitting a `ParsedText`
+  for it. This is a deliberate product decision, not an implementation gap - and for percent-literals, also a
+  correctness requirement: an _unrecognized_ one containing a quote (`%w[don't stop]`) would otherwise be
+  misread as the start of a real string, corrupting everything scanned after it.
 - `plugin.parsers` is the list of parsers a cspell plugin module exposes; a plugin can expose more than one.
 
 ## Known limitations
@@ -119,38 +122,34 @@ unconditionally.
 This parser is a small hand-written scanner, not a real grammar, which keeps it dependency-free but means a
 handful of Ruby constructs are deliberately out of scope for this first version:
 
-- **Percent-literals are not recognized at all.** `%w[]`, `%i[]`, `%q()`, `%Q{}`, `%r{}`, and all their other
-  delimiter variants are left as ordinary, unscanned code - their content is silently not spell checked. This
-  is the safe failure direction (missing something rather than misreading it), consistent with every other
-  heuristic in this parser, but it does mean a `%w[...]` word list or a `%q(...)` string won't be checked.
+- **Regex-literal and percent-literal content is excluded from spell checking entirely**, by design - see
+  "How it works" above. Percent-literal recognition only covers a curated set of delimiters (bracket pairs,
+  plus `| ! # / ~ ^`) - not every character Ruby technically allows - so an exotic delimiter falls back to
+  ordinary code, same failure direction as a missed regex (see below).
 - **A squiggly heredoc's (`<<~ID`) leading-whitespace dedent is not simulated.** Real Ruby strips each line's
   common leading whitespace from a `<<~` heredoc's evaluated value; this parser extracts the raw body text
   byte for byte instead, since leading whitespace isn't a word and doesn't affect spell checking.
-- **Regex-literal content is excluded from spell checking entirely**, by design - see "How it works" above.
 - **Symbols get no special handling.** A bare symbol (`:identifier`) is just an ordinary `:` followed by an
   ordinary identifier, both silently skipped like any other punctuation/identifier. A quoted symbol
   (`:"..."`/`:'...'`) is spell checked as an ordinary double/single-quoted string - the leading `:` is
   skipped as ordinary punctuation, and the parser's normal quote handling picks up from there.
-- **The regex-vs-division and heredoc-vs-left-shift ambiguities are resolved with a lightweight, shared
-  heuristic, not full expression tracking.** `/pattern/` vs. `a / b`, and `<<~ID`/`<<-ID`/`<<ID` vs.
-  `arr << x`, share the same underlying shape: a token that can either open a new literal or act as a binary
-  operator on whatever came before it. This parser resolves both the same way a real Ruby lexer does - by
-  looking at whatever significant token comes right before it (an identifier, a keyword, `)`, `]`, `}`, ...) -
-  using one shared, documented set of keywords/method names (`if`, `unless`, `return`, `puts`, `print`, `raise`,
-  ...) after which a new expression is expected. This correctly handles the overwhelming majority of real
+- **Regex-vs-division, heredoc-vs-left-shift, and percent-literal-vs-modulo are resolved with a lightweight,
+  shared heuristic, not full expression tracking.** `/pattern/` vs. `a / b`, `<<~ID` vs. `arr << x`, and
+  `%w[]` vs. `a % b` all share the same shape: a token that either opens a new literal or acts as a binary
+  operator on whatever came before it. This parser resolves all three the way a real Ruby lexer does - by
+  looking at the significant token right before it (an identifier, a keyword, `)`, `]`, `}`, a closing quote,
+  ...) - using one shared, documented set of keywords/method names (`if`, `unless`, `return`, `puts`, `print`,
+  `raise`, ...) after which a new expression is expected. This handles the overwhelming majority of real
   code, but it can still miss:
-  - A regex or heredoc passed as a bare argument (no parens) to a method call not in that keyword set (e.g.
-    `some_custom_method /pattern/` or `some_custom_method <<~TEXT`) - these are left as ordinary code
-    (division/left-shift), not recognized as a literal.
+  - A literal passed as a bare argument (no parens) to a method call not in that keyword set (e.g.
+    `some_custom_method /pattern/`) - left as ordinary code (division/left-shift/modulo), not a literal.
   - A regex literal that spans multiple lines - a real but rare Ruby feature this parser doesn't support; it
     stops looking for a regex's closing `/` at the first newline, falling back to treating the `/` as
     ordinary code (and, for any quote inside, the narrower `canPrecedeString` fallback described below).
-  - A `/` right after a `}` is always treated as division-like (never a regex), and a `<<` right after a `}`
-    is always treated as left-shift/append-like (never a heredoc) - `}` closes both a block (where a regex or
-    heredoc argument commonly follows) and a hash/block-argument-list (where `/`/`<<` are real operators), so
-    this is genuinely ambiguous either way. Biasing toward "operator" here is the safe choice: getting it
-    wrong just misses a literal, rather than risking a wrongly-recognized literal swallowing real code that
-    follows it.
+  - A `/`, `<<`, or `%` right after a `}` is always treated as an operator, never a literal opener - `}`
+    closes both a block (where a literal argument commonly follows) and a hash/argument list (where these are
+    real operators), so it's genuinely ambiguous. Biasing toward "operator" is the safe choice: getting it
+    wrong just misses a literal, rather than risking a wrongly-recognized one swallowing real code after it.
 
   When a regex is missed, a quote character inside it falls back to a narrower, per-character mitigation
   (`canPrecedeString`): a quote directly preceded by an identifier character or another quote is never
