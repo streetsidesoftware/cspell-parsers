@@ -14,19 +14,13 @@ export const supportedFileTypes: string[] = ['javascript', 'javascriptreact'];
 
 /** Options for {@link createParser}: the parser's name, and which tagged segments to keep. */
 export interface CustomizeParserOptions {
-  /**
-   * Set the name of the parser.
-   */
   name?: string;
-  /**
-   * Define which tagged segments to keep. Omit to keep everything.
-   */
+  /** Omit to keep everything. */
   tags?: TagFilterOptions;
 }
 
 /**
- * Create a parser for JavaScript and JSX files. You can set the name of the parser and filter on the tags if
- * desired.
+ * Create a parser for JavaScript and JSX files.
  *
  * The name is used to select the parser via the
  * [cspell `parser`](https://cspell.org/docs/api/cspell-types/interfaces/CSpellSettings#parser) setting.
