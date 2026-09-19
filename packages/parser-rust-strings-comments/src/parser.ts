@@ -9,14 +9,9 @@ const COMMENT_BLOCK_TAG: ParsedTags = { ...COMMENT_TAG, 'comment.block': true };
 const COMMENT_BLOCK_DOC_TAG: ParsedTags = { ...COMMENT_BLOCK_TAG, 'comment.block.doc': true };
 
 /**
- * Rust only ever uses `"` for strings (`'` is exclusively char literals, which this parser never emits at
- * all - see below), so there's no quote-style ambiguity to tag the way `string.singleQuote`/`.doubleQuote`
- * disambiguate a language with two interchangeable quote characters. Instead these tags describe the string's
- * *kind* - plain, byte (`b"..."`), raw (`r"..."`), byte-raw (`br"..."`), C (`c"..."`), or C-raw (`cr"..."`) -
- * hierarchically, the same dot-path convention used everywhere else in this repo: `string.byte.raw` carries
- * `string.byte` (and `string`) as ancestors, so filtering on `string.byte` alone matches both a plain byte
- * string and a raw byte string, and likewise for `string.c`/`string.c.raw`. A plain `"..."` string needs no
- * extra descriptor beyond the base `string` tag.
+ * Rust has one string quote character, so these tags encode the string's *kind* (plain/byte/raw/C) rather
+ * than quote style. Hierarchical, per this repo's dot-path convention: `string.byte.raw` also carries
+ * `string.byte` and `string`, so filtering on `string.byte` matches both byte forms.
  */
 const STRING_TAG: ParsedTags = { string: true };
 const STRING_BYTE_TAG: ParsedTags = { ...STRING_TAG, 'string.byte': true };
@@ -26,9 +21,9 @@ const STRING_C_TAG: ParsedTags = { ...STRING_TAG, 'string.c': true };
 const STRING_C_RAW_TAG: ParsedTags = { ...STRING_C_TAG, 'string.c.raw': true };
 
 /**
- * Strips a line comment's marker (`//`, or a doc marker - `///` or `//!`) - and one following space, if
- * present - from `rawText`. Unlike `@internal/utils`'s `stripCommentMarkers`, this takes the marker's length
- * explicitly, since this scanner has two possible line-comment marker lengths, not just one.
+ * Strips a line comment's marker and one following space, if present. Takes the marker's length explicitly
+ * (unlike `@internal/utils`'s `stripCommentMarkers`) since this scanner has two marker lengths: plain `//`
+ * (2) vs. doc `///`/`//!` (3).
  */
 function stripLineMarker(rawText: string, markerLen: number): { text: string; map: SourceMap } {
   let skip = markerLen;
@@ -37,12 +32,9 @@ function stripLineMarker(rawText: string, markerLen: number): { text: string; ma
 }
 
 /**
- * `stripCommentMarkers` only special-cases a `/**` opener (as both a 3-char marker and for its own
- * per-line "gutter" stripping decisions) - it has no notion of Rust's `/*!` inner doc-block form. Since
- * `/*!` and `/**` are the same length and differ only in the one character `stripCommentMarkers` itself
- * inspects for that check (and never includes in the extracted `text`, which always starts at or after the
- * 3-char open marker), substituting a `*` for the `!` before delegating gets `/*!` the same 3-char-marker
- * treatment as `/**` without duplicating `stripCommentMarkers`'s gutter-stripping logic here.
+ * `stripCommentMarkers` doesn't know about Rust's `/*!` inner doc form, only `/**`. `/*!` and `/**` are the
+ * same length and differ only in a character `stripCommentMarkers` never includes in its extracted `text`,
+ * so substituting `*` for `!` before delegating is safe and avoids duplicating its gutter-stripping logic.
  */
 function stripRustBlockComment(rawText: string): { text: string; map: SourceMap } {
   const normalized = rawText.startsWith('/*!') ? '/**' + rawText.slice(3) : rawText;
@@ -84,29 +76,16 @@ function isIdentChar(ch: string | undefined): boolean {
 
 /**
  * Scans Rust source for comments and string literals, yielding one `ParsedText` per segment and silently
- * skipping everything else (identifiers, keywords, punctuation, numbers, lifetimes, char literals) - the
- * same "only emit what should be spell checked" approach as `@cspell/parser-example`, extended to also emit
- * string contents.
+ * skipping everything else - identifiers, keywords, punctuation, numbers, lifetimes, and char literals -
+ * the same "only emit what should be spell checked" approach as `@cspell/parser-example`.
  *
- * **Char literals (`'a'`, `'\n'`, ...), byte-char literals (`b'x'`, ...), and lifetimes/labels (`'a`,
- * `'static`, `'_`, ...) are not generally recognized at all** - a bare `'` is simply treated as ordinary,
- * unrecognized code, exactly like any other punctuation this scanner doesn't check. This is a deliberate
- * simplification, not an oversight: char literals have no prose worth spell checking, so there's no need to
- * parse their shape just to decide not to emit them. The one exception is `'"'` (see `run()`'s dedicated
- * check for it below): without recognizing that specific shape as a single unit, the `"` right after its
- * opening `'` would look exactly like the start of a real string, running on past the literal's actual
- * closing `'` and potentially swallowing real code - see `README.md`'s "Known limitations" for the full
- * rationale.
+ * Char/byte-char literals and lifetimes/labels get no general recognition; a bare `'` is just ordinary,
+ * unrecognized code. The one exception is a `'` that opens a double-quote char literal (`'"'` or `'\"'`),
+ * which `run()` special-cases - see CONTRIBUTING.md for why.
  *
- * Rust has no template-literal-style interpolation, so - unlike the JS/TS-family scanner in this repo - no
- * construct here ever splits into multiple fragments; each emitting scan method emits exactly one
- * `ParsedText`. It has one wrinkle no other language in this repo has needed yet, covered in detail in
- * `CONTRIBUTING.md`: block comments nest (`/* /* nested *\/ still open *\/` is ONE comment) -
- * `scanBlockComment` tracks a depth counter rather than closing at the first `*\/`.
- *
- * Emits lazily via a generator rather than collecting into an array - nothing here holds onto a tree or
- * other resource a consumer could leak by not fully draining the result, so there's no reason to force eager
- * collection.
+ * No construct here splits into multiple fragments (Rust has no string interpolation), and block comments
+ * nest (`scanBlockComment` tracks depth - see CONTRIBUTING.md). Emits lazily via a generator since nothing
+ * here holds a resource a consumer could leak by not draining the result.
  */
 class Scanner {
   private i = 0;
@@ -137,15 +116,11 @@ class Scanner {
         }
       }
 
-      // A '"' char literal is the one shape that needs its own check, even though char literals otherwise
-      // get no special recognition at all (see the class doc comment above): a bare "'" immediately followed
-      // by a '"' can only be this literal (no lifetime can start with a '"' right after the tick - a
-      // lifetime always continues with an identifier character), so this is unambiguous, not a heuristic.
-      // Skipping it as one unit here keeps its embedded '"' from being misread by scanQuotedString below as
-      // the start of a real string, which would otherwise scan right past this literal's actual closing "'"
-      // looking for another '"' - potentially swallowing real code (including a genuine string) in between.
-      if (c === "'" && n === '"') {
-        this.i += 2;
+      // '"' or '\"' - a char literal whose content is a double quote, unescaped or (redundantly, but
+      // legally) escaped. Left unrecognized, that embedded '"' would be misread below as the start of a
+      // real string. See CONTRIBUTING.md for why this is the one char-literal shape that needs a check.
+      if (c === "'" && (n === '"' || (n === '\\' && content[this.i + 2] === '"'))) {
+        this.i += n === '"' ? 2 : 3;
         if (content[this.i] === "'") {
           this.i++;
         }
@@ -186,12 +161,9 @@ class Scanner {
   }
 
   /**
-   * A `/* ... *\/` block comment. Unlike every C-family language, Rust block comments nest:
-   * `/* /* nested *\/ still open *\/` is ONE comment, not two. `depth` tracks how many un-closed `/*`
-   * openers have been seen (starting at 1, for the one this method was called for), incrementing on every
-   * further `/*` and decrementing on every `*\/`, only closing the comment once `depth` returns to 0. This
-   * applies uniformly to a plain block comment and both doc-comment block forms (`/** ... *\/`,
-   * `/*! ... *\/`) - see CONTRIBUTING.md.
+   * A `/* ... *\/` block comment. Unlike every C-family language, Rust block comments nest
+   * (`/* /* nested *\/ still open *\/` is ONE comment) - `depth` tracks un-closed `/*` openers, starting at
+   * 1 for this one, only closing once it returns to 0. See CONTRIBUTING.md.
    */
   private scanBlockComment(): ParsedText {
     const { content } = this;
@@ -222,10 +194,9 @@ class Scanner {
   }
 
   /**
-   * A plain `"..."` string, a `b"..."` byte string, or a `c"..."` C string (a nul-terminated `CStr` literal,
-   * stable since Rust 1.77) - all three use the same ordinary backslash-escape rules, differing only in which
-   * tag they get. `literalStart` is where the emitted segment begins - the `"` itself, or the `b`/`c` right
-   * before it for a byte or C string.
+   * A plain `"..."`, `b"..."` byte, or `c"..."` C string (`CStr` literal, stable since Rust 1.77) - same
+   * escape rules, differing only by tag. `literalStart` is the segment's start: the `"` itself, or the
+   * `b`/`c` prefix before it.
    */
   private scanQuotedString(literalStart: number): ParsedText {
     const { content } = this;
@@ -256,19 +227,13 @@ class Scanner {
   }
 
   /**
-   * A Rust raw string: an optional `b` byte or `c` C-string prefix (never both), `r`, zero-or-more `#`
-   * characters, then `"..."`, closed by a `"` followed by exactly as many `#` characters as opened it -
-   * adapted from `@cspell/parser-c-cpp-strings-comments`'s `tryScanCppRawString`, which matches a closing
-   * token built from an arbitrary *text* delimiter; Rust's delimiter is instead a *count* of `#` characters,
-   * so the closing token here is built by repeating `#` `hashCount` times rather than copied out of the
-   * source. No escape processing at all inside - a backslash is a literal character, not an escape, so
-   * unlike `scanQuotedString` this never calls `skipEscape`.
+   * A Rust raw string: optional `b`/`c` prefix (never both), `r`, zero-or-more `#`, then `"..."`, closed by
+   * a `"` plus exactly as many `#` as opened it - no escape processing inside. See CONTRIBUTING.md for how
+   * this adapts `@cspell/parser-c-cpp-strings-comments`'s raw-string scan to a `#`-count delimiter.
    *
-   * Requires a non-identifier character (or start of file) immediately before the `b`/`c`/`r` prefix, so this
-   * can't misfire partway through an ordinary identifier that happens to end in "r", "b", or "c" (mirrors
-   * `tryScanRegExpCallArgs`'s boundary check in `@cspell/parser-typescript-strings-comments`). Returns
-   * `undefined` (consuming nothing) if the pattern doesn't actually match a raw string opener, so the caller
-   * falls back to treating the prefix letter as an ordinary skipped character.
+   * Requires a non-identifier character (or start of file) right before the prefix, so this can't misfire
+   * mid-identifier (e.g. `author"data"`). Returns `undefined`, consuming nothing, when the prefix doesn't
+   * actually resolve to a raw string, so the caller falls back to treating it as an ordinary character.
    */
   private tryScanRawString(): ParsedText | undefined {
     const { content } = this;

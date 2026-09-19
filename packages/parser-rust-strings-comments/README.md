@@ -8,11 +8,10 @@ It implements cspell's [`Parser`](https://www.npmjs.com/package/@cspell/cspell-t
 Unlike [`@cspell/parser-example`](https://www.npmjs.com/package/@cspell/parser-example) (comments only), this
 parser only ever emits comments and string-like literals - never identifiers, keywords, punctuation, char
 literals, or lifetimes - using a small hand-written scanner rather than a real grammar. It understands
-Rust's several string and comment forms: `"..."` strings, `b"..."` byte strings, `c"..."` C strings, raw
-strings (`r"..."`, `r#"..."#`, ...) including byte raw (`br"..."`) and C raw (`cr"..."`) forms, line comments
-(`//`, `///`, `//!`), and block comments (`/* */`, `/** */`, `/*! */`) - including Rust's nested block
-comments. Char literals (`'...'`, `b'...'`) are never spell checked and get no special handling at all - see
-"How it works" and "Known limitations" below for what that trades off.
+Rust's string and comment forms: `"..."` strings, `b"..."` byte strings, `c"..."` C strings, raw strings
+(`r"..."`, `r#"..."#`, ...) including byte raw (`br"..."`) and C raw (`cr"..."`) forms, line comments (`//`,
+`///`, `//!`), and block comments (`/* */`, `/** */`, `/*! */`) - including Rust's nested block comments.
+Char literals (`'...'`, `b'...'`) are never spell checked.
 
 ## Usage
 
@@ -108,39 +107,27 @@ parsers can't share one.
 - Every segment is tagged with a dot-separated tag, plus every ancestor of it (`comment.block.doc` also
   carries `comment` and `comment.block`) - `customizePlugin` can filter which segments get spell checked using
   these tags, at any level of specificity (just `comment`, or the more specific `comment.block.doc`).
-- Rust has no string interpolation, so unlike some other languages this repo covers, nothing here ever splits
-  into more than one `ParsedText` fragment per literal.
-- **String tags describe the string's _kind_, not its quote style.** Rust only ever uses `"` for strings, so
-  there's no `string.singleQuote`/`.doubleQuote` distinction to make the way some other languages in this
-  repo do. Instead a plain `"..."` string gets just the bare `string` tag, and each other kind adds its own
-  descriptor: `string.byte` for a `b"..."` byte string, `string.raw` for a raw string, `string.byte.raw` for a
-  byte raw string (carrying `string.byte` as an ancestor too, so filtering on `string.byte` alone matches
-  both), `string.c` for a `c"..."` C string, and `string.c.raw` for a C raw string (likewise carrying
-  `string.c` as an ancestor).
-- **Char literals (`'a'`, `'\n'`, `'\x41'`, `'\u{1F600}'`, and their `b'...'` byte-char equivalents) and
-  lifetimes/labels (`'a`, `'static`, `'_`) are never spell checked and get no general recognition at all.** A
-  bare `'` is simply left as ordinary, unrecognized code - a single character or escape sequence has no prose
-  worth checking, so there's no need to parse a char literal's shape just to decide not to emit it. The one
-  exception is `'"'` (a char literal whose content is a `"`), which is specifically recognized and skipped as
-  a unit - see "Known limitations" for why that one case needs its own handling.
+- Rust has no string interpolation, so nothing here ever splits into more than one `ParsedText` fragment per
+  literal.
+- **String tags describe the string's _kind_, not its quote style** - Rust only ever uses `"`, so there's no
+  `string.singleQuote`/`.doubleQuote` distinction to make. A plain `"..."` string gets the bare `string` tag;
+  `string.byte`, `string.raw`, `string.byte.raw`, `string.c`, and `string.c.raw` each add their own
+  descriptor, with the raw/byte/C forms carrying their non-raw or non-byte counterpart as an ancestor too.
+- **Char literals and lifetimes/labels are never spell checked and get no general recognition at all** - a
+  bare `'` is left as ordinary, unrecognized code. See "Known limitations" below for the one exception.
 - `plugin.parsers` is the list of parsers a cspell plugin module exposes; a plugin can expose more than one.
 
 ## Known limitations
 
 This parser is a small hand-written scanner, not a real grammar, which keeps it dependency-free but comes
-with a few deliberate, documented scope limits:
+with one deliberate, documented scope limit:
 
 - **Char literals and lifetimes get no general recognition at all - a bare `'` is otherwise always just
-  ordinary code.** This is a deliberate simplification: since char literals are never spell checked, there's
-  nothing to gain from correctly parsing their shape. The one exception is `'"'` (a char literal whose
-  content is a `"`): without recognizing it as a single unit, the `"` right after its opening `'` would look
-  exactly like the start of a real string, which would then scan past the literal's actual closing `'`
-  looking for another `"` - potentially swallowing real code (including a genuine string) in between. This
-  one shape is specifically detected and skipped as a unit to avoid that; every other char literal and every
-  lifetime still gets no special handling, since nothing else risks the same failure mode - see
+  ordinary code.** Since char literals are never spell checked, there's nothing to gain from parsing their
+  shape. The one exception: a char literal containing a `"` (`'"'` or `'\"'`) is specifically detected and
+  skipped as a unit, since otherwise that embedded `"` would be misread as the start of a real string,
+  swallowing real code (potentially including a genuine string) up to the next `"` in the file. See
   `CONTRIBUTING.md` for the full rationale.
-- **Nested block comments are fully supported** (`/* /* nested */ still open */` is tracked as one comment,
-  per Rust's actual grammar), unlike every C-family language covered elsewhere in this repo.
 
 Use this package as a template: copy `src/parser.ts`, `src/plugin.ts`, `src/index.ts`, and `src/recommended.ts`
 into a new package under `packages/` and replace the parsing logic with your own. See the repo root

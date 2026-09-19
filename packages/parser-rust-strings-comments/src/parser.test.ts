@@ -163,18 +163,14 @@ describe('rust-strings-comments parser', () => {
   });
 
   describe('lifetimes-vs-chars.rs (char literals and lifetimes are not specially recognized)', () => {
-    // Neither a char/byte-char literal nor a lifetime/label gets any special handling - a bare "'" is just
-    // ordinary, unrecognized code, exactly like any other punctuation this scanner doesn't check. Char
-    // literals have no prose worth spell checking, so there's nothing to gain from parsing their shape - see
-    // README.md's "How it works" and CONTRIBUTING.md for the full rationale. The one exception is '"' (see
-    // below), which run() special-cases just enough to skip safely, without reintroducing general
-    // char-literal recognition.
+    // Char/byte-char literals and lifetimes get no special handling - a bare "'" is just ordinary code.
+    // Exception: '"' and '\"' (see CONTRIBUTING.md), which run() special-cases just enough to skip safely.
     const parsedTexts = parseFixture('lifetimes-vs-chars.rs');
 
     it.each([
       ["'a'", 'a plain char literal'],
       [String.raw`'\n'`, 'an escape-based char literal'],
-      [String.raw`'\''`, 'an escaped-quote char literal'],
+      [String.raw`'\''`, 'an escaped-quote (single) char literal'],
       [String.raw`'\x41'`, 'a byte-escape char literal'],
       [String.raw`'\u{1F600}'`, 'a unicode-escape char literal'],
       ["b'x'", 'a byte-char literal'],
@@ -209,18 +205,17 @@ describe('rust-strings-comments parser', () => {
       expect(byText(parsedTexts, 'hello')?.tags).toEqual({ string: true });
     });
 
-    it('a char literal containing a quote ("\'"\'") is skipped as one unit, so a real string right after it is still recognized', () => {
-      // '"' is a special case: without recognizing it as a single unit, the "\"" right after its opening "'"
-      // would look exactly like the start of a real string to scanQuotedString, which would then scan past
-      // the literal's actual closing "'" looking for another "\"", swallowing whatever real code (here, the
-      // genuine string that follows) sits in between. run() special-cases exactly this one shape (a "'"
-      // immediately followed by a "\"") and skips over it, without reintroducing general char-literal
-      // recognition for every other form (which is still unnecessary, since nothing else needs it).
-      const content = readFixture('lifetimes-vs-chars.rs');
-      const parsed = [...parse(content, 'file.rs').parsedTexts];
-      const str = parsed.find((p) => p.text === 'a real string that must still be recognized correctly');
-      expect(str?.tags).toEqual({ string: true });
-    });
+    it.each([
+      ["'\"'", 'a real string that must still be recognized correctly'],
+      [String.raw`'\"'`, 'a real string that must still be recognized correctly after an escaped quote'],
+    ])(
+      'a %j char literal is skipped as one unit, so a real string right after it is still recognized',
+      (_raw, text) => {
+        // Without this, the embedded '"' would look like the start of a real string to scanQuotedString,
+        // which would scan past the literal's actual closing "'" looking for another '"' - see CONTRIBUTING.md.
+        expect(byText(parsedTexts, text)?.tags).toEqual({ string: true });
+      },
+    );
   });
 
   it('extends an unterminated block comment (with a nested comment inside it) to the end of the file', () => {
