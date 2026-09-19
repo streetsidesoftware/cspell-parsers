@@ -90,29 +90,12 @@ parsers can't share one.
 | `string.doubleQuote` | A `"..."` interpreted string literal                                                          |
 | `string.raw`         | A `` `...` `` raw string literal                                                              |
 
-## How it works
-
-- `parser.parse(content, filename)` returns a `ParseResult` containing one or more `ParsedText` entries.
-- Each `ParsedText.range` is the `[start, end]` offset of that segment in the original `content`, which is how
-  cspell maps spelling issues found in the parsed text back to the right place in the source file.
-- Every segment is tagged with a dot-separated tag, plus every ancestor of it (`comment.block.doc` also
-  carries `comment` and `comment.block`) - `customizePlugin` can filter which segments get spell checked
-  using these tags, at any level of specificity (just `comment`, or the more specific `comment.block.doc`).
-- A backtick-delimited raw string (`` `...` ``) never has its contents split up or escape-processed - Go's
-  own grammar disallows a literal backtick inside one, so the next backtick unambiguously ends it, and there
-  is no `${...}`-style interpolation to watch for the way a JS/TS template literal has.
-- `plugin.parsers` is the list of parsers a cspell plugin module exposes; a plugin can expose more than one.
-
 ## Known limitations
 
 This parser is a small hand-written scanner, not a real grammar. Go's syntax has no regex-literal-vs-division
 ambiguity, no string interpolation, and no escape sequences inside a raw string, so - unlike this repo's
 JS/TS-family parser - there's nothing here that's only heuristically resolved: comments and every string form
 are recognized unambiguously from their delimiters alone.
-
-Use this package as a template: copy `src/parser.ts`, `src/plugin.ts`, `src/index.ts`, and `src/recommended.ts`
-into a new package under `packages/` and replace the parsing logic with your own. See the repo root
-`CONTRIBUTING.md` for the full steps.
 
 <!-- cspell:ignore godoc -->
 

@@ -151,10 +151,7 @@ class Scanner {
   }
 }
 
-/**
- * Extracts comments and string/rune/raw-string literals from Go source. See the `Scanner` class for the
- * actual scanning logic.
- */
+/** Extracts comments and string/rune/raw-string literals from Go source for cspell to spell check. */
 export function parse(content: string, filename: string): ParseResult {
   return { content, filename, parsedTexts: new Scanner(content).run() };
 }
@@ -174,9 +171,9 @@ export interface CustomizeParserOptions {
 }
 
 /**
- * Create a customized copy of {@link parser} - override its name (used to select it via the
+ * Returns a version of {@link parser} registered under a different name (used to select it via the
  * [cspell `parser`](https://cspell.org/docs/api/cspell-types/interfaces/CSpellSettings#parser) setting)
- * and/or filter which tagged segments it emits.
+ * and/or restricted to only the tagged segments you choose to keep, so cspell only spell checks those.
  *
  * Usage: **`cspell.config.mts`**
  * ```ts
