@@ -5,6 +5,11 @@ someone using the plugin; this file is for someone changing it. See the repo roo
 general package shape (`parser.ts`/`plugin.ts`/`index.ts`/`recommended.ts`, `fixtures/`, `samples/`) - this
 file only covers what's specific to this package's parsing logic.
 
+This package can also serve as a starting point for a new parser package: copy `src/parser.ts`,
+`src/plugin.ts`, `src/index.ts`, and `src/recommended.ts` into a new package under `packages/` and replace the
+parsing logic with your own. See the repo root `CONTRIBUTING.md`'s "Adding a new parser package" for the full
+steps.
+
 ## Shape of the parser
 
 This parser is a single hand-written scanner (`Scanner`, a small stateful class holding a mutable cursor `i`
@@ -33,7 +38,10 @@ the way the JS/TS and combined packages have.
 
 ### Emitting a segment
 
-Every scan method builds a `ParsedText` from a `[start, end)` range it already knows:
+Every scan method builds a `ParsedText` from a `[start, end)` range it already knows. `ParsedText.range` is
+the `[start, end]` offset of that segment in the original `content`, which is how cspell maps spelling issues
+found in the parsed text back to the right place in the source file - getting this right for every construct
+(including the unterminated/EOF cases below) is the core correctness concern of this scanner.
 
 - Block comments reuse `@internal/utils`'s `stripCommentMarkers` directly (it already handles the doc-comment
   gutter-stripping correctly, and always starts with `/*`). Line comments use a local `stripLineMarker`

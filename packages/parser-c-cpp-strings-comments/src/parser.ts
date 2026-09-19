@@ -194,8 +194,9 @@ class Scanner {
 }
 
 /**
- * Extracts comments and string/char/raw-string literals from C/C++ source. See the `Scanner` class for the
- * actual scanning logic.
+ * Extracts comments and string/char/raw-string literals from C/C++ source, so cspell only ever spell checks
+ * that content - never identifiers, keywords, or punctuation. Most consumers won't call this directly; use
+ * the `parser`/`plugin` exports, or the `recommended`/`index` settings modules, to wire it into cspell.
  */
 export function parse(content: string, filename: string): ParseResult {
   return { content, filename, parsedTexts: new Scanner(content).run() };
@@ -217,8 +218,11 @@ export interface CustomizeParserOptions {
 }
 
 /**
- * Create a customized copy of the C/C++ parser, renamed and/or tag-filtered. The name is used to select it
- * via the [cspell `parser`](https://cspell.org/docs/api/cspell-types/interfaces/CSpellSettings#parser) setting.
+ * Returns a C/C++ `Parser` that only emits segments matching the given tag filter, optionally under a new
+ * name so it can be registered and selected independently of the default `parser` export. See the "Tags"
+ * table in `README.md` for the tag names to filter on, and the
+ * [cspell `parser`](https://cspell.org/docs/api/cspell-types/interfaces/CSpellSettings#parser) setting for
+ * how the name is used to select a parser.
  *
  * Usage: **`cspell.config.mts`**
  * ```ts
