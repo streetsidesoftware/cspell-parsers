@@ -77,16 +77,6 @@ for every tag this parser can emit.
 registering more than one customized copy of this parser, since cspell selects a parser by name and two
 parsers can't share one.
 
-## How it works
-
-- `parser.parse(content, filename)` returns a `ParseResult` containing one or more `ParsedText` entries.
-- Each `ParsedText.range` is the `[start, end]` offset of that segment in the original `content`, which is how
-  cspell maps spelling issues found in the parsed text back to the right place in the source file.
-- Every segment is tagged with a dot-separated tag, plus every ancestor of it (`comment.block.doc` also
-  carries `comment` and `comment.block`) - `customizePlugin` can filter which segments get spell checked
-  using these tags, at any level of specificity (just `comment`, or the more specific `comment.block.doc`).
-- `plugin.parsers` is the list of parsers a cspell plugin module exposes; a plugin can expose more than one.
-
 ## Tags
 
 | Tag                  | Meaning                             |
@@ -99,6 +89,16 @@ parsers can't share one.
 | `string.singleQuote` | A `'...'` character literal         |
 | `string.doubleQuote` | A `"..."` string literal            |
 | `string.textBlock`   | A `"""..."""` text block (Java 15+) |
+
+## How it works
+
+- `parser.parse(content, filename)` returns a `ParseResult` containing one or more `ParsedText` entries.
+- Each `ParsedText.range` is the `[start, end]` offset of that segment in the original `content`, which is how
+  cspell maps spelling issues found in the parsed text back to the right place in the source file.
+- Every segment is tagged with a dot-separated tag, plus every ancestor of it (`comment.block.doc` also
+  carries `comment` and `comment.block`) - `customizePlugin` can filter which segments get spell checked
+  using these tags, at any level of specificity (just `comment`, or the more specific `comment.block.doc`).
+- `plugin.parsers` is the list of parsers a cspell plugin module exposes; a plugin can expose more than one.
 
 ## Known limitations
 
@@ -133,16 +133,6 @@ Please show your support through one of the following sites:
 </p>
 
 <!--- @@inject-end: ../../static/sponsor.md --->
-
-## CSpell for Enterprise
-
-<!--- @@inject: ../../static/tidelift.md --->
-
-Available as part of the Tidelift Subscription.
-
-The maintainers of cspell and thousands of other packages are working with Tidelift to deliver commercial support and maintenance for the open source packages you use to build your applications. Save time, reduce risk, and improve code health, while paying the maintainers of the exact packages you use. [Learn more.](https://tidelift.com/subscription/pkg/npm-cspell?utm_source=npm-cspell&utm_medium=referral&utm_campaign=enterprise&utm_term=repo)
-
-<!--- @@inject-end: ../../static/tidelift.md --->
 
 <!--- @@inject: ../../static/footer.md --->
 

@@ -81,6 +81,20 @@ every tag this parser can emit.
 registering more than one customized copy of this parser, since cspell selects a parser by name and two
 parsers can't share one.
 
+## Tags
+
+| Tag                  | Meaning                                           |
+| -------------------- | ------------------------------------------------- |
+| `comment`            | Any comment                                       |
+| `comment.line`       | A `//` line comment                               |
+| `comment.line.doc`   | A Doxygen-style `///` or `//!` doc-comment line   |
+| `comment.block`      | A `/* ... */` block comment                       |
+| `comment.block.doc`  | A `/** ... */` doc comment (Doxygen-style)        |
+| `string`             | Any string-like literal                           |
+| `string.singleQuote` | A `'...'` char literal                            |
+| `string.doubleQuote` | A `"..."` string literal                          |
+| `string.raw`         | A C++11 raw string literal (`R"delim(...)delim"`) |
+
 ## How it works
 
 - `parser.parse(content, filename)` returns a `ParseResult` containing one or more `ParsedText` entries.
@@ -97,20 +111,6 @@ parsers can't share one.
   (`)delim"`), so a near-miss inside the body (e.g. `)DEL` when the real delimiter is `DELIM`) doesn't end the
   string early. Real C code never contains this syntax, so recognizing it is harmless there.
 - `plugin.parsers` is the list of parsers a cspell plugin module exposes; a plugin can expose more than one.
-
-## Tags
-
-| Tag                  | Meaning                                           |
-| -------------------- | ------------------------------------------------- |
-| `comment`            | Any comment                                       |
-| `comment.line`       | A `//` line comment                               |
-| `comment.line.doc`   | A Doxygen-style `///` or `//!` doc-comment line   |
-| `comment.block`      | A `/* ... */` block comment                       |
-| `comment.block.doc`  | A `/** ... */` doc comment (Doxygen-style)        |
-| `string`             | Any string-like literal                           |
-| `string.singleQuote` | A `'...'` char literal                            |
-| `string.doubleQuote` | A `"..."` string literal                          |
-| `string.raw`         | A C++11 raw string literal (`R"delim(...)delim"`) |
 
 ## Known limitations
 
@@ -148,16 +148,6 @@ Please show your support through one of the following sites:
 </p>
 
 <!--- @@inject-end: ../../static/sponsor.md --->
-
-## CSpell for Enterprise
-
-<!--- @@inject: ../../static/tidelift.md --->
-
-Available as part of the Tidelift Subscription.
-
-The maintainers of cspell and thousands of other packages are working with Tidelift to deliver commercial support and maintenance for the open source packages you use to build your applications. Save time, reduce risk, and improve code health, while paying the maintainers of the exact packages you use. [Learn more.](https://tidelift.com/subscription/pkg/npm-cspell?utm_source=npm-cspell&utm_medium=referral&utm_campaign=enterprise&utm_term=repo)
-
-<!--- @@inject-end: ../../static/tidelift.md --->
 
 <!--- @@inject: ../../static/footer.md --->
 
