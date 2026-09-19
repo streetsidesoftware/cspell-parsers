@@ -53,9 +53,8 @@ plugin in yourself and choose the language IDs to use it for:
 
 By default every comment/string the parser emits gets spell checked. To check only some of them - for
 example, only doc comments - use `customizePlugin` instead of the plain `plugin` export. It takes a
-`CustomizePluginOptions` object - `tags: TagFilterOptions` and `name` are both optional, and omitting `tags`
-keeps everything - and returns a `Plugin` whose parser filters segments by tag itself, before cspell ever
-sees them.
+`CustomizePluginOptions` object - `tags` and `name` are both optional, and omitting `tags` keeps everything -
+and returns a `Plugin` that only spell checks the segments matching those tags.
 
 ```js
 // cspell.config.mjs — customizePlugin returns a live Plugin object, so it needs a JS/TS config file
@@ -84,6 +83,10 @@ parsers can't share one.
 
 ## Tags
 
+Every segment carries its own tag plus every ancestor implied by it - a doc comment carries
+`comment.block.doc` together with `comment.block` and `comment` - so the `tags` filter above can match at
+whatever level of specificity it needs.
+
 | Tag                         | Meaning                                                                                                                     |
 | --------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | `comment`                   | Any comment                                                                                                                 |
@@ -100,17 +103,8 @@ parsers can't share one.
 | `module.specifier`          | Any module specifier string (same as `module`, for a more specific filter)                                                  |
 | `module.specifier.literal`  | The module specifier string of an `import`/`export ... from` statement, a dynamic `import('...')`, or a `require(...)` call |
 
-## How it works
+## What gets checked
 
-- `parser.parse(content, filename)` returns a `ParseResult` containing one or more `ParsedText` entries.
-- Each `ParsedText.range` is the `[start, end]` offset of that segment in the original `content`, which is how
-  cspell maps spelling issues found in the parsed text back to the right place in the source file.
-- Every segment is tagged with a dot-separated tag, plus every ancestor of it (`comment.block.doc` also
-  carries `comment` and `comment.block`) - `customizePlugin` can filter which segments get spell checked
-  using these tags, at any level of specificity (just `comment`, or the more specific `comment.block.doc`).
-- A template literal is split into one `ParsedText` per literal fragment around each `${...}` hole; the
-  hole's own contents are recursively scanned the same way as the rest of the file, so a string or comment
-  nested inside an interpolation (e.g. a ternary's string branches) still gets picked up and tagged normally.
 - **Regex literals (`/pattern/flags`) and `RegExp(...)`/`new RegExp(...)` calls are never spell checked.** A
   regex pattern isn't prose, so both forms are skipped entirely, including any quotes inside. A comment
   inside a `RegExp(...)` call's argument list is still recognized normally; only the pattern/flags string
@@ -120,25 +114,15 @@ parsers can't share one.
   `import('./mod.js')`, and `require('./mod.js')` all get the `module`/`module.specifier`/
   `module.specifier.literal` tags in addition to their usual string tags (matching `@cspell/parser-typescript`'s
   convention). Use `customizePlugin` to exclude them if a relative path or package name isn't worth checking.
-- `plugin.parsers` is the list of parsers a cspell plugin module exposes; a plugin can expose more than one.
+- A string or comment nested inside a template literal's `${...}` interpolation (e.g. a ternary's string
+  branches) is still recognized and tagged normally.
 
 ## Known limitations
 
-This is a hand-written scanner, not a real grammar, so it resolves the regex-vs-division ambiguity
-(`/pattern/` vs. `a / b`) with a heuristic rather than full expression tracking: it looks at the significant
-character right before the `/` (an identifier, a keyword, `)`, `]`, `}`, ...), the same way a JS tokenizer
-does. This correctly recognizes a regex literal in the overwhelming majority of real code, including a quote
-character anywhere in its body (`/don't/`, `/[\w"']/`) - except `/['"]/`, which is genuinely ambiguous with a
-real string starting right after an array literal's bracket and can't be resolved from the characters alone.
-
-The heuristic can still occasionally miss a real regex - most likely right after a keyword it doesn't
-recognize, or right after a `}` (deliberately biased toward "division," the safer failure mode - see
-`CONTRIBUTING.md`). When it does, a quote directly preceded by an identifier character or another quote is
-still never mistaken for a real string's start, as a narrower fallback.
-
-Use this package as a template: copy `src/parser.ts`, `src/plugin.ts`, `src/index.ts`, and `src/recommended.ts`
-into a new package under `packages/` and replace the parsing logic with your own. See the repo root
-`CONTRIBUTING.md` for the full steps.
+This scanner isn't a full grammar, so in rare cases it can misjudge whether a `/` starts a regex literal or
+is division - most commonly for a regex shaped like `/['"]/`, or one appearing right after an unusual keyword
+or a `}` - which can affect whether that spot gets spell checked as prose or skipped as code. See
+`CONTRIBUTING.md` for the heuristic this is resolved with.
 
 ## Requirements
 

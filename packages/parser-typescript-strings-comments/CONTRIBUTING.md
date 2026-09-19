@@ -3,6 +3,12 @@
 Contributor-facing notes on `src/parser.ts`. See the repo root `CONTRIBUTING.md` for the general package
 shape (`parser.ts`/`plugin.ts`/`index.ts`/`recommended.ts`, `fixtures/`, `samples/`).
 
+## Using this package as a template
+
+To add a new parser for another language, copy `src/parser.ts`, `src/plugin.ts`, `src/index.ts`, and
+`src/recommended.ts` into a new package under `packages/` and replace the parsing logic with your own. See
+the repo root `CONTRIBUTING.md` for the full steps.
+
 ## Shape
 
 `Scanner` is a single hand-written scanner (no AST, no tokenizer) - `scanCode` walks `content`
@@ -19,9 +25,18 @@ string/comment nested inside an interpolation gets scanned and tagged exactly li
 
 ## Regex vs. division, and module specifiers
 
-The reasoning for the regex-literal-vs-division heuristic (`isDivisionContext`, `tryScanRegexLiteral`,
-`canPrecedeString`/`sawSlash`) and for module-specifier detection (`isModuleSpecifierContext`) is documented
-in-line in `parser.ts` rather than repeated here - start at those functions' doc comments.
+This is a hand-written scanner, not a real grammar, so it resolves the regex-vs-division ambiguity
+(`/pattern/` vs. `a / b`) with a heuristic - looking at the significant character right before the `/`, the
+same way a JS tokenizer does - rather than full expression tracking. It correctly recognizes a regex literal
+in the overwhelming majority of real code, including a quote character anywhere in its body (`/don't/`,
+`/[\w"']/`), except `/['"]/` right after an array literal's bracket, which is genuinely ambiguous with a real
+string and can't be resolved from the characters alone. Failures are deliberately biased toward "division,"
+the safer failure mode: getting it wrong there just means a regex literal is scanned as ordinary code instead
+of being skipped as an opaque unit (see `README.md`'s "Known limitations" for the user-visible effect).
+
+The full reasoning for the heuristic (`isDivisionContext`, `tryScanRegexLiteral`, `canPrecedeString`/
+`sawSlash`) and for module-specifier detection (`isModuleSpecifierContext`) is documented in-line in
+`parser.ts` rather than repeated here - start at those functions' doc comments.
 
 Worth knowing before touching any of it: `parser.test.ts` has regression tests for the trickiest cases (a
 same-line `}` that must resolve as division, `sawSlash`'s stickiness, a quote surviving inside an

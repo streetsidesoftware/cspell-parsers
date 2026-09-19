@@ -490,8 +490,8 @@ class Scanner {
 }
 
 /**
- * Extracts comments and string/template literals from JavaScript/JSX/TypeScript/TSX source. See the
- * `Scanner` class for the actual scanning logic.
+ * Extracts comments and string/template literal contents from JavaScript, JSX, TypeScript, and TSX source
+ * for cspell to spell check, leaving identifiers, keywords, punctuation, and JSX markup unchecked.
  */
 export function parse(content: string, filename: string): ParseResult {
   return { content, filename, parsedTexts: new Scanner(content).run() };
