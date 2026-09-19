@@ -342,6 +342,21 @@ importers:
         specifier: workspace:*
         version: link:..
 
+  packages/parser-python-strings-comments:
+    devDependencies:
+      '@cspell/cspell-types':
+        specifier: 'catalog:'
+        version: 10.3.3
+      '@internal/utils':
+        specifier: workspace:*
+        version: link:../internal-utils
+
+  packages/parser-python-strings-comments/samples:
+    devDependencies:
+      '@cspell/parser-python-strings-comments':
+        specifier: workspace:*
+        version: link:..
+
   packages/parser-strings-comments:
     devDependencies:
       '@cspell/cspell-types':

@@ -1,0 +1,2 @@
+import:
+  - '@cspell/parser-python-strings-comments/recommended'
