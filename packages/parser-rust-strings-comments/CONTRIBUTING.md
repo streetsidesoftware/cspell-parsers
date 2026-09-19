@@ -12,7 +12,7 @@ single hand-written scanner (`Scanner`, a small stateful class holding a mutable
 There's no AST and no tokenizer for the language as a whole - `Scanner.run` walks `content` character by
 character, recognizing only the handful of constructs that matter (comments and strings) and silently
 advancing `i` past everything else. Since cspell only ever checks what's inside `parsedTexts`, this is how
-the parser excludes syntax noise: by simply never emitting it, not by filtering it out afterwards - the same
+the parser excludes syntax noise: by never emitting it, not by filtering it out afterwards - the same
 approach `@cspell/parser-example` uses. Char literals and lifetimes get no special handling at all - see
 "Char literals and lifetimes" below.
 
@@ -172,6 +172,15 @@ String tags describe the string's _kind_ rather than quote style (Rust has only 
 and byte-raw/C-raw tags are built by spreading their non-raw counterpart (`STRING_BYTE_RAW_TAG` spreads
 `STRING_BYTE_TAG`, not `STRING_TAG`), so filtering on `string.byte` (or `string.c`) alone matches both the
 plain and raw forms.
+
+### Why `customizePlugin`/`createParser` filter in the parser, not via cspell
+
+`customizePlugin` and `createParser` are thin wrappers around `@internal/utils`'s `customizeParser`, which
+wraps `parser.parse()` so excluded segments never appear in the returned `parsedTexts` at all - the filtering
+happens here, before cspell ever sees those segments, rather than relying on cspell's own tag-based `validate`
+filtering. That's what lets `customizePlugin` work with any cspell version, including one too old to filter
+`ParsedText.tags` itself. See `packages/internal-utils/src/customize.ts`'s `customizeParser`/`compileTagFilter`
+for the actual filtering logic.
 
 ## Testing
 

@@ -99,23 +99,8 @@ parsers can't share one.
 | `string.c`          | A `c"..."` C string literal (also carried by `string.c.raw`)                  |
 | `string.c.raw`      | A C raw string literal (`cr"..."`, `cr#"..."#`, ...)                          |
 
-## How it works
-
-- `parser.parse(content, filename)` returns a `ParseResult` containing one or more `ParsedText` entries.
-- Each `ParsedText.range` is the `[start, end]` offset of that segment in the original `content`, which is how
-  cspell maps spelling issues found in the parsed text back to the right place in the source file.
-- Every segment is tagged with a dot-separated tag, plus every ancestor of it (`comment.block.doc` also
-  carries `comment` and `comment.block`) - `customizePlugin` can filter which segments get spell checked using
-  these tags, at any level of specificity (just `comment`, or the more specific `comment.block.doc`).
-- Rust has no string interpolation, so nothing here ever splits into more than one `ParsedText` fragment per
-  literal.
-- **String tags describe the string's _kind_, not its quote style** - Rust only ever uses `"`, so there's no
-  `string.singleQuote`/`.doubleQuote` distinction to make. A plain `"..."` string gets the bare `string` tag;
-  `string.byte`, `string.raw`, `string.byte.raw`, `string.c`, and `string.c.raw` each add their own
-  descriptor, with the raw/byte/C forms carrying their non-raw or non-byte counterpart as an ancestor too.
-- **Char literals and lifetimes/labels are never spell checked and get no general recognition at all** - a
-  bare `'` is left as ordinary, unrecognized code. See "Known limitations" below for the one exception.
-- `plugin.parsers` is the list of parsers a cspell plugin module exposes; a plugin can expose more than one.
+Since Rust only ever uses `"` for strings, string tags describe a literal's _kind_ (byte/raw/C) rather than
+quote style.
 
 ## Known limitations
 

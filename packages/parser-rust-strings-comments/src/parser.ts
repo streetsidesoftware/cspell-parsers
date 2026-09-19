@@ -84,8 +84,7 @@ function isIdentChar(ch: string | undefined): boolean {
  * which `run()` special-cases - see CONTRIBUTING.md for why.
  *
  * No construct here splits into multiple fragments (Rust has no string interpolation), and block comments
- * nest (`scanBlockComment` tracks depth - see CONTRIBUTING.md). Emits lazily via a generator since nothing
- * here holds a resource a consumer could leak by not draining the result.
+ * nest (`scanBlockComment` tracks depth) - see CONTRIBUTING.md.
  */
 class Scanner {
   private i = 0;
@@ -276,7 +275,7 @@ class Scanner {
 
 /**
  * Extracts comments and string literals from Rust source (char literals are recognized but never spell
- * checked). See the `Scanner` class for the actual scanning logic.
+ * checked).
  */
 export function parse(content: string, filename: string): ParseResult {
   return { content, filename, parsedTexts: new Scanner(content).run() };
@@ -291,13 +290,8 @@ export const supportedFileTypes: string[] = ['rust'];
 
 /** Options for {@link createParser}: the parser's name, and which tagged segments to keep. */
 export interface CustomizeParserOptions {
-  /**
-   * Set the name of the parser.
-   */
   name?: string;
-  /**
-   * Define which tagged segments to keep. Omit to keep everything.
-   */
+  /** Omit to keep everything. */
   tags?: TagFilterOptions;
 }
 
