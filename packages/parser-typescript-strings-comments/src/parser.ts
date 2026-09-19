@@ -183,10 +183,6 @@ function isModuleSpecifierContext(content: string, quoteIndex: number): boolean 
  * `ParsedText` per segment and silently skipping everything else (identifiers, keywords, punctuation,
  * numbers, JSX markup) - the same "only emit what should be spell checked" approach as
  * `@cspell/parser-example`, extended to also emit string contents.
- *
- * Emits lazily via generators rather than collecting into an array - unlike a tree-sitter-backed parser,
- * nothing here holds onto a tree or other resource a consumer could leak by not fully draining the result,
- * so there's no reason to force eager collection.
  */
 class Scanner {
   private i = 0;
