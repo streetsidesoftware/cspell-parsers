@@ -50,8 +50,8 @@ choose the language IDs to use it for:
 By default every comment/string/markup segment the parser emits gets spell checked. To check only some of
 them - for example, only the PHP code itself, skipping the surrounding HTML markup - use `customizePlugin`
 instead of the plain `plugin` export. It takes a `CustomizePluginOptions` object - `tags: TagFilterOptions`
-and `name` are both optional, and omitting `tags` keeps everything - and returns a `Plugin` whose parser
-filters segments by tag itself, before cspell ever sees them.
+and `name` are both optional, and omitting `tags` keeps everything - and returns a `Plugin` that only spell
+checks the tagged segments you keep. It works with any cspell version.
 
 ```js
 // cspell.config.mjs — customizePlugin returns a live Plugin object, so it needs a JS/TS config file
@@ -80,37 +80,18 @@ parsers can't share one.
 
 ## Tags
 
-| Tag                  | Meaning                                                             |
-| -------------------- | ------------------------------------------------------------------- |
-| `comment`            | Any comment                                                         |
-| `comment.line`       | A `//` or `#` line comment                                          |
-| `comment.block`      | A `/* ... */` block comment                                         |
-| `comment.block.doc`  | A `/** ... */` PHPDoc-style comment                                 |
-| `string`             | Any string-like literal                                             |
-| `string.singleQuote` | A `'...'` string literal (no interpolation)                         |
-| `string.doubleQuote` | A `"..."` string literal (interpolation-aware)                      |
-| `string.heredoc`     | A `<<<ID ... ID` heredoc body (interpolation-aware)                 |
-| `string.nowdoc`      | A `<<<'ID' ... ID` nowdoc body (no interpolation)                   |
-| `markup`             | HTML (or other non-PHP) content outside `<?php`/`<?=`/`<?` ... `?>` |
-
-## How it works
-
-- `parser.parse(content, filename)` returns a `ParseResult` containing one or more `ParsedText` entries.
-- Each `ParsedText.range` is the `[start, end]` offset of that segment in the original `content`, which is how
-  cspell maps spelling issues found in the parsed text back to the right place in the source file.
-- Every segment is tagged with a dot-separated tag, plus every ancestor of it (`comment.block.doc` also
-  carries `comment` and `comment.block`) - `customizePlugin` can filter which segments get spell checked
-  using these tags, at any level of specificity (just `string`, or the more specific `string.heredoc`).
-- **PHP files toggle between HTML markup and PHP code.** Everything outside `<?php`/`<?=`/`<?` ... `?>` is
-  passed through as `markup` - untouched, unsplit HTML - and everything between those boundaries is scanned
-  for comments and strings as PHP code.
-- **A double-quoted string's or heredoc's `{$...}` complex-interpolation hole is spell checked as part of the
-  same string, not split out into its own segment.** Unlike a JS template literal's `${...}` hole, PHP's
-  `{$...}` syntax is detected only so the scanner doesn't mistake something inside it (like a nested quote in
-  `"{$arr['key']}"`) for the string's own closing delimiter - the hole's contents are then included verbatim
-  in the same `ParsedText` as the rest of the string.
-- **A `#` starts a line comment, except immediately before `[`.** `#[Attribute]` is a PHP 8 attribute, not a
-  comment, so `#[` is left as ordinary code instead.
+| Tag                  | Meaning                                                                   |
+| -------------------- | ------------------------------------------------------------------------- |
+| `comment`            | Any comment                                                               |
+| `comment.line`       | A `//` or `#` line comment (`#[` starts a PHP 8 attribute, not a comment) |
+| `comment.block`      | A `/* ... */` block comment                                               |
+| `comment.block.doc`  | A `/** ... */` PHPDoc-style comment                                       |
+| `string`             | Any string-like literal                                                   |
+| `string.singleQuote` | A `'...'` string literal (no interpolation)                               |
+| `string.doubleQuote` | A `"..."` string literal (interpolation-aware)                            |
+| `string.heredoc`     | A `<<<ID ... ID` heredoc body (interpolation-aware)                       |
+| `string.nowdoc`      | A `<<<'ID' ... ID` nowdoc body (no interpolation)                         |
+| `markup`             | HTML (or other non-PHP) content outside `<?php`/`<?=`/`<?` ... `?>`       |
 
 ## Known limitations
 

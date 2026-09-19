@@ -124,6 +124,16 @@ built as module-level constants rather than computed per segment. `markup` is th
 that deliberately has no ancestor - it isn't a kind of `string` or `comment`, so it stands alone at the top
 level. See `README.md`'s [Tags](README.md#tags) table for what each one means to a consumer.
 
+### Why `customizePlugin`/`createParser` filtering works with any cspell version
+
+`plugin.ts`'s `customizePlugin` and `parser.ts`'s `createParser` both filter by wrapping this package's
+`parser` in `@internal/utils`'s `customizeParser` (see `packages/internal-utils/src/customize.ts`), which
+compiles the `tags` option into a `TagsFilter` once and uses it to drop excluded entries from `parse()`'s own
+`parsedTexts` before returning. The filtering therefore happens entirely inside this package's parser, before
+its result ever reaches cspell - cspell just sees an ordinary parser whose `parse()` already omits the
+excluded segments. That's why `README.md` can tell users it works with any cspell version: there's no
+dependency on cspell itself supporting tag-based filtering.
+
 ## Testing
 
 - `parser.test.ts` reads fixtures out of `fixtures/` (via `readFixture`/`parseFixture` helpers) rather than
