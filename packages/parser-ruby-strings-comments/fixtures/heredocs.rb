@@ -14,6 +14,12 @@ plain = <<PLAIN
 Plain heredoc marker with no leading whitespace before the terminator.
 PLAIN
 
+plain_with_indented_lookalike = <<PLAIN2
+Body text before the indented lookalike line.
+  PLAIN2
+Body text after it - an indented occurrence of the marker is not the terminator for a plain heredoc.
+PLAIN2
+
 literal = <<~'RAW'
   No #{interpolation} happens in here - this is literal text, braces and all.
 RAW
