@@ -93,25 +93,6 @@ for every tag this parser can emit.
 more than one customized copy of this parser, since cspell selects a parser by name and two parsers can't
 share one.
 
-## How it works
-
-- `parser.parse(content, filename)` returns a `ParseResult` containing one or more `ParsedText` entries.
-- Each `ParsedText.range` is the `[start, end]` offset of that segment in the original `content`, which is how
-  cspell maps spelling issues found in the parsed text back to the right place in the source file.
-- Which language-specific forms apply (template literals, verbatim/raw strings, heredoc, ...) is chosen once
-  per file from `filename`'s extension - falling back to a plain `//`/`/* */`/`'...'`/`"..."` baseline for an
-  unrecognized one.
-- Every segment is tagged with a dot-separated tag, plus every ancestor of it (`string.heredoc` also carries
-  `string`) - `customizePlugin` can filter which segments get spell checked using these tags, at any level of
-  specificity (just `string`, or the more specific `string.heredoc`).
-- A JS/TS template literal or C# interpolated string is split into one `ParsedText` per literal fragment
-  around each `${...}`/`{...}` hole; the hole's own contents are recursively scanned the same way as the rest
-  of the file, so a string or comment nested inside an interpolation still gets picked up and tagged normally.
-- A PHP file additionally toggles between an HTML "markup" pass-through mode and a PHP code-scanning mode at
-  each `<?php`/`<?=`/`<?` and `?>` boundary. Text outside those tags is emitted verbatim, tagged `markup`, so
-  it's still spell checked (the same as if no parser applied to it) even though it isn't PHP code.
-- `plugin.parsers` is the list of parsers a cspell plugin module exposes; a plugin can expose more than one.
-
 ## Tags
 
 | Tag                      | Meaning                                                                                                       |
@@ -136,6 +117,25 @@ share one.
 A C# string can carry more than one of these at once - a combined verbatim-and-interpolated `$@"..."`/`@$"..."`
 fragment is tagged with both `string.verbatim` and `string.interpolated`, and an interpolated C# 11 raw string
 (`$"""..."""`) with both `string.raw` and `string.interpolated`.
+
+## How it works
+
+- `parser.parse(content, filename)` returns a `ParseResult` containing one or more `ParsedText` entries.
+- Each `ParsedText.range` is the `[start, end]` offset of that segment in the original `content`, which is how
+  cspell maps spelling issues found in the parsed text back to the right place in the source file.
+- Which language-specific forms apply (template literals, verbatim/raw strings, heredoc, ...) is chosen once
+  per file from `filename`'s extension - falling back to a plain `//`/`/* */`/`'...'`/`"..."` baseline for an
+  unrecognized one.
+- Every segment is tagged with a dot-separated tag, plus every ancestor of it (`string.heredoc` also carries
+  `string`) - `customizePlugin` can filter which segments get spell checked using these tags, at any level of
+  specificity (just `string`, or the more specific `string.heredoc`).
+- A JS/TS template literal or C# interpolated string is split into one `ParsedText` per literal fragment
+  around each `${...}`/`{...}` hole; the hole's own contents are recursively scanned the same way as the rest
+  of the file, so a string or comment nested inside an interpolation still gets picked up and tagged normally.
+- A PHP file additionally toggles between an HTML "markup" pass-through mode and a PHP code-scanning mode at
+  each `<?php`/`<?=`/`<?` and `?>` boundary. Text outside those tags is emitted verbatim, tagged `markup`, so
+  it's still spell checked (the same as if no parser applied to it) even though it isn't PHP code.
+- `plugin.parsers` is the list of parsers a cspell plugin module exposes; a plugin can expose more than one.
 
 ## Known limitations
 
@@ -185,16 +185,6 @@ Please show your support through one of the following sites:
 </p>
 
 <!--- @@inject-end: ../../static/sponsor.md --->
-
-## CSpell for Enterprise
-
-<!--- @@inject: ../../static/tidelift.md --->
-
-Available as part of the Tidelift Subscription.
-
-The maintainers of cspell and thousands of other packages are working with Tidelift to deliver commercial support and maintenance for the open source packages you use to build your applications. Save time, reduce risk, and improve code health, while paying the maintainers of the exact packages you use. [Learn more.](https://tidelift.com/subscription/pkg/npm-cspell?utm_source=npm-cspell&utm_medium=referral&utm_campaign=enterprise&utm_term=repo)
-
-<!--- @@inject-end: ../../static/tidelift.md --->
 
 <!--- @@inject: ../../static/footer.md --->
 

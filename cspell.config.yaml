@@ -24,6 +24,8 @@ ignorePaths:
 words:
   - COMMIT_EDITMSG
   - dedup
+  - gitdir
   - inlines
   - sigstore
   - unaliased
+  - worktrees

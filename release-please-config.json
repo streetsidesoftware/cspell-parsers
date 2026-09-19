@@ -69,6 +69,9 @@
     ".": {
       "component": "cspell-parsers"
     },
+    "packages/parser-c-cpp-strings-comments": {
+      "component": "@cspell/parser-c-cpp-strings-comments"
+    },
     "packages/parser-csharp-strings-comments": {
       "component": "@cspell/parser-csharp-strings-comments"
     },
@@ -86,6 +89,9 @@
     },
     "packages/parser-php-strings-comments": {
       "component": "@cspell/parser-php-strings-comments"
+    },
+    "packages/parser-python-strings-comments": {
+      "component": "@cspell/parser-python-strings-comments"
     },
     "packages/parser-rust-strings-comments": {
       "component": "@cspell/parser-rust-strings-comments"
