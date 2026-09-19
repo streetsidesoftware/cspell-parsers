@@ -12,10 +12,8 @@ export const plugin: Plugin = {
 export type CustomizePluginOptions = CustomizeParserOptions;
 
 /**
- * Returns a version of {@link plugin} that only spell checks the tagged segments you keep (see
- * {@link CustomizePluginOptions} and the Tags table in the README), and/or registers its parser under a
- * different name - useful when registering more than one customized instance. Works with any cspell
- * version.
+ * Create a customized copy of {@link plugin} - rename its parser and/or choose which tagged segments get
+ * spell checked. Works with any cspell version.
  *
  * **`cspell.config.mjs`**
  *
