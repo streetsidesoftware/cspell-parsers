@@ -30,8 +30,8 @@ itself has to alternate between two fundamentally different scans, not just call
   a `markup`-tagged segment (verbatim, no transform), then hands off to `scanCode` starting right after the
   tag.
 - `scanCode` runs in `phpAware` mode: as soon as it sees a top-level `?>`, it stops and returns control to
-  `scanPhpDocument`, which resumes looking for the next open tag. If no `?>` appears, `scanCode` simply runs
-  to the end of the file (a file that never leaves PHP mode after its one `<?php`, which is the common case).
+  `scanPhpDocument`, which resumes looking for the next open tag. If no `?>` appears, `scanCode` runs to the
+  end of the file (a file that never leaves PHP mode after its one `<?php`, which is the common case).
 - `findPhpOpenTag` recognizes three open-tag forms: `<?php` (matched case-insensitively, with a word-boundary
   check via `isIdentChar` on the character right after it, so a bare identifier starting with `<?php...` -
   not that this is valid PHP either way - doesn't false-positive), `<?=` (the "short echo" tag,

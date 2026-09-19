@@ -111,7 +111,6 @@ parsers can't share one.
   in the same `ParsedText` as the rest of the string.
 - **A `#` starts a line comment, except immediately before `[`.** `#[Attribute]` is a PHP 8 attribute, not a
   comment, so `#[` is left as ordinary code instead.
-- `plugin.parsers` is the list of parsers a cspell plugin module exposes; a plugin can expose more than one.
 
 ## Known limitations
 
