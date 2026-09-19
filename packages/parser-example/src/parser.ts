@@ -74,19 +74,14 @@ export const supportedFileTypes: string[] = ['c', 'cpp', 'csharp', 'java', 'java
 
 /** Options for {@link createParser}: the parser's name, and which tagged segments to keep. */
 export interface CustomizeParserOptions {
-  /**
-   * Set the name of the parser.
-   */
+  /** Overrides the parser's name (defaults to `c-style-comments`). */
   name?: string;
-  /**
-   * Define which tagged segments to keep. Omit to keep everything.
-   */
+  /** Which tagged segments to keep. Omit to keep everything. */
   tags?: TagFilterOptions;
 }
 
 /**
- * Create a parser for C, C++, C#, Java, JavaScript, and TypeScript files. You can set the name of the parser
- * and filter on the tags if desired.
+ * Creates a customized copy of {@link parser} - renamed, and/or filtered to only some tagged segments.
  *
  * The name is used to select the parser via the
  * [cspell `parser`](https://cspell.org/docs/api/cspell-types/interfaces/CSpellSettings#parser) setting.

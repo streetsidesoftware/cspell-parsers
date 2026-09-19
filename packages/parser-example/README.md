@@ -96,16 +96,6 @@ Use this package as a template: copy `src/parser.ts`, `src/plugin.ts`, `src/inde
 into a new package under `packages/` and replace the parsing logic with your own. See the repo root
 `CONTRIBUTING.md` for the full steps.
 
-## How it works
-
-- `parser.parse(content, filename)` returns a `ParseResult` containing one or more `ParsedText` entries.
-- Each `ParsedText.range` is the `[start, end]` offset of that segment in the original `content`, which is how
-  cspell maps spelling issues found in the parsed text back to the right place in the source file.
-- Each comment is tagged with a dot-separated tag, plus every ancestor of it (`comment.block.doc` also
-  carries `comment` and `comment.block`) - `customizePlugin` can filter which segments get spell checked
-  using these tags, at any level of specificity (just `comment`, or the more specific `comment.line`).
-- `plugin.parsers` is the list of parsers a cspell plugin module exposes; a plugin can expose more than one.
-
 ## Requirements
 
 <!--- @@inject: ../../static/requirements.md --->
