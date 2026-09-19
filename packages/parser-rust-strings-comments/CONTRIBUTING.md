@@ -12,7 +12,7 @@ single hand-written scanner (`Scanner`, a small stateful class holding a mutable
 There's no AST and no tokenizer for the language as a whole - `Scanner.run` walks `content` character by
 character, recognizing only the handful of constructs that matter (comments and strings) and silently
 advancing `i` past everything else. Since cspell only ever checks what's inside `parsedTexts`, this is how
-the parser excludes syntax noise: by simply never emitting it, not by filtering it out afterwards - the same
+the parser excludes syntax noise: by never emitting it, not by filtering it out afterwards - the same
 approach `@cspell/parser-example` uses. Char literals and lifetimes get no special handling at all - see
 "Char literals and lifetimes" below.
 
