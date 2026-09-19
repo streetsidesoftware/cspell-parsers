@@ -90,11 +90,6 @@ parsers can't share one.
 | `string.doubleQuote` | A `"..."` string literal            |
 | `string.textBlock`   | A `"""..."""` text block (Java 15+) |
 
-## How it works
-
-Each `ParsedText.range` is the `[start, end]` offset of that segment in the original `content`, which is how
-cspell maps a spelling issue found in the parsed text back to the right place in the source file.
-
 ## Known limitations
 
 This parser is a small hand-written scanner, not a real grammar. It doesn't build an AST, so it can't tell

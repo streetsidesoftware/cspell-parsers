@@ -37,7 +37,11 @@ to only checking one extra character.
 
 ### Emitting a segment
 
-Every scan method builds a single `ParsedText` from a `[start, end)` range it already knows:
+Every scan method builds a single `ParsedText` from a `[start, end)` range it already knows. `range` is the
+offset of the segment in the original `content`, not in `text`/`rawText` - it's what cspell uses to map a
+spelling issue found in the parsed text back to the right place in the source file, so getting it exactly
+right (including for unterminated literals, see "Escape handling" below) is the correctness-critical part of
+every scan method:
 
 - Line/block comments reuse `@internal/utils`'s `stripCommentMarkers` directly (it already handles the
   Javadoc gutter-stripping correctly, and always starts with `//` or `/*`).
