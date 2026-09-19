@@ -218,11 +218,10 @@ export interface CustomizeParserOptions {
 }
 
 /**
- * Returns a C/C++ `Parser` that only emits segments matching the given tag filter, optionally under a new
- * name so it can be registered and selected independently of the default `parser` export. See the "Tags"
- * table in `README.md` for the tag names to filter on, and the
- * [cspell `parser`](https://cspell.org/docs/api/cspell-types/interfaces/CSpellSettings#parser) setting for
- * how the name is used to select a parser.
+ * Create a parser for C and C++ files. You can set the name of the parser and filter on the tags if desired.
+ *
+ * The name is used to select the parser via the
+ * [cspell `parser`](https://cspell.org/docs/api/cspell-types/interfaces/CSpellSettings#parser) setting.
  *
  * Usage: **`cspell.config.mts`**
  * ```ts
