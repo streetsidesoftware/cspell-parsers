@@ -227,6 +227,52 @@ describe('ruby-strings-comments parser', () => {
     });
   });
 
+  describe('char-literals-and-backticks.rb', () => {
+    // ?'/?"/?# (a one-character-string literal whose one character is a quote or "#") and backtick command
+    // strings are two more shapes that can trigger the same runaway-scan failure mode as an unrecognized
+    // percent-literal, if left unrecognized - see CONTRIBUTING.md.
+    const parsedTexts = parseFixture('char-literals-and-backticks.rb');
+
+    it.each([
+      ["?'", 'quote'],
+      ['?"', 'double-quote'],
+      ['?#', 'hash'],
+    ])(
+      'does not emit anything for the %j char literal, and the real string after it is still recognized',
+      (rawText) => {
+        expect(parsedTexts.some((p) => p.rawText === rawText)).toBe(false);
+      },
+    );
+
+    it('does not emit anything for a plain char literal ("?a")', () => {
+      expect(parsedTexts.some((p) => p.rawText === '?a')).toBe(false);
+    });
+
+    it('still recognizes a ternary\'s strings normally, whether or not there is a space after "?"', () => {
+      expect(byText(parsedTexts, 'yes')).toBeDefined();
+      expect(byText(parsedTexts, 'no')).toBeDefined();
+      expect(parsedTexts.filter((p) => p.text === 'yes')).toHaveLength(2);
+    });
+
+    it('tags a backtick command string as string.backtick', () => {
+      const str = byText(parsedTexts, "ls -la 'My Documents'");
+      expect(str?.rawText).toBe("ls -la 'My Documents'");
+      expect(str?.tags).toEqual({ string: true, 'string.backtick': true });
+    });
+
+    it("does not swallow the real string after a backtick command containing a quote (`ls -la 'My Documents'`)", () => {
+      const real = byText(parsedTexts, 'still a real string, unaffected by anything above');
+      expect(real?.tags).toEqual({ string: true, 'string.singleQuote': true });
+    });
+
+    it('splits an interpolated backtick command string into fragments around #{...}', () => {
+      const start = parsedTexts.findIndex((p) => p.text === 'echo ');
+      const fragments = parsedTexts.slice(start, start + 2);
+      expect(fragments.map((f) => f.text)).toEqual(['echo ', ' today']);
+      expect(fragments.every((f) => f.tags?.['string.backtick'])).toBe(true);
+    });
+  });
+
   describe('unterminated.rb', () => {
     it('extends an unterminated heredoc body to the end of the file', () => {
       const content = readFixture('unterminated.rb');

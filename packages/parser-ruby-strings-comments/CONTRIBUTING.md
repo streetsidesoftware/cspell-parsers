@@ -10,12 +10,12 @@ file only covers what's specific to this package's parsing logic.
 Like `@cspell/parser-typescript-strings-comments` and `@cspell/parser-go-strings-comments`, this parser is a
 single hand-written scanner (`Scanner`, a small stateful class holding a mutable cursor `i` over `content`).
 There's no AST and no tokenizer for the language as a whole - `Scanner.scanCode` walks `content` character by
-character, recognizing comments, strings, heredocs, regex literals, and percent-literals, and silently
-advancing `i` past everything else (identifiers, keywords, punctuation, numbers, symbols). Since cspell only
-ever checks what's inside `parsedTexts`, this is how the parser excludes syntax noise: by simply never
-emitting it, not by filtering it out afterwards. Regex and percent-literals are recognized but never
-emitted either - see "Regex, percent-literals, division, and modulo" below for why that's load-bearing, not
-just a scope choice.
+character, recognizing comments, strings, heredocs, backtick command strings, regex literals, and
+percent-literals, and silently advancing `i` past everything else (identifiers, keywords, punctuation,
+numbers, symbols, char literals). Since cspell only ever checks what's inside `parsedTexts`, this is how the
+parser excludes syntax noise: by simply never emitting it, not by filtering it out afterwards. Regex and
+percent-literals are recognized but never emitted either - see "Regex, percent-literals, division, modulo,
+and char-literal-vs-ternary" below for why that's load-bearing, not just a scope choice.
 
 ### `scanCode`'s one exit condition
 
@@ -44,13 +44,13 @@ itself then finds the closing marker the same way a heredoc finds its own closin
 rest of that line (real Ruby ignores whatever follows `=end` on its own line, e.g. `=end # note`) as part of
 the (unscanned) footer, not as spell-checked content.
 
-## Regex, percent-literals, division, and modulo
+## Regex, percent-literals, division, modulo, and char-literal-vs-ternary
 
-Three different ambiguities in Ruby's grammar share the exact same shape: a token (`/`, `<<`, or `%`) that
-can either open a brand-new literal (a regex, heredoc, or percent-literal) or act as a binary operator
-continuing whatever value came right before it (division, left-shift/append, or modulo). All three are
-resolved by one function, `isOperandContext(content, index)` - ported from
-`@cspell/parser-typescript-strings-comments`'s `isDivisionContext`, generalized to cover all three operators:
+Four different ambiguities in Ruby's grammar share the exact same shape: a token (`/`, `<<`, `%`, or `?`)
+that can either open a brand-new literal (a regex, heredoc, percent-literal, or char literal) or act as a
+binary operator continuing whatever value came right before it (division, left-shift/append, modulo, or the
+ternary operator). All four are resolved by one function, `isOperandContext(content, index)` - ported from
+`@cspell/parser-typescript-strings-comments`'s `isDivisionContext`, generalized to cover all four operators:
 
 ```ts
 function isOperandContext(content: string, index: number): boolean {
@@ -133,6 +133,42 @@ opener (swallows real code), whereas missing an exotic percent-literal delimiter
 unscanned code (safe). An unterminated percent-literal is extended to EOF, the same as an unterminated
 heredoc, rather than left as a dangling opener with its quote(s) still live to misread.
 
+### The `?'`/`?"`/`?#` char-literal special case
+
+Ruby's `?x` one-character-string literal never gets general recognition - a bare `?` is otherwise always
+just ordinary code, since a single character has no prose worth checking (the same reasoning
+`@cspell/parser-rust-strings-comments` applies to Rust char literals). But `?'`, `?"`, and `?#` are the one
+shape that needs its own check: left unrecognized, that second character would reach the quote/comment
+dispatch in `scanCode` and run away exactly like an unrecognized percent-literal's embedded quote does (see
+above) - `?'` swallows real code hunting for the next `'`, and `?#` gets misread as a real comment to
+end-of-line. `scanCode` special-cases exactly this, gated by `isOperandContext` since `?` is also the
+ternary operator:
+
+```ts
+if (c === '?' && !isOperandContext(content, this.i) && (n === "'" || n === '"' || n === '#')) {
+  this.i += 2;
+  sawSlash = false;
+  continue;
+}
+```
+
+The `isOperandContext` gate is what keeps this from misfiring on a ternary: `cond ? 'a' : 'b'` has a value
+(`cond`) right before the `?`, so `isOperandContext` returns `true` and this check never fires, leaving `?`
+as ordinary code and `'a'`/`'b'` to be recognized normally by the ordinary quote dispatch - true whether or
+not there's a space after `?` (`cond ?'a':'b'` resolves the same way, matching real Ruby's own lexer
+behavior for this same ambiguity).
+
+### `scanInterpolatedString` and backtick command strings
+
+A backtick command string (`` `cmd` ``) follows the exact same escape/interpolation grammar as a
+double-quoted string - so rather than a separate method, `scanInterpolatedString(quoteChar, tags)` takes the
+delimiter and tag as parameters, and `scanCode` calls it once for `"` (`STRING_DOUBLE_TAG`) and once for `` ` ``
+(`STRING_BACKTICK_TAG`). Unlike every other literal opener in this file, a backtick needs no
+`isOperandContext` gating at all - Ruby has no other use for a bare backtick, so there's no operator it could
+be confused with. Recognizing it closes the same class of bug as percent-literals and `?'`/`?"`/`?#`: an
+embedded quote or `#` inside an unrecognized `` `...` `` would otherwise reach the ordinary dispatch and run
+away - see `fixtures/char-literals-and-backticks.rb`.
+
 ### `canPrecedeString` (the fallback, for what `tryScanRegexLiteral` misses)
 
 A narrow, backward-looking mitigation rather than a real fix: before treating a `'`/`"` as a real string's
@@ -184,7 +220,7 @@ Once the closing marker's position is known, the body is emitted:
   as one `string.heredoc` fragment via `emitFragment`, with no escape or interpolation handling at all - the
   same "literal" treatment `scanSingleQuotedString` gives a plain `'...'` string, just without even the
   boundary-finding backslash skip (there's no closing quote to hunt for; the boundary is already known).
-- **Interpolated** (bare or double-quoted marker): scanned exactly like `scanDoubleQuotedString`'s body,
+- **Interpolated** (bare or double-quoted marker): scanned exactly like `scanInterpolatedString`'s body,
   splitting into fragments around `#{...}` holes and recursing into `scanCode` for each one - just bounded by
   the already-known `bodyEnd` instead of searching for a closing `"`.
 
@@ -198,19 +234,23 @@ checked - see `README.md`'s "Known limitations".
 ## Tags
 
 Same convention as every other package in this repo: a tag is a dot-separated hierarchical name, and every
-segment carries its whole ancestor chain, built as module-level constants (`STRING_HEREDOC_TAG`, ...) rather
-than computed per segment. See `README.md`'s [Tags](README.md#tags) table for what each one means to a
-consumer. Regex and percent-literals intentionally have no tag at all - see `README.md`.
+segment carries its whole ancestor chain, built as module-level constants (`STRING_HEREDOC_TAG`,
+`STRING_BACKTICK_TAG`, ...) rather than computed per segment. See `README.md`'s [Tags](README.md#tags) table
+for what each one means to a consumer. Regex and percent-literals intentionally have no tag at all - see
+`README.md`. Char literals have no tag either, since (aside from the `?'`/`?"`/`?#` special case) they're
+never recognized in the first place.
 
 ## Testing
 
 - `parser.test.ts` reads fixtures out of `fixtures/` (via `readFixture`/`parseFixture` helpers) rather than
-  embedding source strings inline for the "typical case" coverage - including `fixtures/percent-literals.rb`,
-  which covers each percent-literal form plus nested-bracket depth tracking - and uses inline `parse()` calls
-  (mirroring `@cspell/parser-typescript-strings-comments`'s own convention) for narrower regression tests
-  where the exact surrounding content matters more than reading like a real file - the
-  `isOperandContext`/`sawSlash` ambiguity cases (including the `"a"<<"b"` closing-quote regression) and the
-  "ends in a trailing lone backslash at EOF" escape-handling edge cases.
+  embedding source strings inline for the "typical case" coverage - including `fixtures/percent-literals.rb`
+  (each percent-literal form plus nested-bracket depth tracking) and `fixtures/char-literals-and-backticks.rb`
+  (the `?'`/`?"`/`?#` special case, a plain char literal, a ternary both with and without a space, and backtick
+  command strings with and without interpolation) - and uses inline `parse()` calls (mirroring
+  `@cspell/parser-typescript-strings-comments`'s own convention) for narrower regression tests where the
+  exact surrounding content matters more than reading like a real file - the `isOperandContext`/`sawSlash`
+  ambiguity cases (including the `"a"<<"b"` closing-quote regression) and the "ends in a trailing lone
+  backslash at EOF" escape-handling edge cases.
 - `samples/` is a real, separate end-to-end check: actual cspell configs plus real source files, run for real
   by `pnpm run test:cspell` (`cspell .` from the package root). `samples/customize` in particular proves the
   `customizePlugin` tag filter is doing something real (a genuine misspelling inside a heredoc that

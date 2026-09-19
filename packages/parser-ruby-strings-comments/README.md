@@ -6,9 +6,9 @@ It implements cspell's [`Parser`](https://www.npmjs.com/package/@cspell/cspell-t
 [`Plugin`](https://www.npmjs.com/package/@cspell/cspell-types) so it can be wired into a cspell configuration.
 
 Unlike [`@cspell/parser-example`](https://www.npmjs.com/package/@cspell/parser-example) (comments only) or a
-full AST-based parser, this parser only ever emits comments and string/heredoc literals - never identifiers,
-keywords, punctuation, symbols, regex literals, or percent-literals (`%w[]`, `%q()`, ...) - using a small
-hand-written scanner rather than a real grammar.
+full AST-based parser, this parser only ever emits comments, strings, heredocs, and backtick command strings
+(`` `...` ``) - never identifiers, keywords, punctuation, symbols, char literals, regex literals, or
+percent-literals (`%w[]`, `%q()`, ...) - using a small hand-written scanner rather than a real grammar.
 
 ## Usage
 
@@ -80,15 +80,16 @@ parsers can't share one.
 
 ## Tags
 
-| Tag                  | Meaning                                                      |
-| -------------------- | ------------------------------------------------------------ |
-| `comment`            | Any comment                                                  |
-| `comment.line`       | A `#` line comment                                           |
-| `comment.block`      | An `=begin` ... `=end` block comment                         |
-| `string`             | Any string-like literal                                      |
-| `string.singleQuote` | A `'...'` string literal                                     |
-| `string.doubleQuote` | A `"..."` string literal (including interpolated fragments)  |
-| `string.heredoc`     | A `<<~ID`/`<<-ID`/`<<ID` heredoc body (any of its fragments) |
+| Tag                  | Meaning                                                                  |
+| -------------------- | ------------------------------------------------------------------------ |
+| `comment`            | Any comment                                                              |
+| `comment.line`       | A `#` line comment                                                       |
+| `comment.block`      | An `=begin` ... `=end` block comment                                     |
+| `string`             | Any string-like literal                                                  |
+| `string.singleQuote` | A `'...'` string literal                                                 |
+| `string.doubleQuote` | A `"..."` string literal (including interpolated fragments)              |
+| `string.heredoc`     | A `<<~ID`/`<<-ID`/`<<ID` heredoc body (any of its fragments)             |
+| `string.backtick`    | A `` `...` `` backtick command string (including interpolated fragments) |
 
 Regex literals (`/pattern/flags`) and percent-literals (`%w[]`, `%q()`, `%r{}`, ...) never appear in this
 table: nothing is ever emitted for either, so there's no tag to filter by - both are already excluded
@@ -101,13 +102,19 @@ unconditionally (see "How it works").
   cspell maps spelling issues found in the parsed text back to the right place in the source file.
 - Every segment is tagged with a dot-separated tag, plus every ancestor of it - `customizePlugin` can filter
   which segments get spell checked using these tags, at any level of specificity.
-- A double-quoted string (`"..."`) or an interpolated heredoc is split into one `ParsedText` per literal
-  fragment around each `#{...}` hole; the hole's own contents are recursively scanned the same way as the
-  rest of the file, so a string or comment nested inside an interpolation still gets picked up and tagged
-  normally.
+- A double-quoted string (`"..."`), backtick command string (`` `...` ``), or an interpolated heredoc is
+  split into one `ParsedText` per literal fragment around each `#{...}` hole; the hole's own contents are
+  recursively scanned the same way as the rest of the file, so a string or comment nested inside an
+  interpolation still gets picked up and tagged normally. A backtick command string follows the exact same
+  escape/interpolation grammar as a double-quoted string, differing only in delimiter and tag.
 - `=begin`/`=end` block comments are only recognized when both markers sit at column 0 - matching Ruby's own
   grammar exactly, so a variable or method merely containing the text "=begin" mid-line is never misdetected
   as opening one.
+- **Char literals (`?a`, `?\n`, ...) are never spell checked and get no general recognition at all** - a bare
+  `?` is simply left as ordinary, unrecognized code, since a single character has no prose worth checking.
+  The one exception is `?'`/`?"`/`?#` (a char literal whose one character is a quote or `#`), which is
+  specifically recognized and skipped as a unit - see "Known limitations" for why that one shape needs its
+  own handling.
 - **Regex literals (`/pattern/flags`) and percent-literals (`%w[]`, `%i[]`, `%q()`, `%Q{}`, `%r{}`, `%s()`,
   `%x()`) are recognized and skipped, but never spell checked at all.** Neither is prose worth checking, so -
   exactly like `@cspell/parser-typescript-strings-comments`'s documented policy for `RegExp` - this parser
@@ -133,20 +140,26 @@ handful of Ruby constructs are deliberately out of scope for this first version:
   ordinary identifier, both silently skipped like any other punctuation/identifier. A quoted symbol
   (`:"..."`/`:'...'`) is spell checked as an ordinary double/single-quoted string - the leading `:` is
   skipped as ordinary punctuation, and the parser's normal quote handling picks up from there.
-- **Regex-vs-division, heredoc-vs-left-shift, and percent-literal-vs-modulo are resolved with a lightweight,
-  shared heuristic, not full expression tracking.** `/pattern/` vs. `a / b`, `<<~ID` vs. `arr << x`, and
-  `%w[]` vs. `a % b` all share the same shape: a token that either opens a new literal or acts as a binary
-  operator on whatever came before it. This parser resolves all three the way a real Ruby lexer does - by
-  looking at the significant token right before it (an identifier, a keyword, `)`, `]`, `}`, a closing quote,
-  ...) - using one shared, documented set of keywords/method names (`if`, `unless`, `return`, `puts`, `print`,
-  `raise`, ...) after which a new expression is expected. This handles the overwhelming majority of real
-  code, but it can still miss:
+- **Char literals get no general recognition at all - a bare `?` is otherwise always just ordinary code.**
+  Since char literals are never spell checked, there's nothing to gain from parsing their shape. The one
+  exception: `?'`, `?"`, and `?#` (a char literal whose one character is a quote or `#`) are specifically
+  detected and skipped as a unit, since otherwise that character would be misread as the start of a real
+  string or comment, swallowing real code after it - the exact same failure mode an unrecognized
+  percent-literal risks (see `CONTRIBUTING.md`).
+- **Regex-vs-division, heredoc-vs-left-shift, percent-literal-vs-modulo, and char-literal-vs-ternary are
+  resolved with a lightweight, shared heuristic, not full expression tracking.** `/pattern/` vs. `a / b`,
+  `<<~ID` vs. `arr << x`, `%w[]` vs. `a % b`, and `?'` vs. `cond ? 'a' : 'b'` all share the same shape: a
+  token that either opens a new literal or acts as a binary operator on whatever came before it. This parser
+  resolves all four the way a real Ruby lexer does - by looking at the significant token right before it (an
+  identifier, a keyword, `)`, `]`, `}`, a closing quote, ...) - using one shared, documented set of
+  keywords/method names (`if`, `unless`, `return`, `puts`, `print`, `raise`, ...) after which a new
+  expression is expected. This handles the overwhelming majority of real code, but it can still miss:
   - A literal passed as a bare argument (no parens) to a method call not in that keyword set (e.g.
     `some_custom_method /pattern/`) - left as ordinary code (division/left-shift/modulo), not a literal.
   - A regex literal that spans multiple lines - a real but rare Ruby feature this parser doesn't support; it
     stops looking for a regex's closing `/` at the first newline, falling back to treating the `/` as
     ordinary code (and, for any quote inside, the narrower `canPrecedeString` fallback described below).
-  - A `/`, `<<`, or `%` right after a `}` is always treated as an operator, never a literal opener - `}`
+  - A `/`, `<<`, `%`, or `?` right after a `}` is always treated as an operator, never a literal opener - `}`
     closes both a block (where a literal argument commonly follows) and a hash/argument list (where these are
     real operators), so it's genuinely ambiguous. Biasing toward "operator" is the safe choice: getting it
     wrong just misses a literal, rather than risking a wrongly-recognized one swallowing real code after it.

@@ -10,6 +10,7 @@ const STRING_TAG: ParsedTags = { string: true };
 const STRING_SINGLE_TAG: ParsedTags = { ...STRING_TAG, 'string.singleQuote': true };
 const STRING_DOUBLE_TAG: ParsedTags = { ...STRING_TAG, 'string.doubleQuote': true };
 const STRING_HEREDOC_TAG: ParsedTags = { ...STRING_TAG, 'string.heredoc': true };
+const STRING_BACKTICK_TAG: ParsedTags = { ...STRING_TAG, 'string.backtick': true };
 
 /**
  * Strips a fixed-length opening/closing delimiter pair from `rawText` (quotes, or a heredoc's
@@ -253,6 +254,17 @@ class Scanner {
         continue;
       }
 
+      // A `?'`/`?"`/`?#` char literal (Ruby's `?x` one-character-string form) is the one shape that needs a
+      // check here: left unrecognized, its second character would reach the quote/comment dispatch below and
+      // run away exactly like an unrecognized percent-literal's embedded quote does - see CONTRIBUTING.md.
+      // `?` is also the ternary operator, so this is gated by isOperandContext the same as /, <<, and % -
+      // `cond ? 'a' : 'b'` has a value right before the `?`, so it's correctly left alone.
+      if (c === '?' && !isOperandContext(content, this.i) && (n === "'" || n === '"' || n === '#')) {
+        this.i += 2;
+        sawSlash = false;
+        continue;
+      }
+
       if (c === "'" && (!sawSlash || canPrecedeString(content[this.i - 1]))) {
         yield this.scanSingleQuotedString();
         // Deliberately not `sawSlash = false` here - see the reference TypeScript-family parser's
@@ -260,7 +272,13 @@ class Scanner {
         continue;
       }
       if (c === '"' && (!sawSlash || canPrecedeString(content[this.i - 1]))) {
-        yield* this.scanDoubleQuotedString();
+        yield* this.scanInterpolatedString('"', STRING_DOUBLE_TAG);
+        continue;
+      }
+      if (c === '`') {
+        // Unlike every other literal opener here, a backtick is never ambiguous with an operator - Ruby has
+        // no other use for a bare backtick - so this needs no isOperandContext gating.
+        yield* this.scanInterpolatedString('`', STRING_BACKTICK_TAG);
         continue;
       }
 
@@ -337,14 +355,18 @@ class Scanner {
     return { text, rawText, map, range: [start, end], tags: STRING_SINGLE_TAG };
   }
 
-  /** A `"..."` string, split into `string.doubleQuote` fragments around `#{...}` interpolation holes. */
-  private *scanDoubleQuotedString(): Generator<ParsedText> {
+  /**
+   * A `"..."` double-quoted string or `` `...` `` backtick command string - identical grammar (escapes,
+   * `#{...}` interpolation), differing only in delimiter and tag - split into fragments around each
+   * interpolation hole.
+   */
+  private *scanInterpolatedString(quoteChar: string, tags: ParsedTags): Generator<ParsedText> {
     const { content } = this;
     let i = this.i + 1;
     let fragStart = i;
     for (;;) {
       if (i >= content.length) {
-        yield* this.emitFragment(fragStart, i, STRING_DOUBLE_TAG);
+        yield* this.emitFragment(fragStart, i, tags);
         this.i = i;
         return;
       }
@@ -353,14 +375,14 @@ class Scanner {
         i = skipEscape(content, i);
         continue;
       }
-      if (c === '"') {
-        yield* this.emitFragment(fragStart, i, STRING_DOUBLE_TAG);
+      if (c === quoteChar) {
+        yield* this.emitFragment(fragStart, i, tags);
         i++;
         this.i = i;
         return;
       }
       if (c === '#' && content[i + 1] === '{') {
-        yield* this.emitFragment(fragStart, i, STRING_DOUBLE_TAG);
+        yield* this.emitFragment(fragStart, i, tags);
         i += 2;
         this.i = i;
         yield* this.scanCode(content.length, true);
@@ -422,13 +444,12 @@ class Scanner {
 
   /**
    * Scans a heredoc's body, given its already-parsed {@link HeredocHeader}, and emits it as one or more
-   * `string.heredoc`-tagged fragments (split around `#{...}` holes if `interpolated`, exactly like a
-   * double-quoted string, or as a single literal fragment otherwise - see `scanDoubleQuotedString`). The
-   * closing marker is found by matching a whole line (`ID` alone, with only trailing whitespace allowed
-   * after it - a body line that merely starts with the marker but continues with anything else, e.g.
-   * `SQL:`, is never mistaken for the terminator) - the same "match a whole line" approach
-   * `@cspell/parser-strings-comments`'s PHP heredoc support uses for its own `<<<ID ... ID` closing marker,
-   * just with Ruby's different opening syntax.
+   * `string.heredoc`-tagged fragments (split around `#{...}` holes if `interpolated`, exactly like
+   * `scanInterpolatedString`, or as a single literal fragment otherwise). The closing marker is found by
+   * matching a whole line (`ID` alone, with only trailing whitespace allowed after it - a body line that
+   * merely starts with the marker but continues with anything else, e.g. `SQL:`, is never mistaken for the
+   * terminator) - the same "match a whole line" approach `@cspell/parser-strings-comments`'s PHP heredoc
+   * support uses for its own `<<<ID ... ID` closing marker, just with Ruby's different opening syntax.
    *
    * Leading whitespace before the marker is only allowed when `header.allowIndentedTerminator` is set
    * (`<<~ID`/`<<-ID`) - a plain `<<ID` opener requires its closing marker at column 0 specifically. This
