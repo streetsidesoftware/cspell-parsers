@@ -127,18 +127,11 @@ function findPhpOpenTag(content: string, from: number): { tagStart: number; code
 
 /**
  * Scans PHP source for comments and string/heredoc/nowdoc literals, yielding one `ParsedText` per segment
- * and silently skipping everything else (identifiers, keywords, punctuation, numbers) - the same "only emit
- * what should be spell checked" approach as `@cspell/parser-example`, extended to also emit string contents
- * (with per-form tags).
+ * and skipping everything else (identifiers, keywords, punctuation, numbers).
  *
- * PHP is the only one of this repo's split-out language families with a genuine two-mode structure: a file
- * toggles between HTML markup (passed through untagged as `markup`) and PHP code at `<?php`/`<?=`/`<?` and
- * `?>` boundaries. `run`/`scanPhpDocument` drive that top-level toggle; `scanCode` handles everything once
- * inside a PHP code region.
- *
- * Emits lazily via generators rather than collecting into an array - nothing here holds onto a tree or other
- * resource a consumer could leak by not fully draining the result, so there's no reason to force eager
- * collection.
+ * PHP alone among this repo's split-out language families has a genuine two-mode structure: a file toggles
+ * between HTML markup (passed through untagged as `markup`) and PHP code at `<?php`/`<?=`/`<?` and `?>`
+ * boundaries. `run`/`scanPhpDocument` drive that toggle; `scanCode` handles everything inside a PHP region.
  */
 class Scanner {
   private i = 0;
@@ -368,18 +361,14 @@ export const supportedFileTypes: string[] = ['php'];
 
 /** Options for {@link createParser}: the parser's name, and which tagged segments to keep. */
 export interface CustomizeParserOptions {
-  /**
-   * Set the name of the parser.
-   */
+  /** Parser name to register under. */
   name?: string;
-  /**
-   * Define which tagged segments to keep. Omit to keep everything.
-   */
+  /** Which tagged segments to keep; omit to keep everything. */
   tags?: TagFilterOptions;
 }
 
 /**
- * Create a parser for PHP files. You can set the name of the parser and filter on the tags if desired.
+ * Create a parser for PHP files, optionally renamed and/or tag-filtered.
  *
  * The name is used to select the parser via the
  * [cspell `parser`](https://cspell.org/docs/api/cspell-types/interfaces/CSpellSettings#parser) setting.
