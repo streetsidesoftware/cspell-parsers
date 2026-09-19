@@ -161,13 +161,10 @@ class Scanner {
   }
 
   /**
-   * A C++11 raw string: an optional `u8`/`u`/`U`/`L` encoding prefix, then `R"delim(...)delim"`, where
-   * `delim` is 0-16 characters up to the `(`. Requires a non-identifier character (or start of file)
-   * immediately before the prefix, so this can't misfire partway through an ordinary identifier that happens
-   * to end in `R`. Returns `undefined` (consuming nothing) if the pattern doesn't actually match, so the
-   * caller falls through to treating `R`/the prefix letter as an ordinary skipped character. This applies
-   * equally to `.c` and `.cpp` files - real C code simply never contains this pattern, so it's safe to always
-   * attempt it.
+   * A C++11 raw string: optional `u8`/`u`/`U`/`L` prefix, then `R"delim(...)delim"` (`delim` up to 16 chars).
+   * Requires a non-identifier character before the prefix so this can't misfire mid-identifier (e.g. one
+   * ending in `R`). Returns `undefined` without consuming input on a non-match. Safe to always attempt on
+   * `.c` files too - real C never contains this syntax.
    */
   private tryScanCppRawString(): ParsedText | undefined {
     const { content } = this;
@@ -213,21 +210,15 @@ export const supportedFileTypes: string[] = ['c', 'cpp'];
 
 /** Options for {@link createParser}: the parser's name, and which tagged segments to keep. */
 export interface CustomizeParserOptions {
-  /**
-   * Set the name of the parser.
-   */
+  /** Overrides the registered parser name (default: `c-cpp-strings-comments`). */
   name?: string;
-  /**
-   * Define which tagged segments to keep. Omit to keep everything.
-   */
+  /** Which tagged segments to keep; omitting keeps everything. */
   tags?: TagFilterOptions;
 }
 
 /**
- * Create a parser for C and C++ files. You can set the name of the parser and filter on the tags if desired.
- *
- * The name is used to select the parser via the
- * [cspell `parser`](https://cspell.org/docs/api/cspell-types/interfaces/CSpellSettings#parser) setting.
+ * Create a customized copy of the C/C++ parser, renamed and/or tag-filtered. The name is used to select it
+ * via the [cspell `parser`](https://cspell.org/docs/api/cspell-types/interfaces/CSpellSettings#parser) setting.
  *
  * Usage: **`cspell.config.mts`**
  * ```ts

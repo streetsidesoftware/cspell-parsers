@@ -12,7 +12,7 @@ over `content`). There's no AST and no tokenizer for the language as a whole - `
 character by character, recognizing only the handful of constructs that matter (comments, string/char
 literals, and C++ raw strings) and silently advancing `i` past everything else (identifiers, keywords,
 punctuation, numbers, preprocessor directives). Since cspell only ever checks what's inside `parsedTexts`,
-this is how the parser excludes syntax noise: by simply never emitting it, not by filtering it out afterwards -
+this is how the parser excludes syntax noise: by never emitting it, not by filtering it out afterwards -
 the same approach `@cspell/parser-example` uses.
 
 This package started as the C/C++ slice of `@cspell/parser-strings-comments`, a single scanner that also

@@ -97,20 +97,13 @@ parsers can't share one.
 
 ## How it works
 
-- `parser.parse(content, filename)` returns a `ParseResult` containing one or more `ParsedText` entries.
 - Each `ParsedText.range` is the `[start, end]` offset of that segment in the original `content`, which is how
   cspell maps spelling issues found in the parsed text back to the right place in the source file.
-- Every segment is tagged with a dot-separated tag, plus every ancestor of it (`comment.block.doc` also
-  carries `comment` and `comment.block`) - `customizePlugin` can filter which segments get spell checked
-  using these tags, at any level of specificity (just `comment`, or the more specific `comment.block.doc`).
-- A Doxygen-style doc-comment line - `///` (but not a `////`-or-more separator line) or `//!` - is tagged
-  `comment.line.doc`; an ordinary `//` line comment is just `comment.line`.
-- **C++11 raw strings (`R"delim(...)delim"`, with an optional `u8`/`u`/`U`/`L` encoding prefix) are
-  recognized and their contents spell checked without treating anything inside as an escape sequence or
-  comment marker.** `delim` can be 0-16 characters, and the closing sequence must match it exactly
-  (`)delim"`), so a near-miss inside the body (e.g. `)DEL` when the real delimiter is `DELIM`) doesn't end the
-  string early. Real C code never contains this syntax, so recognizing it is harmless there.
-- `plugin.parsers` is the list of parsers a cspell plugin module exposes; a plugin can expose more than one.
+- Every segment carries its full tag lineage - `comment.block.doc` also carries `comment` and `comment.block`.
+- C++11 raw strings (`R"delim(...)delim"`, optional `u8`/`u`/`U`/`L` prefix) are recognized without treating
+  their contents as escapes or comment markers. `delim` is 0-16 characters, and the closer must match it
+  exactly, so a near-miss substring in the body (e.g. `)DEL` when the real delimiter is `DELIM`) doesn't end
+  the string early. Harmless to always attempt on `.c` files too, since real C never uses this syntax.
 
 ## Known limitations
 
