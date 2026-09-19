@@ -83,7 +83,7 @@ describe('rust-strings-comments parser', () => {
     });
   });
 
-  describe('nested-comments.rs (Wrinkle 1: block comments nest)', () => {
+  describe('nested-comments.rs (block comments nest)', () => {
     const parsedTexts = parseFixture('nested-comments.rs');
 
     it('treats "/* /* nested */ still open */" as ONE comment, not two', () => {
@@ -141,85 +141,37 @@ describe('rust-strings-comments parser', () => {
     });
   });
 
-  describe('lifetimes-vs-chars.rs (Wrinkle 2: char literal vs. lifetime)', () => {
+  describe('lifetimes-vs-chars.rs (char literals and lifetimes are not specially recognized)', () => {
+    // Neither a char/byte-char literal nor a lifetime/label gets any special handling - a bare "'" is just
+    // ordinary, unrecognized code, exactly like any other punctuation this scanner doesn't check. Char
+    // literals have no prose worth spell checking, so there's nothing to gain from parsing their shape - see
+    // README.md's "How it works"/"Known limitations" and CONTRIBUTING.md for the full rationale, including
+    // the one real trade-off this simplification makes (tested below).
     const parsedTexts = parseFixture('lifetimes-vs-chars.rs');
 
-    it('does not treat the lifetime tick in "Wrapper<\'a>" as the start of a char literal', () => {
-      // The fixture also has a genuine "'a'" char literal elsewhere (in classify()), so this must check the
-      // specific lifetime occurrence's position, not just "no rawText contains 'a" - that would also
-      // (wrongly) fail on the real char literal a few lines down.
+    it.each([
+      ["'a'", 'a plain char literal'],
+      [String.raw`'\n'`, 'an escape-based char literal'],
+      [String.raw`'\''`, 'an escaped-quote char literal'],
+      [String.raw`'\x41'`, 'a byte-escape char literal'],
+      [String.raw`'\u{1F600}'`, 'a unicode-escape char literal'],
+      ["b'x'", 'a byte-char literal'],
+      [String.raw`b'\n'`, 'an escape-based byte-char literal'],
+      [String.raw`b'\x41'`, 'a byte-escape byte-char literal'],
+    ])('does not emit anything with rawText %j (%s)', (rawText) => {
+      expect(parsedTexts.some((p) => p.rawText === rawText)).toBe(false);
+    });
+
+    it('does not emit anything for the lifetime tick in "Wrapper<\'a>"', () => {
       const content = readFixture('lifetimes-vs-chars.rs');
       const tickIndex = content.indexOf("<'a>") + 1;
       expect(parsedTexts.some((p) => p.range[0] === tickIndex)).toBe(false);
     });
 
     it('does not emit anything for a lifetime-annotated reference ("&\'a str")', () => {
-      // If the disambiguation were wrong, this would either run away treating "'a str" as an unterminated
-      // char literal, or spuriously emit "a" as if it were a char literal's content.
       const content = readFixture('lifetimes-vs-chars.rs');
       const tickIndex = content.indexOf("&'a str") + 1;
       expect(parsedTexts.some((p) => p.range[0] === tickIndex)).toBe(false);
-    });
-
-    it('does not emit anything for a real char literal ("\'a\'") - char literals are never spell checked', () => {
-      const content = readFixture('lifetimes-vs-chars.rs');
-      const parsed = [...parse(content, 'file.rs').parsedTexts];
-      expect(parsed.some((p) => p.rawText === "'a'")).toBe(false);
-    });
-
-    it('does not emit anything for an escape-based char literal ("\'\\n\'")', () => {
-      expect(parsedTexts.some((p) => p.rawText === String.raw`'\n'`)).toBe(false);
-    });
-
-    it("does not emit anything for an escaped-quote char literal (\"'\\''\")", () => {
-      expect(parsedTexts.some((p) => p.rawText === String.raw`'\''`)).toBe(false);
-    });
-
-    it('does not emit anything for a byte-escape char literal ("\'\\x41\'"), and still consumes it correctly', () => {
-      // Regression coverage: a fixed-length-2-char-escape assumption (reusing the generic skipEscape,
-      // fine for a "..." string's boundary-finding) would land on "4", not the closing "'", and fail to
-      // recognize this 4-character escape as a char literal at all - meaning the "4" and "1" characters,
-      // and the closing "'", would leak through as unrecognized code instead of being cleanly consumed.
-      const content = readFixture('lifetimes-vs-chars.rs');
-      const literalIndex = content.indexOf(String.raw`'\x41'`);
-      const parsed = [...parse(content, 'file.rs').parsedTexts];
-      expect(parsed.some((p) => p.rawText === String.raw`'\x41'`)).toBe(false);
-      expect(parsed.some((p) => p.range[0] > literalIndex && p.range[0] < literalIndex + 6)).toBe(false);
-    });
-
-    it('does not emit anything for a unicode-escape char literal ("\'\\u{1F600}\'"), and still consumes it correctly', () => {
-      // Regression coverage: same underlying issue as the \x41 case above, but for a variable-length
-      // (4-9 character) brace-delimited escape.
-      const content = readFixture('lifetimes-vs-chars.rs');
-      const literalIndex = content.indexOf(String.raw`'\u{1F600}'`);
-      const parsed = [...parse(content, 'file.rs').parsedTexts];
-      expect(parsed.some((p) => p.rawText === String.raw`'\u{1F600}'`)).toBe(false);
-      expect(parsed.some((p) => p.range[0] > literalIndex && p.range[0] < literalIndex + 11)).toBe(false);
-    });
-
-    it('does not emit anything for a byte-char literal ("b\'x\'")', () => {
-      expect(parsedTexts.some((p) => p.rawText === "b'x'")).toBe(false);
-    });
-
-    it('does not emit anything for an escape-based byte-char literal ("b\'\\n\'")', () => {
-      expect(parsedTexts.some((p) => p.rawText === String.raw`b'\n'`)).toBe(false);
-    });
-
-    it('does not emit anything for a byte-escape byte-char literal ("b\'\\x41\'")', () => {
-      expect(parsedTexts.some((p) => p.rawText === String.raw`b'\x41'`)).toBe(false);
-    });
-
-    it('recognizing a char literal containing a quote ("\'"\'") keeps a real string right after it from being misread', () => {
-      // This is *why* char literals still need to be recognized and consumed, even though nothing is
-      // emitted for them: if the opening "'" of '"' were just treated as an ordinary skipped character (as
-      // it must be for a lifetime), the "\"" right after it would look exactly like the start of a real
-      // string to scanQuotedString - which would then scan forward past the literal's closing "'" looking
-      // for a "closing" quote, potentially swallowing real code (here, the genuine string right after it)
-      // before finding one.
-      const content = readFixture('lifetimes-vs-chars.rs');
-      const parsed = [...parse(content, 'file.rs').parsedTexts];
-      const str = parsed.find((p) => p.text === 'a real string that must still be recognized correctly');
-      expect(str?.tags).toEqual({ string: true, 'string.doubleQuote': true });
     });
 
     it('does not emit anything for the "\'static" lifetime', () => {
@@ -227,12 +179,26 @@ describe('rust-strings-comments parser', () => {
       expect(byText(parsedTexts, 'static')).toBeUndefined();
     });
 
+    it('does not emit anything for the "\'_\'" underscore lifetime', () => {
+      expect(parsedTexts.some((p) => p.rawText?.includes("'_"))).toBe(false);
+    });
+
     it('still tags the ordinary "hello" string literal correctly alongside the lifetime on the same line', () => {
       expect(byText(parsedTexts, 'hello')?.tags).toEqual({ string: true, 'string.doubleQuote': true });
     });
 
-    it('does not emit anything for the "\'_\'" underscore lifetime', () => {
-      expect(parsedTexts.some((p) => p.rawText?.includes("'_"))).toBe(false);
+    it('KNOWN LIMITATION: a char literal containing a quote ("\'"\'") can cause a real string right after it to be misread', () => {
+      // Since char literals aren't specially recognized, a char literal containing a '"' (e.g. '"') is just
+      // ordinary code - so the "\"" right after its opening "'" looks exactly like the start of a real
+      // string to scanQuotedString, which then scans past the literal's actual closing "'" looking for
+      // another "\"", swallowing whatever real code (here, the genuine string that follows) sits in between.
+      // This is a deliberate, accepted trade-off (see README.md's "Known limitations") in exchange for not
+      // needing any char-literal-vs-lifetime disambiguation logic at all - this test locks in that trade-off
+      // rather than silently losing coverage of it.
+      const content = readFixture('lifetimes-vs-chars.rs');
+      const parsed = [...parse(content, 'file.rs').parsedTexts];
+      const str = parsed.find((p) => p.text === 'a real string that must still be recognized correctly');
+      expect(str).toBeUndefined();
     });
   });
 

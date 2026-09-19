@@ -65,37 +65,6 @@ function skipEscape(content: string, i: number): number {
   return Math.min(i + 2, content.length);
 }
 
-/**
- * The length (including the backslash) of a valid Rust char/byte-char-literal escape sequence starting at
- * `content[i]` (a `\`), or `undefined` if what follows isn't one of Rust's recognized escape forms. Unlike
- * the generic 2-char `skipEscape` - fine for skipping *past* an escape inside a `"..."` string, where only
- * finding the boundary matters, not the escape's exact shape - `tryScanCharLiteral` needs to know precisely
- * how long the escape is, since a char literal must be exactly one escape sequence followed immediately by
- * its closing `'`. Assuming every escape is 2 characters (as this scanner originally did, reusing
- * `skipEscape` here too) silently fails to recognize `\x41`'s 4-character byte escape or `\u{1F600}`'s
- * variable-length (4-9 character) Unicode escape as valid char literals at all - both are real, common Rust
- * syntax, not edge cases worth leaving unrecognized.
- */
-function charLiteralEscapeLength(content: string, i: number): number | undefined {
-  const c = content[i + 1];
-  if (c === undefined) return undefined;
-  if ('nrt\\\'"0'.includes(c)) return 2;
-  if (c === 'x') {
-    return /^[0-9a-fA-F]{2}/.test(content.slice(i + 2, i + 4)) ? 4 : undefined;
-  }
-  if (c === 'u') {
-    if (content[i + 2] !== '{') return undefined;
-    let j = i + 3;
-    let hexDigits = 0;
-    while (hexDigits < 6 && /[0-9a-fA-F]/.test(content[j] ?? '')) {
-      j++;
-      hexDigits++;
-    }
-    return hexDigits > 0 && content[j] === '}' ? j + 1 - i : undefined;
-  }
-  return undefined;
-}
-
 function isIdentChar(ch: string | undefined): boolean {
   return !!ch && /[A-Za-z0-9_]/.test(ch);
 }
@@ -106,21 +75,19 @@ function isIdentChar(ch: string | undefined): boolean {
  * same "only emit what should be spell checked" approach as `@cspell/parser-example`, extended to also emit
  * string contents.
  *
- * **Char literals (`'a'`, `'\n'`, `'\x41'`, `'\u{1F600}'`, and their `b'...'` byte-char equivalents) are
- * recognized and consumed, but never spell checked** - a single character or escape sequence has no prose
- * worth checking, so `tryScanCharLiteral` only needs to find where one ends, not emit anything for it. See
- * `README.md`'s "How it works" for why recognizing the shape still matters even though nothing is emitted.
+ * **Char literals (`'a'`, `'\n'`, ...), byte-char literals (`b'x'`, ...), and lifetimes/labels (`'a`,
+ * `'static`, `'_`, ...) are not specially recognized at all** - a bare `'` is simply treated as ordinary,
+ * unrecognized code, exactly like any other punctuation this scanner doesn't check. This is a deliberate
+ * simplification, not an oversight: char literals have no prose worth spell checking, so there's no need to
+ * parse their shape just to decide not to emit them. See `README.md`'s "Known limitations" for the one real
+ * consequence of this choice: a char literal containing a `"` (e.g. `'"'`) can cause a real string right
+ * after it to be misread.
  *
  * Rust has no template-literal-style interpolation, so - unlike the JS/TS-family scanner in this repo - no
  * construct here ever splits into multiple fragments; each emitting scan method emits exactly one
- * `ParsedText`. It has two wrinkles no other language in this repo has needed yet, both covered in detail in
- * `CONTRIBUTING.md`:
- *
- * - Block comments nest (`/* /* nested *\/ still open *\/` is ONE comment) - `scanBlockComment` tracks a
- *   depth counter rather than closing at the first `*\/`.
- * - A bare `'` is ambiguous between a char literal (`'a'`) and a lifetime/label (`'a`, with no closing quote
- *   at all) - `tryScanCharLiteral` resolves this by checking what's immediately ahead, never scanning
- *   forward speculatively (a lifetime has nothing to find).
+ * `ParsedText`. It has one wrinkle no other language in this repo has needed yet, covered in detail in
+ * `CONTRIBUTING.md`: block comments nest (`/* /* nested *\/ still open *\/` is ONE comment) -
+ * `scanBlockComment` tracks a depth counter rather than closing at the first `*\/`.
  *
  * Emits lazily via a generator rather than collecting into an array - nothing here holds onto a tree or
  * other resource a consumer could leak by not fully draining the result, so there's no reason to force eager
@@ -161,23 +128,6 @@ class Scanner {
       }
       if (c === 'b' && n === '"' && !isIdentChar(content[this.i - 1])) {
         yield this.scanQuotedString(this.i);
-        continue;
-      }
-
-      if (c === "'") {
-        if (this.tryScanCharLiteral(this.i)) continue;
-        // Not a char literal after all - a lifetime/label (`'a`, `'static`, `'_`, ...) has no closing quote
-        // to skip to. Treat the `'` itself as an ordinary skipped character; the identifier that follows it
-        // is already skipped normally by the fallthrough below, with no special handling needed.
-        this.i++;
-        continue;
-      }
-      if (c === 'b' && n === "'" && !isIdentChar(content[this.i - 1])) {
-        if (this.tryScanCharLiteral(this.i)) continue;
-        // There's no "byte lifetime" - a `b` immediately followed by `'` is unambiguously either a
-        // byte-char-literal start or nothing. It wasn't one, so just skip the `b`; the next iteration
-        // re-examines the `'` itself via the plain case just above.
-        this.i++;
         continue;
       }
 
@@ -265,48 +215,6 @@ class Scanner {
     const { text, map } = stripDelimited(rawText, openLen, 1, closed);
     this.i = end;
     return { text, rawText, map, range: [literalStart, end], tags: STRING_DOUBLE_TAG };
-  }
-
-  /**
-   * Implements the char-literal-vs-lifetime disambiguation for a `'` (plain char literal) or `b'`
-   * (byte-char literal) starting at `literalStart` - see CONTRIBUTING.md for the full write-up. A char
-   * literal is always exactly one character, or one escape sequence, then a closing `'` - checked by
-   * looking at what's immediately ahead, never by scanning forward speculatively (a lifetime has no closing
-   * quote at all, so scanning forward for one could run away across the rest of the file).
-   *
-   * Char literals are never spell checked (there's no prose in a single character or escape sequence worth
-   * checking), so on a match this only advances `this.i` past the literal - it doesn't build a `ParsedText`
-   * at all. Recognizing the shape still matters even though nothing is emitted: a char literal can contain a
-   * `"` (e.g. `'"'`) that, if not consumed as part of this literal, would otherwise be misread by
-   * `scanQuotedString` as the start of a real string, consuming real code after it while looking for a
-   * closing quote that isn't there.
-   *
-   * Returns `false` (consuming nothing) when it isn't a char literal, so the caller treats the opening
-   * `'`/`b` as an ordinary character.
-   */
-  private tryScanCharLiteral(literalStart: number): boolean {
-    const { content } = this;
-    const quoteStart = content[literalStart] === 'b' ? literalStart + 1 : literalStart;
-    const afterQuote = quoteStart + 1;
-
-    let closeAt: number | undefined;
-    if (content[afterQuote] === '\\') {
-      // An escape-based char literal (`'\n'`, `'\''`, `'\x41'`, `'\u{1F600}'`, ...): resolve the escape's
-      // exact length via charLiteralEscapeLength (simple escapes are 2 characters, `\xHH` is 4, `\u{...}` is
-      // variable) and require the very next character after it to be the closing `'`. If the escape isn't
-      // recognized, or isn't immediately followed by `'`, this just isn't a char literal at all (see this
-      // method's doc comment), not mis-scanned as one.
-      const escapeLen = charLiteralEscapeLength(content, afterQuote);
-      const afterEscape = escapeLen === undefined ? undefined : afterQuote + escapeLen;
-      if (afterEscape !== undefined && content[afterEscape] === "'") closeAt = afterEscape;
-    } else if (content[afterQuote + 1] === "'") {
-      // A plain one-character literal (`'a'`, `'0'`, ...).
-      closeAt = afterQuote + 1;
-    }
-    if (closeAt === undefined) return false;
-
-    this.i = closeAt + 1;
-    return true;
   }
 
   /**

@@ -6,12 +6,12 @@ It implements cspell's [`Parser`](https://www.npmjs.com/package/@cspell/cspell-t
 [`Plugin`](https://www.npmjs.com/package/@cspell/cspell-types) so it can be wired into a cspell configuration.
 
 Unlike [`@cspell/parser-example`](https://www.npmjs.com/package/@cspell/parser-example) (comments only), this
-parser only ever emits comments and string-like literals - never identifiers, keywords, punctuation, or char
-literals - using a small hand-written scanner rather than a real grammar. It understands Rust's several
-string and comment forms: `"..."` strings, `b"..."` byte strings, raw strings (`r"..."`, `r#"..."#`, ...),
-line comments (`//`, `///`, `//!`), and block comments (`/* */`, `/** */`, `/*! */`) - including Rust's nested
-block comments. Char literals (`'...'`, `b'...'`) are recognized (so they're never mistaken for something
-else) but never spell checked - see "How it works" below.
+parser only ever emits comments and string-like literals - never identifiers, keywords, punctuation, char
+literals, or lifetimes - using a small hand-written scanner rather than a real grammar. It understands
+Rust's several string and comment forms: `"..."` strings, `b"..."` byte strings, raw strings (`r"..."`,
+`r#"..."#`, ...), line comments (`//`, `///`, `//!`), and block comments (`/* */`, `/** */`, `/*! */`) -
+including Rust's nested block comments. Char literals (`'...'`, `b'...'`) are never spell checked and get no
+special handling at all - see "How it works" and "Known limitations" below for what that trades off.
 
 ## Usage
 
@@ -106,10 +106,11 @@ parsers can't share one.
   these tags, at any level of specificity (just `comment`, or the more specific `comment.block.doc`).
 - Rust has no string interpolation, so unlike some other languages this repo covers, nothing here ever splits
   into more than one `ParsedText` fragment per literal.
-- **Char literals (`'a'`, `'\n'`, `'\x41'`, `'\u{1F600}'`, and their `b'...'` byte-char equivalents) are never
-  spell checked.** A single character or escape sequence has no prose worth checking, so this parser
-  recognizes the shape of a char literal - distinguishing it from Rust's unrelated `'a` lifetime/label syntax
-  - and skips over it entirely, the same way a regex literal is skipped in this repo's JS/TS-family parser.
+- **Char literals (`'a'`, `'\n'`, `'\x41'`, `'\u{1F600}'`, and their `b'...'` byte-char equivalents) and
+  lifetimes/labels (`'a`, `'static`, `'_`) are never spell checked and get no special recognition at all.** A
+  bare `'` is simply left as ordinary, unrecognized code - a single character or escape sequence has no prose
+  worth checking, so there's no need to parse a char literal's shape just to decide not to emit it. See
+  "Known limitations" for the one real trade-off this makes.
 - `plugin.parsers` is the list of parsers a cspell plugin module exposes; a plugin can expose more than one.
 
 ## Known limitations
@@ -122,12 +123,16 @@ with a few deliberate, documented scope limits:
   first version - a `c"..."` literal is simply not recognized as anything special (it falls through as
   ordinary skipped code), so its content is never spell checked. Add support if you need it - see
   `CONTRIBUTING.md`.
-- **The char-literal-vs-lifetime disambiguation only looks one or two characters ahead.** It never scans
-  forward speculatively (a lifetime has no closing quote to find), so it's a strictly local decision - see
-  `CONTRIBUTING.md` for the exact algorithm. This correctly handles every real Rust char literal and lifetime
-  form, but an escape sequence whose closing `'` isn't immediately where expected (essentially, invalid Rust)
-  is simply not recognized as a char literal at all - it's treated as an ordinary character instead of being
-  skipped as one unit, which is harmless either way since char literals are never spell checked regardless.
+- **Char literals and lifetimes get no special recognition at all - a bare `'` is always just ordinary code.**
+  This is a deliberate simplification: since char literals are never spell checked, there's nothing to gain
+  from correctly parsing their shape. The one real consequence: **a char literal containing a `"` (e.g.
+  `'"'`) can cause a real string right after it to be misread.** Without any recognition of the char literal
+  as a single unit, the `"` right after its opening `'` looks exactly like the start of a real string, which
+  then scans past the literal's actual closing `'` looking for another `"` - potentially swallowing real code
+  (including a genuine string) in between. This is rare in practice (a `"` char literal is uncommon, and
+  usually appears in code that also has few nearby strings to swallow), and is accepted as the cost of not
+  needing any char-literal-vs-lifetime disambiguation logic at all - see `CONTRIBUTING.md` for the full
+  rationale.
 - **Nested block comments are fully supported** (`/* /* nested */ still open */` is tracked as one comment,
   per Rust's actual grammar), unlike every C-family language covered elsewhere in this repo.
 

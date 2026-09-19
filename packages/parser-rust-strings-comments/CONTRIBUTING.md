@@ -14,10 +14,11 @@ character, recognizing only the handful of constructs that matter (comments and 
 advancing `i` past everything else (identifiers, keywords, punctuation, numbers, lifetimes, char literals).
 Since cspell only ever checks what's inside `parsedTexts`, this is how the parser excludes syntax noise: by
 simply never emitting it, not by filtering it out afterwards - the same approach `@cspell/parser-example`
-uses. Lifetimes and char literals are both recognized well enough to be skipped correctly (see Wrinkle 2
-below for why that recognition matters even though neither is ever spell checked), but neither one ever
-produces a `ParsedText` - there's no tag to filter them by, because nothing is emitted for them in the first
-place.
+uses. Char literals (`'a'`, `b'x'`, ...) and lifetimes/labels (`'a`, `'static`, `'_`, ...) get **no special
+handling at all** - a bare `'` is simply left as ordinary, unrecognized code, exactly like any other
+punctuation this scanner doesn't check. This is a deliberate simplification: char literals have no prose
+worth spell checking, so there's no need to parse their shape just to decide not to emit them. See "Known
+limitations" below for the one real trade-off this makes.
 
 Rust has no template-literal-style interpolation, so unlike the JS/TS-family scanner in this repo, `run()`
 doesn't need a recursive `scanCode(end, stopAtUnmatchedBrace)` helper - it's a single flat loop, and every
@@ -30,7 +31,7 @@ Every emitting method returns a single `ParsedText` that `run()`'s generator `yi
 `new Scanner(content).run()` directly, never collecting into an array first - there's nothing here holding a
 tree or other resource a consumer could leak by not fully draining the result.
 
-## Wrinkle 1: block comments nest
+## Block comments nest
 
 Unlike every C-family language covered elsewhere in this repo, Rust block comments **nest**:
 `/* /* nested */ still open */` is ONE comment, not two - closing at the first `*/` (as a C/C++/Java/C#/Go
@@ -74,73 +75,33 @@ character at a time (except when it matches, when it jumps by 2), so the extra `
 scanned over like any other character and never confused for a nesting marker itself. The same reasoning
 means `/*!`'s `!` is likewise just an ordinary character to the depth-tracking loop.
 
-## Wrinkle 2: char literal vs. lifetime/label
+## Char literals and lifetimes: no special handling at all
 
-Rust uses a bare `'` for two unrelated things:
+Rust uses a bare `'` for two unrelated things - a **char literal** (`'a'`, `'\n'`, `'\u{1F600}'`, always
+exactly one character or escape sequence then a closing `'`) and a **lifetime or label** (`'a`, `'static`,
+`'_`, used in type/generic syntax like `&'a str` or `fn foo<'a>(...)`, which has **no closing quote at all**).
+An earlier version of this parser disambiguated between the two with a small lookahead algorithm
+(`tryScanCharLiteral`), so a char literal could be recognized and silently consumed (never emitted - see
+above) without a naive forward scan misreading a lifetime as an unterminated char literal.
 
-- A **char literal** (`'a'`, `'\n'`, `'\''`, `'\u{1F600}'`) - always exactly one character or one escape
-  sequence, then a closing `'`.
-- A **lifetime or label** (`'a`, `'static`, `'_`, used in type/generic syntax like `&'a str` or
-  `fn foo<'a>(...)`) - which has **no closing quote at all**.
+That disambiguation logic has been removed entirely, by design: since char literals are never spell checked
+anyway, there's nothing to gain from correctly recognizing their shape - a bare `'` (whether it starts a
+char literal or a lifetime) is now just left as ordinary, unrecognized code, and `run()` advances past it one
+character at a time like any other punctuation.
 
-Naively scanning forward from a `'` looking for the next `'` (the way `scanQuotedString` does for `"..."`)
-would be wrong for a lifetime: there's nothing to find, so it would either run away consuming the rest of the
-file looking for a quote that never comes, or accidentally treat some unrelated, much-later `'` (starting
-another lifetime or char literal) as this one's close.
+**The trade-off**: without that recognition, a char literal containing a `"` (e.g. `'"'`) is no longer
+consumed as one unit, so the `"` right after its opening `'` looks exactly like the start of a real string to
+`scanQuotedString` - which then scans past the literal's actual closing `'` looking for another `"`,
+potentially swallowing real code (including a genuine string) in between. This is accepted as a rare,
+documented limitation (see `README.md`'s "Known limitations") rather than a reason to keep the disambiguation
+logic around. `fixtures/lifetimes-vs-chars.rs`'s `quote_char_then_real_string` function and its corresponding
+"KNOWN LIMITATION" test in `parser.test.ts` lock in this exact trade-off, so it stays visible and intentional
+rather than turning into a silent, unexplained regression.
 
-**Char literals are never spell checked** - a single character or escape sequence has no prose worth
-checking - so `tryScanCharLiteral` doesn't build a `ParsedText` at all; it only needs to find where a char
-literal ends, so the scanner's cursor lands in the right place afterward. Recognizing the shape still matters
-even though nothing is emitted: a char literal can contain a `"` (e.g. `'"'`), which - if the opening `'`
-were just treated as an ordinary character the way a lifetime's is - would leave the `"` right after it to be
-misread by `scanQuotedString` as the start of a real string, consuming real code after it while looking for a
-closing quote that isn't there. `fixtures/lifetimes-vs-chars.rs`'s `quote_char_then_real_string` function
-exercises exactly this: a `'"'` char literal immediately followed by a genuine string, proving the string is
-still recognized correctly.
-
-`tryScanCharLiteral` makes a purely **local** decision - it only ever looks at the one or two characters
-immediately after the opening `'` (or `b'`), never scanning forward speculatively:
-
-1. If the character right after the quote is `\` (backslash): this can only be an escape-based char literal.
-   Resolve the escape's exact length via `charLiteralEscapeLength` - `2` for a simple escape (`\n`, `\t`,
-   `\r`, `\\`, `\'`, `\"`, `\0`), `4` for a byte escape (`\xHH`, exactly two hex digits), or the full
-   `\u{H...H}` span (1-6 hex digits between braces) for a Unicode escape - then check whether the character
-   immediately after it is `'`. If it is, this is a char literal - consume it (advance `this.i` past
-   `literalStart` through that closing `'`, inclusive) and return `true`. If the escape isn't recognized, or
-   isn't immediately followed by `'`, this wasn't a valid escape-based char literal after all - return
-   `false` (consuming nothing), and the caller treats the opening `'` as an ordinary skipped character.
-
-   This can't reuse the generic 2-character `skipEscape` (fine for a `"..."` string, which only needs to
-   find _a_ boundary, not measure any one escape precisely): assuming every escape is exactly 2 characters
-   long is wrong for `\xHH` (4 characters) and `\u{...}` (4-9 characters, depending on how many hex digits),
-   both of which are real, common Rust syntax - not edge cases worth leaving unrecognized. `charLiteralEscapeLength`
-   measures each form precisely so a multi-character escape's closing `'` is found correctly and the whole
-   literal is cleanly consumed, rather than only its first two characters (leaving the rest to leak through as
-   unrecognized code).
-
-2. Else (the character right after the quote isn't `\`): check whether the character **two** positions past
-   the opening `'` is `'`. If so, this is a plain one-character literal (`'a'`, `'0'`, ...) - consume it
-   (exactly 3 characters: `'` + 1 char + `'`) and return `true`.
-
-3. Otherwise, this `'` is not a char literal at all - it's a lifetime or label. **Do not** scan forward
-   looking for a closing quote; there isn't one. Return `false`; `run()` then advances `this.i` by 1 (treating
-   the `'` as an ordinary skipped character, exactly like any other punctuation this scanner doesn't
-   recognize) and lets the normal fallthrough skip the following identifier (`a`, `static`, `_`, ...)
-   character by character, with no special handling needed - lifetimes are never emitted as `ParsedText`s, by
-   construction (and neither are char literals, by design).
-
-A byte-char literal (`b'x'`, `b'\n'`) runs through the exact same three-step algorithm, just starting one
-character later: `tryScanCharLiteral`'s `literalStart` parameter is the position of the `b` (not the `'`),
-and it computes `quoteStart` as `literalStart + 1` when `content[literalStart] === 'b'`. There's no "byte
-lifetime" to disambiguate against, so `b'` is unambiguously either a byte-char-literal start or nothing -
-if it's nothing, `run()` just skips the `b` by itself and lets the next loop iteration re-examine the `'`
-fresh via the plain (non-byte) case, which then applies the same three-step algorithm on its own.
-
-`fixtures/lifetimes-vs-chars.rs` exercises both directions together - real char/byte-char literals
-(`'a'`, `'\n'`, `'\''`, `'\x41'`, `'\u{1F600}'`, `b'x'`, `b'\n'`, `b'\x41'`) alongside real lifetime usages
-(`Wrapper<'a>`, `&'a str`, `fn longest<'a>`, `&'static str`, `&'_ str`) - specifically so a regression in
-either direction (a lifetime mis-scanned as a runaway char literal, or a real char literal left unrecognized
-and its closing `"`-adjacent content leaking into a later string) shows up as a test failure.
+`fixtures/lifetimes-vs-chars.rs` still exercises the ordinary case in both directions - real char/byte-char
+literals (`'a'`, `'\n'`, `'\''`, `'\x41'`, `'\u{1F600}'`, `b'x'`, `b'\n'`, `b'\x41'`) and real lifetime usages
+(`Wrapper<'a>`, `&'a str`, `fn longest<'a>`, `&'static str`, `&'_ str`) - confirming neither one is ever
+emitted, alongside a real string on the same line as a lifetime to confirm that's still recognized normally.
 
 ## Doc comments
 
@@ -153,7 +114,7 @@ and its closing `"`-adjacent content leaking into a later string) shows up as a 
 - **Block comments**: `/* */` is plain; `/** */` (outer, at least 5 characters so the 4-character `/**/` isn't
   misread as an empty doc comment - same length guard as every other `/**`-checking package in this repo) or
   `/*! */` (inner) are doc comments, both tagged `comment.block.doc`. Classification happens against the
-  already depth-correct `rawText` (see Wrinkle 1), so a nested plain comment inside a doc block comment
+  already depth-correct `rawText` (see "Block comments nest" above), so a nested plain comment inside a doc block comment
   doesn't affect whether the _outer_ comment is recognized as a doc comment - see
   `fixtures/nested-comments.rs`'s `nested_doc` case.
 
@@ -222,11 +183,10 @@ reasoning to the plain `b"..."` byte-string and `b'...'` byte-char forms, via an
 
 `skipEscape(content, i)` clamps a backslash-escape skip (`i + 2`) to `content.length`, so a trailing lone
 backslash right at EOF (an unterminated string ending mid-escape) lands on the end of `content` instead of
-one past it. Every backslash-skip in `scanQuotedString`/`tryScanCharLiteral` goes through this - without it,
-the emitted `range`/`map` can exceed `content.length`, inconsistent with the actual `rawText`. See
-`parser.test.ts`'s "unterminated literals ending mid-token at EOF" tests. Raw strings never call this at all
-
-- a backslash inside one is just a literal character, per Rust's grammar.
+one past it. Every backslash-skip in `scanQuotedString` goes through this - without it, the emitted
+`range`/`map` can exceed `content.length`, inconsistent with the actual `rawText`. See `parser.test.ts`'s
+"unterminated literals ending mid-token at EOF" tests. Raw strings never call this at all - a backslash
+inside one is just a literal character, per Rust's grammar.
 
 ## Known limitations (see also README.md)
 
@@ -234,8 +194,10 @@ the emitted `range`/`map` can exceed `content.length`, inconsistent with the act
   extension of `tryScanRawString`'s machinery (a `c`/`cr` prefix alongside today's bare/`r`/`b`/`br` ones), but
   were left out of this first version to keep scope tight. If you add them, extend
   `fixtures/raw-strings.rs` and `parser.test.ts` alongside `tryScanRawString`.
-- The char-literal-vs-lifetime algorithm is intentionally local/non-speculative (see Wrinkle 2 above) - this
-  is a deliberate scope limit, not an oversight to fix later.
+- **Char literals and lifetimes get no special recognition at all** (see "Char literals and lifetimes: no
+  special handling at all" above) - a deliberate simplification, not an oversight. The one accepted
+  consequence: a char literal containing a `"` (e.g. `'"'`) can cause a real string right after it to be
+  misread, since nothing consumes the char literal as a single unit anymore.
 
 ## Tags
 
@@ -252,9 +214,10 @@ segment. See `README.md`'s [Tags](README.md#tags) table for what each one means 
   from `tsc`/ESLint/Prettier (see root `CLAUDE.md`) because a fixture's exact bytes - quote style, spacing, an
   unterminated literal's missing closing delimiter - are frequently what's being asserted on; don't let a
   formatter "fix" one.
-- `fixtures/nested-comments.rs` and `fixtures/unterminated.rs` specifically exercise Wrinkle 1 (nesting depth,
-  including through an unterminated comment).
-- `fixtures/lifetimes-vs-chars.rs` specifically exercises Wrinkle 2, in both directions, in the same file.
+- `fixtures/nested-comments.rs` and `fixtures/unterminated.rs` specifically exercise block-comment nesting
+  depth, including through an unterminated comment.
+- `fixtures/lifetimes-vs-chars.rs` covers char literals and lifetimes never being emitted, in both
+  directions, in the same file - including the accepted `'"'` known-limitation case.
 - `fixtures/raw-strings.rs` covers the `#`-count delimiter matching, including a body containing a shorter,
   non-matching `#`-run that must not close a longer-delimited raw string early.
 - `samples/` is a real, separate end-to-end check: actual cspell configs plus real source files, run for real
@@ -263,6 +226,5 @@ segment. See `README.md`'s [Tags](README.md#tags) table for what each one means 
   excludes) - sanity-checked by temporarily swapping in the plain `plugin` and confirming `cspell .` actually
   fails without the filter before restoring it, the way `packages/parser-typescript/samples/customize` does.
 
-If you change either wrinkle's logic, verify your test actually catches a regression: temporarily break it
-(e.g. remove the depth tracking, or make `tryScanCharLiteral` scan forward instead of checking locally),
-confirm the relevant test fails, then restore the fix.
+If you change the block-comment nesting logic, verify your test actually catches a regression: temporarily
+remove the depth tracking, confirm the relevant test fails, then restore the fix.
