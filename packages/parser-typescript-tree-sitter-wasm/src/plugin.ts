@@ -12,9 +12,10 @@ export const plugin: Plugin = {
 export type CustomizePluginOptions = CustomizeParserOptions;
 
 /**
- * Create a customized copy of {@link plugin} - rename its parser and/or choose which tagged segments get
- * spell checked. Filtering happens in the parser itself, before cspell ever sees the excluded segments, so
- * it works with any cspell version.
+ * Register this instead of {@link plugin} to control which tagged segments get spell checked, and/or to
+ * give the registered parser a different name. Segments outside the given filter are excluded before cspell
+ * ever sees them, so this works with any cspell version - no need for cspell itself to support tag-based
+ * filtering.
  *
  * **`cspell.config.mjs`**
  *

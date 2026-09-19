@@ -55,7 +55,8 @@ for a node's name ever seems to silently fail, suspect this field first.
 Each segment carries `tags`. A tag is a dot-separated hierarchical name used
 as the key of the `ParsedTags` object, with `true` as its value (e.g. `'comment.block.doc': true`), not a
 category-name key holding a subtype string - this is what lets a consumer match a broad key like
-`comment.block` against a more specific tag like `comment.block.doc`.
+`comment.block` against a more specific tag like `comment.block.doc`. See `README.md`'s
+[Tags](README.md#tags) table for what each one means to a consumer.
 
 `hierarchicalTags(tag)` builds the whole ancestor chain for a dotted tag - e.g.
 `hierarchicalTags('comment.block.doc')` is `{ comment: true, 'comment.block': true, 'comment.block.doc':
