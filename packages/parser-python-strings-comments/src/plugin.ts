@@ -13,9 +13,8 @@ export const plugin: Plugin = {
 export type CustomizePluginOptions = CustomizeParserOptions;
 
 /**
- * Returns a {@link Plugin} that only spell checks the tagged segments you choose (see the Tags table in
- * `README.md` for what's available), and, optionally, registers its parser under a different name. Works
- * with any cspell version.
+ * Create a customized copy of {@link plugin} - rename its parser and/or choose which tagged segments get
+ * spell checked. Works with any cspell version.
  *
  * **`cspell.config.mjs`**
  *

@@ -339,10 +339,10 @@ export interface CustomizeParserOptions {
 }
 
 /**
- * Returns a {@link Parser} that only spell checks the tagged segments you choose (see the Tags table in
- * `README.md` for what's available) and, optionally, registers it under a different name - useful once
- * more than one customized parser is registered, since cspell selects a parser by name via the
- * [`parser`](https://cspell.org/docs/api/cspell-types/interfaces/CSpellSettings#parser) setting.
+ * Create a parser for Python files. You can set the name of the parser and filter on the tags if desired.
+ *
+ * The name is used to select the parser via the
+ * [cspell `parser`](https://cspell.org/docs/api/cspell-types/interfaces/CSpellSettings#parser) setting.
  *
  * ```ts
  * // cspell.config.mts
