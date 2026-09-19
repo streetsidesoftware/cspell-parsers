@@ -171,9 +171,10 @@ export interface CustomizeParserOptions {
 }
 
 /**
- * Returns a version of {@link parser} registered under a different name (used to select it via the
- * [cspell `parser`](https://cspell.org/docs/api/cspell-types/interfaces/CSpellSettings#parser) setting)
- * and/or restricted to only the tagged segments you choose to keep, so cspell only spell checks those.
+ * Create a parser for Go files. You can set the name of the parser and filter on the tags if desired.
+ *
+ * The name is used to select the parser via the
+ * [cspell `parser`](https://cspell.org/docs/api/cspell-types/interfaces/CSpellSettings#parser) setting.
  *
  * Usage: **`cspell.config.mts`**
  * ```ts
