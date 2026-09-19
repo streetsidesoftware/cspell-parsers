@@ -162,6 +162,11 @@ interface HeredocHeader {
   readonly interpolated: boolean;
   /** The identifier the closing marker line must match. */
   readonly markerId: string;
+  /**
+   * `false` only for a plain `<<ID` opener (no `~`/`-`) - Ruby requires that variant's closing marker at
+   * column 0 specifically; `<<~ID`/`<<-ID` both allow it indented. See `scanHeredocBody`.
+   */
+  readonly allowIndentedTerminator: boolean;
 }
 
 /**
@@ -391,7 +396,8 @@ class Scanner {
   private parseHeredocHeader(): HeredocHeader | undefined {
     const { content } = this;
     let i = this.i + 2; // past '<<'
-    if (content[i] === '~' || content[i] === '-') i++;
+    const indentMarker = content[i] === '~' || content[i] === '-' ? content[i] : undefined;
+    if (indentMarker) i++;
 
     let quote: string | undefined;
     if (content[i] === "'" || content[i] === '"') {
@@ -411,18 +417,25 @@ class Scanner {
 
     const lineEnd = content.indexOf('\n', i);
     const bodyStart = lineEnd === -1 ? content.length : lineEnd + 1;
-    return { bodyStart, interpolated: quote !== "'", markerId };
+    return { bodyStart, interpolated: quote !== "'", markerId, allowIndentedTerminator: indentMarker !== undefined };
   }
 
   /**
    * Scans a heredoc's body, given its already-parsed {@link HeredocHeader}, and emits it as one or more
    * `string.heredoc`-tagged fragments (split around `#{...}` holes if `interpolated`, exactly like a
    * double-quoted string, or as a single literal fragment otherwise - see `scanDoubleQuotedString`). The
-   * closing marker is found by matching a whole line (`ID` alone, with only leading/trailing whitespace
-   * allowed around it - a body line that merely starts with the marker but continues with anything else,
-   * e.g. `SQL:`, is never mistaken for the terminator) - the same
-   * "match a whole line" approach `@cspell/parser-strings-comments`'s PHP heredoc support uses for its own
-   * `<<<ID ... ID` closing marker, just with Ruby's different opening syntax.
+   * closing marker is found by matching a whole line (`ID` alone, with only trailing whitespace allowed
+   * after it - a body line that merely starts with the marker but continues with anything else, e.g.
+   * `SQL:`, is never mistaken for the terminator) - the same "match a whole line" approach
+   * `@cspell/parser-strings-comments`'s PHP heredoc support uses for its own `<<<ID ... ID` closing marker,
+   * just with Ruby's different opening syntax.
+   *
+   * Leading whitespace before the marker is only allowed when `header.allowIndentedTerminator` is set
+   * (`<<~ID`/`<<-ID`) - a plain `<<ID` opener requires its closing marker at column 0 specifically. This
+   * matters for more than cosmetic accuracy: a plain heredoc's body can legitimately contain an *indented*
+   * line that happens to equal the marker word (it isn't the terminator, since it isn't at column 0), and
+   * matching it anyway truncates the body early, silently dropping real body content from spell checking -
+   * see `CONTRIBUTING.md`.
    *
    * No dedent simulation: a `<<~ID` squiggly heredoc's real, evaluated value has Ruby's common-leading-
    * whitespace stripped, but that transform doesn't matter for spell-checking (leading whitespace isn't a
@@ -431,9 +444,10 @@ class Scanner {
    */
   private *scanHeredocBody(header: HeredocHeader): Generator<ParsedText> {
     const { content } = this;
-    const { bodyStart, interpolated, markerId } = header;
+    const { bodyStart, interpolated, markerId, allowIndentedTerminator } = header;
 
-    const closeRe = new RegExp(`^[ \\t]*${escapeRegExp(markerId)}[ \\t]*$`, 'm');
+    const indent = allowIndentedTerminator ? '[ \\t]*' : '';
+    const closeRe = new RegExp(`^${indent}${escapeRegExp(markerId)}[ \\t]*$`, 'm');
     const rest = content.slice(bodyStart);
     const found = closeRe.exec(rest);
     const bodyEnd = found ? bodyStart + found.index : content.length;

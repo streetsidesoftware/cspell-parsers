@@ -158,19 +158,25 @@ really a `<<`/`<<=` left-shift/append operator.
 support does: by matching a whole line, not a fixed-length delimiter -
 
 ```ts
-const closeRe = new RegExp(`^[ \\t]*${escapeRegExp(markerId)}[ \\t]*$`, 'm');
+const indent = allowIndentedTerminator ? '[ \\t]*' : '';
+const closeRe = new RegExp(`^${indent}${escapeRegExp(markerId)}[ \\t]*$`, 'm');
 ```
 
-`ID` alone on a line (optionally indented, with only trailing whitespace allowed after it) closes the
-heredoc - requiring the end-of-line anchor, not just "not immediately followed by an identifier character",
-matters: without it, a body line like `SQL:` or `SQLite text` would still start with the marker `SQL`
-followed by a non-identifier character and wrongly close the heredoc early, even though the marker isn't
-alone on that line. This closes regardless of which of the three opener variants was used - this parser
-doesn't simulate `<<~`'s dedent transform (see `README.md`), so all three behave identically for
-spell-checking purposes. Real Ruby actually requires a plain `<<ID` heredoc's
-terminator at column 0 specifically (no leading whitespace), unlike `<<~`/`<<-`; this parser deliberately
-doesn't distinguish that case (see `README.md`'s "Known limitations") since over-recognizing an indented
-terminator only ever matters in already-invalid Ruby.
+`ID` alone on a line, with only trailing whitespace allowed after it, closes the heredoc - requiring the
+end-of-line anchor, not just "not immediately followed by an identifier character", matters: without it, a
+body line like `SQL:` or `SQLite text` would still start with the marker `SQL` followed by a non-identifier
+character and wrongly close the heredoc early, even though the marker isn't alone on that line.
+
+Leading whitespace before the marker is allowed only when `header.allowIndentedTerminator` is set - true for
+`<<~ID`/`<<-ID`, false for a plain `<<ID` opener, which `parseHeredocHeader` records based on whether it saw
+a `~`/`-` right after `<<`. Real Ruby requires a plain heredoc's terminator at column 0 specifically; an
+earlier version of this parser treated all three opener variants identically, on the reasoning that
+over-recognizing an indented terminator could only matter in an already-invalid program. **That reasoning
+was wrong**: a plain heredoc's body can legitimately contain an _indented_ line that happens to equal the
+marker word - it's ordinary body content, not the terminator, precisely because it isn't at column 0 - and
+the old code would still close the heredoc there, silently dropping the rest of the (valid) body from spell
+checking. `fixtures/heredocs.rb`'s `plain_with_indented_lookalike` and its test in `parser.test.ts`
+reproduce this.
 
 Once the closing marker's position is known, the body is emitted:
 

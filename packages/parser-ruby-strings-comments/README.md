@@ -165,11 +165,6 @@ handful of Ruby constructs are deliberately out of scope for this first version:
   header, the same simplification `@cspell/parser-strings-comments`'s PHP heredoc support already ships. This
   means only one heredoc per line is supported, and a real string literal placed after a heredoc marker on
   the same line won't be spell checked.
-- **A plain `<<ID` heredoc's closing marker is recognized even if indented**, though real Ruby requires it at
-  column 0 for that (non-`~`/`-`) variant specifically. Treating all three variants identically here is a
-  deliberate simplification (see "How it works"): over-recognizing an indented terminator only changes where
-  the body boundary falls in an already-invalid Ruby program, never in valid code, so it never risks
-  swallowing real content that should have been checked.
 
 Use this package as a template: copy `src/parser.ts`, `src/plugin.ts`, `src/index.ts`, and `src/recommended.ts`
 into a new package under `packages/` and replace the parsing logic with your own. See the repo root

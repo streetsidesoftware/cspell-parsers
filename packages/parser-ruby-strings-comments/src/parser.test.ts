@@ -111,6 +111,19 @@ describe('ruby-strings-comments parser', () => {
       expect(str?.tags).toEqual({ string: true, 'string.heredoc': true });
     });
 
+    it('does not close a plain <<ID heredoc on an indented line that merely matches the marker', () => {
+      // Regression coverage: real Ruby requires a plain (non-~/-) heredoc's closing marker at column 0
+      // specifically, so an indented occurrence of the marker word inside the body is just body content,
+      // not the terminator - unlike <<~/<<- heredocs, where an indented marker legitimately does close it.
+      const str = byText(
+        parsedTexts,
+        'Body text before the indented lookalike line.\n' +
+          '  PLAIN2\n' +
+          'Body text after it - an indented occurrence of the marker is not the terminator for a plain heredoc.\n',
+      );
+      expect(str?.tags).toEqual({ string: true, 'string.heredoc': true });
+    });
+
     it("does not interpolate a single-quoted <<~'ID' heredoc marker", () => {
       const str = byText(
         parsedTexts,
@@ -142,6 +155,14 @@ describe('ruby-strings-comments parser', () => {
         '  SQL: this line starts with the marker but keeps going.\n  Still inside the heredoc.\n',
       );
       expect(body?.tags).toEqual({ string: true, 'string.heredoc': true });
+    });
+
+    it('closes a <<~ heredoc on an indented closing marker (unlike a plain <<ID heredoc)', () => {
+      // Regression coverage for the plain-vs-~/- distinction: <<~/<<- both legitimately allow the closing
+      // marker to be indented, so this must still close here, in contrast to the plain-heredoc test above.
+      const content = 'sql = <<~SQL\n  indented body\n  SQL\nputs sql\n';
+      const parsed = [...parse(content, 'file.rb').parsedTexts];
+      expect(byText(parsed, '  indented body\n')?.tags).toEqual({ string: true, 'string.heredoc': true });
     });
   });
 
