@@ -128,13 +128,16 @@ really a `<<`/`<<=` left-shift/append operator.
 support does: by matching a whole line, not a fixed-length delimiter -
 
 ```ts
-const closeRe = new RegExp(`^[ \\t]*${escapeRegExp(markerId)}(?![A-Za-z0-9_])`, 'm');
+const closeRe = new RegExp(`^[ \\t]*${escapeRegExp(markerId)}[ \\t]*$`, 'm');
 ```
 
-`ID` alone on a line (optionally indented, not immediately followed by another identifier character so
-`SQLite` doesn't accidentally match a `SQL` marker) closes the heredoc, regardless of which of the three
-opener variants was used - this parser doesn't simulate `<<~`'s dedent transform (see `README.md`), so all
-three behave identically for spell-checking purposes. Real Ruby actually requires a plain `<<ID` heredoc's
+`ID` alone on a line (optionally indented, with only trailing whitespace allowed after it) closes the
+heredoc - requiring the end-of-line anchor, not just "not immediately followed by an identifier character",
+matters: without it, a body line like `SQL:` or `SQLite text` would still start with the marker `SQL`
+followed by a non-identifier character and wrongly close the heredoc early, even though the marker isn't
+alone on that line. This closes regardless of which of the three opener variants was used - this parser
+doesn't simulate `<<~`'s dedent transform (see `README.md`), so all three behave identically for
+spell-checking purposes. Real Ruby actually requires a plain `<<ID` heredoc's
 terminator at column 0 specifically (no leading whitespace), unlike `<<~`/`<<-`; this parser deliberately
 doesn't distinguish that case (see `README.md`'s "Known limitations") since over-recognizing an indented
 terminator only ever matters in already-invalid Ruby.
