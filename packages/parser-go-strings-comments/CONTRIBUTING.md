@@ -109,4 +109,10 @@ no module-specifier detection, and no template-literal interpolation:
   `plugin` and confirming `cspell .` actually fails without the filter before restoring it, the way
   `packages/parser-typescript/samples/customize` does.
 
+## Using this package as a template
+
+To start a new parser package, copy `src/parser.ts`, `src/plugin.ts`, `src/index.ts`, and `src/recommended.ts`
+into a new package under `packages/` and replace the parsing logic with your own. See the repo root
+`CONTRIBUTING.md` for the full steps.
+
 <!-- cspell:ignore godoc gofmt Trakcs -->
