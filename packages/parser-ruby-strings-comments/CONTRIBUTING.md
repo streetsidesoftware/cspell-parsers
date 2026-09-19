@@ -10,10 +10,12 @@ file only covers what's specific to this package's parsing logic.
 Like `@cspell/parser-typescript-strings-comments` and `@cspell/parser-go-strings-comments`, this parser is a
 single hand-written scanner (`Scanner`, a small stateful class holding a mutable cursor `i` over `content`).
 There's no AST and no tokenizer for the language as a whole - `Scanner.scanCode` walks `content` character by
-character, recognizing only the handful of constructs that matter (comments, plain strings, and heredocs) and
-silently advancing `i` past everything else (identifiers, keywords, punctuation, numbers, symbols,
-percent-literals). Since cspell only ever checks what's inside `parsedTexts`, this is how the parser excludes
-syntax noise: by simply never emitting it, not by filtering it out afterwards.
+character, recognizing comments, strings, heredocs, regex literals, and percent-literals, and silently
+advancing `i` past everything else (identifiers, keywords, punctuation, numbers, symbols). Since cspell only
+ever checks what's inside `parsedTexts`, this is how the parser excludes syntax noise: by simply never
+emitting it, not by filtering it out afterwards. Regex and percent-literals are recognized but never
+emitted either - see "Regex, percent-literals, division, and modulo" below for why that's load-bearing, not
+just a scope choice.
 
 ### `scanCode`'s one exit condition
 
@@ -42,13 +44,13 @@ itself then finds the closing marker the same way a heredoc finds its own closin
 rest of that line (real Ruby ignores whatever follows `=end` on its own line, e.g. `=end # note`) as part of
 the (unscanned) footer, not as spell-checked content.
 
-## Regex literals vs. division, and heredocs vs. left-shift/append
+## Regex, percent-literals, division, and modulo
 
-These are two different ambiguities in Ruby's grammar, but they share the exact same shape: a token (`/` or
-`<<`) that can either open a brand-new literal (a regex, or a heredoc) or act as a binary operator continuing
-whatever value came right before it (division, or left-shift/append). Both are resolved by the same function,
-`isOperandContext(content, index)` - ported from `@cspell/parser-typescript-strings-comments`'s
-`isDivisionContext`, generalized to cover both operators instead of just `/`:
+Three different ambiguities in Ruby's grammar share the exact same shape: a token (`/`, `<<`, or `%`) that
+can either open a brand-new literal (a regex, heredoc, or percent-literal) or act as a binary operator
+continuing whatever value came right before it (division, left-shift/append, or modulo). All three are
+resolved by one function, `isOperandContext(content, index)` - ported from
+`@cspell/parser-typescript-strings-comments`'s `isDivisionContext`, generalized to cover all three operators:
 
 ```ts
 function isOperandContext(content: string, index: number): boolean {
@@ -56,7 +58,7 @@ function isOperandContext(content: string, index: number): boolean {
   while (j >= 0 && (content[j] === ' ' || content[j] === '\t')) j--;
   if (j < 0) return false;
   const ch = content[j];
-  if (ch === ')' || ch === ']' || ch === '}') return true;
+  if (ch === ')' || ch === ']' || ch === '}' || ch === "'" || ch === '"') return true;
   if (!/[A-Za-z0-9_]/.test(ch)) return false;
   let wordStart = j;
   while (wordStart > 0 && /[A-Za-z0-9_]/.test(content[wordStart - 1])) wordStart--;
@@ -65,28 +67,34 @@ function isOperandContext(content: string, index: number): boolean {
 ```
 
 It looks at whatever significant character (skipping inline whitespace) comes right before the ambiguous
-token. An identifier/number that isn't one of `EXPRESSION_START_KEYWORDS`, a `)`, a `]`, or a `}` means a
+token. A `)`/`]`/`}`, a closing quote, or an identifier/number not in `EXPRESSION_START_KEYWORDS` means a
 value was already produced there, so the token must be a binary operator; anything else (an operator, `(`,
 `,`, `=`, the start of the file, a keyword like `if` or `return`, ...) means a new expression is still
 expected.
 
+**The closing-quote check (`'`/`"`) closes a real bug, not a hypothetical one:** without it, `"a"<<"b"` -
+ordinary string append, no spaces - reads as a `<<"b"` heredoc opener (the closing `"` of `"a"` isn't a `)`,
+`]`, `}`, or identifier character, so it used to fall through to "new expression expected"), swallowing
+everything up to a line containing just `b` as the heredoc's own unscanned body. A quote character can only
+appear immediately before one of these operators as the closing delimiter of a string `scanCode` already
+consumed, so treating it as "a value was just produced" is always correct, never a heuristic guess.
+
 **`}` is deliberately biased toward "operator," not "new literal."** It's genuinely ambiguous - it closes
-both a block (`arr.each { |x| ... }\n/regex/.test(y)`, where a regex commonly follows) and a hash/argument
+both a block (`arr.each { |x| ... }\n/regex/.test(y)`, where a literal commonly follows) and a hash/argument
 list (`{ a: 1 } / 2`, where `/` is real division) - and the two failure modes aren't symmetric. Treating `}`
-as operator-like and getting it wrong just means a real regex/heredoc isn't recognized (falling back to the
-character-level `canPrecedeString` mitigation for regexes, below, or simply leaving `<<` as ordinary code for
-heredocs - a fine outcome either way). Treating `}` as expression-context and getting _that_ wrong is worse:
-`tryScanRegexLiteral` would attempt to parse real division as a regex, scanning ahead for the next unrelated
-`/` in the file as if it were the closing delimiter and silently swallowing whatever real string or comment
-sat in between - see `parser.test.ts`'s "treats a same-line `}`..." test, which reproduces exactly this.
+as operator-like and getting it wrong just means a real literal isn't recognized (falling back to the
+character-level `canPrecedeString` mitigation for regexes, below, or plain ordinary code otherwise - a fine
+outcome either way). Treating `}` as expression-context and getting _that_ wrong is worse: `tryScanRegexLiteral`
+would attempt to parse real division as a regex, scanning ahead for the next unrelated `/` in the file as if
+it were the closing delimiter and silently swallowing whatever real string or comment sat in between - see
+`parser.test.ts`'s "treats a same-line `}`..." test, which reproduces exactly this.
 
 `EXPRESSION_START_KEYWORDS` is deliberately not exhaustive - it covers Ruby's own control-flow/boolean
 keywords (`if`, `unless`, `while`, `case`, `when`, `and`, `or`, `not`, ...) plus a handful of very common
 method names that are frequently called without parens directly on a regex or heredoc argument (`puts`,
 `print`, `raise`, `return`, `yield`, and Ruby's own regex-oriented `String`/`Enumerable` methods like `gsub`,
-`sub`, `scan`, `match`, `split`, `grep`). A method call outside that list followed directly by a bare
-regex/heredoc argument (no parens) won't be recognized - see `README.md`'s "Known limitations" for the
-user-facing summary.
+`sub`, `scan`, `match`, `split`, `grep`). A method call outside that list followed directly by a bare literal
+argument (no parens) won't be recognized - see `README.md`'s "Known limitations" for the user-facing summary.
 
 ### `tryScanRegexLiteral` (the primary regex mechanism)
 
@@ -102,6 +110,28 @@ This is what actually fixes the regex/quote ambiguity, including the one case a 
 can never resolve: a class that opens with a quote right after `[` (`/['"]/`) is textually identical to a
 real string starting right after an array literal's bracket (`['real string']`) - only knowing that a regex
 is actually expected at that position (via `isOperandContext`) breaks the tie.
+
+### `tryScanPercentLiteral`
+
+Once `isOperandContext` says "not an operator," `tryScanPercentLiteral` scans a percent-literal (`%w[]`,
+`%i[]`, `%q()`, `%Q{}`, `%r{}`, `%s()`, `%x()`, or a type-letter-less `%(...)`) and skips it as one opaque
+unit, exactly like `tryScanRegexLiteral` does for a regex - no `ParsedText` is ever emitted for its content.
+
+This exists to fix a real bug, not just to add coverage: before it existed, an unrecognized percent-literal's
+embedded quote (`%w[don't stop]`, `%q(it's fine)`) reached the ordinary quote dispatch in `scanCode` and
+kicked off a runaway string scan - hunting for the next unrelated `'`/`"` in the file as the "closing quote"
+and silently swallowing whatever real code sat in between. `parser.test.ts`'s `percent-literals.rb` suite
+reproduces this.
+
+Only a curated delimiter set is recognized - `( [ { <` (which nest: `%w(foo (bar) baz)` is one literal, so
+`depth` tracks further opens the same way `scanBeginEndComment`/heredoc closing-marker matching track their
+own structure) and a handful of same-character delimiters seen in real code (`| ! # / ~ ^`, none of which can
+nest, since open and close are identical) - not "any non-alphanumeric character," which Ruby technically
+allows. This is deliberately conservative for the same reason `isOperandContext` is biased toward "operator"
+at a `}`: a modulo expression using an unusual character right after `%` must never be misread as a literal
+opener (swallows real code), whereas missing an exotic percent-literal delimiter just leaves it as ordinary,
+unscanned code (safe). An unterminated percent-literal is extended to EOF, the same as an unterminated
+heredoc, rather than left as a dangling opener with its quote(s) still live to misread.
 
 ### `canPrecedeString` (the fallback, for what `tryScanRegexLiteral` misses)
 
@@ -164,15 +194,17 @@ checked - see `README.md`'s "Known limitations".
 Same convention as every other package in this repo: a tag is a dot-separated hierarchical name, and every
 segment carries its whole ancestor chain, built as module-level constants (`STRING_HEREDOC_TAG`, ...) rather
 than computed per segment. See `README.md`'s [Tags](README.md#tags) table for what each one means to a
-consumer. Regex literals intentionally have no tag at all - see `README.md`.
+consumer. Regex and percent-literals intentionally have no tag at all - see `README.md`.
 
 ## Testing
 
 - `parser.test.ts` reads fixtures out of `fixtures/` (via `readFixture`/`parseFixture` helpers) rather than
-  embedding source strings inline for the "typical case" coverage, and uses inline `parse()` calls (mirroring
-  `@cspell/parser-typescript-strings-comments`'s own convention) for narrower regression tests where the exact
-  surrounding content matters more than reading like a real file - the `isOperandContext`/`sawSlash`
-  ambiguity cases, and the "ends in a trailing lone backslash at EOF" escape-handling edge cases.
+  embedding source strings inline for the "typical case" coverage - including `fixtures/percent-literals.rb`,
+  which covers each percent-literal form plus nested-bracket depth tracking - and uses inline `parse()` calls
+  (mirroring `@cspell/parser-typescript-strings-comments`'s own convention) for narrower regression tests
+  where the exact surrounding content matters more than reading like a real file - the
+  `isOperandContext`/`sawSlash` ambiguity cases (including the `"a"<<"b"` closing-quote regression) and the
+  "ends in a trailing lone backslash at EOF" escape-handling edge cases.
 - `samples/` is a real, separate end-to-end check: actual cspell configs plus real source files, run for real
   by `pnpm run test:cspell` (`cspell .` from the package root). `samples/customize` in particular proves the
   `customizePlugin` tag filter is doing something real (a genuine misspelling inside a heredoc that
