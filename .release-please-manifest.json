@@ -1,8 +1,18 @@
 {
-  ".": "1.1.5",
+  ".": "1.2.0",
   "packages/parser-example": "1.1.4",
   "packages/parser-javascript": "1.0.5",
   "packages/parser-typescript": "1.1.5",
   "packages/parser-typescript-tree-sitter": "1.0.4",
-  "packages/parser-typescript-tree-sitter-wasm": "1.0.3"
+  "packages/parser-typescript-tree-sitter-wasm": "1.0.3",
+  "packages/parser-c-cpp-strings-comments": "1.0.0",
+  "packages/parser-csharp-strings-comments": "1.0.0",
+  "packages/parser-go-strings-comments": "1.0.0",
+  "packages/parser-java-strings-comments": "1.0.0",
+  "packages/parser-php-strings-comments": "1.0.0",
+  "packages/parser-python-strings-comments": "1.0.0",
+  "packages/parser-ruby-strings-comments": "1.0.0",
+  "packages/parser-rust-strings-comments": "1.0.0",
+  "packages/parser-strings-comments": "1.0.0",
+  "packages/parser-typescript-strings-comments": "1.0.0"
 }

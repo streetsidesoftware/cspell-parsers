@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.2.0](https://github.com/streetsidesoftware/cspell-parsers/compare/cspell-parsers@1.1.5...cspell-parsers@1.2.0) (2026-09-19)
+
+
+### Features
+
+* Add @cspell/parser-c-cpp-strings-comments ([#64](https://github.com/streetsidesoftware/cspell-parsers/issues/64)) ([78b6225](https://github.com/streetsidesoftware/cspell-parsers/commit/78b6225a55c118d9b4fe6ef319dc11d43116bbd2))
+* Add @cspell/parser-csharp-strings-comments ([#65](https://github.com/streetsidesoftware/cspell-parsers/issues/65)) ([46c197b](https://github.com/streetsidesoftware/cspell-parsers/commit/46c197b603e57083a366f9b256bfd3e6d81624f6))
+* Add @cspell/parser-go-strings-comments ([#66](https://github.com/streetsidesoftware/cspell-parsers/issues/66)) ([4e8962b](https://github.com/streetsidesoftware/cspell-parsers/commit/4e8962b923ebfdd388fdb0bf343bca321d13713e))
+* Add @cspell/parser-java-strings-comments ([#67](https://github.com/streetsidesoftware/cspell-parsers/issues/67)) ([31f207c](https://github.com/streetsidesoftware/cspell-parsers/commit/31f207c248dc5d5d067f85563506fb82f43a0d73))
+* Add @cspell/parser-php-strings-comments ([#68](https://github.com/streetsidesoftware/cspell-parsers/issues/68)) ([4be05ad](https://github.com/streetsidesoftware/cspell-parsers/commit/4be05ad14bd3fe43c490e81714a61a3aecdc8f4e))
+* Add @cspell/parser-python-strings-comments ([#69](https://github.com/streetsidesoftware/cspell-parsers/issues/69)) ([bc47ba1](https://github.com/streetsidesoftware/cspell-parsers/commit/bc47ba17689cae1ab756cc565ddd7bf4a7ee0c0d))
+* Add @cspell/parser-ruby-strings-comments ([#70](https://github.com/streetsidesoftware/cspell-parsers/issues/70)) ([0a648c9](https://github.com/streetsidesoftware/cspell-parsers/commit/0a648c985d29600353cb0812572ee175e7c5ce81))
+* Add @cspell/parser-rust-strings-comments ([#72](https://github.com/streetsidesoftware/cspell-parsers/issues/72)) ([ea33e16](https://github.com/streetsidesoftware/cspell-parsers/commit/ea33e1679d13ae8e7bd0a3228f7f7f88c4bce515))
+* Add @cspell/parser-strings-comments (C, C++, C#, Go, Java, JS/JSX, TS/TSX, PHP) ([#60](https://github.com/streetsidesoftware/cspell-parsers/issues/60)) ([293e02b](https://github.com/streetsidesoftware/cspell-parsers/commit/293e02bdcb42a080b8cb71694deb801f1cad3731))
+* Add @cspell/parser-typescript-strings-comments (JS/JSX/TS/TSX) ([#62](https://github.com/streetsidesoftware/cspell-parsers/issues/62)) ([353cf23](https://github.com/streetsidesoftware/cspell-parsers/commit/353cf2302e0c0a072f86f9e20f6a5441dcd821e1))
+
 ## [1.1.5](https://github.com/streetsidesoftware/cspell-parsers/compare/cspell-parsers@1.1.4...cspell-parsers@1.1.5) (2026-09-17)
 
 
