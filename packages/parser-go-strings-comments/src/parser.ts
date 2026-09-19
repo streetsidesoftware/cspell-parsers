@@ -43,16 +43,13 @@ function skipEscape(content: string, i: number): number {
 
 /**
  * Scans Go source for comments and string/rune/raw-string literals, yielding one `ParsedText` per segment
- * and silently skipping everything else (identifiers, keywords, punctuation, numbers) - the same "only emit
- * what should be spell checked" approach as `@cspell/parser-example`, extended to also emit string contents.
+ * and skipping everything else (identifiers, keywords, punctuation, numbers).
  *
  * Go has no template-literal-style interpolation and no regex-literal-vs-division ambiguity to resolve, so
  * unlike the JS/TS-family scanner this is split from, no construct here ever splits into multiple fragments
- * or needs any lookahead/lookbehind context - each scan method below emits exactly one `ParsedText`.
+ * or needs lookahead/lookbehind - each scan method below emits exactly one `ParsedText`.
  *
- * Emits lazily via a generator rather than collecting into an array - nothing here holds onto a tree or
- * other resource a consumer could leak by not fully draining the result, so there's no reason to force eager
- * collection.
+ * Emits lazily via a generator rather than an array - nothing here needs eager draining to release a resource.
  */
 class Scanner {
   private i = 0;
@@ -169,23 +166,17 @@ export const parser: Parser = {
 
 export const supportedFileTypes: string[] = ['go'];
 
-/** Options for {@link createParser}: the parser's name, and which tagged segments to keep. */
+/** Options for {@link createParser}. */
 export interface CustomizeParserOptions {
-  /**
-   * Set the name of the parser.
-   */
   name?: string;
-  /**
-   * Define which tagged segments to keep. Omit to keep everything.
-   */
+  /** Omit to keep every tagged segment. */
   tags?: TagFilterOptions;
 }
 
 /**
- * Create a parser for Go files. You can set the name of the parser and filter on the tags if desired.
- *
- * The name is used to select the parser via the
- * [cspell `parser`](https://cspell.org/docs/api/cspell-types/interfaces/CSpellSettings#parser) setting.
+ * Create a customized copy of {@link parser} - override its name (used to select it via the
+ * [cspell `parser`](https://cspell.org/docs/api/cspell-types/interfaces/CSpellSettings#parser) setting)
+ * and/or filter which tagged segments it emits.
  *
  * Usage: **`cspell.config.mts`**
  * ```ts
