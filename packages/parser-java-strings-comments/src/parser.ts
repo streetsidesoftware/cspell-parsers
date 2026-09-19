@@ -42,17 +42,10 @@ function skipEscape(content: string, i: number): number {
 
 /**
  * Scans Java source for comments and character/string/text-block literals, yielding one `ParsedText` per
- * segment and silently skipping everything else (identifiers, keywords, punctuation, numbers) - the same
- * "only emit what should be spell checked" approach as `@cspell/parser-example`.
+ * segment and skipping everything else (identifiers, keywords, punctuation, numbers).
  *
- * Unlike a JS/TS-family scanner, there's no regex-literal ambiguity, no string interpolation, and no
- * module-specifier tagging to worry about here, and a Java text block never fragments around holes the way
- * a template literal does - so each scan method below just returns a single `ParsedText` directly, with no
- * need for an `emitFragment`-style generator.
- *
- * Emits lazily via generators rather than collecting into an array - nothing here holds onto a tree or
- * other resource a consumer could leak by not fully draining the result, so there's no reason to force
- * eager collection.
+ * No string interpolation or regex/division ambiguity to resolve here, so `run` is a single flat loop and
+ * every scan method returns exactly one `ParsedText` - no `emitFragment`-style recursion needed.
  */
 class Scanner {
   private i = 0;
@@ -75,8 +68,8 @@ class Scanner {
         continue;
       }
       // A `"` starts a text block only when followed by two more `"` characters (a fixed 3-quote opening
-      // delimiter) - otherwise it falls through to an ordinary `"..."` string, same dispatch order the
-      // combined @cspell/parser-strings-comments package used for its 'java' dialect.
+      // delimiter); otherwise it falls through to an ordinary `"..."` string. See CONTRIBUTING.md for why
+      // the look-ahead needs both extra characters.
       if (c === '"') {
         if (n === '"' && content[this.i + 2] === '"') {
           yield this.scanJavaTextBlock();
@@ -169,10 +162,6 @@ class Scanner {
   }
 }
 
-/**
- * Extracts comments and character/string/text-block literals from Java source. See the `Scanner` class for
- * the actual scanning logic.
- */
 export function parse(content: string, filename: string): ParseResult {
   return { content, filename, parsedTexts: new Scanner(content).run() };
 }
@@ -187,17 +176,17 @@ export const supportedFileTypes: string[] = ['java'];
 /** Options for {@link createParser}: the parser's name, and which tagged segments to keep. */
 export interface CustomizeParserOptions {
   /**
-   * Set the name of the parser.
+   * Overrides the parser's registered name. Defaults to `java-strings-comments`.
    */
   name?: string;
   /**
-   * Define which tagged segments to keep. Omit to keep everything.
+   * Which tagged segments to keep. Omit to keep everything.
    */
   tags?: TagFilterOptions;
 }
 
 /**
- * Create a parser for Java files. You can set the name of the parser and filter on the tags if desired.
+ * Create a Java parser, optionally renamed and/or filtered by tag.
  *
  * The name is used to select the parser via the
  * [cspell `parser`](https://cspell.org/docs/api/cspell-types/interfaces/CSpellSettings#parser) setting.

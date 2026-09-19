@@ -8,12 +8,9 @@ file only covers what's specific to this package's parsing logic.
 ## Shape of the parser
 
 This parser is a single hand-written scanner (`Scanner`, a small stateful class holding a mutable cursor `i`
-over `content`). There's no AST and no tokenizer for the language as a whole - `Scanner.run` walks `content`
-character by character, recognizing only the handful of constructs that matter (comments, character
-literals, string literals, and text blocks) and silently advancing `i` past everything else (identifiers,
-keywords, punctuation, numbers). Since cspell only ever checks what's inside `parsedTexts`, this is how the
-parser excludes syntax noise: by simply never emitting it, not by filtering it out afterwards - the same
-approach `@cspell/parser-example` uses.
+over `content`) - no AST, no tokenizer. `run` walks `content` character by character, emitting only comments,
+character/string literals, and text blocks; everything else (identifiers, keywords, punctuation, numbers) is
+simply never emitted, not filtered out afterward.
 
 This package started as the Java slice of `@cspell/parser-strings-comments`, a single scanner that also
 covered C, C++, C#, Go, JS/TS, and PHP via a `Dialect` union type. Splitting Java out into its own package
