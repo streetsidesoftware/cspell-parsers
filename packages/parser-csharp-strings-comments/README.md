@@ -100,18 +100,15 @@ string; `string.raw` and `string.interpolated` are combined for an interpolated 
 
 ## How it works
 
-- `parser.parse(content, filename)` returns a `ParseResult` containing one or more `ParsedText` entries.
 - Each `ParsedText.range` is the `[start, end]` offset of that segment in the original `content`, which is how
   cspell maps spelling issues found in the parsed text back to the right place in the source file.
-- Every segment is tagged with a dot-separated tag, plus every ancestor of it (`comment.line.doc` also
-  carries `comment` and `comment.line`) - `customizePlugin` can filter which segments get spell checked using
-  these tags, at any level of specificity (just `comment`, or the more specific `comment.line.doc`).
+- Every segment carries its full ancestor chain of tags (e.g. `comment.line.doc` also carries `comment` and
+  `comment.line`) - see [Filtering by tag](#filtering-by-tag) above.
 - An interpolated string (`$"..."`, and its verbatim-combined and raw forms, except as noted below) is split
   into one `ParsedText` per literal fragment around each `{...}` hole; the hole's own contents are recursively
   scanned the same way as the rest of the file, so a string or comment nested inside an interpolation (e.g. a
   ternary's string branches) still gets picked up and tagged normally. `{{`/`}}` are literal braces, not
   holes.
-- `plugin.parsers` is the list of parsers a cspell plugin module exposes; a plugin can expose more than one.
 
 ## Known limitations
 
