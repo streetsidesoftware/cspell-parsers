@@ -13,3 +13,7 @@ pub fn double_hashed() -> &'static str {
 pub fn byte_raw() -> &'static [u8] {
     br"byte raw string, no escapes \ here either"
 }
+
+pub fn c_raw() -> &'static std::ffi::CStr {
+    cr#"C raw string with an embedded "quote" and no escapes \ either"#
+}

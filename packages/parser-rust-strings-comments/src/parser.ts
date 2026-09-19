@@ -12,17 +12,18 @@ const COMMENT_BLOCK_DOC_TAG: ParsedTags = { ...COMMENT_BLOCK_TAG, 'comment.block
  * Rust only ever uses `"` for strings (`'` is exclusively char literals, which this parser never emits at
  * all - see below), so there's no quote-style ambiguity to tag the way `string.singleQuote`/`.doubleQuote`
  * disambiguate a language with two interchangeable quote characters. Instead these tags describe the string's
- * *kind* - plain, byte (`b"..."`), raw (`r"..."`), or byte-raw (`br"..."`) - hierarchically, the same
- * dot-path convention used everywhere else in this repo: `string.byte.raw` carries `string.byte` (and
- * `string`) as ancestors, so filtering on `string.byte` alone matches both a plain byte string and a raw
- * byte string. A plain `"..."` string needs no extra descriptor beyond the base `string` tag. (A future
- * `c"..."` C-string, if added - see CONTRIBUTING.md - would follow the same pattern as `string.c`, and a raw
- * one as `string.c.raw`.)
+ * *kind* - plain, byte (`b"..."`), raw (`r"..."`), byte-raw (`br"..."`), C (`c"..."`), or C-raw (`cr"..."`) -
+ * hierarchically, the same dot-path convention used everywhere else in this repo: `string.byte.raw` carries
+ * `string.byte` (and `string`) as ancestors, so filtering on `string.byte` alone matches both a plain byte
+ * string and a raw byte string, and likewise for `string.c`/`string.c.raw`. A plain `"..."` string needs no
+ * extra descriptor beyond the base `string` tag.
  */
 const STRING_TAG: ParsedTags = { string: true };
 const STRING_BYTE_TAG: ParsedTags = { ...STRING_TAG, 'string.byte': true };
 const STRING_RAW_TAG: ParsedTags = { ...STRING_TAG, 'string.raw': true };
 const STRING_BYTE_RAW_TAG: ParsedTags = { ...STRING_BYTE_TAG, 'string.byte.raw': true };
+const STRING_C_TAG: ParsedTags = { ...STRING_TAG, 'string.c': true };
+const STRING_C_RAW_TAG: ParsedTags = { ...STRING_C_TAG, 'string.c.raw': true };
 
 /**
  * Strips a line comment's marker (`//`, or a doc marker - `///` or `//!`) - and one following space, if
@@ -128,7 +129,7 @@ class Scanner {
         continue;
       }
 
-      if (c === 'r' || c === 'b') {
+      if (c === 'r' || c === 'b' || c === 'c') {
         const rawString = this.tryScanRawString();
         if (rawString) {
           yield rawString;
@@ -156,6 +157,10 @@ class Scanner {
         continue;
       }
       if (c === 'b' && n === '"' && !isIdentChar(content[this.i - 1])) {
+        yield this.scanQuotedString(this.i);
+        continue;
+      }
+      if (c === 'c' && n === '"' && !isIdentChar(content[this.i - 1])) {
         yield this.scanQuotedString(this.i);
         continue;
       }
@@ -217,15 +222,17 @@ class Scanner {
   }
 
   /**
-   * A plain `"..."` string, or a `b"..."` byte string - both use the same ordinary backslash-escape rules,
-   * differing only in which tag they get (`string` alone for plain, `string.byte` for a byte string).
-   * `literalStart` is where the emitted segment begins - the `"` itself, or the `b` right before it for a
-   * byte string.
+   * A plain `"..."` string, a `b"..."` byte string, or a `c"..."` C string (a nul-terminated `CStr` literal,
+   * stable since Rust 1.77) - all three use the same ordinary backslash-escape rules, differing only in which
+   * tag they get. `literalStart` is where the emitted segment begins - the `"` itself, or the `b`/`c` right
+   * before it for a byte or C string.
    */
   private scanQuotedString(literalStart: number): ParsedText {
     const { content } = this;
-    const isByte = content[literalStart] === 'b';
-    const quoteStart = isByte ? literalStart + 1 : literalStart;
+    const prefix = content[literalStart];
+    const isByte = prefix === 'b';
+    const isC = prefix === 'c';
+    const quoteStart = isByte || isC ? literalStart + 1 : literalStart;
     let i = quoteStart + 1;
     let closed = false;
     while (i < content.length) {
@@ -244,20 +251,21 @@ class Scanner {
     const openLen = quoteStart - literalStart + 1;
     const { text, map } = stripDelimited(rawText, openLen, 1, closed);
     this.i = end;
-    return { text, rawText, map, range: [literalStart, end], tags: isByte ? STRING_BYTE_TAG : STRING_TAG };
+    const tags = isByte ? STRING_BYTE_TAG : isC ? STRING_C_TAG : STRING_TAG;
+    return { text, rawText, map, range: [literalStart, end], tags };
   }
 
   /**
-   * A Rust raw string: optional `b` byte prefix, `r`, zero-or-more `#` characters, then `"..."`, closed by a
-   * `"` followed by exactly as many `#` characters as opened it - adapted from
-   * `@cspell/parser-c-cpp-strings-comments`'s `tryScanCppRawString`, which matches a closing token built
-   * from an arbitrary *text* delimiter; Rust's delimiter is instead a *count* of `#` characters, so the
-   * closing token here is built by repeating `#` `hashCount` times rather than copied out of the source. No
-   * escape processing at all inside - a backslash is a literal character, not an escape, so unlike
-   * `scanQuotedString` this never calls `skipEscape`.
+   * A Rust raw string: an optional `b` byte or `c` C-string prefix (never both), `r`, zero-or-more `#`
+   * characters, then `"..."`, closed by a `"` followed by exactly as many `#` characters as opened it -
+   * adapted from `@cspell/parser-c-cpp-strings-comments`'s `tryScanCppRawString`, which matches a closing
+   * token built from an arbitrary *text* delimiter; Rust's delimiter is instead a *count* of `#` characters,
+   * so the closing token here is built by repeating `#` `hashCount` times rather than copied out of the
+   * source. No escape processing at all inside - a backslash is a literal character, not an escape, so
+   * unlike `scanQuotedString` this never calls `skipEscape`.
    *
-   * Requires a non-identifier character (or start of file) immediately before the `b`/`r` prefix, so this
-   * can't misfire partway through an ordinary identifier that happens to end in "r" or "b" (mirrors
+   * Requires a non-identifier character (or start of file) immediately before the `b`/`c`/`r` prefix, so this
+   * can't misfire partway through an ordinary identifier that happens to end in "r", "b", or "c" (mirrors
    * `tryScanRegExpCallArgs`'s boundary check in `@cspell/parser-typescript-strings-comments`). Returns
    * `undefined` (consuming nothing) if the pattern doesn't actually match a raw string opener, so the caller
    * falls back to treating the prefix letter as an ordinary skipped character.
@@ -269,8 +277,12 @@ class Scanner {
 
     let j = start;
     let isByte = false;
+    let isC = false;
     if (content[j] === 'b') {
       isByte = true;
+      j++;
+    } else if (content[j] === 'c') {
+      isC = true;
       j++;
     }
     if (content[j] !== 'r') return undefined;
@@ -292,7 +304,8 @@ class Scanner {
     const rawText = content.slice(start, end);
     const { text, map } = stripDelimited(rawText, openLen, closer.length, closed);
     this.i = end;
-    return { text, rawText, map, range: [start, end], tags: isByte ? STRING_BYTE_RAW_TAG : STRING_RAW_TAG };
+    const tags = isByte ? STRING_BYTE_RAW_TAG : isC ? STRING_C_RAW_TAG : STRING_RAW_TAG;
+    return { text, rawText, map, range: [start, end], tags };
   }
 }
 

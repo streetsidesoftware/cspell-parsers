@@ -171,16 +171,18 @@ Searching for the _exact_ closing token (not just the next `"`) is what makes `f
 for a `##`-delimited raw string is `"##` (two hashes), `indexOf` correctly skips right past that shorter,
 non-matching run and finds the real 2-hash closer later on.
 
-### The `r`/`b`/`br` prefix's word-boundary guard
+### The `r`/`b`/`c`/`br`/`cr` prefix's word-boundary guard
 
-`tryScanRawString` requires a non-identifier character (or start of file) immediately before the `b`/`r`
+`tryScanRawString` requires a non-identifier character (or start of file) immediately before the `b`/`c`/`r`
 prefix - `isIdentChar(content[start - 1])` - mirroring
 `@cspell/parser-typescript-strings-comments`'s `tryScanRegExpCallArgs` boundary check. Without it, an ordinary
-identifier that happens to end in "r" or "b" immediately before an unrelated quote, with no separator between
-them (e.g. the trailing `r` of an identifier called `author` right before a string, as in `author"data"`), would
-be read as a raw-string prefix rather than the last letter of that identifier. `run()` applies the same
-reasoning to the plain `b"..."` byte-string and `b'...'` byte-char forms, via an inline
-`!isIdentChar(content[this.i - 1])` check at each call site, for the same reason.
+identifier that happens to end in "r", "b", or "c" immediately before an unrelated quote, with no separator
+between them (e.g. the trailing `r` of an identifier called `author` right before a string, as in
+`author"data"`), would be read as a raw-string prefix rather than the last letter of that identifier. `run()`
+applies the same reasoning to the plain `b"..."` byte-string and `c"..."` C-string forms (and `b'...'`
+byte-char, never emitted), via an inline `!isIdentChar(content[this.i - 1])` check at each call site, for the
+same reason. `b` and `c` are mutually exclusive prefixes - Rust has no `bc"..."`/`cb"..."` form - so
+`tryScanRawString` only ever sets one of `isByte`/`isC`.
 
 ## Escape handling
 
@@ -193,10 +195,6 @@ inside one is just a literal character, per Rust's grammar.
 
 ## Known limitations (see also README.md)
 
-- **C-string literals (`c"..."`, `cr"..."#`, Rust 1.77+) are not implemented.** They're a natural, low-risk
-  extension of `tryScanRawString`'s machinery (a `c`/`cr` prefix alongside today's bare/`r`/`b`/`br` ones), but
-  were left out of this first version to keep scope tight. If you add them, extend
-  `fixtures/raw-strings.rs` and `parser.test.ts` alongside `tryScanRawString`.
 - **Char literals and lifetimes get no general recognition at all** (see "Char literals and lifetimes: no
   special handling at all" above) - a deliberate simplification, not an oversight, with one narrow exception:
   a `'"'` char literal is specifically detected and skipped as a unit, since that's the one shape that would
@@ -212,13 +210,14 @@ segment. See `README.md`'s [Tags](README.md#tags) table for what each one means 
 String tags are a deliberate departure from the `string.singleQuote`/`string.doubleQuote` pattern used by
 every other package in this repo: since Rust only ever uses `"` for strings (`'` is exclusively char
 literals, never emitted - see above), quote style carries no information worth tagging. Instead the tags
-describe the string's _kind_: `scanQuotedString` picks `STRING_TAG` (plain) or `STRING_BYTE_TAG` (byte,
-`b"..."`) based on whether it was called for a `b`-prefixed literal; `tryScanRawString` picks `STRING_RAW_TAG`
-or `STRING_BYTE_RAW_TAG` the same way. `STRING_BYTE_RAW_TAG` is built by spreading `STRING_BYTE_TAG`
-(not `STRING_TAG` directly), so it carries `string.byte` as an ancestor alongside `string` - filtering on
-`string.byte` alone therefore matches both a plain byte string and a byte raw string, the same hierarchical
-filtering `customizePlugin` already relies on everywhere else. If C-string literals (`c"..."`, `cr"..."#`)
-are ever added (see "Known limitations"), follow the same pattern: `string.c` and `string.c.raw`.
+describe the string's _kind_: `scanQuotedString` picks `STRING_TAG` (plain), `STRING_BYTE_TAG` (byte,
+`b"..."`), or `STRING_C_TAG` (C string, `c"..."`) based on which prefix (if any) it was called for;
+`tryScanRawString` picks `STRING_RAW_TAG`, `STRING_BYTE_RAW_TAG`, or `STRING_C_RAW_TAG` the same way.
+`STRING_BYTE_RAW_TAG` is built by spreading `STRING_BYTE_TAG` (not `STRING_TAG` directly), and
+`STRING_C_RAW_TAG` by spreading `STRING_C_TAG`, so each carries its non-raw counterpart (`string.byte` or
+`string.c`) as an ancestor alongside `string` - filtering on `string.byte` (or `string.c`) alone therefore
+matches both the plain and raw forms of that kind, the same hierarchical filtering `customizePlugin` already
+relies on everywhere else.
 
 ## Testing
 
@@ -234,7 +233,9 @@ are ever added (see "Known limitations"), follow the same pattern: `string.c` an
   directions, in the same file - including the `'"'` special case, proving a real string right after it is
   still recognized correctly.
 - `fixtures/raw-strings.rs` covers the `#`-count delimiter matching, including a body containing a shorter,
-  non-matching `#`-run that must not close a longer-delimited raw string early.
+  non-matching `#`-run that must not close a longer-delimited raw string early, plus a `cr#"..."#` C raw
+  string. `fixtures/comments-and-strings.rs` covers the plain `c"..."` form alongside the other quoted-string
+  kinds.
 - `samples/` is a real, separate end-to-end check: actual cspell configs plus real source files, run for real
   by `pnpm run test:cspell` (`cspell .` from the package root). `samples/customize` in particular proves the
   `customizePlugin` tag filter is doing something real (a genuine misspelling in a segment the filter

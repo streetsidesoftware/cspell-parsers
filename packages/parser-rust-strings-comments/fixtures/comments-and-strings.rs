@@ -38,3 +38,7 @@ pub fn initial() -> char {
 pub fn magic_bytes() -> &'static [u8] {
     b"binary payload marker"
 }
+
+pub fn magic_c_string() -> &'static std::ffi::CStr {
+    c"nul terminated payload marker"
+}

@@ -8,10 +8,11 @@ It implements cspell's [`Parser`](https://www.npmjs.com/package/@cspell/cspell-t
 Unlike [`@cspell/parser-example`](https://www.npmjs.com/package/@cspell/parser-example) (comments only), this
 parser only ever emits comments and string-like literals - never identifiers, keywords, punctuation, char
 literals, or lifetimes - using a small hand-written scanner rather than a real grammar. It understands
-Rust's several string and comment forms: `"..."` strings, `b"..."` byte strings, raw strings (`r"..."`,
-`r#"..."#`, ...), line comments (`//`, `///`, `//!`), and block comments (`/* */`, `/** */`, `/*! */`) -
-including Rust's nested block comments. Char literals (`'...'`, `b'...'`) are never spell checked and get no
-special handling at all - see "How it works" and "Known limitations" below for what that trades off.
+Rust's several string and comment forms: `"..."` strings, `b"..."` byte strings, `c"..."` C strings, raw
+strings (`r"..."`, `r#"..."#`, ...) including byte raw (`br"..."`) and C raw (`cr"..."`) forms, line comments
+(`//`, `///`, `//!`), and block comments (`/* */`, `/** */`, `/*! */`) - including Rust's nested block
+comments. Char literals (`'...'`, `b'...'`) are never spell checked and get no special handling at all - see
+"How it works" and "Known limitations" below for what that trades off.
 
 ## Usage
 
@@ -85,17 +86,19 @@ parsers can't share one.
 
 ## Tags
 
-| Tag                 | Meaning                                                                             |
-| ------------------- | ----------------------------------------------------------------------------------- |
-| `comment`           | Any comment                                                                         |
-| `comment.line`      | A `//` line comment                                                                 |
-| `comment.line.doc`  | A `///` outer doc comment or `//!` inner doc comment line                           |
-| `comment.block`     | A `/* ... */` block comment (including a nested one)                                |
-| `comment.block.doc` | A `/** ... */` outer doc block or `/*! ... */` inner doc block                      |
-| `string`            | Any string-like literal, including a plain `"..."` string                           |
-| `string.byte`       | A `b"..."` byte string literal (also carried by `string.byte.raw`)                  |
-| `string.raw`        | A raw string literal (`r"..."`, `r#"..."#`, ...) - not a byte raw string, see below |
-| `string.byte.raw`   | A byte raw string literal (`br"..."`, `br#"..."#`, ...)                             |
+| Tag                 | Meaning                                                                       |
+| ------------------- | ----------------------------------------------------------------------------- |
+| `comment`           | Any comment                                                                   |
+| `comment.line`      | A `//` line comment                                                           |
+| `comment.line.doc`  | A `///` outer doc comment or `//!` inner doc comment line                     |
+| `comment.block`     | A `/* ... */` block comment (including a nested one)                          |
+| `comment.block.doc` | A `/** ... */` outer doc block or `/*! ... */` inner doc block                |
+| `string`            | Any string-like literal, including a plain `"..."` string                     |
+| `string.byte`       | A `b"..."` byte string literal (also carried by `string.byte.raw`)            |
+| `string.raw`        | A raw string literal (`r"..."`, `r#"..."#`, ...) - not a byte or C raw string |
+| `string.byte.raw`   | A byte raw string literal (`br"..."`, `br#"..."#`, ...)                       |
+| `string.c`          | A `c"..."` C string literal (also carried by `string.c.raw`)                  |
+| `string.c.raw`      | A C raw string literal (`cr"..."`, `cr#"..."#`, ...)                          |
 
 ## How it works
 
@@ -110,9 +113,10 @@ parsers can't share one.
 - **String tags describe the string's _kind_, not its quote style.** Rust only ever uses `"` for strings, so
   there's no `string.singleQuote`/`.doubleQuote` distinction to make the way some other languages in this
   repo do. Instead a plain `"..."` string gets just the bare `string` tag, and each other kind adds its own
-  descriptor: `string.byte` for a `b"..."` byte string, `string.raw` for a raw string, and
-  `string.byte.raw` for a byte raw string (carrying `string.byte` as an ancestor too, so filtering on
-  `string.byte` alone matches both).
+  descriptor: `string.byte` for a `b"..."` byte string, `string.raw` for a raw string, `string.byte.raw` for a
+  byte raw string (carrying `string.byte` as an ancestor too, so filtering on `string.byte` alone matches
+  both), `string.c` for a `c"..."` C string, and `string.c.raw` for a C raw string (likewise carrying
+  `string.c` as an ancestor).
 - **Char literals (`'a'`, `'\n'`, `'\x41'`, `'\u{1F600}'`, and their `b'...'` byte-char equivalents) and
   lifetimes/labels (`'a`, `'static`, `'_`) are never spell checked and get no general recognition at all.** A
   bare `'` is simply left as ordinary, unrecognized code - a single character or escape sequence has no prose
@@ -126,11 +130,6 @@ parsers can't share one.
 This parser is a small hand-written scanner, not a real grammar, which keeps it dependency-free but comes
 with a few deliberate, documented scope limits:
 
-- **C-string literals are not supported.** Rust 1.77 added `c"..."`/`cr"..."#` (nul-terminated `CStr`
-  literals). They're a natural extension of the same raw-string machinery used here, but are left out of this
-  first version - a `c"..."` literal is simply not recognized as anything special (it falls through as
-  ordinary skipped code), so its content is never spell checked. Add support if you need it - see
-  `CONTRIBUTING.md`.
 - **Char literals and lifetimes get no general recognition at all - a bare `'` is otherwise always just
   ordinary code.** This is a deliberate simplification: since char literals are never spell checked, there's
   nothing to gain from correctly parsing their shape. The one exception is `'"'` (a char literal whose

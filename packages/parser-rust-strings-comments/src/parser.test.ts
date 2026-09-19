@@ -87,6 +87,12 @@ describe('rust-strings-comments parser', () => {
       expect(str?.tags).toEqual({ string: true, 'string.byte': true });
     });
 
+    it('tags a C string (c"...") as string.c', () => {
+      const str = byText(parsedTexts, 'nul terminated payload marker');
+      expect(str?.rawText).toBe('c"nul terminated payload marker"');
+      expect(str?.tags).toEqual({ string: true, 'string.c': true });
+    });
+
     it('does not emit anything for a char literal ("\'A\'") - char literals are never spell checked', () => {
       expect(parsedTexts.some((p) => p.rawText === "'A'")).toBe(false);
     });
@@ -147,6 +153,12 @@ describe('rust-strings-comments parser', () => {
       const str = byText(parsedTexts, 'byte raw string, no escapes \\ here either');
       expect(str?.rawText).toBe('br"byte raw string, no escapes \\ here either"');
       expect(str?.tags).toEqual({ string: true, 'string.byte': true, 'string.byte.raw': true });
+    });
+
+    it('recognizes a C raw string (cr#"..."#) the same way as a plain raw string, tagged string.c.raw', () => {
+      const str = byText(parsedTexts, 'C raw string with an embedded "quote" and no escapes \\ either');
+      expect(str?.rawText).toBe('cr#"C raw string with an embedded "quote" and no escapes \\ either"#');
+      expect(str?.tags).toEqual({ string: true, 'string.c': true, 'string.c.raw': true });
     });
   });
 
@@ -253,7 +265,7 @@ describe('rust-strings-comments parser', () => {
     });
   });
 
-  describe('word-boundary guards on the "r"/"b"/"br" prefixes', () => {
+  describe('word-boundary guards on the "r"/"b"/"c"/"br"/"cr" prefixes', () => {
     it('does not mistake an identifier ending in "r" immediately before a quote for a raw-string prefix', () => {
       // No separator between "author" and the quote - without the boundary guard, the trailing "r" would be
       // read as a zero-hash raw-string prefix (r"data") instead of the last letter of the identifier.
@@ -266,6 +278,14 @@ describe('rust-strings-comments parser', () => {
       // No separator between "verb" and the quote - without the boundary guard, the trailing "b" would be
       // read as a byte-string prefix (b"data") instead of the last letter of the identifier.
       const content = 'verb"data"\n';
+      const parsed = [...parse(content, 'file.rs').parsedTexts];
+      expect(byText(parsed, 'data')?.tags).toEqual({ string: true });
+    });
+
+    it('does not mistake an identifier ending in "c" immediately before a quote for a C-string prefix', () => {
+      // No separator between "magic" and the quote - without the boundary guard, the trailing "c" would be
+      // read as a C-string prefix (c"data") instead of the last letter of the identifier.
+      const content = 'magic"data"\n';
       const parsed = [...parse(content, 'file.rs').parsedTexts];
       expect(byText(parsed, 'data')?.tags).toEqual({ string: true });
     });
