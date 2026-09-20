@@ -85,7 +85,10 @@ function groupParsersByFileType(plugins: ParserPlugin[]): Map<string, ParserPlug
  * @returns
  */
 export function customizePlugin(fileType: string, options: CustomizePluginOptions): ParserPluginEx {
-  const opts: CustomizePluginOptions = { tags: options.tags };
+  const opts: CustomizePluginOptions = {};
+  if (options.tags) {
+    opts.tags = options.tags;
+  }
   if (options.name && fileType !== '*') {
     opts.name = options.name;
   }
