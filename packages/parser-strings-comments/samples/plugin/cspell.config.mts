@@ -5,7 +5,7 @@ export default {
   languageSettings: [
     {
       languageId: 'php',
-      parser: 'strings-comments',
+      parser: plugin.getParser('php')?.name,
     },
   ],
 };

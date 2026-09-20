@@ -1,7 +1,7 @@
 import type { AdvancedCSpellSettings } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
-import { plugin, supportedFileTypes } from './plugin.js';
+import { plugin } from './plugin.js';
 import recommended from './recommended.js';
 
 describe('recommended (cspell settings entry point)', () => {
@@ -9,13 +9,15 @@ describe('recommended (cspell settings entry point)', () => {
     expect(recommended.plugins).toEqual([plugin]);
   });
 
-  it('selects the strings-comments parser for every supported file type', () => {
-    expect(recommended.languageSettings).toEqual([
-      {
-        languageId: supportedFileTypes.join(','),
-        parser: 'strings-comments',
-      },
-    ]);
+  it('selects the language-specific strings-comments parsers for supported file types', () => {
+    expect(recommended.languageSettings).toEqual(
+      expect.arrayContaining([
+        {
+          languageId: 'csharp',
+          parser: 'csharp-strings-comments',
+        },
+      ]),
+    );
   });
 
   it('is assignable to AdvancedCSpellSettings', () => {

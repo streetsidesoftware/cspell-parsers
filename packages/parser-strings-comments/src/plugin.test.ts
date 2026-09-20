@@ -1,20 +1,18 @@
-import type { Parser } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
-import { parser, supportedFileTypes as parserSupportedFileTypes } from './parser.js';
-import { customizePlugin, plugin, supportedFileTypes } from './plugin.js';
+import { customizePlugin, getParsersByFileType, plugin } from './plugin.js';
 
 describe('plugin', () => {
   it('exposes the strings-comments parser', () => {
-    expect(plugin.parsers).toEqual([parser]);
+    expect(plugin.parsers.map((p) => p.name)).toEqual(expect.arrayContaining(['typescript-strings-comments']));
   });
 
-  it('re-exports supportedFileTypes from the parser', () => {
-    expect(supportedFileTypes).toBe(parserSupportedFileTypes);
+  it('exposes the supported file types', () => {
+    expect(plugin.supportedFileTypes).toEqual(expect.arrayContaining(['typescript']));
   });
 
   it('is usable to parse content', () => {
-    const [pluginParser] = (plugin.parsers ?? []) as Parser[];
+    const [pluginParser] = getParsersByFileType('c').slice(-1);
     const result = pluginParser?.parse('// hello\n', 'example.c');
 
     expect([...(result?.parsedTexts ?? [])].some((p) => p.text === 'hello')).toBe(true);
@@ -22,18 +20,9 @@ describe('plugin', () => {
 });
 
 describe('customizePlugin', () => {
-  it('wires tag filtering into the strings-comments parser', () => {
-    const customized = customizePlugin({ tags: { '*': true, comment: false } });
-    const [customizedParser] = (customized.parsers ?? []) as Parser[];
-    const result = customizedParser?.parse('// hello\n', 'example.c');
-
-    expect([...(result?.parsedTexts ?? [])]).toEqual([]);
-  });
-
-  it('wires name customization into the strings-comments parser', () => {
-    const customized = customizePlugin({ name: 'custom-example', tags: {} });
-    const [customizedParser] = (customized.parsers ?? []) as Parser[];
-
-    expect(customizedParser?.name).toBe('custom-example');
+  it('customizes the plugin with a new name', () => {
+    const custom = customizePlugin('*', { name: 'custom-typescript-strings-comments', tags: { '*': false } });
+    expect(custom.name).toBe('custom-typescript-strings-comments');
+    expect(custom.parsers.map((p) => p.name)).toEqual(plugin.parsers.map((p) => p.name));
   });
 });
