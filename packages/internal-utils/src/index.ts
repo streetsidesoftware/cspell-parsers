@@ -6,6 +6,8 @@ export type { DecodedText, StringPart } from './strings.js';
 export { decodeStringParts } from './strings.js';
 export type {
   ParserPlugin,
+  ParserTags,
+  PluginParser,
   RecommendedLanguageSetting,
   RecommendedLanguageSettings,
   RecommendedSettings,

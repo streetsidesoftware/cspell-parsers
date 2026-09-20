@@ -1,4 +1,6 @@
-import type { ParsedTags, ParsedText, Parser } from '@cspell/cspell-types';
+import type { ParsedTags, ParsedText } from '@cspell/cspell-types';
+
+import type { PluginParser } from './types.js';
 
 /**
  * A tag name, or a `*`-wildcard pattern matching one (see {@link TagFilterOptions}).
@@ -55,15 +57,20 @@ export interface CustomizeParserOptions {
  * `options.tags`, and its `name` is `options.name` when given. `options.tags` is compiled into a
  * {@link TagsFilter} once here, before the parser ever runs - see {@link compileTagFilter}.
  */
-export function customizeParser(parser: Parser, options: CustomizeParserOptions): Parser {
+export function customizeParser(parser: PluginParser, options: CustomizeParserOptions): PluginParser {
   if (!options.tags || Object.keys(options.tags).length === 0) {
     return options.name ? { ...parser, name: options.name } : parser;
   }
   return customizeParserWithFilter(parser, compileTagFilter(options.tags), options.name);
 }
 
-function customizeParserWithFilter(parser: Parser, isIncluded: TagsFilter, name: string | undefined): Parser {
-  const newParser: Parser = {
+function customizeParserWithFilter(
+  parser: PluginParser,
+  isIncluded: TagsFilter,
+  name: string | undefined,
+): PluginParser {
+  const newParser: PluginParser = {
+    ...parser,
     name: name ?? parser.name,
     parse(content, filename) {
       const result = parser.parse(content, filename);

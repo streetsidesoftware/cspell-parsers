@@ -1,5 +1,5 @@
-import type { ParsedTags, ParsedText, Parser, ParseResult, SourceMap } from '@cspell/cspell-types';
-import type { TagFilterOptions } from '@internal/utils';
+import type { ParsedTags, ParsedText, ParseResult, SourceMap } from '@cspell/cspell-types';
+import type { ParserTags, PluginParser, TagFilterOptions } from '@internal/utils';
 import { customizeParser, stripCommentMarkers } from '@internal/utils';
 
 const COMMENT_TAG: ParsedTags = Object.freeze({ comment: true });
@@ -352,12 +352,27 @@ export function parse(content: string, filename: string): ParseResult {
   return { content, filename, parsedTexts: new Scanner(content).run() };
 }
 
-export const parser: Parser = {
+export const supportedFileTypes: Readonly<string[]> = Object.freeze(['php']);
+
+const tags: Readonly<ParserTags> = Object.freeze({
+  comment: true,
+  'comment.line': true,
+  'comment.block': true,
+  'comment.block.doc': true,
+  string: true,
+  'string.singleQuote': true,
+  'string.doubleQuote': true,
+  'string.heredoc': true,
+  'string.nowdoc': true,
+  markup: true,
+});
+
+export const parser: PluginParser = {
   name: 'php-strings-comments',
   parse,
+  supportedFileTypes,
+  tags,
 };
-
-export const supportedFileTypes: string[] = ['php'];
 
 /** Options for {@link createParser}: the parser's name, and which tagged segments to keep. */
 export interface CustomizeParserOptions {
@@ -388,6 +403,6 @@ export interface CustomizeParserOptions {
  * };
  * ```
  */
-export function createParser(options: CustomizeParserOptions = {}): Parser {
+export function createParser(options: CustomizeParserOptions = {}): PluginParser {
   return customizeParser(parser, options);
 }

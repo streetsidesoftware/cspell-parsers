@@ -1,5 +1,5 @@
-import type { ParsedTags, ParsedText, Parser, ParseResult } from '@cspell/cspell-types';
-import type { TagFilterOptions } from '@internal/utils';
+import type { ParsedTags, ParsedText, ParseResult } from '@cspell/cspell-types';
+import type { ParserTags, PluginParser, TagFilterOptions } from '@internal/utils';
 import { customizeParser, stripCommentMarkers } from '@internal/utils';
 
 const COMMENT_TAG = Object.freeze({ comment: true });
@@ -65,12 +65,28 @@ function skipStringLiteral(content: string, start: number, quote: string): numbe
   return i + 1;
 }
 
-export const parser: Parser = {
+export const supportedFileTypes: Readonly<string[]> = Object.freeze([
+  'c',
+  'cpp',
+  'csharp',
+  'java',
+  'javascript',
+  'typescript',
+]);
+
+const tags: Readonly<ParserTags> = Object.freeze({
+  comment: true,
+  'comment.line': true,
+  'comment.block': true,
+  'comment.block.doc': true,
+});
+
+export const parser: PluginParser = {
   name: 'c-style-comments',
   parse,
+  supportedFileTypes,
+  tags,
 };
-
-export const supportedFileTypes: string[] = ['c', 'cpp', 'csharp', 'java', 'javascript', 'typescript'];
 
 /** Options for {@link createParser}: the parser's name, and which tagged segments to keep. */
 export interface CustomizeParserOptions {
@@ -102,6 +118,6 @@ export interface CustomizeParserOptions {
  * };
  * ```
  */
-export function createParser(options: CustomizeParserOptions = {}): Parser {
+export function createParser(options: CustomizeParserOptions = {}): PluginParser {
   return customizeParser(parser, options);
 }
