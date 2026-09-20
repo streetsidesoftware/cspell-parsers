@@ -57,13 +57,13 @@ export function getParsersByFileType(fileType?: string): ParserPlugin['parsers']
   return !fileType ? allParsers : parsersByFileType.get(fileType) || [];
 }
 
-/** Options for {@link createParser}: the parser's name, and which tagged segments to keep. */
+/** Options for {@link customizePlugin}: optionally rename the customized plugin/parser(s), and choose which tagged segments to keep. */
 export interface CustomizePluginOptions {
-  /** The name of the plugin */
+  /** Name for the customized plugin (and, when applicable, its parser(s)). */
   name?: string;
 
   /** Tagged segments to keep; omit to keep everything. */
-  tags: TagFilterOptions;
+  tags?: TagFilterOptions;
 }
 
 function groupParsersByFileType(plugins: ParserPlugin[]): Map<string, ParserPlugin['parsers']> {
@@ -98,7 +98,7 @@ export function customizePlugin(fileType: string, options: CustomizePluginOption
   const supportedFileTypes = [...parsersByFileType.keys()];
   const recommendedLanguageSettings = plugins.map((p) => ({
     languageId: filterFileTypes(fileType, p.supportedFileTypes).join(','),
-    parser: p.parsers.slice(-1)[0]?.name,
+    parser: p.parsers[p.parsers.length - 1].name,
   }));
   return {
     name: options.name || plugin.name,
