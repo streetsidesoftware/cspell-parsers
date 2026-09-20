@@ -9,7 +9,7 @@ describe('recommended (cspell settings entry point)', () => {
     expect(recommended.plugins).toEqual([plugin]);
   });
 
-  it('selects the strings-comments parser for every supported file type', () => {
+  it('selects the language-specific strings-comments parsers for supported file types', () => {
     expect(recommended.languageSettings).toEqual(
       expect.arrayContaining([
         {
