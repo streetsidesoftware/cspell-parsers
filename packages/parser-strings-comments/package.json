@@ -35,10 +35,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./parser": {
-      "types": "./dist/parser.d.ts",
-      "default": "./dist/parser.js"
-    },
     "./plugin": {
       "types": "./dist/plugin.d.ts",
       "default": "./dist/plugin.js"
@@ -61,6 +57,17 @@
     "test:cspell": "cspell . --no-progress",
     "test:vitest": "vitest run",
     "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@cspell/parser-c-cpp-strings-comments": "workspace:*",
+    "@cspell/parser-csharp-strings-comments": "workspace:*",
+    "@cspell/parser-go-strings-comments": "workspace:*",
+    "@cspell/parser-java-strings-comments": "workspace:*",
+    "@cspell/parser-php-strings-comments": "workspace:*",
+    "@cspell/parser-python-strings-comments": "workspace:*",
+    "@cspell/parser-ruby-strings-comments": "workspace:*",
+    "@cspell/parser-rust-strings-comments": "workspace:*",
+    "@cspell/parser-typescript-strings-comments": "workspace:*"
   },
   "devDependencies": {
     "@cspell/cspell-types": "catalog:",

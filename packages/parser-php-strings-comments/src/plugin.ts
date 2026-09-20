@@ -1,13 +1,23 @@
 import type { Plugin } from '@cspell/cspell-types';
-import { customizeParser } from '@internal/utils';
+import { customizeParser, type ParserPlugin } from '@internal/utils';
 
 import type { CustomizeParserOptions } from './parser.js';
-import { parser } from './parser.js';
+import { parser, supportedFileTypes } from './parser.js';
 
 export { supportedFileTypes } from './parser.js';
 
-export const plugin: Plugin = {
+export const recommendedLanguageSettings = [
+  {
+    languageId: supportedFileTypes.join(','),
+    parser: 'php-strings-comments',
+  },
+];
+
+export const plugin: ParserPlugin = {
+  name: 'php-strings-comments',
   parsers: [parser],
+  supportedFileTypes,
+  recommendedLanguageSettings,
 };
 
 /** Options for {@link customizePlugin}: the parser's name, and which tagged segments to keep. */

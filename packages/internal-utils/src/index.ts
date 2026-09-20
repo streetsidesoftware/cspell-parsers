@@ -4,3 +4,9 @@ export type { CustomizeParserOptions, TagFilterOptions, TagPattern, TagsFilter }
 export { customizeParser } from './customize.js';
 export type { DecodedText, StringPart } from './strings.js';
 export { decodeStringParts } from './strings.js';
+export type {
+  ParserPlugin,
+  RecommendedLanguageSetting,
+  RecommendedLanguageSettings,
+  RecommendedSettings,
+} from './types.js';

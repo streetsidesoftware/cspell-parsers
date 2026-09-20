@@ -394,6 +394,34 @@ importers:
         version: link:..
 
   packages/parser-strings-comments:
+    dependencies:
+      '@cspell/parser-c-cpp-strings-comments':
+        specifier: workspace:*
+        version: link:../parser-c-cpp-strings-comments
+      '@cspell/parser-csharp-strings-comments':
+        specifier: workspace:*
+        version: link:../parser-csharp-strings-comments
+      '@cspell/parser-go-strings-comments':
+        specifier: workspace:*
+        version: link:../parser-go-strings-comments
+      '@cspell/parser-java-strings-comments':
+        specifier: workspace:*
+        version: link:../parser-java-strings-comments
+      '@cspell/parser-php-strings-comments':
+        specifier: workspace:*
+        version: link:../parser-php-strings-comments
+      '@cspell/parser-python-strings-comments':
+        specifier: workspace:*
+        version: link:../parser-python-strings-comments
+      '@cspell/parser-ruby-strings-comments':
+        specifier: workspace:*
+        version: link:../parser-ruby-strings-comments
+      '@cspell/parser-rust-strings-comments':
+        specifier: workspace:*
+        version: link:../parser-rust-strings-comments
+      '@cspell/parser-typescript-strings-comments':
+        specifier: workspace:*
+        version: link:../parser-typescript-strings-comments
     devDependencies:
       '@cspell/cspell-types':
         specifier: 'catalog:'

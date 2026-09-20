@@ -1,11 +1,8 @@
-import { plugin as javaScriptPlugin, supportedFileTypes } from './plugin.js';
+import type { RecommendedSettings } from '@internal/utils';
+
+import { plugin as javaScriptPlugin, recommendedLanguageSettings } from './plugin.js';
 
 export default {
   plugins: [javaScriptPlugin],
-  languageSettings: [
-    {
-      languageId: supportedFileTypes.join(','),
-      parser: 'javascript',
-    },
-  ],
-};
+  languageSettings: recommendedLanguageSettings,
+} satisfies RecommendedSettings;
