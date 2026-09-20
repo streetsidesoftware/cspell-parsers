@@ -1,5 +1,5 @@
-import Path from 'node:path';
 import fs from 'node:fs/promises';
+import Path from 'node:path';
 
 import { REPO_ROOT_DIR } from './consts.ts';
 import { readPackageJson } from './package-json-util.ts';

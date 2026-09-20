@@ -1,6 +1,8 @@
-import Path from 'node:path';
 import fs from 'node:fs/promises';
+import Path from 'node:path';
+
 import sortPackageJson from 'sort-package-json';
+
 import { REPO_ROOT_DIR, REPOSITORY_GIT_URL } from './consts.ts';
 
 const PUBLISH_CONFIG: PackageJsonPublishConfig = {

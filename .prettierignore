@@ -9,3 +9,5 @@ pnpm-lock.yaml
 # Parser test fixtures are raw, arbitrary source snippets whose exact bytes
 # (quote style, spacing, ...) are often what a test is asserting on.
 **/fixtures/**
+test-packages/*/tests/*/**
+packages/*/samples/*/**

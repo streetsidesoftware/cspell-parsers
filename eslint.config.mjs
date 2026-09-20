@@ -1,10 +1,21 @@
 import js from '@eslint/js';
+import { defineConfig } from 'eslint/config';
+import nodePlugin from 'eslint-plugin-n';
+import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
-export default tseslint.config(
+export default defineConfig(
   {
-    ignores: ['**/dist/**', '**/dist-test/**', '**/coverage/**', '**/node_modules/**', '**/fixtures/**'],
+    ignores: [
+      '**/dist/**',
+      '**/dist-test/**',
+      '**/coverage/**',
+      '**/node_modules/**',
+      '**/fixtures/**',
+      'test-packages/*/tests/*/**',
+      'packages/*/samples/*/**',
+    ],
   },
   {
     languageOptions: {
@@ -17,8 +28,18 @@ export default tseslint.config(
     },
   },
   js.configs.recommended,
+  nodePlugin.configs['flat/recommended'],
   {
-    files: ['**/*.ts'],
+    plugins: {
+      'simple-import-sort': simpleImportSort,
+    },
+    rules: {
+      'simple-import-sort/imports': 'error',
+      'simple-import-sort/exports': 'error',
+    },
+  },
+  {
+    files: ['**/*.ts', '**/*.mts', '**/*.cts'],
     extends: [...tseslint.configs.recommended],
     rules: {
       'no-unused-vars': 'off',
@@ -30,6 +51,13 @@ export default tseslint.config(
           caughtErrorsIgnorePattern: '^_',
         },
       ],
+    },
+  },
+  {
+    files: ['scripts/**', '**/*.test.*', '**/*.config.{ts,js,mts,mjs,cjs,cts}'],
+    rules: {
+      'n/no-unsupported-features/node-builtins': 'off',
+      'n/no-extraneous-import': 'off',
     },
   },
 );

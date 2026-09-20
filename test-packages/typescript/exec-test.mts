@@ -1,7 +1,7 @@
 import process from 'node:process';
-import packageJson from './package.json' with { type: 'json' };
 
 import { run } from './lib/test-runner.mts';
+import packageJson from './package.json' with { type: 'json' };
 
 function modulesToTest(): string[] {
   const setOfModules: Set<string> = new Set();

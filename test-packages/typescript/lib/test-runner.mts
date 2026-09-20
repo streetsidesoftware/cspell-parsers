@@ -30,7 +30,6 @@ export async function run(moduleName: string, cwd: string, options: RunOptions =
 }
 
 async function runSuite(moduleName: string, suite: string, cwd: string, options: RunOptions): Promise<void> {
-  const target = `${suite}`;
   const moduleNamePrefix = moduleName.replaceAll(/[^\w]/g, '_');
   const actualFile = path.join(cwd, '__snapshots', `${moduleNamePrefix}.${suite}.actual.json`);
   const snapshotFile = path.join(cwd, '__snapshots', `${suite}.json`);
