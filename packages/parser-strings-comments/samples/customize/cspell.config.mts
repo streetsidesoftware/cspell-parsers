@@ -7,7 +7,7 @@ export default {
   languageSettings: [
     {
       languageId: 'csharp',
-      parser: 'csharp-strings-comments-xxx',
+      parser: 'csharp-strings-comments',
     },
   ],
 };
