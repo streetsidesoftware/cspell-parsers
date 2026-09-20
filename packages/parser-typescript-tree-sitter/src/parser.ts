@@ -72,25 +72,25 @@ function hierarchicalTags(tag: string): ParsedTags {
   return tags;
 }
 
-const STRING_TAG = hierarchicalTags('string');
-const STRING_SINGLE_QUOTE_TAG = hierarchicalTags('string.singleQuote');
-const STRING_DOUBLE_QUOTE_TAG = hierarchicalTags('string.doubleQuote');
-const STRING_TEMPLATE_LITERAL_TAG = hierarchicalTags('string.templateLiteral');
+const STRING_TAG = Object.freeze(hierarchicalTags('string'));
+const STRING_SINGLE_QUOTE_TAG = Object.freeze(hierarchicalTags('string.singleQuote'));
+const STRING_DOUBLE_QUOTE_TAG = Object.freeze(hierarchicalTags('string.doubleQuote'));
+const STRING_TEMPLATE_LITERAL_TAG = Object.freeze(hierarchicalTags('string.templateLiteral'));
 
 /**
  * A module specifier string gets both the usual `string`/`string.singleQuote`/`string.doubleQuote`
  * hierarchy (with `.module` appended) and the quote-style-independent `module.specifier.literal`.
  */
-const MODULE_SPECIFIER_LITERAL_TAG = hierarchicalTags('module.specifier.literal');
-const STRING_MODULE_TAG = { ...hierarchicalTags('string.module'), ...MODULE_SPECIFIER_LITERAL_TAG };
-const STRING_SINGLE_QUOTE_MODULE_TAG = {
+const MODULE_SPECIFIER_LITERAL_TAG = Object.freeze(hierarchicalTags('module.specifier.literal'));
+const STRING_MODULE_TAG = Object.freeze({ ...hierarchicalTags('string.module'), ...MODULE_SPECIFIER_LITERAL_TAG });
+const STRING_SINGLE_QUOTE_MODULE_TAG = Object.freeze({
   ...hierarchicalTags('string.singleQuote.module'),
   ...MODULE_SPECIFIER_LITERAL_TAG,
-};
-const STRING_DOUBLE_QUOTE_MODULE_TAG = {
+});
+const STRING_DOUBLE_QUOTE_MODULE_TAG = Object.freeze({
   ...hierarchicalTags('string.doubleQuote.module'),
   ...MODULE_SPECIFIER_LITERAL_TAG,
-};
+});
 
 function quoteTag(text: string, isModuleSpecifier: boolean): ParsedTags {
   switch (text[0]) {
@@ -170,9 +170,9 @@ function isBareModuleSpecifier(quotedText: string): boolean {
   return specifier.length > 0 && specifier[0] !== '.' && specifier[0] !== '/';
 }
 
-const COMMENT_LINE_TAG = hierarchicalTags('comment.line');
-const COMMENT_BLOCK_TAG = hierarchicalTags('comment.block');
-const COMMENT_BLOCK_DOC_TAG = hierarchicalTags('comment.block.doc');
+const COMMENT_LINE_TAG = Object.freeze(hierarchicalTags('comment.line'));
+const COMMENT_BLOCK_TAG = Object.freeze(hierarchicalTags('comment.block'));
+const COMMENT_BLOCK_DOC_TAG = Object.freeze(hierarchicalTags('comment.block.doc'));
 
 function commentTag(text: string): ParsedTags {
   if (text.startsWith('//')) return COMMENT_LINE_TAG;
@@ -181,14 +181,14 @@ function commentTag(text: string): ParsedTags {
 
 /** Tag for each `IdentifierKind`, precomputed once rather than built fresh per emitted identifier. */
 const identifierTagByKind: Record<IdentifierKind, ParsedTags> = {
-  variable: hierarchicalTags('identifier.variable'),
-  property: hierarchicalTags('identifier.property'),
-  privateProperty: hierarchicalTags('identifier.privateProperty'),
-  type: hierarchicalTags('identifier.type'),
-  shorthandProperty: hierarchicalTags('identifier.shorthandProperty'),
-  label: hierarchicalTags('identifier.label'),
-  importBinding: hierarchicalTags('identifier.importBinding'),
-  exportBinding: hierarchicalTags('identifier.exportBinding'),
+  variable: Object.freeze(hierarchicalTags('identifier.variable')),
+  property: Object.freeze(hierarchicalTags('identifier.property')),
+  privateProperty: Object.freeze(hierarchicalTags('identifier.privateProperty')),
+  type: Object.freeze(hierarchicalTags('identifier.type')),
+  shorthandProperty: Object.freeze(hierarchicalTags('identifier.shorthandProperty')),
+  label: Object.freeze(hierarchicalTags('identifier.label')),
+  importBinding: Object.freeze(hierarchicalTags('identifier.importBinding')),
+  exportBinding: Object.freeze(hierarchicalTags('identifier.exportBinding')),
 };
 
 /**

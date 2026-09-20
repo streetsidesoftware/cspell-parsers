@@ -2,22 +2,22 @@ import type { ParsedTags, ParsedText, Parser, ParseResult, SourceMap } from '@cs
 import type { TagFilterOptions } from '@internal/utils';
 import { customizeParser, stripCommentMarkers } from '@internal/utils';
 
-const COMMENT_TAG: ParsedTags = { comment: true };
-const COMMENT_LINE_TAG: ParsedTags = { ...COMMENT_TAG, 'comment.line': true };
-const COMMENT_BLOCK_TAG: ParsedTags = { ...COMMENT_TAG, 'comment.block': true };
-const COMMENT_BLOCK_DOC_TAG: ParsedTags = { ...COMMENT_BLOCK_TAG, 'comment.block.doc': true };
+const COMMENT_TAG: ParsedTags = Object.freeze({ comment: true });
+const COMMENT_LINE_TAG: ParsedTags = Object.freeze({ ...COMMENT_TAG, 'comment.line': true });
+const COMMENT_BLOCK_TAG: ParsedTags = Object.freeze({ ...COMMENT_TAG, 'comment.block': true });
+const COMMENT_BLOCK_DOC_TAG: ParsedTags = Object.freeze({ ...COMMENT_BLOCK_TAG, 'comment.block.doc': true });
 
-const STRING_TAG: ParsedTags = { string: true };
-const STRING_SINGLE_TAG: ParsedTags = { ...STRING_TAG, 'string.singleQuote': true };
-const STRING_DOUBLE_TAG: ParsedTags = { ...STRING_TAG, 'string.doubleQuote': true };
-const STRING_HEREDOC_TAG: ParsedTags = { ...STRING_TAG, 'string.heredoc': true };
-const STRING_NOWDOC_TAG: ParsedTags = { ...STRING_TAG, 'string.nowdoc': true };
+const STRING_TAG: ParsedTags = Object.freeze({ string: true });
+const STRING_SINGLE_TAG: ParsedTags = Object.freeze({ ...STRING_TAG, 'string.singleQuote': true });
+const STRING_DOUBLE_TAG: ParsedTags = Object.freeze({ ...STRING_TAG, 'string.doubleQuote': true });
+const STRING_HEREDOC_TAG: ParsedTags = Object.freeze({ ...STRING_TAG, 'string.heredoc': true });
+const STRING_NOWDOC_TAG: ParsedTags = Object.freeze({ ...STRING_TAG, 'string.nowdoc': true });
 
 /**
  * The HTML markup pass-through segments outside `<?php ... ?>` - deliberately its own top-level tag, not
  * nested under `string` or `comment`, since it isn't either.
  */
-const MARKUP_TAG: ParsedTags = { markup: true };
+const MARKUP_TAG: ParsedTags = Object.freeze({ markup: true });
 
 /**
  * Strips a line comment's marker - PHP's own markers aren't a fixed length: `#` is 1 character, `//` is 2 -

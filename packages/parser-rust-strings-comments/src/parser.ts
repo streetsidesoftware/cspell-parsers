@@ -2,23 +2,23 @@ import type { ParsedTags, ParsedText, Parser, ParseResult, SourceMap } from '@cs
 import type { TagFilterOptions } from '@internal/utils';
 import { customizeParser, stripCommentMarkers } from '@internal/utils';
 
-const COMMENT_TAG: ParsedTags = { comment: true };
-const COMMENT_LINE_TAG: ParsedTags = { ...COMMENT_TAG, 'comment.line': true };
-const COMMENT_LINE_DOC_TAG: ParsedTags = { ...COMMENT_LINE_TAG, 'comment.line.doc': true };
-const COMMENT_BLOCK_TAG: ParsedTags = { ...COMMENT_TAG, 'comment.block': true };
-const COMMENT_BLOCK_DOC_TAG: ParsedTags = { ...COMMENT_BLOCK_TAG, 'comment.block.doc': true };
+const COMMENT_TAG: ParsedTags = Object.freeze({ comment: true });
+const COMMENT_LINE_TAG: ParsedTags = Object.freeze({ ...COMMENT_TAG, 'comment.line': true });
+const COMMENT_LINE_DOC_TAG: ParsedTags = Object.freeze({ ...COMMENT_LINE_TAG, 'comment.line.doc': true });
+const COMMENT_BLOCK_TAG: ParsedTags = Object.freeze({ ...COMMENT_TAG, 'comment.block': true });
+const COMMENT_BLOCK_DOC_TAG: ParsedTags = Object.freeze({ ...COMMENT_BLOCK_TAG, 'comment.block.doc': true });
 
 /**
  * Rust has one string quote character, so these tags encode the string's *kind* (plain/byte/raw/C) rather
  * than quote style. Hierarchical, per this repo's dot-path convention: `string.byte.raw` also carries
  * `string.byte` and `string`, so filtering on `string.byte` matches both byte forms.
  */
-const STRING_TAG: ParsedTags = { string: true };
-const STRING_BYTE_TAG: ParsedTags = { ...STRING_TAG, 'string.byte': true };
-const STRING_RAW_TAG: ParsedTags = { ...STRING_TAG, 'string.raw': true };
-const STRING_BYTE_RAW_TAG: ParsedTags = { ...STRING_BYTE_TAG, 'string.byte.raw': true };
-const STRING_C_TAG: ParsedTags = { ...STRING_TAG, 'string.c': true };
-const STRING_C_RAW_TAG: ParsedTags = { ...STRING_C_TAG, 'string.c.raw': true };
+const STRING_TAG: ParsedTags = Object.freeze({ string: true });
+const STRING_BYTE_TAG: ParsedTags = Object.freeze({ ...STRING_TAG, 'string.byte': true });
+const STRING_RAW_TAG: ParsedTags = Object.freeze({ ...STRING_TAG, 'string.raw': true });
+const STRING_BYTE_RAW_TAG: ParsedTags = Object.freeze({ ...STRING_BYTE_TAG, 'string.byte.raw': true });
+const STRING_C_TAG: ParsedTags = Object.freeze({ ...STRING_TAG, 'string.c': true });
+const STRING_C_RAW_TAG: ParsedTags = Object.freeze({ ...STRING_C_TAG, 'string.c.raw': true });
 
 /**
  * Strips a line comment's marker and one following space, if present. Takes the marker's length explicitly

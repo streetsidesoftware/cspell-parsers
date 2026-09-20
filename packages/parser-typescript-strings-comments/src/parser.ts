@@ -2,15 +2,15 @@ import type { ParsedTags, ParsedText, Parser, ParseResult, SourceMap } from '@cs
 import type { TagFilterOptions } from '@internal/utils';
 import { customizeParser, stripCommentMarkers } from '@internal/utils';
 
-const COMMENT_TAG: ParsedTags = { comment: true };
-const COMMENT_LINE_TAG: ParsedTags = { ...COMMENT_TAG, 'comment.line': true };
-const COMMENT_BLOCK_TAG: ParsedTags = { ...COMMENT_TAG, 'comment.block': true };
-const COMMENT_BLOCK_DOC_TAG: ParsedTags = { ...COMMENT_BLOCK_TAG, 'comment.block.doc': true };
+const COMMENT_TAG: ParsedTags = Object.freeze({ comment: true });
+const COMMENT_LINE_TAG: ParsedTags = Object.freeze({ ...COMMENT_TAG, 'comment.line': true });
+const COMMENT_BLOCK_TAG: ParsedTags = Object.freeze({ ...COMMENT_TAG, 'comment.block': true });
+const COMMENT_BLOCK_DOC_TAG: ParsedTags = Object.freeze({ ...COMMENT_BLOCK_TAG, 'comment.block.doc': true });
 
-const STRING_TAG: ParsedTags = { string: true };
-const STRING_SINGLE_TAG: ParsedTags = { ...STRING_TAG, 'string.singleQuote': true };
-const STRING_DOUBLE_TAG: ParsedTags = { ...STRING_TAG, 'string.doubleQuote': true };
-const STRING_TEMPLATE_TAG: ParsedTags = { ...STRING_TAG, 'string.templateLiteral': true };
+const STRING_TAG: ParsedTags = Object.freeze({ string: true });
+const STRING_SINGLE_TAG: ParsedTags = Object.freeze({ ...STRING_TAG, 'string.singleQuote': true });
+const STRING_DOUBLE_TAG: ParsedTags = Object.freeze({ ...STRING_TAG, 'string.doubleQuote': true });
+const STRING_TEMPLATE_TAG: ParsedTags = Object.freeze({ ...STRING_TAG, 'string.templateLiteral': true });
 
 /**
  * A module specifier string additionally gets the whole `module`/`module.specifier`/
@@ -19,21 +19,21 @@ const STRING_TEMPLATE_TAG: ParsedTags = { ...STRING_TAG, 'string.templateLiteral
  * `customizePlugin` independently of ordinary string literals, without losing the plain `string`/
  * `string.singleQuote`/`string.doubleQuote` tags.
  */
-const MODULE_SPECIFIER_LITERAL_TAG: ParsedTags = {
+const MODULE_SPECIFIER_LITERAL_TAG: ParsedTags = Object.freeze({
   module: true,
   'module.specifier': true,
   'module.specifier.literal': true,
-};
-const STRING_SINGLE_MODULE_TAG: ParsedTags = {
+});
+const STRING_SINGLE_MODULE_TAG: ParsedTags = Object.freeze({
   ...STRING_SINGLE_TAG,
   'string.singleQuote.module': true,
   ...MODULE_SPECIFIER_LITERAL_TAG,
-};
-const STRING_DOUBLE_MODULE_TAG: ParsedTags = {
+});
+const STRING_DOUBLE_MODULE_TAG: ParsedTags = Object.freeze({
   ...STRING_DOUBLE_TAG,
   'string.doubleQuote.module': true,
   ...MODULE_SPECIFIER_LITERAL_TAG,
-};
+});
 
 /**
  * Strips a fixed-length opening/closing delimiter pair (quotes) from `rawText`. `hasClose` must come from
