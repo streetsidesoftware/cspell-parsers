@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { stripCommentMarkers as stripCommentMarkersImpl } from './comments.js';
-import { customizeParser as customizeParserImpl } from './customize.js';
 import { customizeParser, decodeStringParts, stripCommentMarkers } from './index.js';
+import { customizeParser as customizeParserImpl } from './parser.js';
 import { decodeStringParts as decodeStringPartsImpl } from './strings.js';
 
 describe('index', () => {

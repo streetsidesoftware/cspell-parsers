@@ -1,6 +1,6 @@
 import { parse } from '@cspell/parser-typescript/parser';
 import type { ParserTags, PluginParser, TagFilterOptions } from '@internal/utils';
-import { customizeParser } from '@internal/utils';
+import { createPluginParser, customizeParser } from '@internal/utils';
 
 export { parse };
 
@@ -26,12 +26,12 @@ const tags: Readonly<ParserTags> = Object.freeze({
   'identifier.exportBinding': true,
 });
 
-export const parser: PluginParser = {
+export const parser: PluginParser = createPluginParser({
   name: 'javascript',
   parse,
   supportedFileTypes,
   tags,
-};
+});
 
 /** Options for {@link createParser}: the parser's name, and which tagged segments to keep. */
 export interface CustomizeParserOptions {

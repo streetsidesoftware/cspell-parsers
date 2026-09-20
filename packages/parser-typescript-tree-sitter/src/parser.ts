@@ -1,6 +1,6 @@
 import type { ParsedTags, ParsedText, ParseResult } from '@cspell/cspell-types/Parser';
 import type { ParserTags, PluginParser, StringPart, TagFilterOptions } from '@internal/utils';
-import { customizeParser, decodeStringParts, stripCommentMarkers } from '@internal/utils';
+import { createPluginParser, customizeParser, decodeStringParts, stripCommentMarkers } from '@internal/utils';
 import TreeSitterParser from 'tree-sitter';
 import TypeScriptLanguages from 'tree-sitter-typescript';
 
@@ -568,12 +568,12 @@ const tags: Readonly<ParserTags> = Object.freeze({
   'identifier.exportBinding': true,
 });
 
-export const parser: PluginParser = {
+export const parser: PluginParser = createPluginParser({
   name: 'typescript',
   parse,
   supportedFileTypes,
   tags,
-};
+});
 
 /** Options for {@link createParser}: the parser's name, and which tagged segments to keep. */
 export interface CustomizeParserOptions {
