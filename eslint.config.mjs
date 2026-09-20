@@ -3,7 +3,9 @@ import { defineConfig } from 'eslint/config';
 import nodePlugin from 'eslint-plugin-n';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import globals from 'globals';
-import tseslint from 'typescript-eslint';
+import tsEslint from 'typescript-eslint';
+
+// import importPlugin from 'eslint-plugin-import';
 
 export default defineConfig(
   {
@@ -25,6 +27,9 @@ export default defineConfig(
         ...globals.node,
         URL: 'readonly',
       },
+      parserOptions: {
+        tsconfigRootDir: import.meta.dirname,
+      },
     },
   },
   js.configs.recommended,
@@ -40,19 +45,53 @@ export default defineConfig(
   },
   {
     files: ['**/*.ts', '**/*.mts', '**/*.cts'],
-    extends: [...tseslint.configs.recommended],
+    extends: [...tsEslint.configs.recommended],
     rules: {
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
+          args: 'all',
           argsIgnorePattern: '^_',
-          varsIgnorePattern: '^_',
+          caughtErrors: 'all',
           caughtErrorsIgnorePattern: '^_',
+          destructuredArrayIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          ignoreRestSiblings: true,
         },
       ],
     },
   },
+  // {
+  //   files: ['**/*.{ts,mts,cts,tsx}'],
+  //   ignores: ['**/*.d.*'],
+  //   plugins: {
+  //     import: importPlugin,
+  //   },
+  //   languageOptions: {
+  //     parser: tsEslint.parser,
+  //     parserOptions: {
+  //       // project: true, // Uses your tsconfig.json
+  //     },
+  //   },
+  //   settings: {
+  //     'import/resolver': {
+  //       // This is the critical part for TypeScript support
+  //       typescript: {
+  //         alwaysTryTypes: true,
+  //       },
+  //     },
+  //   },
+  //   rules: {
+  //     'import/consistent-type-specifier-style': ['error', 'prefer-top-level'],
+  //     'import/no-duplicates': ['error', { 'prefer-inline': false }],
+  //     '@typescript-eslint/no-import-type-side-effects': 'error',
+  //     '@typescript-eslint/consistent-type-imports': [
+  //       'error',
+  //       { prefer: 'type-imports', fixStyle: 'separate-type-imports' },
+  //     ],
+  //   },
+  // },
   {
     files: ['scripts/**', '**/*.test.*', '**/*.config.{ts,js,mts,mjs,cjs,cts}'],
     rules: {

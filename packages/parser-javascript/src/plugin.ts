@@ -1,6 +1,8 @@
 import type { Plugin } from '@cspell/cspell-types';
 import { customizeParser } from '@internal/utils';
-import { parser, type CustomizeParserOptions } from './parser.js';
+
+import type { CustomizeParserOptions } from './parser.js';
+import { parser } from './parser.js';
 
 export { supportedFileTypes } from './parser.js';
 

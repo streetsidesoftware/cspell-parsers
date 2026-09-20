@@ -30,6 +30,7 @@
     "@types/node": "^24.13.4",
     "cspell": "catalog:",
     "eslint": "^10.10.0",
+    "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-n": "^18.3.0",
     "eslint-plugin-simple-import-sort": "^14.0.0",
     "globals": "^17.12.0",

@@ -1,10 +1,10 @@
 import { createRequire } from 'node:module';
 
-import TreeSitterWasm from '@vscode/tree-sitter-wasm';
-import type { Node as WasmNode } from '@vscode/tree-sitter-wasm';
 import type { ParsedTags, ParsedText, Parser, ParseResult } from '@cspell/cspell-types/Parser';
-import { customizeParser, decodeStringParts, stripCommentMarkers } from '@internal/utils';
 import type { StringPart, TagFilterOptions } from '@internal/utils';
+import { customizeParser, decodeStringParts, stripCommentMarkers } from '@internal/utils';
+import type { Node as WasmNode } from '@vscode/tree-sitter-wasm';
+import TreeSitterWasm from '@vscode/tree-sitter-wasm';
 
 // `@vscode/tree-sitter-wasm`'s CommonJS build assigns its whole `module.exports` in one go, so Node's
 // ESM/CJS interop can't statically see `Parser`/`Language` as named exports - only as properties of the

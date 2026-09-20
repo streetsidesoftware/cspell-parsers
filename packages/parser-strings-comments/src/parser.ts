@@ -1,6 +1,6 @@
 import type { ParsedTags, ParsedText, Parser, ParseResult, SourceMap } from '@cspell/cspell-types';
-import { customizeParser, stripCommentMarkers } from '@internal/utils';
 import type { TagFilterOptions } from '@internal/utils';
+import { customizeParser, stripCommentMarkers } from '@internal/utils';
 
 /**
  * Which language-specific string/comment forms apply while scanning. Chosen once, up front, from the

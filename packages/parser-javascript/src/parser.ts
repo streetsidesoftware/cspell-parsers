@@ -1,7 +1,7 @@
-import { parse } from '@cspell/parser-typescript/parser';
 import type { Parser } from '@cspell/cspell-types/Parser';
-import { customizeParser } from '@internal/utils';
+import { parse } from '@cspell/parser-typescript/parser';
 import type { TagFilterOptions } from '@internal/utils';
+import { customizeParser } from '@internal/utils';
 
 export { parse };
 
