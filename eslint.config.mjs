@@ -1,10 +1,21 @@
 import js from '@eslint/js';
+import { defineConfig } from 'eslint/config';
+import nodePlugin from 'eslint-plugin-n';
+import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import globals from 'globals';
-import tseslint from 'typescript-eslint';
+import tsEslint from 'typescript-eslint';
 
-export default tseslint.config(
+export default defineConfig(
   {
-    ignores: ['**/dist/**', '**/dist-test/**', '**/coverage/**', '**/node_modules/**', '**/fixtures/**'],
+    ignores: [
+      '**/dist/**',
+      '**/dist-test/**',
+      '**/coverage/**',
+      '**/node_modules/**',
+      '**/fixtures/**',
+      'test-packages/*/tests/*/**',
+      'packages/*/samples/*/**',
+    ],
   },
   {
     languageOptions: {
@@ -14,22 +25,51 @@ export default tseslint.config(
         ...globals.node,
         URL: 'readonly',
       },
+      parserOptions: {
+        tsconfigRootDir: import.meta.dirname,
+      },
     },
   },
   js.configs.recommended,
+  nodePlugin.configs['flat/recommended'],
   {
-    files: ['**/*.ts'],
-    extends: [...tseslint.configs.recommended],
+    plugins: {
+      'simple-import-sort': simpleImportSort,
+    },
+    rules: {
+      'simple-import-sort/imports': 'error',
+      'simple-import-sort/exports': 'error',
+    },
+  },
+  {
+    files: ['**/*.ts', '**/*.mts', '**/*.cts'],
+    extends: [...tsEslint.configs.recommended],
     rules: {
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
+          args: 'all',
           argsIgnorePattern: '^_',
-          varsIgnorePattern: '^_',
+          caughtErrors: 'all',
           caughtErrorsIgnorePattern: '^_',
+          destructuredArrayIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          ignoreRestSiblings: true,
         },
       ],
+      '@typescript-eslint/no-import-type-side-effects': 'error',
+      '@typescript-eslint/consistent-type-imports': [
+        'error',
+        { prefer: 'type-imports', fixStyle: 'separate-type-imports', disallowTypeAnnotations: true },
+      ],
+    },
+  },
+  {
+    files: ['scripts/**', '**/*.test.*', '**/*.config.{ts,js,mts,mjs,cjs,cts}'],
+    rules: {
+      'n/no-unsupported-features/node-builtins': 'off',
+      'n/no-extraneous-import': 'off',
     },
   },
 );

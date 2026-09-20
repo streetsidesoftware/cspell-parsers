@@ -1,4 +1,4 @@
-import { supportedFileTypes, plugin as typeScriptPlugin } from './plugin.js';
+import { plugin as typeScriptPlugin, supportedFileTypes } from './plugin.js';
 
 export default {
   plugins: [typeScriptPlugin],

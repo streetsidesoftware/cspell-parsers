@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import Path from 'node:path';
 import fs from 'node:fs/promises';
+import Path from 'node:path';
 
 import { REPO_ROOT_DIR } from './lib/consts.ts';
 import { RELEASE_PLEASE_CONFIG_FILE, updateReleasePleaseConfig } from './lib/release-please-utils.ts';

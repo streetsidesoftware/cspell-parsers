@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-import Path from 'node:path';
 import fs from 'node:fs/promises';
+import Path from 'node:path';
 
-import { fixPackageJson } from './lib/package-json-util.ts';
 import { REPO_ROOT_DIR } from './lib/consts.ts';
+import { fixPackageJson } from './lib/package-json-util.ts';
 
 const HELP = `Usage: fix-package-json [options]
 

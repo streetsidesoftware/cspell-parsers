@@ -1,6 +1,6 @@
 import type { ParsedTags, ParsedText, Parser, ParseResult, SourceMap } from '@cspell/cspell-types';
-import { customizeParser, stripCommentMarkers } from '@internal/utils';
 import type { TagFilterOptions } from '@internal/utils';
+import { customizeParser, stripCommentMarkers } from '@internal/utils';
 
 const COMMENT_TAG: ParsedTags = { comment: true };
 const COMMENT_LINE_TAG: ParsedTags = { ...COMMENT_TAG, 'comment.line': true };

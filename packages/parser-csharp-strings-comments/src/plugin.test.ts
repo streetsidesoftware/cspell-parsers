@@ -1,8 +1,8 @@
+import type { Parser } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
 import { parser, supportedFileTypes as parserSupportedFileTypes } from './parser.js';
 import { customizePlugin, plugin, supportedFileTypes } from './plugin.js';
-import type { Parser } from '@cspell/cspell-types';
 
 describe('plugin', () => {
   it('exposes the csharp-strings-comments parser', () => {
