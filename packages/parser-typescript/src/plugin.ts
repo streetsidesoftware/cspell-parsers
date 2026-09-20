@@ -14,7 +14,7 @@ export const recommendedLanguageSettings = [
 ];
 
 export const plugin: ParserPlugin = {
-  name: 'typescript-strings-comments',
+  name: 'typescript',
   parsers: [parser],
   supportedFileTypes,
   recommendedLanguageSettings,

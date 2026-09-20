@@ -7,7 +7,7 @@ describe('plugin', () => {
     expect(plugin.parsers.map((p) => p.name)).toEqual(expect.arrayContaining(['typescript-strings-comments']));
   });
 
-  it('exposes the the supported file types', () => {
+  it('exposes the supported file types', () => {
     expect(plugin.supportedFileTypes).toEqual(expect.arrayContaining(['typescript']));
   });
 
