@@ -1,7 +1,6 @@
-import type { Parser } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
-import { getParsersByFileType, plugin, customizePlugin } from './plugin.js';
+import { customizePlugin, getParsersByFileType, plugin } from './plugin.js';
 
 describe('plugin', () => {
   it('exposes the strings-comments parser', () => {
