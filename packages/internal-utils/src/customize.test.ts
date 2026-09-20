@@ -1,16 +1,19 @@
-import type { ParsedTags, ParsedText, Parser } from '@cspell/cspell-types';
+import type { ParsedTags, ParsedText } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
 import { compileTagFilter, customizeParser } from './customize.js';
+import type { PluginParser } from './types.js';
 
 function mkText(content: string, tags: ParsedText['tags']): ParsedText {
   return { text: content, range: [0, content.length], tags };
 }
 
-function fakeParser(parsedTexts: ParsedText[]): Parser {
+function fakeParser(parsedTexts: ParsedText[]): PluginParser {
   return {
     name: 'fake',
     parse: (content, filename) => ({ content, filename, parsedTexts }),
+    supportedFileTypes: [],
+    tags: {},
   };
 }
 

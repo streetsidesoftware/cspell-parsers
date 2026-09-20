@@ -1,7 +1,7 @@
 import { createRequire } from 'node:module';
 
-import type { ParsedTags, ParsedText, Parser, ParseResult } from '@cspell/cspell-types/Parser';
-import type { StringPart, TagFilterOptions } from '@internal/utils';
+import type { ParsedTags, ParsedText, ParseResult } from '@cspell/cspell-types/Parser';
+import type { ParserTags, PluginParser, StringPart, TagFilterOptions } from '@internal/utils';
 import { customizeParser, decodeStringParts, stripCommentMarkers } from '@internal/utils';
 import type { Node as WasmNode } from '@vscode/tree-sitter-wasm';
 import TreeSitterWasm from '@vscode/tree-sitter-wasm';
@@ -585,12 +585,45 @@ export function parse(content: string, filename: string): ParseResult {
   return { content, filename, parsedTexts };
 }
 
-export const parser: Parser = {
+export const supportedFileTypes: Readonly<string[]> = Object.freeze([
+  'javascript',
+  'javascriptreact',
+  'typescript',
+  'typescriptreact',
+]);
+
+const tags: Readonly<ParserTags> = Object.freeze({
+  string: true,
+  'string.singleQuote': true,
+  'string.doubleQuote': true,
+  'string.module': true,
+  'string.singleQuote.module': true,
+  'string.doubleQuote.module': true,
+  'string.templateLiteral': true,
+  module: true,
+  'module.specifier': true,
+  'module.specifier.literal': true,
+  comment: true,
+  'comment.line': true,
+  'comment.block': true,
+  'comment.block.doc': true,
+  identifier: true,
+  'identifier.variable': true,
+  'identifier.property': true,
+  'identifier.privateProperty': true,
+  'identifier.type': true,
+  'identifier.shorthandProperty': true,
+  'identifier.label': true,
+  'identifier.importBinding': true,
+  'identifier.exportBinding': true,
+});
+
+export const parser: PluginParser = {
   name: 'typescript',
   parse,
+  supportedFileTypes,
+  tags,
 };
-
-export const supportedFileTypes: string[] = ['javascript', 'javascriptreact', 'typescript', 'typescriptreact'];
 
 /** Options for {@link createParser}: the parser's name, and which tagged segments to keep. */
 export interface CustomizeParserOptions {
@@ -626,6 +659,6 @@ export interface CustomizeParserOptions {
  * };
  * ```
  */
-export function createParser(options: CustomizeParserOptions = {}): Parser {
+export function createParser(options: CustomizeParserOptions = {}): PluginParser {
   return customizeParser(parser, options);
 }

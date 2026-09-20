@@ -26,7 +26,9 @@ const allPlugins = [
 
 const allParsers = allPlugins.flatMap((p) => p.parsers);
 
-export const supportedFileTypes: string[] = [...new Set(allPlugins.flatMap((p) => p.supportedFileTypes))];
+export const supportedFileTypes: Readonly<string[]> = Object.freeze([
+  ...new Set(allPlugins.flatMap((p) => p.supportedFileTypes)),
+]);
 
 export const recommendedLanguageSettings: RecommendedLanguageSettings = allPlugins.flatMap(
   (p) => p.recommendedLanguageSettings,
@@ -98,7 +100,7 @@ export function customizePlugin(fileType: string, options: CustomizePluginOption
   );
   const parsersByFileType = groupParsersByFileType(plugins.map((p) => p));
   const parsers = [...new Set([...parsersByFileType.values()].flat())];
-  const supportedFileTypes = [...parsersByFileType.keys()];
+  const supportedFileTypes = Object.freeze([...parsersByFileType.keys()]);
   const recommendedLanguageSettings = plugins.map((p) => ({
     languageId: filterFileTypes(fileType, p.supportedFileTypes).join(','),
     parser: p.parsers[p.parsers.length - 1].name,
@@ -126,7 +128,7 @@ function customizeImportedPlugin(plugin: ParserPlugin, options: CustomizePluginO
   return { ...plugin, parsers: plugin.parsers.map((parser) => customizeParser(parser, options)) };
 }
 
-function filterFileTypes(fileType: string, supportedFileTypes: string[]): string[] {
+function filterFileTypes(fileType: string, supportedFileTypes: Readonly<string[]>): Readonly<string[]> {
   if (fileType === '*') {
     return supportedFileTypes;
   }

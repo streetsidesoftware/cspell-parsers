@@ -1,5 +1,5 @@
-import type { ParsedTags, ParsedText, Parser, ParseResult, SourceMap } from '@cspell/cspell-types';
-import type { TagFilterOptions } from '@internal/utils';
+import type { ParsedTags, ParsedText, ParseResult, SourceMap } from '@cspell/cspell-types';
+import type { ParserTags, PluginParser, TagFilterOptions } from '@internal/utils';
 import { customizeParser, stripCommentMarkers } from '@internal/utils';
 
 const COMMENT_TAG: ParsedTags = Object.freeze({ comment: true });
@@ -281,12 +281,28 @@ export function parse(content: string, filename: string): ParseResult {
   return { content, filename, parsedTexts: new Scanner(content).run() };
 }
 
-export const parser: Parser = {
+export const supportedFileTypes: Readonly<string[]> = Object.freeze(['rust']);
+
+const tags: Readonly<ParserTags> = Object.freeze({
+  comment: true,
+  'comment.line': true,
+  'comment.line.doc': true,
+  'comment.block': true,
+  'comment.block.doc': true,
+  string: true,
+  'string.byte': true,
+  'string.raw': true,
+  'string.byte.raw': true,
+  'string.c': true,
+  'string.c.raw': true,
+});
+
+export const parser: PluginParser = {
   name: 'rust-strings-comments',
   parse,
+  supportedFileTypes,
+  tags,
 };
-
-export const supportedFileTypes: string[] = ['rust'];
 
 /** Options for {@link createParser}: the parser's name, and which tagged segments to keep. */
 export interface CustomizeParserOptions {
@@ -316,6 +332,6 @@ export interface CustomizeParserOptions {
  * };
  * ```
  */
-export function createParser(options: CustomizeParserOptions = {}): Parser {
+export function createParser(options: CustomizeParserOptions = {}): PluginParser {
   return customizeParser(parser, options);
 }

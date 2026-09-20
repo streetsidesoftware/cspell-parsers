@@ -1,16 +1,37 @@
-import type { Parser } from '@cspell/cspell-types/Parser';
 import { parse } from '@cspell/parser-typescript/parser';
-import type { TagFilterOptions } from '@internal/utils';
+import type { ParserTags, PluginParser, TagFilterOptions } from '@internal/utils';
 import { customizeParser } from '@internal/utils';
 
 export { parse };
 
-export const parser: Parser = {
+export const supportedFileTypes: Readonly<string[]> = Object.freeze(['javascript', 'javascriptreact']);
+
+const tags: Readonly<ParserTags> = Object.freeze({
+  string: true,
+  'string.singleQuote': true,
+  'string.doubleQuote': true,
+  'string.templateLiteral': true,
+  comment: true,
+  'comment.line': true,
+  'comment.block': true,
+  'comment.block.doc': true,
+  identifier: true,
+  'identifier.variable': true,
+  'identifier.property': true,
+  'identifier.privateProperty': true,
+  'identifier.type': true,
+  'identifier.shorthandProperty': true,
+  'identifier.label': true,
+  'identifier.importBinding': true,
+  'identifier.exportBinding': true,
+});
+
+export const parser: PluginParser = {
   name: 'javascript',
   parse,
+  supportedFileTypes,
+  tags,
 };
-
-export const supportedFileTypes: string[] = ['javascript', 'javascriptreact'];
 
 /** Options for {@link createParser}: the parser's name, and which tagged segments to keep. */
 export interface CustomizeParserOptions {
@@ -41,6 +62,6 @@ export interface CustomizeParserOptions {
  * };
  * ```
  */
-export function createParser(options: CustomizeParserOptions = {}): Parser {
+export function createParser(options: CustomizeParserOptions = {}): PluginParser {
   return customizeParser(parser, options);
 }
