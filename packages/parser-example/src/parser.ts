@@ -2,10 +2,10 @@ import type { ParsedTags, ParsedText, Parser, ParseResult } from '@cspell/cspell
 import type { TagFilterOptions } from '@internal/utils';
 import { customizeParser, stripCommentMarkers } from '@internal/utils';
 
-const COMMENT_TAG = { comment: true };
-const COMMENT_LINE_TAG = { ...COMMENT_TAG, 'comment.line': true };
-const COMMENT_BLOCK_TAG = { ...COMMENT_TAG, 'comment.block': true };
-const COMMENT_BLOCK_DOC_TAG = { ...COMMENT_BLOCK_TAG, 'comment.block.doc': true };
+const COMMENT_TAG = Object.freeze({ comment: true });
+const COMMENT_LINE_TAG = Object.freeze({ ...COMMENT_TAG, 'comment.line': true });
+const COMMENT_BLOCK_TAG = Object.freeze({ ...COMMENT_TAG, 'comment.block': true });
+const COMMENT_BLOCK_DOC_TAG = Object.freeze({ ...COMMENT_BLOCK_TAG, 'comment.block.doc': true });
 
 function commentTag(text: string): ParsedTags {
   return text.startsWith('//') ? COMMENT_LINE_TAG : text.startsWith('/**') ? COMMENT_BLOCK_DOC_TAG : COMMENT_BLOCK_TAG;

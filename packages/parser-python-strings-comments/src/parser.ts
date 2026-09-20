@@ -2,16 +2,16 @@ import type { ParsedTags, ParsedText, Parser, ParseResult, SourceMap } from '@cs
 import type { TagFilterOptions } from '@internal/utils';
 import { customizeParser } from '@internal/utils';
 
-const COMMENT_TAG: ParsedTags = { comment: true };
-const COMMENT_LINE_TAG: ParsedTags = { ...COMMENT_TAG, 'comment.line': true };
+const COMMENT_TAG: ParsedTags = Object.freeze({ comment: true });
+const COMMENT_LINE_TAG: ParsedTags = Object.freeze({ ...COMMENT_TAG, 'comment.line': true });
 
-const STRING_TAG: ParsedTags = { string: true };
-const STRING_SINGLE_TAG: ParsedTags = { ...STRING_TAG, 'string.singleQuote': true };
-const STRING_DOUBLE_TAG: ParsedTags = { ...STRING_TAG, 'string.doubleQuote': true };
-const STRING_TRIPLE_TAG: ParsedTags = { ...STRING_TAG, 'string.tripleQuote': true };
+const STRING_TAG: ParsedTags = Object.freeze({ string: true });
+const STRING_SINGLE_TAG: ParsedTags = Object.freeze({ ...STRING_TAG, 'string.singleQuote': true });
+const STRING_DOUBLE_TAG: ParsedTags = Object.freeze({ ...STRING_TAG, 'string.doubleQuote': true });
+const STRING_TRIPLE_TAG: ParsedTags = Object.freeze({ ...STRING_TAG, 'string.tripleQuote': true });
 
-const STRING_RAW_FLAG: ParsedTags = { 'string.raw': true };
-const STRING_INTERPOLATED_FLAG: ParsedTags = { 'string.interpolated': true };
+const STRING_RAW_FLAG: ParsedTags = Object.freeze({ 'string.raw': true });
+const STRING_INTERPOLATED_FLAG: ParsedTags = Object.freeze({ 'string.interpolated': true });
 
 /**
  * Composes a base quote-style tag with the `string.raw`/`string.interpolated` flags for a given prefix,
