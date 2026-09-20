@@ -5,8 +5,6 @@ import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import globals from 'globals';
 import tsEslint from 'typescript-eslint';
 
-// import importPlugin from 'eslint-plugin-import';
-
 export default defineConfig(
   {
     ignores: [
@@ -60,38 +58,13 @@ export default defineConfig(
           ignoreRestSiblings: true,
         },
       ],
+      '@typescript-eslint/no-import-type-side-effects': 'error',
+      '@typescript-eslint/consistent-type-imports': [
+        'error',
+        { prefer: 'type-imports', fixStyle: 'separate-type-imports', disallowTypeAnnotations: true },
+      ],
     },
   },
-  // {
-  //   files: ['**/*.{ts,mts,cts,tsx}'],
-  //   ignores: ['**/*.d.*'],
-  //   plugins: {
-  //     import: importPlugin,
-  //   },
-  //   languageOptions: {
-  //     parser: tsEslint.parser,
-  //     parserOptions: {
-  //       // project: true, // Uses your tsconfig.json
-  //     },
-  //   },
-  //   settings: {
-  //     'import/resolver': {
-  //       // This is the critical part for TypeScript support
-  //       typescript: {
-  //         alwaysTryTypes: true,
-  //       },
-  //     },
-  //   },
-  //   rules: {
-  //     'import/consistent-type-specifier-style': ['error', 'prefer-top-level'],
-  //     'import/no-duplicates': ['error', { 'prefer-inline': false }],
-  //     '@typescript-eslint/no-import-type-side-effects': 'error',
-  //     '@typescript-eslint/consistent-type-imports': [
-  //       'error',
-  //       { prefer: 'type-imports', fixStyle: 'separate-type-imports' },
-  //     ],
-  //   },
-  // },
   {
     files: ['scripts/**', '**/*.test.*', '**/*.config.{ts,js,mts,mjs,cjs,cts}'],
     rules: {
