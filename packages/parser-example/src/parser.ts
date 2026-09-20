@@ -1,6 +1,6 @@
 import type { ParsedTags, ParsedText, ParseResult } from '@cspell/cspell-types';
 import type { ParserTags, PluginParser, TagFilterOptions } from '@internal/utils';
-import { customizeParser, stripCommentMarkers } from '@internal/utils';
+import { createPluginParser, customizeParser, stripCommentMarkers } from '@internal/utils';
 
 const COMMENT_TAG = Object.freeze({ comment: true });
 const COMMENT_LINE_TAG = Object.freeze({ ...COMMENT_TAG, 'comment.line': true });
@@ -81,12 +81,12 @@ const tags: Readonly<ParserTags> = Object.freeze({
   'comment.block.doc': true,
 });
 
-export const parser: PluginParser = {
+export const parser: PluginParser = createPluginParser({
   name: 'c-style-comments',
   parse,
   supportedFileTypes,
   tags,
-};
+});
 
 /** Options for {@link createParser}: the parser's name, and which tagged segments to keep. */
 export interface CustomizeParserOptions {

@@ -1,7 +1,8 @@
 import type { ParsedTags, ParsedText } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
-import { compileTagFilter, customizeParser } from './customize.js';
+import { compileTagFilter } from './customize.js';
+import { createPluginParser, customizeParser } from './parser.js';
 import type { PluginParser } from './types.js';
 
 function mkText(content: string, tags: ParsedText['tags']): ParsedText {
@@ -9,12 +10,12 @@ function mkText(content: string, tags: ParsedText['tags']): ParsedText {
 }
 
 function fakeParser(parsedTexts: ParsedText[]): PluginParser {
-  return {
+  return createPluginParser({
     name: 'fake',
     parse: (content, filename) => ({ content, filename, parsedTexts }),
     supportedFileTypes: [],
     tags: {},
-  };
+  });
 }
 
 describe('customizeParser', () => {

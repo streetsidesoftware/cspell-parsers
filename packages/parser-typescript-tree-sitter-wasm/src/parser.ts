@@ -2,7 +2,7 @@ import { createRequire } from 'node:module';
 
 import type { ParsedTags, ParsedText, ParseResult } from '@cspell/cspell-types/Parser';
 import type { ParserTags, PluginParser, StringPart, TagFilterOptions } from '@internal/utils';
-import { customizeParser, decodeStringParts, stripCommentMarkers } from '@internal/utils';
+import { createPluginParser, customizeParser, decodeStringParts, stripCommentMarkers } from '@internal/utils';
 import type { Node as WasmNode } from '@vscode/tree-sitter-wasm';
 import TreeSitterWasm from '@vscode/tree-sitter-wasm';
 
@@ -618,12 +618,12 @@ const tags: Readonly<ParserTags> = Object.freeze({
   'identifier.exportBinding': true,
 });
 
-export const parser: PluginParser = {
+export const parser: PluginParser = createPluginParser({
   name: 'typescript',
   parse,
   supportedFileTypes,
   tags,
-};
+});
 
 /** Options for {@link createParser}: the parser's name, and which tagged segments to keep. */
 export interface CustomizeParserOptions {

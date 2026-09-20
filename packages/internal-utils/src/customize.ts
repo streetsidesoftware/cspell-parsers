@@ -1,76 +1,13 @@
-import type { ParsedTags, ParsedText } from '@cspell/cspell-types';
+import type { ParsedTags, ParsedText, Parser } from '@cspell/cspell-types';
 
-import type { PluginParser } from './types.js';
+import type { PluginParser, TagFilterOptions, TagsFilter } from './types.js';
 
-/**
- * A tag name, or a `*`-wildcard pattern matching one (see {@link TagFilterOptions}).
- */
-export type TagPattern = string;
-
-/**
- * Options for {@link customizeParser}: which tagged segments to keep.
- *
- * Deliberately declared here rather than imported from `@cspell/cspell-types`'s `ValidationTags` - the
- * two happen to share a shape today, but that's incidental. `customizeParser`'s options are a property of
- * its own filtering behavior and should be free to diverge from it.
- */
-export interface TagFilterOptions {
-  /**
-   * The default filter setting for any tag not otherwise matched.
-   * @default true
-   */
-  '*'?: boolean | undefined;
-
-  /**
-   * Filter setting for the specific tag or wildcard pattern.
-   *
-   * If not specified, the default (`'*'`) will be used.
-   */
-  [tag: TagPattern]: boolean | undefined;
-}
-
-/**
- * Decides whether a `ParsedText` should be kept (spell checked), given its `tags`. Returned by
- * {@link compileTagFilter}, which does all the pattern-matching setup once so this function itself
- * is cheap to call per segment.
- */
-export type TagsFilter = (tags: ParsedTags | undefined) => boolean;
-
-/**
- * Options for {@link customizeParser}, as a struct rather than a bare `TagFilterOptions` so it can grow
- * more options later without a breaking signature change.
- */
-export interface CustomizeParserOptions {
-  /**
-   * Override the parser's `name`. Useful when registering more than one customized copy of the same
-   * parser (e.g. under `plugins`), since cspell selects a parser by name and two parsers can't share one.
-   */
-  name?: string;
-  /**
-   * Which tagged segments to keep. Omit to keep everything.
-   */
-  tags?: TagFilterOptions;
-}
-
-/**
- * Wraps a single `Parser` so its `parse()` output only includes `parsedTexts` selected by
- * `options.tags`, and its `name` is `options.name` when given. `options.tags` is compiled into a
- * {@link TagsFilter} once here, before the parser ever runs - see {@link compileTagFilter}.
- */
-export function customizeParser(parser: PluginParser, options: CustomizeParserOptions): PluginParser {
-  if (!options.tags || Object.keys(options.tags).length === 0) {
-    return options.name ? { ...parser, name: options.name } : parser;
-  }
-  return customizeParserWithFilter(parser, compileTagFilter(options.tags), options.name);
-}
-
-function customizeParserWithFilter(
+export function customizeParserWithFilter(
   parser: PluginParser,
   isIncluded: TagsFilter,
   name: string | undefined,
-): PluginParser {
-  const newParser: PluginParser = {
-    ...parser,
+): Parser {
+  const newParser: Parser = {
     name: name ?? parser.name,
     parse(content, filename) {
       const result = parser.parse(content, filename);

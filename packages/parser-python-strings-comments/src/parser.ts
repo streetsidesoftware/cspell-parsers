@@ -1,6 +1,6 @@
 import type { ParsedTags, ParsedText, ParseResult, SourceMap } from '@cspell/cspell-types';
 import type { ParserTags, PluginParser, TagFilterOptions } from '@internal/utils';
-import { customizeParser } from '@internal/utils';
+import { createPluginParser, customizeParser } from '@internal/utils';
 
 const COMMENT_TAG: ParsedTags = Object.freeze({ comment: true });
 const COMMENT_LINE_TAG: ParsedTags = Object.freeze({ ...COMMENT_TAG, 'comment.line': true });
@@ -336,12 +336,12 @@ const tags: Readonly<ParserTags> = Object.freeze({
   'string.interpolated': true,
 });
 
-export const parser: PluginParser = {
+export const parser: PluginParser = createPluginParser({
   name: 'python-strings-comments',
   parse,
   supportedFileTypes,
   tags,
-};
+});
 
 /** Options for {@link createParser}: the parser's name, and which tagged segments to keep. */
 export interface CustomizeParserOptions {
