@@ -80,6 +80,8 @@ parsers can't share one.
 
 ## Tags
 
+<!--- @@inject: docs/tags-table.md --->
+
 | Tag                  | Meaning                                                                  |
 | -------------------- | ------------------------------------------------------------------------ |
 | `comment`            | Any comment                                                              |
@@ -90,6 +92,8 @@ parsers can't share one.
 | `string.doubleQuote` | A `"..."` string literal (including interpolated fragments)              |
 | `string.heredoc`     | A `<<~ID`/`<<-ID`/`<<ID` heredoc body (any of its fragments)             |
 | `string.backtick`    | A `` `...` `` backtick command string (including interpolated fragments) |
+
+<!--- @@inject-end: docs/tags-table.md --->
 
 Regex literals (`/pattern/flags`) and percent-literals (`%w[]`, `%q()`, `%r{}`, ...) never appear in this
 table: nothing is ever emitted for either, so there's no tag to filter by - both are already excluded
@@ -133,19 +137,23 @@ handful of Ruby constructs are deliberately out of scope for this first version:
   "How it works" above. Percent-literal recognition only covers a curated set of delimiters (bracket pairs,
   plus `| ! # / ~ ^`) - not every character Ruby technically allows - so an exotic delimiter falls back to
   ordinary code, same failure direction as a missed regex (see below).
+
 - **A squiggly heredoc's (`<<~ID`) leading-whitespace dedent is not simulated.** Real Ruby strips each line's
   common leading whitespace from a `<<~` heredoc's evaluated value; this parser extracts the raw body text
   byte for byte instead, since leading whitespace isn't a word and doesn't affect spell checking.
+
 - **Symbols get no special handling.** A bare symbol (`:identifier`) is just an ordinary `:` followed by an
   ordinary identifier, both silently skipped like any other punctuation/identifier. A quoted symbol
   (`:"..."`/`:'...'`) is spell checked as an ordinary double/single-quoted string - the leading `:` is
   skipped as ordinary punctuation, and the parser's normal quote handling picks up from there.
+
 - **Char literals get no general recognition at all - a bare `?` is otherwise always just ordinary code.**
   Since char literals are never spell checked, there's nothing to gain from parsing their shape. The one
   exception: `?'`, `?"`, and `?#` (a char literal whose one character is a quote or `#`) are specifically
   detected and skipped as a unit, since otherwise that character would be misread as the start of a real
   string or comment, swallowing real code after it - the exact same failure mode an unrecognized
   percent-literal risks (see `CONTRIBUTING.md`).
+
 - **Regex-vs-division, heredoc-vs-left-shift, percent-literal-vs-modulo, and char-literal-vs-ternary are
   resolved with a lightweight, shared heuristic, not full expression tracking.** `/pattern/` vs. `a / b`,
   `<<~ID` vs. `arr << x`, `%w[]` vs. `a % b`, and `?'` vs. `cond ? 'a' : 'b'` all share the same shape: a
@@ -154,6 +162,7 @@ handful of Ruby constructs are deliberately out of scope for this first version:
   identifier, a keyword, `)`, `]`, `}`, a closing quote, ...) - using one shared, documented set of
   keywords/method names (`if`, `unless`, `return`, `puts`, `print`, `raise`, ...) after which a new
   expression is expected. This handles the overwhelming majority of real code, but it can still miss:
+
   - A literal passed as a bare argument (no parens) to a method call not in that keyword set (e.g.
     `some_custom_method /pattern/`) - left as ordinary code (division/left-shift/modulo), not a literal.
   - A regex literal that spans multiple lines - a real but rare Ruby feature this parser doesn't support; it
