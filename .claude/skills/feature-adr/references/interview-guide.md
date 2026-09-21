@@ -54,7 +54,7 @@ user could reasonably have picked differently; it just makes the interview faste
   a new production dependency here is a real cost worth surfacing as a decision, not an implementation
   afterthought.
 - If scanner-based: are `parsedTexts` ranges straightforward to compute relative to the original file
-  content, or are there escaping/normalization edge cases (e.g. multi-byte characters, ` `/` ` per
+  content, or are there escaping/normalization edge cases (e.g. multi-byte characters, `\u2028`/`\u2029` per
   this repo's code-style rule on invisible characters) worth calling out in context?
 
 ## 5. Edge cases
@@ -62,6 +62,7 @@ user could reasonably have picked differently; it just makes the interview faste
 Ask concretely, with example input, rather than abstractly ("how should nested comments behave?" is worse
 than "given `/* outer /* inner */ still outer? */`, what should happen?"). Common categories worth checking
 against this codebase's existing parsers:
+
 - Malformed/incomplete input (unterminated string, unterminated comment) — error out, or best-effort parse?
 - Nesting and adjacency (comment inside string, string inside comment, back-to-back constructs)
 - Leading/trailing content (front-matter blocks, BOM, trailing newline handling)

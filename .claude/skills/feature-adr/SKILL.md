@@ -11,7 +11,7 @@ code gets written. The point isn't ceremony — it's that this repo's package sh
 `supportedFileTypes`, backend choice) bakes a lot of decisions into files that are annoying to unwind later
 (a tag name becomes public API the moment a consumer writes a `customizePlugin` filter against it; a
 `supportedFileTypes` entry becomes a documented promise in the README). An interview surfaces those
-decisions while they're still cheap to change, and the ADR trail means the *next* person touching this
+decisions while they're still cheap to change, and the ADR trail means the _next_ person touching this
 feature (including you, in six months) doesn't have to reverse-engineer why a tag is named the way it is.
 
 ## Workflow
@@ -46,8 +46,8 @@ feature (including you, in six months) doesn't have to reverse-engineer why a ta
    decisions into a single ADR is fine (e.g. "which tags this parser emits" can cover the whole tag set in
    one ADR); keep separate what's separable, e.g. "which backend" and "which file types" almost always
    deserve their own ADRs because they can change independently later.
-   - File: `docs/ADRs/<feature-slug>/NNNN-<decision-slug>.md`, four-digit zero-padded, sequential *within
-     this feature's directory* starting at `0001`. Check existing files in the directory before picking the
+   - File: `docs/ADRs/<feature-slug>/NNNN-<decision-slug>.md`, four-digit zero-padded, sequential _within
+     this feature's directory_ starting at `0001`. Check existing files in the directory before picking the
      next number — don't assume you're starting fresh if the user is resuming a feature from an earlier
      session.
    - Format: title, status, context, decision, consequences — see `references/adr-template.md`. Status is

@@ -27,8 +27,8 @@ bullets when adding to a feature that's already listed.
 
 ## Decisions
 
-| # | Title | Status |
-| - | ----- | ------ |
+| #   | Title | Status |
+| --- | ----- | ------ |
 ```
 
 Append one table row per ADR as it's written: `| 0001 | <title> | Accepted |`.
