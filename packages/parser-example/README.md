@@ -85,6 +85,8 @@ share one.
 
 ## Tags
 
+<!--- @@inject: docs/tags-table.md --->
+
 | Tag                 | Meaning                     |
 | ------------------- | --------------------------- |
 | `comment`           | Any comment                 |
