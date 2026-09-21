@@ -16,7 +16,10 @@ interface TagsModule {
   tagsAndMeaning?: Readonly<Record<string, string>>;
 }
 
-/** Imports `tagsTsFile`'s `tagsAndMeaning` export, or `undefined` if it doesn't export one (packages that haven't adopted the convention are skipped, not an error). */
+/**
+ * Imports `tagsTsFile`'s `tagsAndMeaning` export, or `undefined` if it doesn't export one (packages that
+ * haven't adopted the convention are skipped, not an error).
+ */
 export async function loadTagsAndMeaning(tagsTsFile: string): Promise<Readonly<Record<string, string>> | undefined> {
   const mod = (await import(pathToFileURL(tagsTsFile).href)) as TagsModule;
   return mod.tagsAndMeaning;

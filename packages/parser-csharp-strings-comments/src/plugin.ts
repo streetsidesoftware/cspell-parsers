@@ -33,7 +33,8 @@ export type CustomizePluginOptions = CustomizeParserOptions;
  * import { customizePlugin } from '@cspell/parser-csharp-strings-comments/plugin';
  *
  * export default {
- *   plugins: [customizePlugin({ name: 'csharp-only-docs', tags: { '*': false, 'comment.line.doc': true } })], // only check XML doc comments
+ *   // only check XML doc comments
+ *   plugins: [customizePlugin({ name: 'csharp-only-docs', tags: { '*': false, 'comment.line.doc': true } })],
  *   languageSettings: [{ languageId: 'csharp', parser: 'csharp-only-docs' }],
  * };
  * ```

@@ -45,6 +45,9 @@ point. Don't restate what well-named identifiers already say, don't walk through
 rejected, and don't repeat the same rationale in multiple comments across a file — say it once, where it's
 most load-bearing, and link to it (by function name) from anywhere else it'd otherwise be repeated.
 
+Keep a single comment line to 140 characters or fewer. Wrap into a multi-line `/** ... */`/`// ...` block
+instead of letting one line run long — this applies even to a one-line `/** ... */` doc comment.
+
 ## Architecture
 
 This is a pnpm workspace monorepo (`packages/*`) for cspell parser packages — each package under `packages/`

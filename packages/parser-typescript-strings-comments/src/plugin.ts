@@ -33,7 +33,8 @@ export type CustomizePluginOptions = CustomizeParserOptions;
  * import { customizePlugin } from '@cspell/parser-typescript-strings-comments/plugin';
  *
  * export default {
- *   plugins: [customizePlugin({ name: 'typescript-only-docs', tags: { '*': false, 'comment.block.doc': true } })], // only check doc comments
+ *   // only check doc comments
+ *   plugins: [customizePlugin({ name: 'typescript-only-docs', tags: { '*': false, 'comment.block.doc': true } })],
  *   languageSettings: [{ languageId: 'typescript', parser: 'typescript-only-docs' }],
  * };
  * ```
