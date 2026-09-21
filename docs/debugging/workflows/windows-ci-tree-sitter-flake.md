@@ -117,24 +117,48 @@ This rules out cross-process contention within the package as the cause: with `m
 exactly one process for the whole package's test run, and it still failed. Reverted (no reason to keep a
 slower single-worker config that didn't help).
 
-## Current status: unresolved
+Four independent mitigations were tried and disproved before landing on the fix below: fresh `Parser`
+instance per call, `.reset()` before reuse, pinning `tree-sitter` to the version `tree-sitter-typescript`
+actually supports, and forcing a single vitest worker process. Three passed their first `windows-latest` run
+and failed on retest; one failed immediately. None of them touch the same lever, which means the bug isn't in
+how this package manages the `Parser` instance, isn't the tree-sitter/tree-sitter-typescript version mismatch
+(though that's still worth having fixed on its own merits - see attempt C above), and isn't cross-process
+contention over the native binary file. What's left standing is that this is very likely inherent, timing- or
+memory-layout-dependent non-determinism inside the native tree-sitter Windows binary itself, outside what
+this repo's code or config can control.
 
-Four independent mitigations have now been tried and disproved: fresh `Parser` instance per call, `.reset()`
-before reuse, pinning `tree-sitter` to the version `tree-sitter-typescript` actually supports, and forcing a
-single vitest worker process. Three passed their first `windows-latest` run and failed on retest; one failed
-immediately. None of them touch the same lever, which means the bug isn't in how this package manages the
-`Parser` instance, isn't the tree-sitter/tree-sitter-typescript version mismatch (though that's still worth
-having fixed on its own merits - see attempt C above), and isn't cross-process contention over the native
-binary file. What's left standing is that this is very likely inherent, timing- or memory-layout-dependent
-non-determinism inside the native tree-sitter Windows binary itself, outside what this repo's code or config
-can control.
+## Resolution: stop depending on the native binding on Windows
 
-The `tree-sitter` version pin (attempt C) is being kept - it fixes a real, independently-verified problem
-even though it didn't fix the flake. Everything else from attempts A, B, and D has been reverted.
-`windows-latest` for `parser-typescript-tree-sitter` should be assumed to fail intermittently (observed
-across roughly half of the runs during this investigation) until this is fixed upstream or worked around at
-the CI level (retry, or dropping this leg) - further JS-level or vitest-config guessing is not recommended;
-see the process notes below.
+Since the flake looks like it lives in the native tree-sitter/tree-sitter-typescript binary itself rather
+than in this repo's code, the fix taken was to stop exercising that code path on `windows-latest` rather than
+keep chasing it there:
+
+- `@cspell/parser-typescript` (previously a thin re-export of `@cspell/parser-typescript-tree-sitter`, the
+  native package) now re-exports `@cspell/parser-typescript-tree-sitter-wasm` instead - the WebAssembly
+  build, which doesn't touch the flaky native binding at all. All of `parser-typescript`'s own tests (and
+  `@cspell/parser-javascript`'s, which wraps it in turn) passed unchanged against the wasm backend, and it
+  has _fewer_ production dependencies this way (one, `@vscode/tree-sitter-wasm`, vs. two for native). This
+  required also publishing a `./tags` export from `parser-typescript-tree-sitter-wasm` (mirroring what
+  `parser-typescript-tree-sitter` already had from #120), since `parser-typescript`'s `tags.ts` needed
+  somewhere non-native to re-export `tagsAndMeaning` from.
+- `.github/workflows/test.yml`'s `windows-latest` leg now excludes `@cspell/parser-typescript-tree-sitter`
+  (the raw native package) and `@internal/test-packages-typescript` (its harness, which independently
+  exercises the native module via `--all`) from the main `Test` step, and runs a separate,
+  scoped `node exec-test.mts --module @cspell/parser-typescript --module @cspell/parser-typescript-tree-sitter-wasm`
+  step so the harness still covers both non-native parsers there. The dedicated `Typecheck` step still covers
+  every package, including the native one, in full - only its runtime tests are skipped on `windows-latest`.
+
+**This does not fix the underlying native binding bug** - `@cspell/parser-typescript-tree-sitter` itself is
+still expected to fail intermittently on `windows-latest` if its tests were ever re-enabled there, and should
+stay excluded (or gain a CI-level retry) until there's an upstream fix. The `tree-sitter` version pin (attempt
+C above) is kept regardless, since it fixes a real, independently-verified problem on its own merits.
+
+One wrinkle hit while implementing this: GitHub's `pull_request` checkout tests a _merge_ of the PR branch
+into the current `main`, not the branch alone. `main` had moved forward mid-investigation with a change that
+added `parser-typescript/src/tags.ts` importing from the native package's `./tags` export - invisible on the
+PR branch itself, but a real `ERR_MODULE_NOT_FOUND`/`TS2307` once merged, since this fix had just removed that
+dependency. Merging `main` locally and testing against that merge (not just the branch tip) surfaced and
+resolved it before it could confuse anyone as another dose of Windows flakiness.
 
 ## Process notes for next time
 
@@ -157,6 +181,15 @@ see the process notes below.
   `tree-sitter`-style `peerDependencies`) reports platform-specific weirdness - `grep '<package>@' pnpm-lock.yaml`
   shows the resolved peer version inline, e.g. `tree-sitter-typescript@0.23.2(tree-sitter@0.21.1)`. Worth
   fixing on its own merits even when (as here) it turns out not to explain the symptom you were chasing.
+- **When a long-running branch's CI suddenly fails for a reason unrelated to your last change, check whether
+  `main` moved.** `pull_request`-triggered workflows test a merge of the PR branch into current `main`, not
+  the branch alone - a `Cannot find module`/`TS2307` error referencing a file that doesn't exist on the
+  branch itself is a strong signal of this, not a new flake. `git fetch origin main && git merge origin/main`
+  locally reproduces exactly what CI is testing.
+- **Sometimes the fix for a flaky native dependency is to stop depending on it**, not to keep tuning how it's
+  called. If an equivalent, already-tested alternative exists in the repo (here, the wasm build sitting right
+  next to the native one), swapping a downstream consumer onto it can be less effort and more reliable than
+  continuing to chase a native binary's internal bug.
 
 ## Sources
 
