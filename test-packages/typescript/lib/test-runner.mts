@@ -79,13 +79,17 @@ function spawnCspell(target: string, moduleName: string, cwd: string, actualFile
   // cspell.config.yaml (which ignores `tests/with-issues` - that's for the repo-wide `pnpm spell`
   // check, not for this). cspell's own exit code isn't checked here - `with-issues` always reports
   // real issues, so pass/fail is decided by the snapshot diff in runSuite instead.
+  const args = ['exec', 'cspell', target, '--no-progress', '--no-color'];
+
   return new Promise<void>((resolve, reject) => {
-    const child = child_process.spawn('pnpm', ['exec', 'cspell', target, '--no-progress', '--no-color'], {
-      cwd,
-      env,
-      stdio: 'inherit',
-      shell: process.platform === 'win32',
-    });
+    // pnpm resolves to a .cmd shim on Windows, which per Node's docs can't be launched via spawn()/execFile()
+    // without a shell. Rather than `shell: true` (deprecated as DEP0190 when combined with an args array,
+    // since the args get shell-concatenated without escaping), spawn cmd.exe directly and pass the command
+    // as its own args array - Node still escapes each argument properly since `shell` is unset here.
+    const child =
+      process.platform === 'win32'
+        ? child_process.spawn('cmd.exe', ['/d', '/s', '/c', 'pnpm', ...args], { cwd, env, stdio: 'inherit' })
+        : child_process.spawn('pnpm', args, { cwd, env, stdio: 'inherit' });
 
     child.on('error', reject);
     child.on('exit', () => resolve());
