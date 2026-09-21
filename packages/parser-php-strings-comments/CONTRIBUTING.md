@@ -1,17 +1,21 @@
 # Contributing to @cspell/parser-php-strings-comments
 
-This is a contributor-facing walkthrough of how `src/parser.ts` actually works. `README.md` is written for
-someone using the plugin; this file is for someone changing it. See the repo root `CONTRIBUTING.md` for the
-general package shape (`parser.ts`/`plugin.ts`/`index.ts`/`recommended.ts`, `fixtures/`, `samples/`) - this
-file only covers what's specific to this package's parsing logic.
+This is a contributor-facing walkthrough of how this package's parsing logic actually works. `README.md` is
+written for someone using the plugin; this file is for someone changing it. See the repo root
+`CONTRIBUTING.md` for the general package shape (`plugin.ts`/`index.ts`/`recommended.ts`, `fixtures/`,
+`samples/`) - this file only covers what's specific to this package's parsing logic, which is split across
+three `src/` files beyond the usual template shape:
 
-## Shape of the parser
-
-Like this repo's other split-out language packages, this is a single hand-written scanner (`Scanner`, a
-small stateful class holding a mutable cursor `i` over `content`). There's no AST and no tokenizer for PHP as
-a whole - the scanner walks `content` character by character, recognizing the handful of constructs that get
-their own specific tag (comments, strings) and letting a second cursor, `j`, sweep up everything else it
-advances `i` past as plain `html`/`code` (see "Emitting a segment" below).
+- `scanner.ts` - the actual scan: `Scanner`, a small stateful class holding a mutable cursor `i` over
+  `content`, plus every helper function it uses. There's no AST and no tokenizer for PHP as a whole - the
+  scanner walks `content` character by character, recognizing the handful of constructs that get their own
+  specific tag (comments, strings) and letting a second cursor, `j`, sweep up everything else it advances `i`
+  past as plain `html`/`code` (see "Emitting a segment" below).
+- `tags.ts` - every tag `Scanner` can emit, and the derived `tags` map `parser.ts` registers with
+  `createPluginParser` (see "Tags" below).
+- `parser.ts` - thin wiring: `parse()` just calls `new Scanner(content).run()`, and `parser` is
+  `createPluginParser({ name, parse, supportedFileTypes, tags }, ...)` plus the default code-excluding filter
+  (see "Why `code` is excluded by default" below).
 
 This package started as the PHP slice of `@cspell/parser-strings-comments`, a single scanner that also
 covered C, C++, C#, Go, Java, and JavaScript/TypeScript. Splitting each language family into its own package
@@ -138,21 +142,57 @@ one past it - without this, the emitted `range`/`map` can exceed `content.length
 ## Tags
 
 Same convention as every other package in this repo: a tag is a dot-separated hierarchical name, and every
-segment carries its whole ancestor chain (`comment.block.doc` also carries `comment.block` and `comment`),
-built as module-level constants rather than computed per segment. `html` and `code` are the two tags in this
-package that deliberately have no ancestor and aren't nested under each other either - `html` isn't PHP code,
-and `code` isn't HTML, and neither is a kind of `string` or `comment` - so both stand alone as siblings at the
-top level. See `README.md`'s [Tags](README.md#tags) table for what each one means to a consumer.
+segment carries its whole ancestor chain (`comment.block.doc` also carries `comment.block` and `comment`).
+`html` and `code` are the two tags in this package that deliberately have no ancestor and aren't nested under
+each other either - `html` isn't PHP code, and `code` isn't HTML, and neither is a kind of `string` or
+`comment` - so both stand alone as siblings at the top level. See `README.md`'s [Tags](README.md#tags) table
+for what each one means to a consumer.
 
-### Why `customizePlugin`/`createParser` filtering works with any cspell version
+`tags.ts` is the single place all of this is defined:
 
-`plugin.ts`'s `customizePlugin` and `parser.ts`'s `createParser` both filter by wrapping this package's
-`parser` in `@internal/utils`'s `customizeParser` (see `packages/internal-utils/src/customize.ts`), which
-compiles the `tags` option into a `TagsFilter` once and uses it to drop excluded entries from `parse()`'s own
-`parsedTexts` before returning. The filtering therefore happens entirely inside this package's parser, before
-its result ever reaches cspell - cspell just sees an ordinary parser whose `parse()` already omits the
-excluded segments. That's why `README.md` can tell users it works with any cspell version: there's no
-dependency on cspell itself supporting tag-based filtering.
+- Every individual tag object (`COMMENT_TAG`, `COMMENT_LINE_TAG`, ...) is a local, module-private constant,
+  composed incrementally via spread the same way as every other package here (`COMMENT_LINE_TAG` spreads
+  `COMMENT_TAG` rather than repeating `comment: true`). They're deliberately **not** exported individually -
+  `scanner.ts` reaches every one of them through the single exported `TAGS` object (`TAGS.COMMENT_LINE`, ...)
+  instead.
+- That indirection is what makes `tags.ts` a true single source of truth rather than just a convention: since
+  `TAGS` is the _only_ way to get a tag object at all, there's no way to add a new tag constant without it
+  being part of `TAGS` - unlike a hand-maintained parallel list, which a new tag constant could simply never
+  be added to. `tags` (the `ParserTags` map `createPluginParser` is given - see `PluginParser.tags`'s own doc
+  comment) is then derived from `TAGS` by taking the union of every key across `Object.values(TAGS)`, rather
+  than hand-typed a second time.
+- `NOT_ON_BY_DEFAULT` is the short, explicit list of tags that deviate from "emitted and spell checked by
+  default" - today, just `[CODE_TAG]`. It references the tag _object_ rather than the bare string `'code'`,
+  so a rename of the underlying key can't silently drift out of sync with what it's supposed to exclude.
+- This matters because `tags` became load-bearing, not just descriptive, once `PluginParser.customize()` was
+  rewritten (see `@internal/utils`'s `PluginParserImpl`/`createParsedTextFilter`) to resolve each known tag's
+  default from this map - a tag `Scanner` emits that isn't a key in `tags` is invisible to that resolution
+  and silently un-filterable via `createParser`/`customizePlugin`'s `tags` option. `parser.test.ts`'s `tags`
+  describe block is the regression test for this: it runs the raw `parse()` over every fixture and asserts
+  every tag key it actually produces is a key in `parser.tags`.
+
+### Why `code` is excluded by default
+
+`parser.ts` passes a second argument to `createPluginParser`: `(p) => p.tags !== TAGS.CODE`. This is what
+makes the exported `parser`/`plugin`/`recommended` skip spell checking `code` segments out of the box, even
+though `parse()` itself (and `tags.code`, its entry in the declared tags map) still say `code` is a real,
+emitted tag - just one a consumer has to opt into, the same way `README.md`'s "Filtering by tag" section
+documents. The comparison is by object identity (`TAGS.CODE`, not `p.tags?.code`), which only works because
+every `code` segment `Scanner` emits reuses that exact frozen object reference rather than building a fresh
+one each time - see `emitCodeSegment`/`run()` in `scanner.ts`.
+
+### Why `customizePlugin`/`createParser` filtering works with any cspell version, and doesn't lose `code`
+
+`plugin.ts`'s `customizePlugin` and `parser.ts`'s `createParser` both filter by calling `parser.customize()`
+(`@internal/utils`'s `PluginParserImpl.customize`, see `packages/internal-utils/src/parser.ts`). Each call
+rebuilds a _fresh_ filter via `createParsedTextFilter(options.tags, this.tags)` and applies it to the
+original, unfiltered `parse` this package registered - never to whatever the _previous_ filtered `.parse` was
+producing. That's what lets a consumer ask for `code` back (`createParser({ tags: { code: true } })`) despite
+it being excluded by default: the default exclusion and a consumer's own override are two independent
+resolutions of the same raw parse output, not one layered on top of the other. The filtering happens entirely
+inside this package's parser, before its result ever reaches cspell - cspell just sees an ordinary parser
+whose `parse()` already omits the excluded segments. That's why `README.md` can tell users it works with any
+cspell version: there's no dependency on cspell itself supporting tag-based filtering.
 
 ## Testing
 
@@ -160,12 +200,21 @@ dependency on cspell itself supporting tag-based filtering.
   embedding source strings inline - a fixture is real, syntactically valid PHP, which both exercises real
   file content and makes intent easier to read than an escaped string literal. `fixtures/` is excluded from
   `tsc`/ESLint/Prettier (see root `CLAUDE.md`) because a fixture's exact bytes are frequently what's being
-  asserted on; don't let a formatter "fix" one.
+  asserted on; don't let a formatter "fix" one. Even though `Scanner` itself now lives in `scanner.ts`, its
+  test coverage stays in `parser.test.ts` - it's still the same parsing behavior being tested, just reached
+  through `parse`/`parser.parse` rather than the `Scanner` class directly.
+- `parseFixture(name, parse = parser.parse)` defaults to the default-filtered view (`code` excluded), which
+  is what almost every test wants. The `mixed.php` block passes `createParse(parse, () => true)` instead,
+  since several of its tests specifically assert on `code`/`html` segments that the default filter would
+  otherwise hide.
 - Each non-obvious piece of scanning logic has its own dedicated fixture: `attributes.php` (`#[...]` vs. `#`
   comments), `close-tag.php` (`?>` ending PHP mode, including mid-line-comment), `short-echo.php` (`<?=`),
   `heredoc-nowdoc.php`, and `interpolation.php` (the nested-quote-inside-`{$...}` case) - in addition to
   `mixed.php` and `strings.php` for the more ordinary cases. When changing any of this logic, prefer adding
   to or extending one of these over inlining a one-off string in the test file itself.
+- `parser.test.ts`'s `tags` describe block is the regression test for `tags.ts` staying in sync with what
+  `Scanner` actually emits (see "Tags" above) - it collects every tag key produced across all of `fixtures/`
+  and asserts each one is declared in `parser.tags`, plus a couple of direct assertions on `code`'s default.
 - `samples/` is a real, separate end-to-end check: actual cspell configs plus real source files, run for real
   by `pnpm run test:cspell` (`cspell .` from the package root). `samples/customize` in particular proves the
   `customizePlugin` tag filter is doing something real (a genuine misspelling in the `html` content the
