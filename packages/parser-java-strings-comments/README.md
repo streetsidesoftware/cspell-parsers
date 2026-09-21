@@ -79,6 +79,8 @@ parsers can't share one.
 
 ## Tags
 
+<!--- @@inject: docs/tags-table.md --->
+
 | Tag                  | Meaning                             |
 | -------------------- | ----------------------------------- |
 | `comment`            | Any comment                         |
@@ -89,6 +91,8 @@ parsers can't share one.
 | `string.singleQuote` | A `'...'` character literal         |
 | `string.doubleQuote` | A `"..."` string literal            |
 | `string.textBlock`   | A `"""..."""` text block (Java 15+) |
+
+<!--- @@inject-end: docs/tags-table.md --->
 
 ## Known limitations
 
