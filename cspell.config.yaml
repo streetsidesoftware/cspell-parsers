@@ -30,4 +30,5 @@ words:
   - Precomputes
   - sigstore
   - unaliased
+  - unpadded
   - worktrees
