@@ -81,6 +81,8 @@ parsers can't share one.
 
 ## Tags
 
+<!--- @@inject: docs/tags-table.md --->
+
 | Tag                   | Meaning                                                                          |
 | --------------------- | -------------------------------------------------------------------------------- |
 | `comment`             | Any comment                                                                      |
@@ -94,6 +96,8 @@ parsers can't share one.
 | `string.verbatim`     | A `@"..."` verbatim string literal                                               |
 | `string.interpolated` | A `$"..."` interpolated string literal fragment                                  |
 | `string.raw`          | A C# 11 `"""..."""` raw string literal                                           |
+
+<!--- @@inject-end: docs/tags-table.md --->
 
 `string.verbatim` and `string.interpolated` are combined on the same segment for a `$@"..."`/`@$"..."`
 string; `string.raw` and `string.interpolated` are combined for an interpolated raw string literal.
