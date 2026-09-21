@@ -1,30 +1,12 @@
 import { parse } from '@cspell/parser-typescript/parser';
-import type { ParserTags, PluginParser, TagFilterOptions } from '@internal/utils';
+import type { PluginParser, TagFilterOptions } from '@internal/utils';
 import { createPluginParser, customizeParser } from '@internal/utils';
+
+import { tags } from './tags.js';
 
 export { parse };
 
 export const supportedFileTypes: Readonly<string[]> = Object.freeze(['javascript', 'javascriptreact']);
-
-const tags: Readonly<ParserTags> = Object.freeze({
-  string: true,
-  'string.singleQuote': true,
-  'string.doubleQuote': true,
-  'string.templateLiteral': true,
-  comment: true,
-  'comment.line': true,
-  'comment.block': true,
-  'comment.block.doc': true,
-  identifier: true,
-  'identifier.variable': true,
-  'identifier.property': true,
-  'identifier.privateProperty': true,
-  'identifier.type': true,
-  'identifier.shorthandProperty': true,
-  'identifier.label': true,
-  'identifier.importBinding': true,
-  'identifier.exportBinding': true,
-});
 
 export const parser: PluginParser = createPluginParser({
   name: 'javascript',
