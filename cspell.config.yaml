@@ -1,6 +1,10 @@
 version: '0.2'
 language: en
 enableGlobDot: true
+languageSettings:
+  - languageId: yaml,markdown
+    substitutions:
+      - ["''", "'"]
 dictionaries:
   - typescript
   - node
@@ -33,3 +37,6 @@ words:
   - unaliased
   - unpadded
   - worktrees
+ignoreWords:
+  - .mtsx
+  - parsedTexts
