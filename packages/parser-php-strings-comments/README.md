@@ -81,6 +81,8 @@ parsers can't share one.
 
 ## Tags
 
+<!--- @@inject: docs/tags-table.md --->
+
 | Tag                  | Meaning                                                                                               |
 | -------------------- | ----------------------------------------------------------------------------------------------------- |
 | `comment`            | Any comment                                                                                           |
@@ -94,6 +96,8 @@ parsers can't share one.
 | `string.nowdoc`      | A `<<<'ID' ... ID` nowdoc body (no interpolation)                                                     |
 | `html`               | HTML (or other non-PHP) content outside `<?php`/`<?=`/`<?` ... `?>`                                   |
 | `code`               | PHP code that isn't a comment or string (identifiers, keywords, punctuation, numbers, tag delimiters) |
+
+<!--- @@inject-end: docs/tags-table.md --->
 
 ## Known limitations
 
