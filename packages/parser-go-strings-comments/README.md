@@ -79,6 +79,8 @@ parsers can't share one.
 
 ## Tags
 
+<!--- @@inject: docs/tags-table.md --->
+
 | Tag                  | Meaning                                                                                       |
 | -------------------- | --------------------------------------------------------------------------------------------- |
 | `comment`            | Any comment                                                                                   |
@@ -90,14 +92,14 @@ parsers can't share one.
 | `string.doubleQuote` | A `"..."` interpreted string literal                                                          |
 | `string.raw`         | A `` `...` `` raw string literal                                                              |
 
+<!--- @@inject-end: docs/tags-table.md --->
+
 ## Known limitations
 
 This parser is a small hand-written scanner, not a real grammar. Go's syntax has no regex-literal-vs-division
 ambiguity, no string interpolation, and no escape sequences inside a raw string, so - unlike this repo's
 JS/TS-family parser - there's nothing here that's only heuristically resolved: comments and every string form
 are recognized unambiguously from their delimiters alone.
-
-<!-- cspell:ignore godoc -->
 
 ## Requirements
 
