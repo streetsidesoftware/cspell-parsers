@@ -84,6 +84,8 @@ nested inside one keeps its own normal tag rather than `string.interpolated` - f
 
 ## Tags
 
+<!--- @@inject: docs/tags-table.md --->
+
 | Tag                   | Meaning                                                                            |
 | --------------------- | ---------------------------------------------------------------------------------- |
 | `comment`             | Any comment                                                                        |
@@ -94,6 +96,8 @@ nested inside one keeps its own normal tag rather than `string.interpolated` - f
 | `string.tripleQuote`  | A `'''...'''` or `"""..."""` string literal                                        |
 | `string.raw`          | Any `r`-prefixed string (`r`, `rb`/`br`, `rf`/`fr`) - composes with the tags above |
 | `string.interpolated` | Any `f`-prefixed string (an f-string) - composes with the tags above               |
+
+<!--- @@inject-end: docs/tags-table.md --->
 
 ## Known limitations
 
