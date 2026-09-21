@@ -1,14 +1,10 @@
 # @cspell/parser-ruby-strings-comments
 
-A strings-and-comments parser plugin for cspell covering Ruby.
+A cspell plugin that extracts Ruby comments and string-like literals - including heredocs and backtick
+command strings (`` `...` ``) - so cspell only spell checks those, not identifiers, keywords, or other code.
 
 It implements cspell's [`Parser`](https://www.npmjs.com/package/@cspell/cspell-types) contract and exports a
 [`Plugin`](https://www.npmjs.com/package/@cspell/cspell-types) so it can be wired into a cspell configuration.
-
-Unlike [`@cspell/parser-example`](https://www.npmjs.com/package/@cspell/parser-example) (comments only) or a
-full AST-based parser, this parser only ever emits comments, strings, heredocs, and backtick command strings
-(`` `...` ``) - never identifiers, keywords, punctuation, symbols, char literals, regex literals, or
-percent-literals (`%w[]`, `%q()`, ...) - using a small hand-written scanner rather than a real grammar.
 
 ## Usage
 
