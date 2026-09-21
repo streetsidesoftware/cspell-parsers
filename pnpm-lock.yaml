@@ -467,11 +467,11 @@ importers:
   packages/parser-typescript-tree-sitter:
     dependencies:
       tree-sitter:
-        specifier: ^0.25.1
-        version: 0.25.1
+        specifier: ^0.21.1
+        version: 0.21.1
       tree-sitter-typescript:
         specifier: ^0.23.2
-        version: 0.23.2(tree-sitter@0.25.1)
+        version: 0.23.2(tree-sitter@0.21.1)
     devDependencies:
       '@cspell/cspell-types':
         specifier: 'catalog:'
@@ -3026,8 +3026,8 @@ packages:
       tree-sitter:
         optional: true
 
-  tree-sitter@0.25.1:
-    resolution: {integrity: sha512-mrcEdkYtHfrK1A6fs3O6FxkBo0Qig5XUXqHhxUOQu0bmPo00QF4XaSx4edpazdHwxnSCjlGKGgIqWdaN4dvTLA==}
+  tree-sitter@0.21.1:
+    resolution: {integrity: sha512-7dxoA6kYvtgWw80265MyqJlkRl4yawIjO7S5MigytjELkX43fV2WsAXzsNfO7sBpPPCF5Gp0+XzHk0DwLCq3xQ==}
 
   treeverse@3.0.0:
     resolution: {integrity: sha512-gcANaAnd2QDZFmHFEOF4k7uc1J/6a6z3DJMd/QwEyxLoKGiptJRwid582r7QIsFlFMIZ3SnxfS52S4hm2DHkuQ==}
@@ -6046,22 +6046,22 @@ snapshots:
 
   tree-kill@1.2.2: {}
 
-  tree-sitter-javascript@0.23.1(tree-sitter@0.25.1):
+  tree-sitter-javascript@0.23.1(tree-sitter@0.21.1):
     dependencies:
       node-addon-api: 8.9.2
       node-gyp-build: 4.8.4
     optionalDependencies:
-      tree-sitter: 0.25.1
+      tree-sitter: 0.21.1
 
-  tree-sitter-typescript@0.23.2(tree-sitter@0.25.1):
+  tree-sitter-typescript@0.23.2(tree-sitter@0.21.1):
     dependencies:
       node-addon-api: 8.9.2
       node-gyp-build: 4.8.4
-      tree-sitter-javascript: 0.23.1(tree-sitter@0.25.1)
+      tree-sitter-javascript: 0.23.1(tree-sitter@0.21.1)
     optionalDependencies:
-      tree-sitter: 0.25.1
+      tree-sitter: 0.21.1
 
-  tree-sitter@0.25.1:
+  tree-sitter@0.21.1:
     dependencies:
       node-addon-api: 8.9.2
       node-gyp-build: 4.8.4
