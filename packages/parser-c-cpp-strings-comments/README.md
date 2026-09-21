@@ -83,6 +83,8 @@ parsers can't share one.
 
 ## Tags
 
+<!--- @@inject: docs/tags-table.md --->
+
 | Tag                  | Meaning                                           |
 | -------------------- | ------------------------------------------------- |
 | `comment`            | Any comment                                       |
@@ -94,6 +96,8 @@ parsers can't share one.
 | `string.singleQuote` | A `'...'` char literal                            |
 | `string.doubleQuote` | A `"..."` string literal                          |
 | `string.raw`         | A C++11 raw string literal (`R"delim(...)delim"`) |
+
+<!--- @@inject-end: docs/tags-table.md --->
 
 ## Known limitations
 
