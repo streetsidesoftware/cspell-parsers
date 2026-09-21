@@ -1,13 +1,10 @@
 # @cspell/parser-go-strings-comments
 
-A strings-and-comments parser plugin for cspell, covering Go.
+A cspell plugin that extracts Go comments and string-like literals - including rune, interpreted, and raw
+string literals - so cspell only spell checks those, not identifiers, keywords, or other code.
 
 It implements cspell's [`Parser`](https://www.npmjs.com/package/@cspell/cspell-types) contract and exports a
 [`Plugin`](https://www.npmjs.com/package/@cspell/cspell-types) so it can be wired into a cspell configuration.
-
-Unlike [`@cspell/parser-example`](https://www.npmjs.com/package/@cspell/parser-example) (comments only), this
-parser only ever emits comments and string-like literals - never identifiers, keywords, or punctuation -
-using a small hand-written scanner rather than a real grammar.
 
 ## Usage
 

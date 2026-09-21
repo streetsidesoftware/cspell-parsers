@@ -1,17 +1,14 @@
 # @cspell/parser-rust-strings-comments
 
-A strings-and-comments parser plugin for cspell, covering Rust.
+A cspell plugin that extracts Rust comments and string-like literals, so cspell only spell checks those, not
+identifiers, keywords, punctuation, char literals, or lifetimes. It understands Rust's string and comment
+forms: `"..."` strings, `b"..."` byte strings, `c"..."` C strings, raw strings (`r"..."`, `r#"..."#`, ...)
+including byte raw (`br"..."`) and C raw (`cr"..."`) forms, line comments (`//`, `///`, `//!`), and block
+comments (`/* */`, `/** */`, `/*! */`) - including Rust's nested block comments. Char literals (`'...'`,
+`b'...'`) are never spell checked.
 
 It implements cspell's [`Parser`](https://www.npmjs.com/package/@cspell/cspell-types) contract and exports a
 [`Plugin`](https://www.npmjs.com/package/@cspell/cspell-types) so it can be wired into a cspell configuration.
-
-Unlike [`@cspell/parser-example`](https://www.npmjs.com/package/@cspell/parser-example) (comments only), this
-parser only ever emits comments and string-like literals - never identifiers, keywords, punctuation, char
-literals, or lifetimes - using a small hand-written scanner rather than a real grammar. It understands
-Rust's string and comment forms: `"..."` strings, `b"..."` byte strings, `c"..."` C strings, raw strings
-(`r"..."`, `r#"..."#`, ...) including byte raw (`br"..."`) and C raw (`cr"..."`) forms, line comments (`//`,
-`///`, `//!`), and block comments (`/* */`, `/** */`, `/*! */`) - including Rust's nested block comments.
-Char literals (`'...'`, `b'...'`) are never spell checked.
 
 ## Usage
 
@@ -117,10 +114,6 @@ with one deliberate, documented scope limit:
   skipped as a unit, since otherwise that embedded `"` would be misread as the start of a real string,
   swallowing real code (potentially including a genuine string) up to the next `"` in the file. See
   `CONTRIBUTING.md` for the full rationale.
-
-Use this package as a template: copy `src/parser.ts`, `src/plugin.ts`, `src/index.ts`, and `src/recommended.ts`
-into a new package under `packages/` and replace the parsing logic with your own. See the repo root
-`CONTRIBUTING.md` for the full steps.
 
 ## Requirements
 

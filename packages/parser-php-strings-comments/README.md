@@ -1,15 +1,13 @@
 # @cspell/parser-php-strings-comments
 
-A strings-and-comments parser plugin for cspell, covering PHP.
+A cspell plugin that extracts PHP comments and string-like literals for spell checking. Unlike this repo's
+other language parsers, it checks the whole file by default, not just comments and strings: the HTML
+surrounding a `<?php ... ?>` block is tagged `html`, and any PHP code that isn't a comment or string
+(identifiers, keywords, punctuation, ...) is tagged `code` - so nothing is silently skipped, but both can be
+filtered out with `customizePlugin` (see below) if you don't want them checked.
 
 It implements cspell's [`Parser`](https://www.npmjs.com/package/@cspell/cspell-types) contract and exports a
 [`Plugin`](https://www.npmjs.com/package/@cspell/cspell-types) so it can be wired into a cspell configuration.
-
-Unlike [`@cspell/parser-example`](https://www.npmjs.com/package/@cspell/parser-example) (comments only), this
-parser emits every byte of the file: comments and string-like literals get their own specific tags, the HTML
-surrounding a PHP file's `<?php ... ?>` regions is tagged `html`, and everything else - identifiers, keywords,
-punctuation, numbers, and the tag delimiters themselves - is tagged `code`, using a small hand-written scanner
-rather than a real grammar.
 
 ## Usage
 
@@ -110,10 +108,6 @@ always spell checked as part of the same string rather than parsed separately.
 Simple interpolation (a bare `$name` or `$arr[key]` without `{}`) isn't specially recognized at all - it's
 just ordinary text inside the double-quoted string or heredoc it appears in, which is exactly what should
 happen: it's still spell checked as part of the surrounding string content.
-
-Use this package as a template: copy `src/parser.ts`, `src/plugin.ts`, `src/index.ts`, and `src/recommended.ts`
-into a new package under `packages/` and replace the parsing logic with your own. See the repo root
-`CONTRIBUTING.md` for the full steps.
 
 ## Requirements
 

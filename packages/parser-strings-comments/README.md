@@ -9,11 +9,9 @@ blocks, C++/Go raw strings, and PHP heredoc/nowdoc).
 It implements cspell's [`Parser`](https://www.npmjs.com/package/@cspell/cspell-types) contract and exports a
 [`Plugin`](https://www.npmjs.com/package/@cspell/cspell-types) so it can be wired into a cspell configuration.
 
-Unlike [`@cspell/parser-example`](https://www.npmjs.com/package/@cspell/parser-example) (comments only) or
-[`@cspell/parser-typescript`](https://www.npmjs.com/package/@cspell/parser-typescript) (a full TypeScript/TSX
-AST parser that also checks identifiers), this parser only ever emits comments and string-like literals -
-never identifiers, keywords, or punctuation - and does it with a single hand-written scanner shared across
-every supported language, rather than a per-language grammar.
+It only ever checks comments and string-like literals - never identifiers, keywords, or punctuation. If you
+want identifiers checked too for TypeScript/TSX/JavaScript/JSX specifically, use
+[`@cspell/parser-typescript`](https://www.npmjs.com/package/@cspell/parser-typescript) instead.
 
 ## Usage
 
@@ -59,6 +57,8 @@ plugin in yourself and choose the language IDs to use it for:
 | `typescript`      |
 | `typescriptreact` |
 
+An unrecognized file extension falls back to a plain `//`/`/* */`/`'...'`/`"..."` baseline instead of failing.
+
 ### Filtering by tag
 
 By default every comment/string the parser emits gets spell checked. To check only some of them - for
@@ -93,6 +93,9 @@ for every tag this parser can emit.
 more than one customized copy of this parser, since cspell selects a parser by name and two parsers can't
 share one.
 
+A `${...}`/`{...}` interpolation hole inside a JS/TS template literal or C# interpolated string is scanned
+like the rest of the file, so a string or comment nested inside one keeps its own normal tag.
+
 ## Tags
 
 | Tag                      | Meaning                                                                                                       |
@@ -119,26 +122,10 @@ A C# string can carry more than one of these at once - a combined verbatim-and-i
 fragment is tagged with both `string.verbatim` and `string.interpolated`, and an interpolated C# 11 raw string
 (`$"""..."""`) with both `string.raw` and `string.interpolated`.
 
-## How it works
-
-- `parser.parse(content, filename)` returns a `ParseResult` containing one or more `ParsedText` entries.
-- Each `ParsedText.range` is the `[start, end]` offset of that segment in the original `content`, which is how
-  cspell maps spelling issues found in the parsed text back to the right place in the source file.
-- Which language-specific forms apply (template literals, verbatim/raw strings, heredoc, ...) is chosen once
-  per file from `filename`'s extension - falling back to a plain `//`/`/* */`/`'...'`/`"..."` baseline for an
-  unrecognized one.
-- Every segment is tagged with a dot-separated tag, plus every ancestor of it (`string.heredoc` also carries
-  `string`) - `customizePlugin` can filter which segments get spell checked using these tags, at any level of
-  specificity (just `string`, or the more specific `string.heredoc`).
-- A JS/TS template literal or C# interpolated string is split into one `ParsedText` per literal fragment
-  around each `${...}`/`{...}` hole; the hole's own contents are recursively scanned the same way as the rest
-  of the file, so a string or comment nested inside an interpolation still gets picked up and tagged normally.
-- A PHP file additionally toggles between an HTML pass-through mode and a PHP code-scanning mode at each
-  `<?php`/`<?=`/`<?` and `?>` boundary. Text outside those tags is emitted verbatim, tagged `html`; PHP code
-  that isn't a comment or string is emitted too, tagged `code` - so, unlike every other language this package
-  covers, a PHP file's entire content is still spell checked by default (the same as if no parser applied to
-  it) even though most of it isn't a comment or string literal.
-- `plugin.parsers` is the list of parsers a cspell plugin module exposes; a plugin can expose more than one.
+Unlike every other language this parser covers, a PHP file's entire content is still spell checked by
+default, not just its comments and strings: HTML outside `<?php ... ?>` is tagged `html`, and PHP code that
+isn't a comment or string is tagged `code`. Use `customizePlugin` to exclude either if you don't want them
+checked.
 
 ## Known limitations
 
@@ -159,10 +146,6 @@ dependency-free but means a few corners are intentionally simplified:
 
 None of these affect where a literal's boundaries are found - only how finely a rare sub-form's contents are
 split up before being spell checked.
-
-Use this package as a template: copy `src/parser.ts`, `src/plugin.ts`, `src/index.ts`, and `src/recommended.ts`
-into a new package under `packages/` and replace the parsing logic with your own. See the repo root
-`CONTRIBUTING.md` for the full steps.
 
 ## Requirements
 

@@ -96,13 +96,6 @@ share one.
 
 <!--- @@inject-end: docs/tags-table.md --->
 
-## Using this package as a template
-
-This package doubles as a minimal starting point for a new parser package in this repo. To build one, copy
-`src/parser.ts`, `src/plugin.ts`, `src/index.ts`, and `src/recommended.ts` into a new package under
-`packages/` and replace the parsing logic with your own. See the repo root `CONTRIBUTING.md` for the full
-steps.
-
 ## Requirements
 
 <!--- @@inject: ../../static/requirements.md --->
