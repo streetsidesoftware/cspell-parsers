@@ -1,4 +1,5 @@
 ignorePaths:
+  - CHANGELOG.md
   - node_modules
   - fixtures
   - dist
