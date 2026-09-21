@@ -78,31 +78,42 @@ never on macOS/Linux, and never in an isolated single-`parse()`-call script (see
      declared support for `tree-sitter@0.22+`**. The combination this package was actually running had never
      been tested by tree-sitter-typescript's own maintainers.
 
-### Fix applied
+### Fix attempt C - dependency version pin (also disproved)
 
 Pinned `tree-sitter` to `^0.21.1` in `packages/parser-typescript-tree-sitter/package.json` - the last
 release before the range `tree-sitter-typescript` stops declaring support for, and confirmed still available
 on npm with prebuilds. `pnpm install` resolved `tree-sitter-typescript@0.23.2(tree-sitter@0.21.1)`, matching
-what tree-sitter-typescript is actually built and tested against.
+what tree-sitter-typescript is actually built and tested against. This is a real, worth-keeping fix for a
+real problem (running an untested dependency combination), independent of whether it explains the flake.
 
-Passed on `windows-latest` twice as of this writing (once after the initial pin, once on a manual re-run of
-the same commit requested to build confidence given the false-positive history above). Given two of this
-document's earlier "fixes" also passed their first run before failing on retest, treat even this as
-provisional until it's held up across more runs over time - if `parser-typescript-tree-sitter` starts
-flaking on `windows-latest` again, re-check whether a dependency bump silently drifted `tree-sitter` back
-outside `tree-sitter-typescript`'s declared peer range before assuming it's a new bug.
+Passed on `windows-latest` on the first run. A deliberate re-run of the _same_ commit (`gh run rerun
+<run-id>`, no code change) then **failed** - same symptom shape, this time on
+`imports.ts`'s "tags a re-export source the same as an import source" test. This makes three independent
+"fixes" (fresh `Parser` per call, `.reset()` before reuse, and this dependency pin) that each passed their
+first `windows-latest` run and then failed on an unmodified retest. That pattern - identical code producing
+different outcomes across runs - means none of the three actually control the outcome, and the flake is very
+likely inherent non-determinism in the native tree-sitter/tree-sitter-typescript Windows binary itself
+(memory-layout- or timing-dependent undefined behavior), not something fixable from this package's code or
+`package.json`.
+
+**Current status: unresolved.** The version pin is being kept anyway (it fixes a real, independently-verified
+problem - see above - even though it didn't fix the Windows flake), but `windows-latest` for
+`parser-typescript-tree-sitter` should be assumed to fail intermittently (roughly 50% of observed runs, 3 of 6) until this is fixed upstream or worked around at the CI level (retry, or dropping this leg).
 
 ## Process notes for next time
 
-- **A single green CI run does not confirm a fix for an intermittent failure.** This investigation had two
-  workarounds each pass their very first run and then fail on an unmodified retest. Budget for at least one
-  deliberate re-run (`gh run rerun <run-id>`) before treating an intermittent-failure fix as done.
+- **A single green CI run does not confirm a fix for an intermittent failure - not even two.** This
+  investigation had three separate workarounds each pass their very first run and then fail on an unmodified
+  retest. For a failure rate around 50%, one confirming pass has a coin-flip chance of being pure luck;
+  budget for several deliberate re-runs (`gh run rerun <run-id>`) with _no_ code change before believing a
+  fix, and treat "passed once" as no signal at all on its own.
 - **An isolated repro script that never fails is informative, not exculpatory** - it ruled out CRLF and a
   single-parse-call scenario, but the real bug only showed up after several `parse()` calls accumulated in
   one process, which is exactly what the full test suite (and nothing simpler) exercises.
 - **Check `pnpm-lock.yaml` for peer-dependency drift** whenever a native-binding package (anything with
   `tree-sitter`-style `peerDependencies`) reports platform-specific weirdness - `grep '<package>@' pnpm-lock.yaml`
-  shows the resolved peer version inline, e.g. `tree-sitter-typescript@0.23.2(tree-sitter@0.21.1)`.
+  shows the resolved peer version inline, e.g. `tree-sitter-typescript@0.23.2(tree-sitter@0.21.1)`. Worth
+  fixing on its own merits even when (as here) it turns out not to explain the symptom you were chasing.
 
 ## Sources
 
