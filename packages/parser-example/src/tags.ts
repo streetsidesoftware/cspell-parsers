@@ -15,7 +15,10 @@ type AllTags = Record<TagName, boolean>;
 /** Keyed by `tagsAndMeaning` rather than the wide-open `ParsedTags`, so an undocumented key fails to compile. */
 export type Tags = Partial<AllTags>;
 
-/** Constructs a `Tags` value; unlike a bare `Object.freeze({...})`, its non-generic parameter type gets excess-property-checked, so an undocumented key is a compile error. */
+/**
+ * Constructs a `Tags` value; unlike a bare `Object.freeze({...})`, its non-generic parameter type gets
+ * excess-property-checked, so an undocumented key is a compile error.
+ */
 function defineTag(tag: Tags): Readonly<Tags> {
   return Object.freeze(tag);
 }
