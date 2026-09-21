@@ -96,9 +96,45 @@ likely inherent non-determinism in the native tree-sitter/tree-sitter-typescript
 (memory-layout- or timing-dependent undefined behavior), not something fixable from this package's code or
 `package.json`.
 
-**Current status: unresolved.** The version pin is being kept anyway (it fixes a real, independently-verified
-problem - see above - even though it didn't fix the Windows flake), but `windows-latest` for
-`parser-typescript-tree-sitter` should be assumed to fail intermittently (roughly 50% of observed runs, 3 of 6) until this is fixed upstream or worked around at the CI level (retry, or dropping this leg).
+### Fix attempt D - force a single vitest worker process (also disproved)
+
+Hypothesis: this package's own 4 test files (`parser.test.ts`, `index.test.ts`, `plugin.test.ts`,
+`recommended.test.ts`) all load the tree-sitter native addon at import time. Vitest's `forks` pool (its
+default - verified directly against the installed `vitest@5.0.1` source, `resolveTestConfig` sets
+`resolved.pool ??= "forks"` unconditionally before any other pool fallback runs) can run multiple test files
+concurrently in separate forked processes. Several processes `dlopen`-ing the identical native `.node` binary
+from disk at nearly the same instant is a known category of Windows-specific flakiness (file locking /
+antivirus interference during concurrent loads) that could plausibly produce a binary that _loads_
+successfully but has a few wrong internal lookups, rather than an outright crash.
+
+Added `packages/parser-typescript-tree-sitter/vitest.config.ts` with `test: { maxWorkers: 1 }` (the Vitest 4+
+replacement for the removed `poolOptions.forks.singleFork` - forces this package's own test run down to one
+worker process total, so no two of its own test files' processes can ever load the native module
+concurrently). **Failed on its very first `windows-latest` run** - no lucky pass this time - with the same
+symptom family (`imports.ts`'s re-export and dynamic-`import()` module-specifier tags missing).
+
+This rules out cross-process contention within the package as the cause: with `maxWorkers: 1` there is
+exactly one process for the whole package's test run, and it still failed. Reverted (no reason to keep a
+slower single-worker config that didn't help).
+
+## Current status: unresolved
+
+Four independent mitigations have now been tried and disproved: fresh `Parser` instance per call, `.reset()`
+before reuse, pinning `tree-sitter` to the version `tree-sitter-typescript` actually supports, and forcing a
+single vitest worker process. Three passed their first `windows-latest` run and failed on retest; one failed
+immediately. None of them touch the same lever, which means the bug isn't in how this package manages the
+`Parser` instance, isn't the tree-sitter/tree-sitter-typescript version mismatch (though that's still worth
+having fixed on its own merits - see attempt C above), and isn't cross-process contention over the native
+binary file. What's left standing is that this is very likely inherent, timing- or memory-layout-dependent
+non-determinism inside the native tree-sitter Windows binary itself, outside what this repo's code or config
+can control.
+
+The `tree-sitter` version pin (attempt C) is being kept - it fixes a real, independently-verified problem
+even though it didn't fix the flake. Everything else from attempts A, B, and D has been reverted.
+`windows-latest` for `parser-typescript-tree-sitter` should be assumed to fail intermittently (observed
+across roughly half of the runs during this investigation) until this is fixed upstream or worked around at
+the CI level (retry, or dropping this leg) - further JS-level or vitest-config guessing is not recommended;
+see the process notes below.
 
 ## Process notes for next time
 
@@ -110,6 +146,13 @@ problem - see above - even though it didn't fix the Windows flake), but `windows
 - **An isolated repro script that never fails is informative, not exculpatory** - it ruled out CRLF and a
   single-parse-call scenario, but the real bug only showed up after several `parse()` calls accumulated in
   one process, which is exactly what the full test suite (and nothing simpler) exercises.
+- **Verify a tool's actual default against the installed version's source, not docs or memory, before
+  spending a CI cycle on it.** Vitest's default `pool` changed from `'threads'` to `'forks'` in the 4.0 "pool
+  rework" (which also removed `poolOptions` in favor of top-level options like `maxWorkers`/`isolate`) -
+  `grep "resolved.pool ??=" node_modules/.pnpm/vitest@<version>*/node_modules/vitest/dist/chunks/*.js` shows
+  the actual resolved default for the exact version installed. This repo's `vitest@5.0.1` already defaults to
+  `forks`, so passing `--pool=forks` explicitly here is a no-op; a workaround remembered from a different
+  repo may have been targeting an older Vitest version where that default was still `'threads'`.
 - **Check `pnpm-lock.yaml` for peer-dependency drift** whenever a native-binding package (anything with
   `tree-sitter`-style `peerDependencies`) reports platform-specific weirdness - `grep '<package>@' pnpm-lock.yaml`
   shows the resolved peer version inline, e.g. `tree-sitter-typescript@0.23.2(tree-sitter@0.21.1)`. Worth
