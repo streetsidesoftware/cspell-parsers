@@ -40,6 +40,10 @@
     "./recommended": {
       "types": "./dist/recommended.d.ts",
       "default": "./dist/recommended.js"
+    },
+    "./tags": {
+      "types": "./dist/tags.d.ts",
+      "default": "./dist/tags.js"
     }
   },
   "main": "./dist/index.js",
