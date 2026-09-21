@@ -257,3 +257,11 @@ never recognized in the first place.
   `{ 'string.heredoc': false }` excludes) - sanity-checked by temporarily swapping in the plain `plugin` and
   confirming `cspell .` actually fails without the filter before restoring it, the way
   `packages/parser-typescript/samples/customize` does.
+
+## Using this package as a template
+
+To start a new `-strings-comments` parser, copy `src/parser.ts`, `src/plugin.ts`, `src/index.ts`, and
+`src/recommended.ts` into a new package under `packages/` and replace the parsing logic with your own -
+`@cspell/parser-typescript-strings-comments` is a simpler starting point than this package if your language
+doesn't need heredoc/percent-literal-style handling. See the repo root `CONTRIBUTING.md`'s "Adding a new
+parser package" section for the full steps.
