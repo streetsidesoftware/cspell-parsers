@@ -85,6 +85,8 @@ parsers can't share one.
 
 ## Tags
 
+<!--- @@inject: docs/tags-table.md --->
+
 | Tag                 | Meaning                                                                       |
 | ------------------- | ----------------------------------------------------------------------------- |
 | `comment`           | Any comment                                                                   |
@@ -98,6 +100,8 @@ parsers can't share one.
 | `string.byte.raw`   | A byte raw string literal (`br"..."`, `br#"..."#`, ...)                       |
 | `string.c`          | A `c"..."` C string literal (also carried by `string.c.raw`)                  |
 | `string.c.raw`      | A C raw string literal (`cr"..."`, `cr#"..."#`, ...)                          |
+
+<!--- @@inject-end: docs/tags-table.md --->
 
 Since Rust only ever uses `"` for strings, string tags describe a literal's _kind_ (byte/raw/C) rather than
 quote style.
