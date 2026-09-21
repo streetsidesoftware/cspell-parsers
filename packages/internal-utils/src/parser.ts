@@ -1,19 +1,10 @@
-import { compileTagFilter, customizeParserWithFilter } from './customize.js';
-import type { CustomizeParserOptions, PluginParser } from './types.js';
+import { createParsedTextFilter } from './customize.js';
+import type { CustomizeParserOptions, ParsedTextFilter, ParseFunction, ParserTags, PluginParser } from './types.js';
 
 export type CreatePluginParserOptions = Pick<PluginParser, 'name' | 'parse' | 'supportedFileTypes' | 'tags'>;
 
-export function createPluginParser(options: CreatePluginParserOptions): PluginParser {
-  // Implementation goes here
-  return {
-    name: options.name,
-    parse: options.parse,
-    supportedFileTypes: options.supportedFileTypes,
-    tags: options.tags,
-    customize(options) {
-      return customizeParser(this, options);
-    },
-  };
+export function createPluginParser(options: CreatePluginParserOptions, filter?: ParsedTextFilter): PluginParser {
+  return new PluginParserImpl(options.name, options.parse, options.supportedFileTypes, options.tags, filter);
 }
 
 /**
@@ -22,8 +13,71 @@ export function createPluginParser(options: CreatePluginParserOptions): PluginPa
  * {@link TagsFilter} once here, before the parser ever runs - see {@link compileTagFilter}.
  */
 export function customizeParser(parser: PluginParser, options: CustomizeParserOptions): PluginParser {
-  if (!options.tags || Object.keys(options.tags).length === 0) {
-    return options.name ? { ...parser, name: options.name } : parser;
+  return parser.customize(options);
+}
+
+export function createParse(parse: ParseFunction, filter?: ParsedTextFilter): ParseFunction {
+  if (!filter) return parse;
+  return (content: string, filename: string) => {
+    const result = parse(content, filename);
+    if (!filter) return result;
+    return { ...result, parsedTexts: filterIterable(result.parsedTexts, filter) };
+  };
+}
+
+class PluginParserImpl implements PluginParser {
+  #parse: ParseFunction;
+  #supportedFileTypes: Readonly<string[]>;
+  #tags: Readonly<ParserTags>;
+  #name: string;
+  #filter?: ParsedTextFilter | undefined;
+  parse: ParseFunction;
+
+  constructor(
+    name: string,
+    parse: ParseFunction,
+    supportedFileTypes: Readonly<string[]>,
+    tags: Readonly<ParserTags>,
+    filter?: ParsedTextFilter,
+  ) {
+    this.#name = name;
+    this.#parse = parse;
+    this.#supportedFileTypes = supportedFileTypes;
+    this.#tags = tags;
+    this.#filter = filter;
+    this.parse = createParse(parse, filter);
   }
-  return { ...parser, ...customizeParserWithFilter(parser, compileTagFilter(options.tags), options.name) };
+
+  get name() {
+    return this.#name;
+  }
+
+  get supportedFileTypes() {
+    return this.#supportedFileTypes;
+  }
+
+  get tags() {
+    return this.#tags;
+  }
+
+  customize(options: CustomizeParserOptions): PluginParser {
+    const filter = options?.tags ? createParsedTextFilter(options.tags, this.#tags) : this.#filter;
+    return new PluginParserImpl(options?.name ?? this.#name, this.#parse, this.#supportedFileTypes, this.#tags, filter);
+  }
+
+  customizeFilter(filter: ParsedTextFilter): PluginParser {
+    return new PluginParserImpl(this.#name, this.#parse, this.#supportedFileTypes, this.#tags, filter);
+  }
+
+  customizeSupportedFileTypes(supportedFileTypes: Readonly<string[]>): PluginParser {
+    return new PluginParserImpl(this.#name, this.#parse, supportedFileTypes, this.#tags, this.#filter);
+  }
+}
+
+function* filterIterable<T>(iterable: Iterable<T>, filter: (item: T) => boolean): Iterable<T> {
+  for (const item of iterable) {
+    if (filter(item)) {
+      yield item;
+    }
+  }
 }

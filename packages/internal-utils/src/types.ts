@@ -1,4 +1,4 @@
-import type { ParsedTags, Parser, Plugin } from '@cspell/cspell-types';
+import type { ParsedTags, ParsedText, Parser, ParseResult, Plugin } from '@cspell/cspell-types';
 
 export interface ParserTags {
   /**
@@ -29,7 +29,13 @@ export interface PluginParser extends Parser {
    * @returns A new parser with the specified customizations applied.
    */
   customize(options: CustomizeParserOptions): PluginParser;
+
+  customizeFilter(filter: ParsedTextFilter): PluginParser;
+  customizeSupportedFileTypes(supportedFileTypes: Readonly<string[]>): PluginParser;
 }
+
+export type ParseFunction = (content: string, filename: string) => ParseResult;
+export type ParsedTextFilter = (parsedText: ParsedText) => boolean;
 
 export interface ParserPlugin extends Plugin {
   name: string;
