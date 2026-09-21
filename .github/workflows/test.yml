@@ -1,4 +1,4 @@
-name: Test
+name: '🧪 Test'
 
 on:
   push:
@@ -53,9 +53,12 @@ jobs:
       # runtime tests are skipped here.
       - name: Test (excludes the native tree-sitter package on Windows)
         if: runner.os == 'Windows'
-        run: pnpm --filter '!@cspell/parser-typescript-tree-sitter' --filter '!@internal/test-packages-typescript' -r run test
+        run: pnpm --filter '!@cspell/parser-typescript-tree-sitter'  -r run test
 
-      - name: Test typescript sample against non-native parsers only (Windows)
-        if: runner.os == 'Windows'
-        working-directory: test-packages/typescript
-        run: node exec-test.mts --module @cspell/parser-typescript --module @cspell/parser-typescript-tree-sitter-wasm
+      # - name: Test typescript sample against non-native parsers only (Windows)
+      #   if: runner.os == 'Windows'
+      #   working-directory: test-packages/typescript
+      #   run: node exec-test.mts --module @cspell/parser-typescript --module @cspell/parser-typescript-tree-sitter-wasm
+
+      - name: Finished
+        run: echo "All tests completed."
