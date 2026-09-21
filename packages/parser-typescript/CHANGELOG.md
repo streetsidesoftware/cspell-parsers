@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.2.0](https://github.com/streetsidesoftware/cspell-parsers/compare/@cspell/parser-typescript@1.1.5...@cspell/parser-typescript@1.2.0) (2026-09-21)
+
+
+### Features
+
+* **parser-typescript-tree-sitter,parser-typescript:** publish tags.ts as a ./tags export ([#120](https://github.com/streetsidesoftware/cspell-parsers/issues/120)) ([3f496b5](https://github.com/streetsidesoftware/cspell-parsers/commit/3f496b59c573ee4ae1c89b15ea10cccaf2bcbfe8))
+
+
+### Updates and Bug Fixes
+
+* Use `parser-*-string-comments` parsers for `parser-strings-commets` ([#94](https://github.com/streetsidesoftware/cspell-parsers/issues/94)) ([31f48a2](https://github.com/streetsidesoftware/cspell-parsers/commit/31f48a29b6d72d10ffd1059ec3b0ff1a3b7837e3))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @cspell/parser-typescript-tree-sitter-wasm bumped to 1.0.4
+
 ## [1.1.5](https://github.com/streetsidesoftware/cspell-parsers/compare/@cspell/parser-typescript@1.1.4...@cspell/parser-typescript@1.1.5) (2026-09-17)
 
 

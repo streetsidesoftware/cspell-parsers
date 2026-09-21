@@ -1,0 +1,21 @@
+# Changelog
+
+## 1.0.0 (2026-09-21)
+
+
+### Features
+
+* Add @cspell/parser-python-strings-comments ([#69](https://github.com/streetsidesoftware/cspell-parsers/issues/69)) ([bc47ba1](https://github.com/streetsidesoftware/cspell-parsers/commit/bc47ba17689cae1ab756cc565ddd7bf4a7ee0c0d))
+
+
+### Updates and Bug Fixes
+
+* Add PluginParser type ([#98](https://github.com/streetsidesoftware/cspell-parsers/issues/98)) ([ad433fc](https://github.com/streetsidesoftware/cspell-parsers/commit/ad433fcf64f2377ae849914eca4a6fe972d89d97))
+* Freeze global tags ([#96](https://github.com/streetsidesoftware/cspell-parsers/issues/96)) ([6795ca3](https://github.com/streetsidesoftware/cspell-parsers/commit/6795ca315e5c2509353e05c90dbf9f4debccc4d5))
+* Use `parser-*-string-comments` parsers for `parser-strings-commets` ([#94](https://github.com/streetsidesoftware/cspell-parsers/issues/94)) ([31f48a2](https://github.com/streetsidesoftware/cspell-parsers/commit/31f48a29b6d72d10ffd1059ec3b0ff1a3b7837e3))
+* Use a common method to create parsers. ([#99](https://github.com/streetsidesoftware/cspell-parsers/issues/99)) ([f1f34b8](https://github.com/streetsidesoftware/cspell-parsers/commit/f1f34b8da70eec258b3ed0f311b16f81bc7aa8b1))
+
+
+### Code Refactoring
+
+* **parser-python-strings-comments:** move tags into tags.ts, generate README table ([#107](https://github.com/streetsidesoftware/cspell-parsers/issues/107)) ([653c940](https://github.com/streetsidesoftware/cspell-parsers/commit/653c9401856eada8fc446c88b351dbd20294c053))
