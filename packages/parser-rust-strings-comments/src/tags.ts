@@ -1,0 +1,64 @@
+/**
+ * Every tag this parser can emit, and what each one means. Source of truth for both `tags` below and
+ * `README.md`'s Tags table, which is generated from this object (`scripts/fix-tags-readme.ts`).
+ */
+export const tagsAndMeaning = {
+  comment: 'Any comment',
+  'comment.line': 'A `//` line comment',
+  'comment.line.doc': 'A `///` outer doc comment or `//!` inner doc comment line',
+  'comment.block': 'A `/* ... */` block comment (including a nested one)',
+  'comment.block.doc': 'A `/** ... */` outer doc block or `/*! ... */` inner doc block',
+  string: 'Any string-like literal, including a plain `"..."` string',
+  'string.byte': 'A `b"..."` byte string literal (also carried by `string.byte.raw`)',
+  'string.raw': 'A raw string literal (`r"..."`, `r#"..."#`, ...) - not a byte or C raw string',
+  'string.byte.raw': 'A byte raw string literal (`br"..."`, `br#"..."#`, ...)',
+  'string.c': 'A `c"..."` C string literal (also carried by `string.c.raw`)',
+  'string.c.raw': 'A C raw string literal (`cr"..."`, `cr#"..."#`, ...)',
+} as const satisfies Record<string, string>;
+
+export type TagName = keyof typeof tagsAndMeaning;
+type AllTags = Record<TagName, boolean>;
+
+/** Keyed by `tagsAndMeaning` rather than the wide-open `ParsedTags`, so an undocumented key fails to compile. */
+export type Tags = Partial<AllTags>;
+
+/** Constructs a `Tags` value; unlike a bare `Object.freeze({...})`, its non-generic parameter type gets excess-property-checked, so an undocumented key is a compile error. */
+function defineTag(tag: Tags): Readonly<Tags> {
+  return Object.freeze(tag);
+}
+
+export const tags: Readonly<AllTags> = Object.freeze(
+  Object.fromEntries(Object.keys(tagsAndMeaning).map((tag) => [tag, true])),
+) as Readonly<AllTags>;
+
+const COMMENT_TAG: Tags = defineTag({ comment: true });
+const COMMENT_LINE_TAG: Tags = defineTag({ ...COMMENT_TAG, 'comment.line': true });
+const COMMENT_LINE_DOC_TAG: Tags = defineTag({ ...COMMENT_LINE_TAG, 'comment.line.doc': true });
+const COMMENT_BLOCK_TAG: Tags = defineTag({ ...COMMENT_TAG, 'comment.block': true });
+const COMMENT_BLOCK_DOC_TAG: Tags = defineTag({ ...COMMENT_BLOCK_TAG, 'comment.block.doc': true });
+
+/**
+ * Rust has one string quote character, so these tags encode the string's *kind* (plain/byte/raw/C) rather
+ * than quote style. Hierarchical, per this repo's dot-path convention: `string.byte.raw` also carries
+ * `string.byte` and `string`, so filtering on `string.byte` matches both byte forms.
+ */
+const STRING_TAG: Tags = defineTag({ string: true });
+const STRING_BYTE_TAG: Tags = defineTag({ ...STRING_TAG, 'string.byte': true });
+const STRING_RAW_TAG: Tags = defineTag({ ...STRING_TAG, 'string.raw': true });
+const STRING_BYTE_RAW_TAG: Tags = defineTag({ ...STRING_BYTE_TAG, 'string.byte.raw': true });
+const STRING_C_TAG: Tags = defineTag({ ...STRING_TAG, 'string.c': true });
+const STRING_C_RAW_TAG: Tags = defineTag({ ...STRING_C_TAG, 'string.c.raw': true });
+
+export const TAGS = {
+  COMMENT: COMMENT_TAG,
+  COMMENT_LINE: COMMENT_LINE_TAG,
+  COMMENT_LINE_DOC: COMMENT_LINE_DOC_TAG,
+  COMMENT_BLOCK: COMMENT_BLOCK_TAG,
+  COMMENT_BLOCK_DOC: COMMENT_BLOCK_DOC_TAG,
+  STRING: STRING_TAG,
+  STRING_BYTE: STRING_BYTE_TAG,
+  STRING_RAW: STRING_RAW_TAG,
+  STRING_BYTE_RAW: STRING_BYTE_RAW_TAG,
+  STRING_C: STRING_C_TAG,
+  STRING_C_RAW: STRING_C_RAW_TAG,
+} as const;
