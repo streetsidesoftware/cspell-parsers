@@ -94,6 +94,7 @@ share one.
 | `comment.block`     | A `/* ... */` block comment |
 | `comment.block.doc` | A `/** ... */` doc comment  |
 
+<!--- @@inject-end: docs/tags-table.md --->
 ## Requirements
 
 <!--- @@inject: ../../static/requirements.md --->
