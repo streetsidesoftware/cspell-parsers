@@ -1,14 +1,15 @@
-import type { ParsedTags, ParsedText, ParseResult } from '@cspell/cspell-types';
-import type { ParserTags, PluginParser, TagFilterOptions } from '@internal/utils';
+import type { ParsedText, ParseResult } from '@cspell/cspell-types';
+import type { PluginParser, TagFilterOptions } from '@internal/utils';
 import { createPluginParser, customizeParser, stripCommentMarkers } from '@internal/utils';
 
-const COMMENT_TAG = Object.freeze({ comment: true });
-const COMMENT_LINE_TAG = Object.freeze({ ...COMMENT_TAG, 'comment.line': true });
-const COMMENT_BLOCK_TAG = Object.freeze({ ...COMMENT_TAG, 'comment.block': true });
-const COMMENT_BLOCK_DOC_TAG = Object.freeze({ ...COMMENT_BLOCK_TAG, 'comment.block.doc': true });
+import { TAGS, type Tags, tags } from './tags.js';
 
-function commentTag(text: string): ParsedTags {
-  return text.startsWith('//') ? COMMENT_LINE_TAG : text.startsWith('/**') ? COMMENT_BLOCK_DOC_TAG : COMMENT_BLOCK_TAG;
+function commentTag(text: string): Tags {
+  return text.startsWith('//')
+    ? TAGS.COMMENT_LINE
+    : text.startsWith('/**')
+      ? TAGS.COMMENT_BLOCK_DOC
+      : TAGS.COMMENT_BLOCK;
 }
 
 /**
@@ -73,13 +74,6 @@ export const supportedFileTypes: Readonly<string[]> = Object.freeze([
   'javascript',
   'typescript',
 ]);
-
-const tags: Readonly<ParserTags> = Object.freeze({
-  comment: true,
-  'comment.line': true,
-  'comment.block': true,
-  'comment.block.doc': true,
-});
 
 export const parser: PluginParser = createPluginParser({
   name: 'c-style-comments',

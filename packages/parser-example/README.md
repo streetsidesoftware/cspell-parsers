@@ -85,12 +85,16 @@ share one.
 
 ## Tags
 
+<!--- @@inject: docs/tags-table.md --->
+
 | Tag                 | Meaning                     |
 | ------------------- | --------------------------- |
 | `comment`           | Any comment                 |
 | `comment.line`      | A `//` line comment         |
 | `comment.block`     | A `/* ... */` block comment |
 | `comment.block.doc` | A `/** ... */` doc comment  |
+
+<!--- @@inject-end: docs/tags-table.md --->
 
 ## Using this package as a template
 
