@@ -45,11 +45,11 @@ user could reasonably have picked differently; it just makes the interview faste
 
 ## 4. Backend / implementation strategy
 
-- Hand-written scanner (regex/character-scan, generator-based `parsedTexts` per
-  `feedback_generator_based_parsedtexts`) vs. AST-based (tree-sitter or similar)? This is exactly the kind
-  of decision `parser-typescript`'s multiple backends (tree-sitter, tree-sitter-wasm, and others planned per
-  the multi-backend project) were built to make swappable — is this feature adding a new backend option, or
-  is a single approach sufficient?
+- Hand-written scanner (regex/character-scan, generator-based `parsedTexts` per `CLAUDE.md`'s "Package
+  shape" section) vs. AST-based (tree-sitter or similar)? `packages/parser-typescript-tree-sitter` (native
+  `tree-sitter`) and `packages/parser-typescript` (which depends on
+  `@cspell/parser-typescript-tree-sitter-wasm`) are the existing precedent for swapping backends behind the
+  same package shape — is this feature adding a new backend option, or is a single approach sufficient?
 - If AST-based: what's the dependency cost? Check `CLAUDE.md`'s dist-size/production-dependency guidance —
   a new production dependency here is a real cost worth surfacing as a decision, not an implementation
   afterthought.
