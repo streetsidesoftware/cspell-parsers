@@ -9,17 +9,18 @@ file only covers what's specific to this package's parsing logic.
 
 Like this repo's other split-out language packages, this is a single hand-written scanner (`Scanner`, a
 small stateful class holding a mutable cursor `i` over `content`). There's no AST and no tokenizer for PHP as
-a whole - the scanner walks `content` character by character, recognizing only the handful of constructs
-that matter (markup, comments, and strings) and silently advancing `i` past everything else.
+a whole - the scanner walks `content` character by character, recognizing the handful of constructs that get
+their own specific tag (comments, strings) and letting a second cursor, `j`, sweep up everything else it
+advances `i` past as plain `html`/`code` (see "Emitting a segment" below).
 
 This package started as the PHP slice of `@cspell/parser-strings-comments`, a single scanner that also
 covered C, C++, C#, Go, Java, and JavaScript/TypeScript. Splitting each language family into its own package
 removes the `Dialect` branching that combined scanner needed everywhere (`if (dialect === 'php') ...`) -
-since this package only ever handles PHP, there's exactly one dialect-specific concept left: the markup/code
+since this package only ever handles PHP, there's exactly one dialect-specific concept left: the html/code
 mode toggle below, which is intrinsic to PHP itself (embedding in HTML is what PHP is _for_), not the kind of
 cross-language branching the split removes.
 
-### The markup/code mode toggle
+### The html/code mode toggle
 
 PHP is the only one of this repo's split-out language families with a genuine two-mode structure. A `.php`
 file is, at the top level, HTML (or any other text) with PHP code embedded between `<?php`/`<?=`/`<?` and
@@ -27,7 +28,7 @@ file is, at the top level, HTML (or any other text) with PHP code embedded betwe
 itself has to alternate between two fundamentally different scans, not just call straight into `scanCode`:
 
 - `scanPhpDocument` repeatedly finds the next PHP open tag (`findPhpOpenTag`), emits everything before it as
-  a `markup`-tagged segment (verbatim, no transform), then hands off to `scanCode` starting right after the
+  an `html`-tagged segment (verbatim, no transform), then hands off to `scanCode` starting right after the
   tag.
 - `scanCode` runs in `phpAware` mode: as soon as it sees a top-level `?>`, it stops and returns control to
   `scanPhpDocument`, which resumes looking for the next open tag. If no `?>` appears, `scanCode` runs to the
@@ -42,6 +43,22 @@ right there - the rest of the line becomes HTML, not comment text. `scanLineComm
 `ParsedText` for the comment (ending exactly at the `?>`, not including it) and a `closesPhp` flag; `scanCode`
 checks that flag after yielding the comment and returns immediately if it's set, so control passes back to
 `scanPhpDocument` without scanning any further PHP-mode constructs on that line.
+
+### The `code` tag: catching everything `scanCode` itself skips over
+
+`scanCode` only ever yields a `ParsedText` for a comment, string, or heredoc/nowdoc - identifiers, keywords,
+punctuation, numbers, and the `<?php`/`<?=`/`<?`/`?>` delimiters themselves just advance `i` with no segment
+of their own. Rather than teach `scanCode`/`scanPhpDocument` to also yield those bits directly (which would
+mean every call site remembering to flush whatever it skipped), `run()` derives them after the fact: a second
+cursor, `j`, trails behind `i`, tracking how far the segments already yielded have covered. For each
+`ParsedText` `scanPhpDocument` yields, `emitCodeSegment` checks whether it starts exactly where `j` left off;
+if there's a gap, that gap becomes a `code`-tagged `ParsedText` of its own, emitted just before the real one.
+Once `scanPhpDocument` is exhausted, `run()` flushes one final `code` segment for anything left between `j`
+and the end of the file - necessary because a PHP region that never hits `?>` (or has no comment/string in
+its tail) would otherwise leave that trailing code unaccounted for. This is why `emitCodeSegment` is called
+uniformly on every segment `scanPhpDocument` yields, including its own `html` segments: the gap immediately
+before an `html` segment is exactly the PHP code (if any) between the last comment/string and the `?>`/EOF
+that ended the PHP region.
 
 ### `#` vs `#[`
 
@@ -94,8 +111,8 @@ string.
 
 ### Emitting a segment
 
-Every segment (comment, string, heredoc/nowdoc, markup) is built from a `[start, end)` range the scan already
-knows, the same way as every other package in this repo:
+Every segment (comment, string, heredoc/nowdoc, html, code) is built from a `[start, end)` range the scan
+already knows, the same way as every other package in this repo:
 
 - Line comments use a local `stripLineMarker(rawText, markerLen)` rather than `@internal/utils`'s
   `stripCommentMarkers` - PHP's line-comment markers aren't a fixed length (`#` is 1 character, `//` is 2),
@@ -106,8 +123,10 @@ knows, the same way as every other package in this repo:
   heredoc/nowdoc's header/footer). `hasClose` must come from the scan itself (whether a real closing
   delimiter was actually found, vs. running off the end of the file) - it can't be inferred from `rawText`'s
   length alone, since a well-formed literal can end exactly at EOF.
-- A markup segment needs no transform at all (`rawText === text`) and is only emitted when non-empty (two
-  adjacent PHP regions with nothing between them shouldn't produce a spurious empty markup segment).
+- An `html` segment needs no transform at all (`rawText === text`) and is only emitted when non-empty (two
+  adjacent PHP regions with nothing between them shouldn't produce a spurious empty `html` segment).
+- A `code` segment likewise needs no transform - `emitCodeSegment` builds it straight from `content.slice(j,
+t.range[0])` - and, the same way, is only emitted when that slice is non-empty (see the previous section).
 
 ### Escape handling
 
@@ -120,9 +139,10 @@ one past it - without this, the emitted `range`/`map` can exceed `content.length
 
 Same convention as every other package in this repo: a tag is a dot-separated hierarchical name, and every
 segment carries its whole ancestor chain (`comment.block.doc` also carries `comment.block` and `comment`),
-built as module-level constants rather than computed per segment. `markup` is the one tag in this package
-that deliberately has no ancestor - it isn't a kind of `string` or `comment`, so it stands alone at the top
-level. See `README.md`'s [Tags](README.md#tags) table for what each one means to a consumer.
+built as module-level constants rather than computed per segment. `html` and `code` are the two tags in this
+package that deliberately have no ancestor and aren't nested under each other either - `html` isn't PHP code,
+and `code` isn't HTML, and neither is a kind of `string` or `comment` - so both stand alone as siblings at the
+top level. See `README.md`'s [Tags](README.md#tags) table for what each one means to a consumer.
 
 ### Why `customizePlugin`/`createParser` filtering works with any cspell version
 
@@ -148,8 +168,10 @@ dependency on cspell itself supporting tag-based filtering.
   to or extending one of these over inlining a one-off string in the test file itself.
 - `samples/` is a real, separate end-to-end check: actual cspell configs plus real source files, run for real
   by `pnpm run test:cspell` (`cspell .` from the package root). `samples/customize` in particular proves the
-  `customizePlugin` tag filter is doing something real (a genuine misspelling in the markup the filter
-  excludes) - sanity-checked by temporarily swapping in the plain `plugin` and confirming `cspell .` actually
-  fails without the filter before restoring it, the way `packages/parser-typescript/samples/customize` does.
+  `customizePlugin` tag filter is doing something real (a genuine misspelling in the `html` content the
+  filter excludes) - sanity-checked by temporarily swapping in the plain `plugin` and confirming `cspell .`
+  actually fails without the filter before restoring it, the way `packages/parser-typescript/samples/customize`
+  does. Remember to `pnpm run build` first - `samples/` imports the package's built `dist/`, not `src/`
+  directly, so a stale build will silently test old behavior.
 
 <!-- cspell:ignore EOTHING -->

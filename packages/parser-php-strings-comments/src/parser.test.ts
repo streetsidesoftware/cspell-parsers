@@ -1,8 +1,9 @@
 // cspell:ignore EOTHING
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import type { ParsedText } from '@cspell/cspell-types';
+import { createParse } from '@internal/utils';
 import { describe, expect, it } from 'vitest';
 
 import { createParser, parse, parser } from './parser.js';
@@ -13,9 +14,9 @@ function readFixture(name: string): string {
   return readFileSync(join(fixturesDir, name), 'utf8');
 }
 
-function parseFixture(name: string): ParsedText[] {
+function parseFixture(name: string, parse = parser.parse): ParsedText[] {
   const content = readFixture(name);
-  return [...parser.parse(content, `fixtures/${name}`).parsedTexts];
+  return [...parse(content, `fixtures/${name}`).parsedTexts];
 }
 
 function byText(parsedTexts: ParsedText[], text: string): ParsedText | undefined {
@@ -139,9 +140,10 @@ describe('php-strings-comments parser', () => {
     it('does not treat "#[Attribute]" as a comment', () => {
       // If "#[" were mistaken for a "#" comment, everything from "#[Attribute]" onward up to the next
       // newline (or, worse, further) would be swallowed as comment text instead of left as ordinary code -
-      // in particular "class Logger" would never be reached as separate code, and no comment text
-      // containing "Attribute" should ever show up.
-      expect(parsedTexts.some((p) => p.text.includes('Attribute'))).toBe(false);
+      // in particular "class Logger" would never be reached as separate code, and no *comment*-tagged
+      // segment containing "Attribute" should ever show up (it legitimately shows up in `code` segments now).
+      const comments = parsedTexts.filter((p) => p.tags?.comment);
+      expect(comments.some((p) => p.text.includes('Attribute'))).toBe(false);
     });
 
     it('still recognizes ordinary code (a real string) right after an attribute line', () => {
@@ -150,8 +152,10 @@ describe('php-strings-comments parser', () => {
     });
 
     it('does not mistake a "#[" that carries constructor arguments for a comment either', () => {
-      const nonComments = parsedTexts.filter((p) => !p.tags?.comment);
-      expect(nonComments).toHaveLength(1); // just the one string literal above
+      // All three "#[...]" attribute lines in this fixture must stay out of `comment` - only the one real
+      // "#" comment above should be tagged `comment` (everything else falls out as `code`).
+      const comments = parsedTexts.filter((p) => p.tags?.comment);
+      expect(comments).toHaveLength(1);
     });
   });
 
@@ -162,9 +166,9 @@ describe('php-strings-comments parser', () => {
       expect(byText(parsedTexts, 'hello')?.tags).toEqual({ string: true, 'string.singleQuote': true });
     });
 
-    it('passes the HTML between "?>" and the next "<?php" through as markup', () => {
-      const markup = parsedTexts.filter((p) => p.tags?.markup);
-      expect(markup.some((p) => p.text.includes('Plain HTML after the closing tag.'))).toBe(true);
+    it('passes the HTML between "?>" and the next "<?php" through as html', () => {
+      const html = parsedTexts.filter((p) => p.tags?.html);
+      expect(html.some((p) => p.text.includes('Plain HTML after the closing tag.'))).toBe(true);
     });
 
     it('ends a "//" line comment early at a "?>" appearing mid-comment, without consuming it as text', () => {
@@ -174,9 +178,9 @@ describe('php-strings-comments parser', () => {
       expect(comment?.rawText).not.toContain('?>');
     });
 
-    it('resumes markup mode right after the "?>" that closed the comment early', () => {
-      const markup = parsedTexts.filter((p) => p.tags?.markup);
-      expect(markup.some((p) => p.text.includes('and this becomes markup'))).toBe(true);
+    it('resumes html mode right after the "?>" that closed the comment early', () => {
+      const html = parsedTexts.filter((p) => p.tags?.html);
+      expect(html.some((p) => p.text.includes('and this becomes markup'))).toBe(true);
     });
 
     it('resumes PHP code mode again at the next "<?php"', () => {
@@ -188,10 +192,10 @@ describe('php-strings-comments parser', () => {
   describe('short-echo.php - "<?=" is a short-echo PHP open tag', () => {
     const parsedTexts = parseFixture('short-echo.php');
 
-    it('passes through the HTML around the PHP regions as markup', () => {
-      const markup = parsedTexts.filter((p) => p.tags?.markup);
-      expect(markup.some((p) => p.text.includes('<ul>'))).toBe(true);
-      expect(markup.some((p) => p.text.includes('</ul>'))).toBe(true);
+    it('passes through the HTML around the PHP regions as html', () => {
+      const html = parsedTexts.filter((p) => p.tags?.html);
+      expect(html.some((p) => p.text.includes('<ul>'))).toBe(true);
+      expect(html.some((p) => p.text.includes('</ul>'))).toBe(true);
     });
 
     it('scans code starting right after "<?=" the same as after "<?php"', () => {
@@ -201,11 +205,19 @@ describe('php-strings-comments parser', () => {
   });
 
   describe('mixed.php', () => {
-    const parsedTexts = parseFixture('mixed.php');
+    const parsedTexts = parseFixture(
+      'mixed.php',
+      createParse(parse, () => true),
+    );
 
-    it('passes through HTML outside <?php ?> tags as untagged markup', () => {
-      const markup = parsedTexts.find((p) => p.tags?.markup);
-      expect(markup?.text).toContain('<h1>Welcome</h1>');
+    it('passes through HTML outside <?php ?> tags tagged html', () => {
+      const html = parsedTexts.find((p) => p.tags?.html);
+      expect(html?.text).toContain('<h1>Welcome</h1>');
+    });
+
+    it('tags an html segment with only html, as a sibling of code rather than nested under it', () => {
+      const html = parsedTexts.find((p) => p.tags?.html);
+      expect(html?.tags).toEqual({ html: true });
     });
 
     it('extracts a "//" comment inside the PHP block', () => {
@@ -243,8 +255,16 @@ describe('php-strings-comments parser', () => {
     });
 
     it('passes through the trailing HTML after the closing ?> tag', () => {
-      const markup = parsedTexts.filter((p) => p.tags?.markup);
-      expect(markup.some((p) => p.text.includes('Thanks for stopping by.'))).toBe(true);
+      const html = parsedTexts.filter((p) => p.tags?.html);
+      expect(html.some((p) => p.text.includes('Thanks for stopping by.'))).toBe(true);
+    });
+
+    it('tags the unhandled PHP code between segments (identifiers, keywords, punctuation) as code', () => {
+      const code = parsedTexts.filter((p) => p.tags?.code);
+      expect(code.length).toBeGreaterThan(0);
+      expect(code.every((p) => p.tags?.code === true && !p.tags?.html)).toBe(true);
+      // "echo" is ordinary PHP code, not a comment/string/html segment, so it should surface via `code`.
+      expect(code.some((p) => p.text.includes('echo'))).toBe(true);
     });
   });
 
@@ -288,8 +308,43 @@ describe('php-strings-comments parser', () => {
   });
 
   describe('parse (named export used directly by the Parser)', () => {
-    it('is the same function wired into the exported parser', () => {
-      expect(parser.parse).toBe(parse);
+    it('parser.parse wraps the raw parse export, filtering out code by default', () => {
+      const content = "<?php // a comment\n$s = 'a string';\n";
+      const raw = [...parse(content, 'file.php').parsedTexts];
+      const filtered = [...parser.parse(content, 'file.php').parsedTexts];
+
+      expect(raw.some((p) => p.tags?.code)).toBe(true);
+      expect(filtered.some((p) => p.tags?.code)).toBe(false);
+      expect(filtered).toEqual(raw.filter((p) => !p.tags?.code));
+    });
+  });
+
+  describe('tags', () => {
+    it('declares every tag the Scanner actually emits, across every fixture', () => {
+      // Regression coverage for a tag silently becoming impossible to filter: `PluginParser.customize` only
+      // knows about tags listed in `parser.tags`, so a tag the Scanner emits but `tags` doesn't declare
+      // would never be reachable via `createParser`/`customizePlugin`'s `tags` option, with no error to
+      // catch the mistake.
+      const emittedTags = new Set<string>();
+      for (const fixture of readdirSync(fixturesDir)) {
+        for (const p of parseFixture(fixture, parse)) {
+          for (const tag in p.tags) emittedTags.add(tag);
+        }
+      }
+
+      expect(emittedTags.size).toBeGreaterThan(0); // sanity check the fixtures actually exercised something
+      for (const tag of emittedTags) {
+        expect(parser.tags).toHaveProperty(tag);
+      }
+    });
+
+    it('is off by default for "code", the one tag a consumer has to opt into', () => {
+      expect(parser.tags.code).toBe(false);
+    });
+
+    it('is on by default for every other declared tag', () => {
+      const { code: _code, ...rest } = parser.tags;
+      expect(Object.values(rest).every((value) => value === true)).toBe(true);
     });
   });
 });

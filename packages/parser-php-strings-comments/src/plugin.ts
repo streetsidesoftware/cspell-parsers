@@ -33,8 +33,8 @@ export type CustomizePluginOptions = CustomizeParserOptions;
  * import { customizePlugin } from '@cspell/parser-php-strings-comments/plugin';
  *
  * export default {
- *   plugins: [customizePlugin({ name: 'php-no-markup', tags: { '*': true, markup: false } })], // skip HTML outside <?php ?>
- *   languageSettings: [{ languageId: 'php', parser: 'php-no-markup' }],
+ *   plugins: [customizePlugin({ name: 'php-no-html', tags: { '*': true, html: false } })], // skip HTML outside <?php ?>
+ *   languageSettings: [{ languageId: 'php', parser: 'php-no-html' }],
  * };
  * ```
  */

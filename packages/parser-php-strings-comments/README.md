@@ -6,8 +6,9 @@ It implements cspell's [`Parser`](https://www.npmjs.com/package/@cspell/cspell-t
 [`Plugin`](https://www.npmjs.com/package/@cspell/cspell-types) so it can be wired into a cspell configuration.
 
 Unlike [`@cspell/parser-example`](https://www.npmjs.com/package/@cspell/parser-example) (comments only), this
-parser only ever emits comments, string-like literals, and the HTML markup surrounding a PHP file's
-`<?php ... ?>` regions - never identifiers, keywords, or punctuation - using a small hand-written scanner
+parser emits every byte of the file: comments and string-like literals get their own specific tags, the HTML
+surrounding a PHP file's `<?php ... ?>` regions is tagged `html`, and everything else - identifiers, keywords,
+punctuation, numbers, and the tag delimiters themselves - is tagged `code`, using a small hand-written scanner
 rather than a real grammar.
 
 ## Usage
@@ -47,8 +48,8 @@ choose the language IDs to use it for:
 
 ### Filtering by tag
 
-By default every comment/string/markup segment the parser emits gets spell checked. To check only some of
-them - for example, only the PHP code itself, skipping the surrounding HTML markup - use `customizePlugin`
+By default every segment the parser emits gets spell checked. To check only some of them - for example,
+skipping the surrounding HTML markup - use `customizePlugin`
 instead of the plain `plugin` export. It takes a `CustomizePluginOptions` object - `tags: TagFilterOptions`
 and `name` are both optional, and omitting `tags` keeps everything - and returns a `Plugin` that only spell
 checks the tagged segments you keep. It works with any cspell version.
@@ -59,7 +60,7 @@ checks the tagged segments you keep. It works with any cspell version.
 import { customizePlugin } from '@cspell/parser-php-strings-comments/plugin';
 
 export default {
-  plugins: [customizePlugin({ tags: { '*': true, markup: false } })], // skip HTML outside <?php ?>
+  plugins: [customizePlugin({ tags: { '*': true, html: false } })], // skip HTML outside <?php ?>
   languageSettings: [
     {
       languageId: 'php',
@@ -80,18 +81,19 @@ parsers can't share one.
 
 ## Tags
 
-| Tag                  | Meaning                                                                   |
-| -------------------- | ------------------------------------------------------------------------- |
-| `comment`            | Any comment                                                               |
-| `comment.line`       | A `//` or `#` line comment (`#[` starts a PHP 8 attribute, not a comment) |
-| `comment.block`      | A `/* ... */` block comment                                               |
-| `comment.block.doc`  | A `/** ... */` PHPDoc-style comment                                       |
-| `string`             | Any string-like literal                                                   |
-| `string.singleQuote` | A `'...'` string literal (no interpolation)                               |
-| `string.doubleQuote` | A `"..."` string literal (interpolation-aware)                            |
-| `string.heredoc`     | A `<<<ID ... ID` heredoc body (interpolation-aware)                       |
-| `string.nowdoc`      | A `<<<'ID' ... ID` nowdoc body (no interpolation)                         |
-| `markup`             | HTML (or other non-PHP) content outside `<?php`/`<?=`/`<?` ... `?>`       |
+| Tag                  | Meaning                                                                                               |
+| -------------------- | ----------------------------------------------------------------------------------------------------- |
+| `comment`            | Any comment                                                                                           |
+| `comment.line`       | A `//` or `#` line comment (`#[` starts a PHP 8 attribute, not a comment)                             |
+| `comment.block`      | A `/* ... */` block comment                                                                           |
+| `comment.block.doc`  | A `/** ... */` PHPDoc-style comment                                                                   |
+| `string`             | Any string-like literal                                                                               |
+| `string.singleQuote` | A `'...'` string literal (no interpolation)                                                           |
+| `string.doubleQuote` | A `"..."` string literal (interpolation-aware)                                                        |
+| `string.heredoc`     | A `<<<ID ... ID` heredoc body (interpolation-aware)                                                   |
+| `string.nowdoc`      | A `<<<'ID' ... ID` nowdoc body (no interpolation)                                                     |
+| `html`               | HTML (or other non-PHP) content outside `<?php`/`<?=`/`<?` ... `?>`                                   |
+| `code`               | PHP code that isn't a comment or string (identifiers, keywords, punctuation, numbers, tag delimiters) |
 
 ## Known limitations
 
