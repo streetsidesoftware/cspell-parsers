@@ -1,0 +1,4 @@
+# Force LF line endings on checkout, regardless of platform/core.autocrlf, so fixtures and other
+# byte-exact test data aren't silently mangled to CRLF by Windows runners/checkouts (see .editorconfig,
+# which already declares end_of_line = lf for the same reason but only advises editors, not git checkout).
+* text=auto eol=lf
