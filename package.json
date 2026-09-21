@@ -17,6 +17,7 @@
     "lint:prettier": "prettier --write .",
     "lint-ci": "pnpm exec fix-package-json --dry-run && pnpm exec fix-release-please-config --dry-run && pnpm exec fix-tags-readme --dry-run && eslint . --max-warnings 0 && prettier --check .",
     "spell": "cspell --no-progress .",
+    "smoke-test": "pnpm run spell",
     "test": "pnpm -r run test && pnpm run typecheck",
     "typecheck": "pnpm -r run typecheck"
   },

@@ -1,4 +1,4 @@
-name: '🧹 Lint'
+name: '🚬 Smoke Test'
 
 on:
   push:
@@ -10,8 +10,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint:
+  test:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v7
 
@@ -19,7 +20,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 22.x
+          node-version: 26.x
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
@@ -27,7 +28,8 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      - run: pnpm run lint-ci
+      - name: Typecheck
+        run: pnpm run typecheck
 
-      - name: Spell Check
-        run: pnpm run spell
+      - name: Smoke Test
+        run: pnpm run smoke-test
