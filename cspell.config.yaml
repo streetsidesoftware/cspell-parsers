@@ -28,6 +28,7 @@ words:
   - heredocs
   - inlines
   - Precomputes
+  - prebuilds
   - sigstore
   - unaliased
   - unpadded
