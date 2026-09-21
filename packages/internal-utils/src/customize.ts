@@ -81,7 +81,10 @@ interface ClassifiedPatterns {
   general: GeneralRule[];
 }
 
-/** Splits `options`' keys into the exact/prefix/general buckets described in {@link compileTagFilter}; shared with {@link compileTagScoreCard}. */
+/**
+ * Splits `options`' keys into the exact/prefix/general buckets described in {@link compileTagFilter}; shared
+ * with {@link compileTagScoreCard}.
+ */
 function classifyTagPatterns(options: TagFilterOptions): ClassifiedPatterns {
   const exact = new Map<string, boolean>();
   const prefixes: PrefixRule[] = [];
