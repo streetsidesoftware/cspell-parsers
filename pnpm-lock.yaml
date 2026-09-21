@@ -438,9 +438,9 @@ importers:
 
   packages/parser-typescript:
     dependencies:
-      '@cspell/parser-typescript-tree-sitter':
+      '@cspell/parser-typescript-tree-sitter-wasm':
         specifier: workspace:^
-        version: link:../parser-typescript-tree-sitter
+        version: link:../parser-typescript-tree-sitter-wasm
     devDependencies:
       '@cspell/cspell-types':
         specifier: 'catalog:'

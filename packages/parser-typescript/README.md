@@ -135,8 +135,8 @@ plugins: [
 
 ## Notes
 
-- Ships a native addon (via `tree-sitter`); prebuilt binaries are used automatically on common platforms, so
-  no local compiler toolchain should be needed to install it.
+- Uses WebAssembly (via `@vscode/tree-sitter-wasm`), so it does not require a native compiler toolchain to
+  install it.
 
 ## Requirements
 

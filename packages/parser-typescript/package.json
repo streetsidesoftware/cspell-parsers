@@ -57,7 +57,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@cspell/parser-typescript-tree-sitter": "workspace:^"
+    "@cspell/parser-typescript-tree-sitter-wasm": "workspace:^"
   },
   "devDependencies": {
     "@cspell/cspell-types": "catalog:",
