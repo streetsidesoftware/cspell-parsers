@@ -1,15 +1,13 @@
 # @cspell/parser-typescript-strings-comments
 
 A strings-and-comments parser plugin for cspell, covering JavaScript, JSX, TypeScript, and TSX - these four
-share identical comment/string/template-literal syntax, so one small scanner handles all of them.
+share identical comment/string/template-literal syntax, so one small parser handles all of them. It only ever
+checks comments and string-like literals - never identifiers, keywords, or punctuation. If you also want
+identifiers checked (so a misspelled variable or function name gets flagged too), use
+[`@cspell/parser-typescript`](https://www.npmjs.com/package/@cspell/parser-typescript) instead.
 
 It implements cspell's [`Parser`](https://www.npmjs.com/package/@cspell/cspell-types) contract and exports a
 [`Plugin`](https://www.npmjs.com/package/@cspell/cspell-types) so it can be wired into a cspell configuration.
-
-Unlike [`@cspell/parser-example`](https://www.npmjs.com/package/@cspell/parser-example) (comments only) or
-[`@cspell/parser-typescript`](https://www.npmjs.com/package/@cspell/parser-typescript) (a full TypeScript/TSX
-AST parser that also checks identifiers), this parser only ever emits comments and string-like literals -
-never identifiers, keywords, or punctuation - using a small hand-written scanner rather than a real grammar.
 
 ## Usage
 

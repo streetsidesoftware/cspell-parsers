@@ -1,13 +1,10 @@
 # @cspell/parser-java-strings-comments
 
-A strings-and-comments parser plugin for cspell, covering Java.
+A cspell plugin that extracts Java comments and string-like literals - including Java 15+ text blocks - so
+cspell only spell checks those, not identifiers, keywords, or other code.
 
 It implements cspell's [`Parser`](https://www.npmjs.com/package/@cspell/cspell-types) contract and exports a
 [`Plugin`](https://www.npmjs.com/package/@cspell/cspell-types) so it can be wired into a cspell configuration.
-
-Unlike [`@cspell/parser-example`](https://www.npmjs.com/package/@cspell/parser-example) (comments only), this
-parser only ever emits comments and string-like literals - never identifiers, keywords, or punctuation -
-using a small hand-written scanner rather than a real grammar.
 
 ## Usage
 
@@ -98,10 +95,6 @@ parsers can't share one.
 
 This parser is a small hand-written scanner, not a real grammar. It doesn't build an AST, so it can't tell
 you anything about what a string or comment is being used for - only where it is and how it was delimited.
-
-Use this package as a template: copy `src/parser.ts`, `src/plugin.ts`, `src/index.ts`, and `src/recommended.ts`
-into a new package under `packages/` and replace the parsing logic with your own. See the repo root
-`CONTRIBUTING.md` for the full steps.
 
 ## Requirements
 

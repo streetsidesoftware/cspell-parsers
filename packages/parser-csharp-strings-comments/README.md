@@ -1,15 +1,12 @@
 # @cspell/parser-csharp-strings-comments
 
-A strings-and-comments parser plugin for cspell, covering C#.
+A cspell plugin that extracts C# comments and string-like literals, so cspell only spell checks those, not
+identifiers, keywords, or other code. It understands C#'s several string literal forms: plain `'...'`/`"..."`,
+verbatim `@"..."`, interpolated `$"..."`, the combined `$@"..."`/`@$"..."`, and the C# 11 raw string literal
+(`"""..."""`).
 
 It implements cspell's [`Parser`](https://www.npmjs.com/package/@cspell/cspell-types) contract and exports a
 [`Plugin`](https://www.npmjs.com/package/@cspell/cspell-types) so it can be wired into a cspell configuration.
-
-Unlike [`@cspell/parser-example`](https://www.npmjs.com/package/@cspell/parser-example) (comments only), this
-parser only ever emits comments and string-like literals - never identifiers, keywords, or punctuation -
-using a small hand-written scanner rather than a real grammar. It understands C#'s several string literal
-forms: plain `'...'`/`"..."`, verbatim `@"..."`, interpolated `$"..."`, the combined `$@"..."`/`@$"..."`, and
-the C# 11 "raw string literal" (`"""..."""`).
 
 ## Usage
 
@@ -119,10 +116,6 @@ string literal form:
 Both only affect formatting/identifier-checking of an already-rare form, not whether the literal's own
 boundaries are found correctly, so they're a reasonable scope limit rather than a bug - see
 `CONTRIBUTING.md` for more detail.
-
-Use this package as a template: copy `src/parser.ts`, `src/plugin.ts`, `src/index.ts`, and `src/recommended.ts`
-into a new package under `packages/` and replace the parsing logic with your own. See the repo root
-`CONTRIBUTING.md` for the full steps.
 
 ## Requirements
 

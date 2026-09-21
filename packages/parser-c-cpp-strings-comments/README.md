@@ -1,15 +1,11 @@
 # @cspell/parser-c-cpp-strings-comments
 
-A strings-and-comments parser plugin for cspell, covering C and C++ - these two share identical comment and
-string/char-literal syntax (plus C++11 raw strings), so one small scanner handles both.
+A cspell plugin that extracts C and C++ comments and string/char-literal contents - including C++11 raw
+strings - so cspell only spell checks those, not identifiers, keywords, or other code. C and C++ share
+identical comment and string/char-literal syntax, so one parser covers both.
 
 It implements cspell's [`Parser`](https://www.npmjs.com/package/@cspell/cspell-types) contract and exports a
 [`Plugin`](https://www.npmjs.com/package/@cspell/cspell-types) so it can be wired into a cspell configuration.
-
-Unlike [`@cspell/parser-example`](https://www.npmjs.com/package/@cspell/parser-example) (comments only), this
-parser also emits string and char literal contents - but like it, this parser only ever emits comments and
-string-like literals - never identifiers, keywords, or punctuation - using a small hand-written scanner
-rather than a real grammar.
 
 ## Usage
 

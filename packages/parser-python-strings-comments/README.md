@@ -1,13 +1,10 @@
 # @cspell/parser-python-strings-comments
 
-A strings-and-comments parser plugin for cspell, covering Python.
+A cspell plugin that extracts Python comments and string literals - including raw, byte, and f-strings - so
+cspell only spell checks those, not identifiers, keywords, or other code.
 
 It implements cspell's [`Parser`](https://www.npmjs.com/package/@cspell/cspell-types) contract and exports a
 [`Plugin`](https://www.npmjs.com/package/@cspell/cspell-types) so it can be wired into a cspell configuration.
-
-Like [`@cspell/parser-typescript-strings-comments`](https://www.npmjs.com/package/@cspell/parser-typescript-strings-comments),
-this parser only ever emits comments and string literals - never identifiers, keywords, or punctuation - using
-a small hand-written scanner rather than a real grammar.
 
 ## Usage
 
