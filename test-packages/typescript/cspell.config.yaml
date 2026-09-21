@@ -1,2 +1,4 @@
 ignorePaths:
+  - CHANGELOG.md
+  - node_modules
   - tests/with-issues
