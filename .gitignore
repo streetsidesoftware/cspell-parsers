@@ -146,4 +146,6 @@ vite.config.ts.timestamp-*
 # cspell reporter output (see test-packages/typescript/lib/reporter.mts)
 test-packages/*/__snapshots/*.actual.json
 
+.claude
+
 # cspell:ignore jscoverage pids stylelintcache wscript
