@@ -82,12 +82,13 @@ function spawnCspell(target: string, moduleName: string, cwd: string, actualFile
   const args = ['exec', 'cspell', target, '--no-progress', '--no-color'];
 
   return new Promise<void>((resolve, reject) => {
-    // pnpm resolves to a .cmd shim on Windows, which needs a shell to execute - but passing `args` as an
-    // array alongside `shell: true` is deprecated (DEP0190) since the args get shell-concatenated without
-    // escaping, so the full command line is built as a single string instead when a shell is needed.
+    // pnpm resolves to a .cmd shim on Windows, which per Node's docs can't be launched via spawn()/execFile()
+    // without a shell. Rather than `shell: true` (deprecated as DEP0190 when combined with an args array,
+    // since the args get shell-concatenated without escaping), spawn cmd.exe directly and pass the command
+    // as its own args array - Node still escapes each argument properly since `shell` is unset here.
     const child =
       process.platform === 'win32'
-        ? child_process.spawn(['pnpm', ...args].join(' '), { cwd, env, stdio: 'inherit', shell: true })
+        ? child_process.spawn('cmd.exe', ['/d', '/s', '/c', 'pnpm', ...args], { cwd, env, stdio: 'inherit' })
         : child_process.spawn('pnpm', args, { cwd, env, stdio: 'inherit' });
 
     child.on('error', reject);
