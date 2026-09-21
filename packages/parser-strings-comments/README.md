@@ -112,7 +112,8 @@ share one.
 | `string.textBlock`       | A Java `"""..."""` text block                                                                                 |
 | `string.heredoc`         | A PHP `<<<ID ... ID` heredoc (interpolated, like a double-quoted string)                                      |
 | `string.nowdoc`          | A PHP `<<<'ID' ... ID` nowdoc (literal, like a single-quoted string)                                          |
-| `markup`                 | PHP source outside `<?php ... ?>` tags, passed through unchanged                                              |
+| `html`                   | HTML (or other non-PHP) content outside a PHP file's `<?php ... ?>` tags, passed through unchanged            |
+| `code`                   | PHP code that isn't a comment or string (identifiers, keywords, punctuation, numbers, tag delimiters)         |
 
 A C# string can carry more than one of these at once - a combined verbatim-and-interpolated `$@"..."`/`@$"..."`
 fragment is tagged with both `string.verbatim` and `string.interpolated`, and an interpolated C# 11 raw string
@@ -132,9 +133,11 @@ fragment is tagged with both `string.verbatim` and `string.interpolated`, and an
 - A JS/TS template literal or C# interpolated string is split into one `ParsedText` per literal fragment
   around each `${...}`/`{...}` hole; the hole's own contents are recursively scanned the same way as the rest
   of the file, so a string or comment nested inside an interpolation still gets picked up and tagged normally.
-- A PHP file additionally toggles between an HTML "markup" pass-through mode and a PHP code-scanning mode at
-  each `<?php`/`<?=`/`<?` and `?>` boundary. Text outside those tags is emitted verbatim, tagged `markup`, so
-  it's still spell checked (the same as if no parser applied to it) even though it isn't PHP code.
+- A PHP file additionally toggles between an HTML pass-through mode and a PHP code-scanning mode at each
+  `<?php`/`<?=`/`<?` and `?>` boundary. Text outside those tags is emitted verbatim, tagged `html`; PHP code
+  that isn't a comment or string is emitted too, tagged `code` - so, unlike every other language this package
+  covers, a PHP file's entire content is still spell checked by default (the same as if no parser applied to
+  it) even though most of it isn't a comment or string literal.
 - `plugin.parsers` is the list of parsers a cspell plugin module exposes; a plugin can expose more than one.
 
 ## Known limitations

@@ -1,0 +1,13 @@
+| Tag                  | Meaning                                                                                               |
+| -------------------- | ----------------------------------------------------------------------------------------------------- |
+| `comment`            | Any comment                                                                                           |
+| `comment.line`       | A `//` or `#` line comment (`#[` starts a PHP 8 attribute, not a comment)                             |
+| `comment.block`      | A `/* ... */` block comment                                                                           |
+| `comment.block.doc`  | A `/** ... */` PHPDoc-style comment                                                                   |
+| `string`             | Any string-like literal                                                                               |
+| `string.singleQuote` | A `'...'` string literal (no interpolation)                                                           |
+| `string.doubleQuote` | A `"..."` string literal (interpolation-aware)                                                        |
+| `string.heredoc`     | A `<<<ID ... ID` heredoc body (interpolation-aware)                                                   |
+| `string.nowdoc`      | A `<<<'ID' ... ID` nowdoc body (no interpolation)                                                     |
+| `html`               | HTML (or other non-PHP) content outside `<?php`/`<?=`/`<?` ... `?>`                                   |
+| `code`               | PHP code that isn't a comment or string (identifiers, keywords, punctuation, numbers, tag delimiters) |

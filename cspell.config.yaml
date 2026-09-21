@@ -27,6 +27,8 @@ words:
   - gitdir
   - heredocs
   - inlines
+  - Precomputes
   - sigstore
   - unaliased
+  - unpadded
   - worktrees

@@ -9,13 +9,13 @@
   },
   "scripts": {
     "build": "pnpm -r run build",
-    "fix:all": "pnpm exec fix-package-json && pnpm exec fix-release-please-config",
-    "build:readme": "inject-markdown README.md \"packages/*/*.md\" && pnpm run lint",
+    "fix:all": "pnpm exec fix-package-json && pnpm exec fix-release-please-config && pnpm exec fix-tags-readme",
+    "build:readme": "pnpm exec fix-tags-readme && inject-markdown README.md \"packages/*/*.md\" && pnpm run lint",
     "clean": "pnpm -r run clean",
-    "lint": "pnpm exec fix-package-json && pnpm exec fix-release-please-config && eslint . --fix && prettier --write .",
+    "lint": "pnpm exec fix-package-json && pnpm exec fix-release-please-config && pnpm exec fix-tags-readme && eslint . --fix && prettier --write .",
     "lint:eslint": "eslint . --fix",
     "lint:prettier": "prettier --write .",
-    "lint-ci": "pnpm exec fix-package-json --dry-run && pnpm exec fix-release-please-config --dry-run && eslint . --max-warnings 0 && prettier --check .",
+    "lint-ci": "pnpm exec fix-package-json --dry-run && pnpm exec fix-release-please-config --dry-run && pnpm exec fix-tags-readme --dry-run && eslint . --max-warnings 0 && prettier --check .",
     "spell": "cspell --no-progress .",
     "test": "pnpm -r run test && pnpm run typecheck",
     "typecheck": "pnpm -r run typecheck"

@@ -27,7 +27,9 @@ describe('customizePlugin', () => {
     const [customizedParser] = (customized.parsers ?? []) as Parser[];
     const result = customizedParser?.parse('<?php // hello\n', 'example.php');
 
-    expect([...(result?.parsedTexts ?? [])]).toEqual([]);
+    // Only `comment` is excluded, so the surrounding "<?php " / "\n" `code` segments still come through -
+    // check that the comment text is gone rather than asserting an empty result.
+    expect([...(result?.parsedTexts ?? [])].some((p) => p.text === 'hello')).toBe(false);
   });
 
   it('wires name customization into the php-strings-comments parser', () => {

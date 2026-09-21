@@ -1,7 +1,7 @@
 import type { ParsedTags, ParsedText } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
-import { compileTagFilter } from './customize.js';
+import { compileTagFilter, createParsedTextFilter } from './customize.js';
 import { createPluginParser, customizeParser } from './parser.js';
 import type { PluginParser } from './types.js';
 
@@ -9,12 +9,22 @@ function mkText(content: string, tags: ParsedText['tags']): ParsedText {
   return { text: content, range: [0, content.length], tags };
 }
 
+/**
+ * `knownTagsAndDefaults` is now load-bearing for `customize()` (see `createParsedTextFilter`) - a tag a
+ * `ParsedText` carries but the parser's own `tags` doesn't declare is invisible to filtering. So this stub
+ * declares every tag any of `parsedTexts` actually carries (all defaulting to emitted/kept), the same way a
+ * real parser's `tags` map is expected to list everything it can emit.
+ */
 function fakeParser(parsedTexts: ParsedText[]): PluginParser {
+  const tags: Record<string, boolean> = {};
+  for (const { tags: parsedTags } of parsedTexts) {
+    for (const tag in parsedTags) tags[tag] = true;
+  }
   return createPluginParser({
     name: 'fake',
     parse: (content, filename) => ({ content, filename, parsedTexts }),
     supportedFileTypes: [],
-    tags: {},
+    tags,
   });
 }
 
@@ -95,6 +105,7 @@ describe('compileTagFilter', () => {
   const docComment: ParsedTags = { comment: true, 'comment.block': true, 'comment.block.doc': true };
   const lineComment: ParsedTags = { comment: true, 'comment.line': true };
   const identifier: ParsedTags = { identifier: true, 'identifier.variable': true };
+  const code: ParsedTags = { code: true };
 
   it('returns the default for undefined tags, with no exact/prefix/general rules at all', () => {
     expect(compileTagFilter({})(undefined)).toBe(true);
@@ -150,6 +161,7 @@ describe('compileTagFilter', () => {
       const isIncluded2 = compileTagFilter({ '*': true, 'comment.*': false, 'comment.block.*': true });
       expect(isIncluded2(docComment)).toBe(true);
       expect(isIncluded2(lineComment)).toBe(false); // only matches the shorter "comment.*"
+      expect(isIncluded2(code)).toBe(true); // matches the longer "comment.block.*" prefix
     });
 
     it('lets the more specific rule win even when it is the prefix, not the exact key', () => {
@@ -184,5 +196,84 @@ describe('compileTagFilter', () => {
       expect(isIncluded(identifier)).toBe(true); // prefix "identifier*" match
       expect(isIncluded(lineComment)).toBe(false); // exact "comment" (specificity 7) matches; "*.doc" never applies
     });
+  });
+});
+
+describe('createParsedTextFilter', () => {
+  const docComment: ParsedTags = { comment: true, 'comment.block': true, 'comment.block.doc': true };
+  const lineComment: ParsedTags = { comment: true, 'comment.line': true };
+  const identifier: ParsedTags = { identifier: true, 'identifier.variable': true };
+  const code: ParsedTags = { code: true };
+
+  // Every known tag defaults to emitted-and-checked, except "code" - mirrors a parser like
+  // @cspell/parser-php-strings-comments, whose `code` tag is emitted but not spell checked unless asked for.
+  const knownTagsAndDefaults = {
+    comment: true,
+    'comment.line': true,
+    'comment.block': true,
+    'comment.block.doc': true,
+    identifier: true,
+    'identifier.variable': true,
+    code: false,
+  };
+
+  function isIncludedWith(options: Parameters<typeof createParsedTextFilter>[0]) {
+    const filter = createParsedTextFilter(options, knownTagsAndDefaults);
+    return (tags: ParsedTags) => filter(mkText('x', tags));
+  }
+
+  it('is a parity check: behaves the same as compileTagFilter when every known tag defaults to true', () => {
+    const options = { '*': false, comment: true, 'comment.block': false, 'comment.block.doc': true };
+    const isIncluded = isIncludedWith(options);
+    const expected = compileTagFilter(options);
+    expect(isIncluded(docComment)).toBe(expected(docComment));
+    expect(isIncluded(lineComment)).toBe(expected(lineComment));
+    expect(isIncluded(identifier)).toBe(expected(identifier));
+  });
+
+  it('lets a more specific key override a broader one, same as compileTagFilter', () => {
+    const isIncluded = isIncludedWith({ '*': true, 'comment.block': false, 'comment.block.doc': true });
+    expect(isIncluded(docComment)).toBe(true); // "comment.block.doc" (more specific) wins over "comment.block"
+    expect(isIncluded(lineComment)).toBe(true); // untouched by either rule, falls back to "*": true
+  });
+
+  it('supports prefix and general wildcard patterns, same as compileTagFilter', () => {
+    const prefixFilter = isIncludedWith({ '*': false, 'comment.block.*': true });
+    expect(prefixFilter(docComment)).toBe(true);
+    expect(prefixFilter(lineComment)).toBe(false);
+
+    const generalFilter = isIncludedWith({ '*': false, '*.doc': true });
+    expect(generalFilter(docComment)).toBe(true);
+    expect(generalFilter(lineComment)).toBe(false);
+  });
+
+  it("falls back to a known tag's own default when no option addresses it at all", () => {
+    const isIncluded = isIncludedWith({});
+    expect(isIncluded(code)).toBe(false); // code's own default
+    expect(isIncluded(docComment)).toBe(true); // comment's own default
+  });
+
+  it('lets an explicit "*" override a known tag\'s own default', () => {
+    expect(isIncludedWith({ '*': true })(code)).toBe(true);
+    expect(isIncludedWith({ '*': false })(docComment)).toBe(false);
+  });
+
+  it('lets an explicit tag rule beat both "*" and the tag\'s own default', () => {
+    expect(isIncludedWith({ '*': true, code: false })(code)).toBe(false); // exact rule wins over "*": true
+    expect(isIncludedWith({ '*': false, code: true })(code)).toBe(true); // exact rule wins over "*": false
+  });
+
+  it('is unaffected by rules that target unrelated tags, keeping its own default', () => {
+    const isIncluded = isIncludedWith({ comment: false });
+    expect(isIncluded(code)).toBe(false); // still code's own default, "comment: false" doesn't reach it
+  });
+
+  it('falls back to the overall default (true) for a tag not in knownTagsAndDefaults at all', () => {
+    expect(isIncludedWith({})({ unknownTag: true })).toBe(true);
+  });
+
+  it('returns the default for an undefined tags object', () => {
+    const filter = createParsedTextFilter({}, knownTagsAndDefaults);
+    expect(filter(mkText('x', undefined))).toBe(true);
   });
 });

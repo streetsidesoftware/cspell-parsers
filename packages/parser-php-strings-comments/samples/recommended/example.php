@@ -3,7 +3,7 @@
 <body>
 <h1>Recent orders</h1>
 <?php
-// The recommended settings select this parser for PHP files, covering markup, comments, and strings.
+// The recommended settings select this parser for PHP files, covering html, comments, strings, and code.
 function shout(string $message): string
 {
     /* Converts the message to upper case before returning it. */

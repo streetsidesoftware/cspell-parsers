@@ -38,6 +38,13 @@ characters in source code — including inside string/regex literals and `switch
 invisible character is nearly indistinguishable from its neighbors in a diff or review, and editors/formatters
 can silently mangle or normalize it; an explicit escape keeps the intent visible.
 
+Keep comments short. Maintainers are experienced programmers — a comment should cover the "what" and, only
+when it's non-obvious, a bit of the "why"; it should never take longer to read than the code it's attached
+to. Favor one line over a `/** ... */` block, and a block only when a single line can't fit the essential
+point. Don't restate what well-named identifiers already say, don't walk through alternatives that were
+rejected, and don't repeat the same rationale in multiple comments across a file — say it once, where it's
+most load-bearing, and link to it (by function name) from anywhere else it'd otherwise be repeated.
+
 ## Architecture
 
 This is a pnpm workspace monorepo (`packages/*`) for cspell parser packages — each package under `packages/`
