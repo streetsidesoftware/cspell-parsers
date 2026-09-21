@@ -60,5 +60,10 @@ jobs:
         working-directory: test-packages/typescript
         run: node exec-test.mts --module @cspell/parser-typescript --module @cspell/parser-typescript-tree-sitter-wasm
 
+  # this is a workaround to have a final step that runs after all tests, regardless of OS
+  test-finalize:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
       - name: Finished
         run: echo "All tests completed."
