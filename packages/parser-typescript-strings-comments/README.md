@@ -87,6 +87,8 @@ Every segment carries its own tag plus every ancestor implied by it - a doc comm
 `comment.block.doc` together with `comment.block` and `comment` - so the `tags` filter above can match at
 whatever level of specificity it needs.
 
+<!--- @@inject: docs/tags-table.md --->
+
 | Tag                         | Meaning                                                                                                                     |
 | --------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | `comment`                   | Any comment                                                                                                                 |
@@ -102,6 +104,8 @@ whatever level of specificity it needs.
 | `module`                    | Any module specifier string                                                                                                 |
 | `module.specifier`          | Any module specifier string (same as `module`, for a more specific filter)                                                  |
 | `module.specifier.literal`  | The module specifier string of an `import`/`export ... from` statement, a dynamic `import('...')`, or a `require(...)` call |
+
+<!--- @@inject-end: docs/tags-table.md --->
 
 ## What gets checked
 
