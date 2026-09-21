@@ -3,12 +3,13 @@ import type { PluginParser, TagFilterOptions } from '@internal/utils';
 import { createPluginParser, customizeParser } from '@internal/utils';
 
 import { Scanner } from './scanner.js';
-import { tags } from './tags.js';
+import { TAGS, tags } from './tags.js';
 
 /**
- * Extracts comments and string/char/raw-string literals from C/C++ source, so cspell only ever spell checks
- * that content - never identifiers, keywords, or punctuation. Most consumers won't call this directly; use
- * the `parser`/`plugin` exports, or the `recommended`/`index` settings modules, to wire it into cspell.
+ * Extracts comments and string/char/raw-string literals from C/C++ source, tagging everything else
+ * (identifiers, keywords, punctuation, numbers, preprocessor tokens) as plain `code` - so the full file
+ * content is covered. Most consumers won't call this directly; use the `parser`/`plugin` exports, or the
+ * `recommended`/`index` settings modules, to wire it into cspell.
  */
 export function parse(content: string, filename: string): ParseResult {
   return { content, filename, parsedTexts: new Scanner(content).run() };
@@ -16,12 +17,15 @@ export function parse(content: string, filename: string): ParseResult {
 
 export const supportedFileTypes: Readonly<string[]> = Object.freeze(['c', 'cpp']);
 
-export const parser: PluginParser = createPluginParser({
-  name: 'c-cpp-strings-comments',
-  parse,
-  supportedFileTypes,
-  tags,
-});
+export const parser: PluginParser = createPluginParser(
+  {
+    name: 'c-cpp-strings-comments',
+    parse,
+    supportedFileTypes,
+    tags,
+  },
+  (p) => p.tags !== TAGS.CODE,
+);
 
 /** Options for {@link createParser}: the parser's name, and which tagged segments to keep. */
 export interface CustomizeParserOptions {

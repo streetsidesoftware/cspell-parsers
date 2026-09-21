@@ -1,8 +1,9 @@
 # @cspell/parser-c-cpp-strings-comments
 
 A cspell plugin that extracts C and C++ comments and string/char-literal contents - including C++11 raw
-strings - so cspell only spell checks those, not identifiers, keywords, or other code. C and C++ share
-identical comment and string/char-literal syntax, so one parser covers both.
+strings - so cspell only spell checks those by default, not identifiers, keywords, or other code (everything
+else is still tagged `code`, so it can be opted into with `customizePlugin` if you want it checked too). C
+and C++ share identical comment and string/char-literal syntax, so one parser covers both.
 
 It implements cspell's [`Parser`](https://www.npmjs.com/package/@cspell/cspell-types) contract and exports a
 [`Plugin`](https://www.npmjs.com/package/@cspell/cspell-types) so it can be wired into a cspell configuration.
@@ -45,11 +46,13 @@ plugin in yourself and choose the language IDs to use it for:
 
 ### Filtering by tag
 
-By default every comment/string the parser emits gets spell checked. To check only some of them - for
-example, only doc comments - use `customizePlugin` instead of the plain `plugin` export. It takes a
-`CustomizePluginOptions` object - `tags: TagFilterOptions` and `name` are both optional, and omitting `tags`
-keeps everything - and returns a `Plugin` that only spell checks segments matching the filter. This works
-with any cspell version, since the filtering doesn't rely on cspell itself supporting it.
+By default every comment/string the parser emits gets spell checked, and `code` (everything else -
+identifiers, keywords, punctuation, numbers, preprocessor tokens) is excluded. To change which segments get
+checked - for example, only doc comments, or also checking `code` - use `customizePlugin` instead of the
+plain `plugin` export. It takes a `CustomizePluginOptions` object - `tags: TagFilterOptions` and `name` are
+both optional, and omitting `tags` keeps the defaults above - and returns a `Plugin` that only spell checks
+segments matching the filter. This works with any cspell version, since the filtering doesn't rely on cspell
+itself supporting it.
 
 ```js
 // cspell.config.mjs — customizePlugin returns a live Plugin object, so it needs a JS/TS config file

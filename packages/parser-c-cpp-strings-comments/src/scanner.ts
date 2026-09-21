@@ -48,20 +48,49 @@ function isIdentChar(ch: string | undefined): boolean {
 }
 
 /**
- * Scans C/C++ source for comments and string/char literals, yielding one `ParsedText` per segment and
- * silently skipping everything else (identifiers, keywords, punctuation, numbers) - the same "only emit what
- * should be spell checked" approach as `@cspell/parser-example`, extended to also emit string contents.
+ * Scans C/C++ source for comments and string/char literals (each tagged with its own specific tag), and
+ * passes everything else through too - identifiers, keywords, punctuation, numbers, preprocessor tokens -
+ * as `code`, so every byte of the file ends up in exactly one `ParsedText`.
+ *
+ * `run` fills in the `code`-tagged gaps between what `scanTagged` itself yields, via `j` - a second cursor
+ * trailing `i`, marking how far the emitted segments have covered so far - the same approach
+ * `@cspell/parser-php-strings-comments`'s `Scanner` uses.
  *
  * Emits lazily via a generator rather than collecting into an array - nothing here holds onto a tree or other
  * resource a consumer could leak by not fully draining the result, so there's no reason to force eager
  * collection.
  */
 export class Scanner {
+  private j = 0;
   private i = 0;
 
   constructor(private readonly content: string) {}
 
   *run(): Generator<ParsedText> {
+    for (const parsed of this.scanTagged()) {
+      const codeSegment = this.emitCodeSegment(parsed);
+      if (codeSegment) yield codeSegment;
+      yield parsed;
+    }
+    if (this.j < this.content.length) {
+      const text = this.content.slice(this.j, this.content.length);
+      yield { text, rawText: text, range: [this.j, this.content.length], tags: TAGS.CODE };
+      this.j = this.content.length;
+    }
+  }
+
+  private emitCodeSegment(t: ParsedText): ParsedText | undefined {
+    if (t.range[0] === this.j) {
+      this.j = t.range[1];
+      return undefined;
+    }
+    const text = this.content.slice(this.j, t.range[0]);
+    const p: ParsedText = { text, rawText: text, range: [this.j, t.range[0]], tags: TAGS.CODE };
+    this.j = t.range[1];
+    return p;
+  }
+
+  private *scanTagged(): Generator<ParsedText> {
     const { content } = this;
 
     while (this.i < content.length) {
