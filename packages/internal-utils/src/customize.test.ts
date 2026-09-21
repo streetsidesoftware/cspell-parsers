@@ -105,6 +105,7 @@ describe('compileTagFilter', () => {
   const docComment: ParsedTags = { comment: true, 'comment.block': true, 'comment.block.doc': true };
   const lineComment: ParsedTags = { comment: true, 'comment.line': true };
   const identifier: ParsedTags = { identifier: true, 'identifier.variable': true };
+  const code: ParsedTags = { code: true };
 
   it('returns the default for undefined tags, with no exact/prefix/general rules at all', () => {
     expect(compileTagFilter({})(undefined)).toBe(true);
@@ -160,6 +161,7 @@ describe('compileTagFilter', () => {
       const isIncluded2 = compileTagFilter({ '*': true, 'comment.*': false, 'comment.block.*': true });
       expect(isIncluded2(docComment)).toBe(true);
       expect(isIncluded2(lineComment)).toBe(false); // only matches the shorter "comment.*"
+      expect(isIncluded2(code)).toBe(true); // matches the longer "comment.block.*" prefix
     });
 
     it('lets the more specific rule win even when it is the prefix, not the exact key', () => {
