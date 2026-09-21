@@ -1,6 +1,8 @@
 name: '🚬 Smoke Test'
 
 on:
+  workflow_dispatch:
+  workflow_call:
   push:
     branches: [main]
   pull_request:
@@ -10,7 +12,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
+  smoke-test:
     runs-on: ubuntu-latest
 
     steps:
