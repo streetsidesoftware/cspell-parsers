@@ -6,7 +6,7 @@ import * as prettier from 'prettier';
 
 import { REPO_ROOT_DIR } from './consts.ts';
 
-/** The `src/tags.ts` convention a package opts into by exporting `tagsAndMeaning` - see its own doc comment. */
+/** Glob for the `src/tags.ts` convention a package opts into by exporting `tagsAndMeaning`. */
 export const TAGS_SOURCE_GLOB = 'packages/*/src/tags.ts';
 
 /** Where the generated table for a given `src/tags.ts` lives, relative to that package's own root. */
@@ -16,24 +16,16 @@ interface TagsModule {
   tagsAndMeaning?: Readonly<Record<string, string>>;
 }
 
-/**
- * Dynamically imports `tagsTsFile` (a `src/tags.ts` matched by `TAGS_SOURCE_GLOB`) and returns its
- * `tagsAndMeaning` export, or `undefined` if the file doesn't export one - not every package has adopted
- * this convention yet, and that's fine; `tags.ts` files that don't export it are simply skipped rather than
- * treated as an error.
- */
+/** Imports `tagsTsFile`'s `tagsAndMeaning` export, or `undefined` if it doesn't export one (packages that haven't adopted the convention are skipped, not an error). */
 export async function loadTagsAndMeaning(tagsTsFile: string): Promise<Readonly<Record<string, string>> | undefined> {
   const mod = (await import(pathToFileURL(tagsTsFile).href)) as TagsModule;
   return mod.tagsAndMeaning;
 }
 
 /**
- * Renders `tagsAndMeaning` as a GFM table matching `README.md`'s existing "Tags" section shape, formatted
- * through the repo's own prettier config (column-aligned, per `.prettierrc.json`'s `printWidth`) rather than
- * emitted unpadded. This has to happen here, not left for a later `prettier --write .` pass: `updateTagsTables`
- * decides whether a table needs regenerating by comparing this output against what's already on disk, and
- * that comparison is only meaningful if both sides go through the same formatting - otherwise a table that's
- * already prettier-formatted on disk would look like it "needs fixing" every single run.
+ * Renders `tagsAndMeaning` as a GFM table, formatted through the repo's prettier config. Formatting has to
+ * happen here rather than a later `prettier --write` pass, since `updateTagsTables` compares this output
+ * against what's on disk to decide if a table needs regenerating.
  */
 export async function renderTagsTable(tagsAndMeaning: Readonly<Record<string, string>>): Promise<string> {
   const rows = Object.entries(tagsAndMeaning).map(([tag, meaning]) => `| \`${tag}\` | ${meaning} |`);

@@ -1,7 +1,6 @@
 /**
- * Every tag this parser can emit, and what each one means to a consumer - the single source of truth for
- * both `tags` (below, what `createPluginParser` is given) and `README.md`'s Tags table, which is generated
- * from this object (see `scripts/fix-tags-readme.ts` at the repo root) rather than hand-copied from it.
+ * Every tag this parser can emit, and what each one means. Source of truth for both `tags` below and
+ * `README.md`'s Tags table, which is generated from this object (`scripts/fix-tags-readme.ts`).
  */
 export const tagsAndMeaning = {
   comment: 'Any comment',
@@ -20,26 +19,15 @@ export const tagsAndMeaning = {
 export type TagName = keyof typeof tagsAndMeaning;
 type AllTags = Record<TagName, boolean>;
 
-/**
- * The shape every tag constant below is declared as - deliberately not the wide-open `ParsedTags`
- * (`{[tag: string]: boolean}`), so a tag key that isn't in `tagsAndMeaning` above fails to compile rather
- * than silently becoming a real, emitted-but-undocumented tag (the reverse - a documented tag that's never
- * actually emitted - is fine; see `defineTag`'s doc comment for why this only works when going through it).
- */
+/** Keyed by `tagsAndMeaning` rather than the wide-open `ParsedTags`, so an undocumented key fails to compile. */
 export type Tags = Partial<AllTags>;
 
-/**
- * Helper to ensure proper typing and compile-time checking of tag objects.
- */
+/** Constructs a `Tags` value; unlike a bare `Object.freeze({...})`, its non-generic parameter type gets excess-property-checked, so an undocumented key is a compile error. */
 function defineTag(tag: Tags): Readonly<Tags> {
   return Object.freeze(tag);
 }
 
-/**
- * Tags that deviate from "emitted and spell checked by default" - kept as a short, explicit exception list
- * rather than restating every tag's default, since a deviation like this should stay rare and visible.
- * `code` is the one tag in this package a consumer has to opt into (see `CODE_TAG`'s doc comment below).
- */
+/** Tags excluded from "spell checked by default". `code` is the one tag consumers must opt into. */
 const NOT_ON_BY_DEFAULT: ReadonlySet<TagName> = new Set(['code']);
 
 export const tags: Readonly<AllTags> = Object.freeze(
@@ -57,18 +45,10 @@ const STRING_DOUBLE_TAG: Tags = defineTag({ ...STRING_TAG, 'string.doubleQuote':
 const STRING_HEREDOC_TAG: Tags = defineTag({ ...STRING_TAG, 'string.heredoc': true });
 const STRING_NOWDOC_TAG: Tags = defineTag({ ...STRING_TAG, 'string.nowdoc': true });
 
-/**
- * Everything inside a PHP region that isn't a comment or string literal - identifiers, keywords, punctuation,
- * numbers, and the `<?php`/`<?=`/`<?`/`?>` tag delimiters themselves - emitted so it still gets spell checked
- * by default (the same as if no parser applied to it) rather than silently dropped.
- */
+/** Identifiers, keywords, punctuation, numbers, and tag delimiters - everything not a comment or string. */
 const CODE_TAG: Tags = defineTag({ code: true });
 
-/**
- * The HTML markup pass-through segments outside `<?php ... ?>` - deliberately its own top-level tag, a
- * sibling of `code` rather than nested under it, since HTML markup isn't PHP code, and not nested under
- * `string` or `comment` either, since it isn't either of those.
- */
+/** HTML markup outside `<?php ... ?>` - a top-level tag, sibling to `code`, not nested under it. */
 const HTML_TAG: Tags = defineTag({ html: true });
 
 export const TAGS = {

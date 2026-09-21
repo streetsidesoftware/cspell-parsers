@@ -56,24 +56,11 @@ interface GeneralRule extends Rule {
 }
 
 /**
- * Compiles `options` ({@link TagFilterOptions}) into a {@link TagsFilter},
- * doing all the pattern classification, sorting, and regexp compilation up front - once per `options`
- * object - so that calling the returned function per `ParsedText` (potentially thousands of times per
- * file) is as cheap as possible.
- *
- * Every non-`'*'` key in `options` is a {@link TagPattern} and falls into one of three buckets:
- * - **exact** - no `*` at all (e.g. `comment.block.doc`). Matched with a plain `Map` lookup.
- * - **prefix** - exactly one `*`, and it's the last character (e.g. `comment.block.*`, `comment*`).
- *   Matched with `tag.startsWith(prefix)`, sorted longest-prefix-first once so matching can stop at the
- *   first hit instead of scanning every prefix.
- * - **general** - anything else (`*` in the middle, or more than one `*`, e.g. `*.doc`). Matched against
- *   a regexp, compiled once here rather than per call.
- *
- * The common cases - no wildcards at all, or only trailing wildcards - never touch the general/regexp
- * path or its per-call `RegExp#test`, which is the point of separating them out: a plugin author who
- * only writes patterns like `{ "*": false, "comment.block.doc": true }` or
- * `{ "*": false, "comment.block.*": true }` gets a hashmap-or-startsWith fast path, not a search through
- * regexps for every segment of every file.
+ * Compiles `options` into a {@link TagsFilter}, classifying patterns once up front so the returned
+ * closure is cheap to call per `ParsedText`. Non-`'*'` keys fall into three buckets:
+ * - **exact** (no `*`) - `Map` lookup.
+ * - **prefix** (single trailing `*`, e.g. `comment.block.*`) - `startsWith`, longest-prefix-first.
+ * - **general** (`*` elsewhere, or more than one) - compiled `RegExp`.
  */
 export function compileTagFilter(options: TagFilterOptions): TagsFilter {
   const defaultValue = options['*'] ?? true;
@@ -94,11 +81,7 @@ interface ClassifiedPatterns {
   general: GeneralRule[];
 }
 
-/**
- * Classifies every non-`'*'` key in `options` into the exact/prefix/general buckets described in
- * {@link compileTagFilter}'s doc comment - shared between it (which matches a whole `ParsedTags` object
- * against these buckets) and {@link compileTagScoreCard} (which matches one tag name at a time).
- */
+/** Splits `options`' keys into the exact/prefix/general buckets described in {@link compileTagFilter}; shared with {@link compileTagScoreCard}. */
 function classifyTagPatterns(options: TagFilterOptions): ClassifiedPatterns {
   const exact = new Map<string, boolean>();
   const prefixes: PrefixRule[] = [];
@@ -119,8 +102,7 @@ function classifyTagPatterns(options: TagFilterOptions): ClassifiedPatterns {
     }
     general.push({ regExp: patternToRegExp(pattern), specificity: starIndex, value });
   }
-  // Longest (most specific) prefix first, so a match can stop scanning as soon as it finds one - every
-  // remaining entry is guaranteed to be no more specific.
+  // Longest-prefix-first, so matching can stop at the first hit.
   prefixes.sort((a, b) => b.specificity - a.specificity);
 
   return { exact, prefixes, general };
@@ -198,8 +180,7 @@ function matchExact(best: Best, tag: string, exact: ReadonlyMap<string, boolean>
 /** `prefixes` must already be sorted longest-first (see `compileTagFilter`). */
 function matchPrefixes(best: Best, tag: string, prefixes: readonly PrefixRule[]): void {
   for (const rule of prefixes) {
-    // Every later entry is <= this one's specificity (sorted desc), so once one can no longer beat the
-    // current floor, none of the rest can either - stop scanning instead of just skipping this one.
+    // Sorted desc by specificity: once one rule can't beat the floor, none after it can either.
     if (rule.specificity <= best.specificity) return;
     if (tag.startsWith(rule.prefix)) {
       best.value = rule.value;
@@ -217,13 +198,7 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-/**
- * Represents the score a tag gets.
- *
- * 0 = default value
- * > 0 = on (higher the stronger the match)
- * < 0 = off (lower the stronger the negative match)
- */
+/** 0 = default value; positive = on, negative = off; magnitude = strength of the match. */
 type TagScore = number;
 
 interface TagScoreCard {
@@ -233,11 +208,9 @@ interface TagScoreCard {
 type KnownTagsAndDefaults = Record<string, boolean>;
 
 /**
- * Resolves a single known tag name against already-classified `options` patterns - the same specificity
- * rules {@link matchAnyPattern} applies to a whole `ParsedTags` object (see {@link matchExact} and
- * {@link matchPrefixes}), but for one tag in isolation. This is the per-tag building block
- * {@link compileTagScoreCard} uses to precompute a score once per known tag, rather than re-running pattern
- * matching per `ParsedText`. Returns `undefined` when nothing in `options` addresses this tag at all.
+ * Resolves one tag name against classified `options`, using the same specificity rules as
+ * {@link matchAnyPattern} applies to a whole `ParsedTags` object. Returns `undefined` if `options`
+ * doesn't address this tag at all.
  */
 function matchSingleTag(
   tag: string,
@@ -258,10 +231,10 @@ function matchSingleTag(
   return best.value === undefined ? undefined : { value: best.value, specificity: best.specificity };
 }
 
-// A known tag's score magnitude falls into one of three bands, weakest first, so a stronger band always
-// outranks a weaker one regardless of how unspecific its own match was (e.g. a bare general pattern like
-// "*.doc" has raw specificity 0, but as an explicit `options` match it must still outrank "*").
-const TAG_DEFAULT_MAGNITUDE = 1; // nothing in `options` addresses this tag at all - its own built-in default
+// Magnitude bands, weakest to strongest, so a stronger band always outranks a weaker one regardless of
+// how unspecific its own match was (e.g. a bare general pattern like "*.doc" has raw specificity 0, but
+// as an explicit `options` match it must still outrank "*").
+const TAG_DEFAULT_MAGNITUDE = 1; // no `options` pattern addresses this tag - its own built-in default
 const WILDCARD_MAGNITUDE = 2; // `options['*']`, when nothing more specific matches
 const EXPLICIT_MATCH_OFFSET = 3; // an exact/prefix/general `options` pattern; + its own specificity on top
 
@@ -270,29 +243,17 @@ function toScore(included: boolean, magnitude: number): TagScore {
 }
 
 /**
- * Precomputes a {@link TagScoreCard}: one {@link TagScore} per tag in `knownTagsAndDefaults`, so filtering a
- * `ParsedText` later (via {@link compileTagFilterFromScoreCard}) is a handful of map lookups instead of
- * re-running `options`' exact/prefix/general pattern matching for every segment of every file.
+ * Precomputes a {@link TagScoreCard}: one score per tag in `knownTagsAndDefaults`, so filtering a
+ * `ParsedText` (via {@link compileTagFilterFromScoreCard}) is map lookups instead of re-running pattern
+ * matching per segment.
  *
- * Each known tag is resolved independently and in isolation via {@link matchSingleTag}, using the same
- * specificity rules as {@link compileTagFilter} - `options`' most specific matching pattern wins - with two
- * fallbacks below that when nothing in `options` addresses the tag at all: `options['*']` if given,
- * otherwise the tag's own built-in default from `knownTagsAndDefaults` (e.g. a tag a parser emits but
- * doesn't spell check unless explicitly asked for - see `code` in `@cspell/parser-php-strings-comments`).
- * That fallback order - an explicit tag rule beats `'*'` beats the tag's own default - is why `'*'` being
- * merely *absent* from `options` (as opposed to explicitly set) must NOT implicitly mean `'*': true` the way
- * {@link compileTagFilter} treats it: doing so would make every known tag's own default unreachable, since
- * an implicit `'*': true` would always outrank it.
+ * Per tag, resolution order is: an explicit `options` pattern, then `options['*']`, then the tag's own
+ * default (e.g. `code` in `@cspell/parser-php-strings-comments`, which defaults off). `'*'` being merely
+ * *absent* from `options` must NOT implicitly mean `true` (unlike {@link compileTagFilter}) - that would
+ * make every tag's own default unreachable.
  *
- * A real `ParsedText`'s tags carry their whole ancestor chain (`comment.block.doc` also carries
- * `comment.block` and `comment`), so `compileTagFilterFromScoreCard` still has to pick whichever known tag
- * is both actually present on a given segment *and* has the strongest score - this function only has to get
- * each tag's own score right on its own.
- *
- * Every known tag always gets an explicit, nonzero-magnitude score (even one that resolves `false`) rather
- * than leaving it at the `TagScore` docs' "0 = default value" - that would only be correct if this score
- * card is always paired with a `compileTagFilterFromScoreCard(..., true)` call, and baking that coupling in
- * here would silently break any known tag whose own default is `false` if that pairing ever changed.
+ * A real `ParsedText`'s tags carry the whole ancestor chain, so `compileTagFilterFromScoreCard` still
+ * picks whichever known tag is present on a segment *and* has the strongest score.
  */
 function compileTagScoreCard(options: TagFilterOptions, knownTagsAndDefaults: KnownTagsAndDefaults): TagScoreCard {
   const { exact, prefixes, general } = classifyTagPatterns(options);
@@ -343,9 +304,7 @@ export function createParsedTextFilter(
   knownTagsAndDefaults: KnownTagsAndDefaults,
 ): (text: ParsedText) => boolean {
   const scoreCard = compileTagScoreCard(options, knownTagsAndDefaults);
-  // Same fallback compileTagFilter uses: for a `ParsedText` with no tags at all, or none of them known,
-  // `options['*']` (not a hardcoded `true`) is what should decide it - otherwise `'*': false` could never
-  // exclude an untagged/unknown-tagged segment, no matter what the caller asked for.
+  // `options['*']` decides untagged/unknown-tagged segments, same as compileTagFilter.
   const tagFilter = compileTagFilterFromScoreCard(scoreCard, options['*'] ?? true);
   return (text: ParsedText) => tagFilter(text.tags);
 }
