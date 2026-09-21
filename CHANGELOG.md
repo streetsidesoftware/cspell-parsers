@@ -1,5 +1,48 @@
 # Changelog
 
+## [1.2.0](https://github.com/streetsidesoftware/cspell-parsers/compare/cspell-parsers@1.1.5...cspell-parsers@1.2.0) (2026-09-21)
+
+
+### Features
+
+* Add @cspell/parser-c-cpp-strings-comments ([#64](https://github.com/streetsidesoftware/cspell-parsers/issues/64)) ([78b6225](https://github.com/streetsidesoftware/cspell-parsers/commit/78b6225a55c118d9b4fe6ef319dc11d43116bbd2))
+* Add @cspell/parser-csharp-strings-comments ([#65](https://github.com/streetsidesoftware/cspell-parsers/issues/65)) ([46c197b](https://github.com/streetsidesoftware/cspell-parsers/commit/46c197b603e57083a366f9b256bfd3e6d81624f6))
+* Add @cspell/parser-go-strings-comments ([#66](https://github.com/streetsidesoftware/cspell-parsers/issues/66)) ([4e8962b](https://github.com/streetsidesoftware/cspell-parsers/commit/4e8962b923ebfdd388fdb0bf343bca321d13713e))
+* Add @cspell/parser-java-strings-comments ([#67](https://github.com/streetsidesoftware/cspell-parsers/issues/67)) ([31f207c](https://github.com/streetsidesoftware/cspell-parsers/commit/31f207c248dc5d5d067f85563506fb82f43a0d73))
+* Add @cspell/parser-php-strings-comments ([#68](https://github.com/streetsidesoftware/cspell-parsers/issues/68)) ([4be05ad](https://github.com/streetsidesoftware/cspell-parsers/commit/4be05ad14bd3fe43c490e81714a61a3aecdc8f4e))
+* Add @cspell/parser-python-strings-comments ([#69](https://github.com/streetsidesoftware/cspell-parsers/issues/69)) ([bc47ba1](https://github.com/streetsidesoftware/cspell-parsers/commit/bc47ba17689cae1ab756cc565ddd7bf4a7ee0c0d))
+* Add @cspell/parser-ruby-strings-comments ([#70](https://github.com/streetsidesoftware/cspell-parsers/issues/70)) ([0a648c9](https://github.com/streetsidesoftware/cspell-parsers/commit/0a648c985d29600353cb0812572ee175e7c5ce81))
+* Add @cspell/parser-rust-strings-comments ([#72](https://github.com/streetsidesoftware/cspell-parsers/issues/72)) ([ea33e16](https://github.com/streetsidesoftware/cspell-parsers/commit/ea33e1679d13ae8e7bd0a3228f7f7f88c4bce515))
+* Add @cspell/parser-strings-comments (C, C++, C#, Go, Java, JS/JSX, TS/TSX, PHP) ([#60](https://github.com/streetsidesoftware/cspell-parsers/issues/60)) ([293e02b](https://github.com/streetsidesoftware/cspell-parsers/commit/293e02bdcb42a080b8cb71694deb801f1cad3731))
+* Add @cspell/parser-typescript-strings-comments (JS/JSX/TS/TSX) ([#62](https://github.com/streetsidesoftware/cspell-parsers/issues/62)) ([353cf23](https://github.com/streetsidesoftware/cspell-parsers/commit/353cf2302e0c0a072f86f9e20f6a5441dcd821e1))
+* **parser-typescript-tree-sitter,parser-typescript:** publish tags.ts as a ./tags export ([#120](https://github.com/streetsidesoftware/cspell-parsers/issues/120)) ([3f496b5](https://github.com/streetsidesoftware/cspell-parsers/commit/3f496b59c573ee4ae1c89b15ea10cccaf2bcbfe8))
+
+
+### Updates and Bug Fixes
+
+* Add PluginParser type ([#98](https://github.com/streetsidesoftware/cspell-parsers/issues/98)) ([ad433fc](https://github.com/streetsidesoftware/cspell-parsers/commit/ad433fcf64f2377ae849914eca4a6fe972d89d97))
+* Freeze global tags ([#96](https://github.com/streetsidesoftware/cspell-parsers/issues/96)) ([6795ca3](https://github.com/streetsidesoftware/cspell-parsers/commit/6795ca315e5c2509353e05c90dbf9f4debccc4d5))
+* **test-packages:** avoid DEP0190 when spawning pnpm on Windows ([#123](https://github.com/streetsidesoftware/cspell-parsers/issues/123)) ([e25c6c0](https://github.com/streetsidesoftware/cspell-parsers/commit/e25c6c031f1010cf22428306b12dcd10fb28440d))
+* Use `parser-*-string-comments` parsers for `parser-strings-commets` ([#94](https://github.com/streetsidesoftware/cspell-parsers/issues/94)) ([31f48a2](https://github.com/streetsidesoftware/cspell-parsers/commit/31f48a29b6d72d10ffd1059ec3b0ff1a3b7837e3))
+* Use a common method to create parsers. ([#99](https://github.com/streetsidesoftware/cspell-parsers/issues/99)) ([f1f34b8](https://github.com/streetsidesoftware/cspell-parsers/commit/f1f34b8da70eec258b3ed0f311b16f81bc7aa8b1))
+
+
+### Code Refactoring
+
+* **parser-c-cpp-strings-comments:** move tags into tags.ts, generate README table ([#103](https://github.com/streetsidesoftware/cspell-parsers/issues/103)) ([c729de2](https://github.com/streetsidesoftware/cspell-parsers/commit/c729de2d70dbf0d06c93e30dacb7937a88c39eba))
+* **parser-csharp-strings-comments:** move tags into tags.ts, generate README table ([#104](https://github.com/streetsidesoftware/cspell-parsers/issues/104)) ([7ffdf35](https://github.com/streetsidesoftware/cspell-parsers/commit/7ffdf352940e0ae3d6a929c441c3058fbd056c43))
+* **parser-example:** move tags into tags.ts, generate README table ([#113](https://github.com/streetsidesoftware/cspell-parsers/issues/113)) ([81e3d3b](https://github.com/streetsidesoftware/cspell-parsers/commit/81e3d3b4b3883fe4ac0c93e9974692228b8c773e))
+* **parser-go-strings-comments:** move tags into tags.ts, generate README table ([#105](https://github.com/streetsidesoftware/cspell-parsers/issues/105)) ([44d29fc](https://github.com/streetsidesoftware/cspell-parsers/commit/44d29fc3e67e6948a4eeea98b91bec4741033962))
+* **parser-java-strings-comments:** move tags into tags.ts, generate README table ([#106](https://github.com/streetsidesoftware/cspell-parsers/issues/106)) ([4f5ba15](https://github.com/streetsidesoftware/cspell-parsers/commit/4f5ba153d436289f27f9929f26ec4c1475ea13a4))
+* **parser-javascript:** reuse tags exported by parser-typescript ([#118](https://github.com/streetsidesoftware/cspell-parsers/issues/118)) ([876ed5c](https://github.com/streetsidesoftware/cspell-parsers/commit/876ed5c8da57bd4df5219bf4cdd69ec33e86f45e))
+* **parser-python-strings-comments:** move tags into tags.ts, generate README table ([#107](https://github.com/streetsidesoftware/cspell-parsers/issues/107)) ([653c940](https://github.com/streetsidesoftware/cspell-parsers/commit/653c9401856eada8fc446c88b351dbd20294c053))
+* **parser-ruby-strings-comments:** move tags into tags.ts, generate README table ([#108](https://github.com/streetsidesoftware/cspell-parsers/issues/108)) ([6fa0aef](https://github.com/streetsidesoftware/cspell-parsers/commit/6fa0aef00ee5805f993068113fd9e44009939c53))
+* **parser-rust-strings-comments:** move tags into tags.ts, generate README table ([#109](https://github.com/streetsidesoftware/cspell-parsers/issues/109)) ([deba58f](https://github.com/streetsidesoftware/cspell-parsers/commit/deba58fd17b89bbec4c432352309482c637b0d9e))
+* **parser-typescript-strings-comments:** move tags into tags.ts, generate README table ([#110](https://github.com/streetsidesoftware/cspell-parsers/issues/110)) ([4a3580a](https://github.com/streetsidesoftware/cspell-parsers/commit/4a3580aa88544965918760535155deba965be24d))
+* **parser-typescript-tree-sitter-wasm:** move tags into tags.ts, generate README table ([#117](https://github.com/streetsidesoftware/cspell-parsers/issues/117)) ([39aac22](https://github.com/streetsidesoftware/cspell-parsers/commit/39aac223a7eaa270971b6a0af5539e5a43c18174))
+* **parser-typescript-tree-sitter:** move tags into tags.ts, generate README table ([#116](https://github.com/streetsidesoftware/cspell-parsers/issues/116)) ([cc3b0d5](https://github.com/streetsidesoftware/cspell-parsers/commit/cc3b0d52d0732ea92f374d665fd8c47c42639429))
+* Use PluginParser class to create parsers and allow customization. ([#102](https://github.com/streetsidesoftware/cspell-parsers/issues/102)) ([40db27b](https://github.com/streetsidesoftware/cspell-parsers/commit/40db27be8f561ddc1d2170ce0044ff5b79b0058e))
+
 ## [1.1.5](https://github.com/streetsidesoftware/cspell-parsers/compare/cspell-parsers@1.1.4...cspell-parsers@1.1.5) (2026-09-17)
 
 
