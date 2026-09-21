@@ -100,6 +100,8 @@ one.
 
 ## Tags
 
+<!--- @@inject: docs/tags-table.md --->
+
 | Tag                            | Meaning                                                                                                  |
 | ------------------------------ | -------------------------------------------------------------------------------------------------------- |
 | `string`                       | A string literal (fallback for a quote style that's neither `'` nor `"`)                                 |
@@ -125,6 +127,8 @@ one.
 | `identifier.label`             | A statement label                                                                                        |
 | `identifier.importBinding`     | A renamed import alias, default import name, or namespace import name                                    |
 | `identifier.exportBinding`     | A renamed export alias (`export { x as y }`)                                                             |
+
+<!--- @@inject-end: docs/tags-table.md --->
 
 ## Notes
 
