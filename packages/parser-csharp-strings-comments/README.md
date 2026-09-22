@@ -40,11 +40,8 @@ choose the language IDs to use it for:
 
 ### Filtering by tag and file type
 
-By default every comment/string the parser emits gets spell checked. To change which segments get checked -
-for example, only XML doc comments - use `customizePlugin` instead of the plain `plugin` export. It takes a
-`CustomizePluginOptions` object - `tags: TagFilterOptions` and `name` are both optional, and omitting `tags`
-keeps the defaults - and returns a `Plugin` whose parser filters segments by tag itself, before cspell ever
-sees them.
+By default every comment/string the parser emits gets spell checked. Use `customizePlugin` to change what is sent on to the spell checker.
+See also: [Customization options](#customization-options)
 
 **`cspell.config.ts`** or **`cspell.config.js`**
 
@@ -119,6 +116,72 @@ export default {
     },
   ],
 };
+```
+
+## Customization options
+
+The customization options have two purposes:
+
+- Change the name of the plugin and parser
+- Setup a `tags` filter to specify what is passed to the spell checker based upon
+  the attributed tags.
+
+### `CustomizePluginOptions`
+
+```ts
+interface CustomizePluginOptions {
+  /**
+   * Set the name of the plugin and parser.
+   */
+  name?: string;
+  /**
+   * Define which tagged segments to keep. Omit to keep everything.
+   */
+  tags?: TagFilterOptions;
+}
+```
+
+### Examples
+
+**Everything including `code`**
+
+```ts
+const option = { tags: { '*': true } };
+```
+
+**Everything except `code`**
+
+```ts
+const option = { tags: { '*': true, code: false } };
+```
+
+**Only comments**
+
+```ts
+const option = { tags: { '*': false, comment: true } };
+```
+
+### `TagFilterOptions`
+
+```ts
+/**
+ * A tag name, or a `*`-wildcard pattern matching one.
+ */
+type TagPattern = string;
+
+interface TagFilterOptions {
+  /**
+   * The default filter setting for any tag not otherwise matched.
+   */
+  '*'?: boolean | undefined;
+
+  /**
+   * Filter setting for the specific tag or wildcard pattern.
+   *
+   * If not specified, the default (`'*'`) will be used.
+   */
+  [tag: TagPattern]: boolean | undefined;
+}
 ```
 
 ## Known limitations
