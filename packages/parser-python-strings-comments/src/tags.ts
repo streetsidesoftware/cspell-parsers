@@ -11,7 +11,7 @@ export const tagsAndMeaning = {
   'string.tripleQuote': 'A `\'\'\'...\'\'\'` or `"""..."""` string literal',
   'string.raw': 'Any `r`-prefixed string (`r`, `rb`/`br`, `rf`/`fr`) - composes with the tags above',
   'string.interpolated': 'Any `f`-prefixed string (an f-string) - composes with the tags above',
-  code: "Python code that isn't a comment or string (identifiers, keywords, punctuation, numbers)",
+  code: 'Everything else (off by default)',
 } as const satisfies Record<string, string>;
 
 export type TagName = keyof typeof tagsAndMeaning;

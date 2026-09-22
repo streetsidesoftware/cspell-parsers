@@ -1,11 +1,7 @@
 # @cspell/parser-python-strings-comments
 
-A cspell plugin that extracts Python comments and string literals - including raw, byte, and f-strings - so
-cspell only spell checks those by default, not identifiers, keywords, or other code (everything else is
-still tagged `code`, so it can be opted into with `customizePlugin` if you want it checked too).
-
-It implements cspell's [`Parser`](https://www.npmjs.com/package/@cspell/cspell-types) contract and exports a
-[`Plugin`](https://www.npmjs.com/package/@cspell/cspell-types) so it can be wired into a cspell configuration.
+A cspell plugin that spell checks only the comments and string literals in Python files, leaving identifiers,
+keywords, and the rest of the code alone.
 
 ## Usage
 
@@ -42,39 +38,46 @@ choose the language IDs to use it for:
 | ----------- |
 | `python`    |
 
-### Filtering by tag
+### Filtering by tag and file type
 
-By default every comment/string the parser emits gets spell checked, and `code` (everything else -
-identifiers, keywords, punctuation, numbers, operators) is excluded. To change which segments get checked,
-for example to skip f-strings (whose interpolation holes can pull in code-shaped text) or to also check
-`code`, use `customizePlugin` instead of the plain `plugin` export. It takes a `CustomizePluginOptions`
-object (`tags: TagFilterOptions` and `name` are both optional, and omitting `tags` keeps the defaults above)
-and returns a `Plugin` whose parser filters segments by tag itself, before cspell ever sees them.
+By default every comment/string the parser emits gets spell checked. Use `customizePlugin` to change what is sent on to the spell checker.
+See also: [Customization options](#customization-options)
+
+**`cspell.config.ts`** or **`cspell.config.js`**
 
 ```js
-// cspell.config.mjs — customizePlugin returns a live Plugin object, so it needs a JS/TS config file
-// (.mjs/.ts/.cjs), not .json/.jsonc/.yaml, where "plugins" can only be a list of module-specifier strings.
 import { customizePlugin } from '@cspell/parser-python-strings-comments/plugin';
 
+const customPlugin = customizePlugin({
+  // set the parser name to be used in languageSettings
+  name: 'python-no-f-strings',
+  tags: { '*': true, 'string.interpolated': false }, // skip f-strings
+});
+
 export default {
-  plugins: [customizePlugin({ tags: { '*': true, 'string.interpolated': false } })], // skip f-strings
+  plugins: [customPlugin],
   languageSettings: [
     {
+      // select the customized parser by name, for python files only
       languageId: 'python',
-      parser: 'python-strings-comments',
+      parser: 'python-no-f-strings',
     },
   ],
 };
 ```
 
-`tags` keys are matched hierarchically against the tags below - `string` also matches the more specific
-`string.singleQuote` unless a more specific key overrides it - and may use `*` as a wildcard (`string.*`, or
-a bare `*` for "everything not otherwise matched", which defaults to `true`). See the [Tags](#tags) table
-below for every tag this parser can emit.
+**NOTE:**
 
-`name` overrides the parser's registered name (`python-strings-comments` by default). This matters when
-registering more than one customized copy of this parser, since cspell selects a parser by name and two
-parsers can't share one.
+> `name` overrides the parser's registered name (`python-strings-comments` by default). This matters when
+> registering more than one customized copy of this parser, since cspell selects a parser by name and two
+> parsers can't share one.
+
+**NOTE:**
+
+> `tags` keys are matched hierarchically against the [tags](#tags) below.
+>
+> The key `string` also matches the more specific
+> `string.singleQuote` unless a more specific key overrides it. See: [`CustomizePluginOptions`](#customizepluginoptions) and [`TagFilterOptions`](#tagfilteroptions) below.
 
 An f-string's `{...}` interpolation holes are scanned like the rest of the file, so a string or comment
 nested inside one keeps its own normal tag rather than `string.interpolated` - filtering out
@@ -95,8 +98,111 @@ nested inside one keeps its own normal tag rather than `string.interpolated` - f
 | `string.tripleQuote`  | A `'''...'''` or `"""..."""` string literal                                        |
 | `string.raw`          | Any `r`-prefixed string (`r`, `rb`/`br`, `rf`/`fr`) - composes with the tags above |
 | `string.interpolated` | Any `f`-prefixed string (an f-string) - composes with the tags above               |
+| `code`                | Everything else (off by default)                                                   |
 
 <!--- @@inject-end: docs/tags-table.md --->
+
+### The `code` tag
+
+By default, text tagged `code` is not spell checked. To check it too, use `customizePlugin`:
+
+**`cspell.config.ts`** or **`cspell.config.js`**
+
+```js
+import { customizePlugin } from '@cspell/parser-python-strings-comments/plugin';
+
+export default {
+  plugins: [customizePlugin({ tags: { code: true } })],
+  languageSettings: [
+    {
+      languageId: 'python',
+      parser: 'python-strings-comments',
+    },
+  ],
+};
+```
+
+## Customization options
+
+The customization options have two purposes:
+
+- Change the name of the plugin and parser
+- Setup a `tags` filter to specify what is passed to the spell checker based upon
+  the attributed tags.
+
+### `CustomizePluginOptions`
+
+```ts
+interface CustomizePluginOptions {
+  /**
+   * Set the name of the plugin and parser.
+   */
+  name?: string;
+  /**
+   * Define which tagged segments to keep. Omit to keep everything.
+   */
+  tags?: TagFilterOptions;
+}
+```
+
+### Examples
+
+**Everything including `code`**
+
+```ts
+const option = { tags: { '*': true } };
+```
+
+**Everything except `code`**
+
+```ts
+const option = { tags: { '*': true, code: false } };
+```
+
+**Only comments**
+
+```ts
+const option = { tags: { '*': false, comment: true } };
+```
+
+**Turn off `string.raw`**
+
+```ts
+const option = { tags: { 'string.raw': false } };
+```
+
+### `TagFilterOptions`
+
+`TagFilterOptions` are used to set the filter criteria for the text sent to the spell checker.
+
+The values are inherited hierarchically
+
+- `comment: false` also implies `comment.line` is `false` unless overwritten by `'comment.line': true`
+
+Wildcards
+
+- `*` wildcards are weak matches. A more specific match will win.
+
+```ts
+/**
+ * A tag name, or a `*`-wildcard pattern matching one.
+ */
+type TagPattern = string;
+
+interface TagFilterOptions {
+  /**
+   * The default filter setting for any tag not otherwise matched.
+   */
+  '*'?: boolean | undefined;
+
+  /**
+   * Filter setting for the specific tag or wildcard pattern.
+   *
+   * If not specified, the default (`'*'`) will be used.
+   */
+  [tag: TagPattern]: boolean | undefined;
+}
+```
 
 ## Known limitations
 

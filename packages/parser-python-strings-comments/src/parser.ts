@@ -6,10 +6,9 @@ import { Scanner } from './scanner.js';
 import { TAGS, tags } from './tags.js';
 
 /**
- * Extracts comments and string literals from Python source, tagging everything else (identifiers, keywords,
- * punctuation, numbers, operators) as plain `code` - so the full file content is covered. Most consumers
- * should register the exported {@link parser} (or a {@link createParser} customization) with cspell rather
- * than calling this directly.
+ * Extracts comments and string literals from Python source; everything else is tagged `code`. Most
+ * consumers should register the exported {@link parser} (or a {@link createParser} customization) with
+ * cspell rather than calling this directly.
  */
 export function parse(content: string, filename: string): ParseResult {
   return { content, filename, parsedTexts: new Scanner(content).run() };

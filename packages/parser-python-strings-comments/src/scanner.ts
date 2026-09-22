@@ -116,15 +116,7 @@ function isClosingDelimiterAt(content: string, i: number, quote: string, delimLe
   return content[i + 1] === quote && content[i + 2] === quote;
 }
 
-/**
- * Scans Python source for comments and string literals (each tagged with its own specific tag), and passes
- * everything else through too - identifiers, keywords, punctuation, numbers, operators - as `code`, so every
- * byte of the file ends up in exactly one `ParsedText`.
- *
- * `run` fills in the `code`-tagged gaps between what `scanCode` itself yields via `@internal/utils`'s
- * `createCodeTagsEmitter`, shared with every other package in this rollout rather than each one
- * reimplementing its own trailing-cursor logic.
- */
+/** Scans Python source for comments and string literals, tagging everything else as `code`. */
 export class Scanner {
   private i = 0;
 
