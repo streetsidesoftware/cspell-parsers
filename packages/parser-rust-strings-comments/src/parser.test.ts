@@ -5,6 +5,7 @@ import type { ParsedText } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
 import { createParser, parse, parser } from './parser.js';
+import { tags } from './tags.js';
 
 const fixturesDir = join(import.meta.dirname, '../fixtures');
 
@@ -240,20 +241,23 @@ describe('rust-strings-comments parser', () => {
 
     it('a plain double-quoted string with a trailing lone backslash', () => {
       const content = 'let s = "abc\\';
-      const [str] = [...parse(content, 'file.rs').parsedTexts];
+      const parsed = [...parse(content, 'file.rs').parsedTexts];
+      const str = parsed.find((p) => p.tags?.string);
       expectRangeMatchesRawText(str, content);
     });
 
     it('an unterminated plain double-quoted string with no trailing backslash', () => {
       const content = 'let s = "abc';
-      const [str] = [...parse(content, 'file.rs').parsedTexts];
+      const parsed = [...parse(content, 'file.rs').parsedTexts];
+      const str = parsed.find((p) => p.tags?.string);
       expect(str?.text).toBe('abc');
       expectRangeMatchesRawText(str, content);
     });
 
     it('an unterminated raw string', () => {
       const content = 'let s = r#"abc';
-      const [str] = [...parse(content, 'file.rs').parsedTexts];
+      const parsed = [...parse(content, 'file.rs').parsedTexts];
+      const str = parsed.find((p) => p.tags?.string);
       expect(str?.text).toBe('abc');
       expect(str?.tags).toEqual({ string: true, 'string.raw': true });
       expectRangeMatchesRawText(str, content);
@@ -307,9 +311,44 @@ describe('rust-strings-comments parser', () => {
     });
   });
 
-  describe('parse (named export used directly by the Parser)', () => {
-    it('is the same function wired into the exported parser', () => {
-      expect(parser.parse).toBe(parse);
+  it('tags the unhandled Rust code between comments and strings as code', () => {
+    const content = 'let x = 1; // comment\n';
+    const parsedTexts = [...parse(content, 'file.rs').parsedTexts];
+
+    const code = parsedTexts.find((p) => p.tags?.code);
+    expect(code?.text).toBe('let x = 1; ');
+  });
+
+  it('parser.parse wraps the raw parse export, filtering out code by default', () => {
+    const content = 'let x = 1; // comment\n';
+
+    const raw = [...parse(content, 'file.rs').parsedTexts];
+    const filtered = [...parser.parse(content, 'file.rs').parsedTexts];
+
+    expect(raw.some((p) => p.tags?.code)).toBe(true);
+    expect(filtered.some((p) => p.tags?.code)).toBe(false);
+  });
+
+  describe('tags', () => {
+    it('declares every tag the scanner can emit', () => {
+      const content = readFixture('comments-and-strings.rs');
+      const parsedTexts = [...parse(content, 'file.rs').parsedTexts];
+      const emittedTags = new Set(parsedTexts.flatMap((p) => Object.keys(p.tags ?? {})));
+
+      for (const tag of emittedTags) {
+        expect(tags).toHaveProperty(tag);
+      }
+    });
+
+    it('is off by default for code', () => {
+      expect(tags.code).toBe(false);
+    });
+
+    it('is on by default for everything else', () => {
+      for (const [tag, onByDefault] of Object.entries(tags)) {
+        if (tag === 'code') continue;
+        expect(onByDefault).toBe(true);
+      }
     });
   });
 });
