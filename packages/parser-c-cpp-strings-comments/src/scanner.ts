@@ -1,5 +1,5 @@
 import type { ParsedText, SourceMap } from '@cspell/cspell-types';
-import { stripCommentMarkers } from '@internal/utils';
+import { createCodeTagsEmitter, stripCommentMarkers } from '@internal/utils';
 
 import { TAGS } from './tags.js';
 
@@ -61,33 +61,13 @@ function isIdentChar(ch: string | undefined): boolean {
  * collection.
  */
 export class Scanner {
-  private j = 0;
   private i = 0;
 
   constructor(private readonly content: string) {}
 
-  *run(): Generator<ParsedText> {
-    for (const parsed of this.scanTagged()) {
-      const codeSegment = this.emitCodeSegment(parsed);
-      if (codeSegment) yield codeSegment;
-      yield parsed;
-    }
-    if (this.j < this.content.length) {
-      const text = this.content.slice(this.j, this.content.length);
-      yield { text, rawText: text, range: [this.j, this.content.length], tags: TAGS.CODE };
-      this.j = this.content.length;
-    }
-  }
-
-  private emitCodeSegment(t: ParsedText): ParsedText | undefined {
-    if (t.range[0] === this.j) {
-      this.j = t.range[1];
-      return undefined;
-    }
-    const text = this.content.slice(this.j, t.range[0]);
-    const p: ParsedText = { text, rawText: text, range: [this.j, t.range[0]], tags: TAGS.CODE };
-    this.j = t.range[1];
-    return p;
+  run(): Iterable<ParsedText> {
+    const codeInjector = createCodeTagsEmitter(TAGS.CODE, this.content);
+    return codeInjector(this.scanTagged());
   }
 
   private *scanTagged(): Generator<ParsedText> {

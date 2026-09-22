@@ -206,13 +206,15 @@ describe('c-cpp-strings-comments parser', () => {
 
     it('a plain double-quoted string', () => {
       const content = 'const char *s = "abc\\';
-      const [str] = [...parse(content, 'file.c').parsedTexts];
+      const parsedTexts = [...parse(content, 'file.c').parsedTexts];
+      const str = parsedTexts.find((p) => p.tags?.string);
       expectRangeMatchesRawText(str, content);
     });
 
     it('a plain single-quoted char literal', () => {
       const content = "char c = 'a\\";
-      const [str] = [...parse(content, 'file.c').parsedTexts];
+      const parsedTexts = [...parse(content, 'file.c').parsedTexts];
+      const str = parsedTexts.find((p) => p.tags?.string);
       expectRangeMatchesRawText(str, content);
     });
   });
