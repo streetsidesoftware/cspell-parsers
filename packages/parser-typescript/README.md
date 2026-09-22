@@ -50,50 +50,58 @@ plugin in yourself and choose the language IDs to use it for:
 | `typescript`      |
 | `typescriptreact` |
 
-### Filtering by tag
+### Filtering by tag and file type
 
-By default every segment the parser emits gets spell checked. To check only some of them — for example, only
-comments, or only string content — use `customizePlugin` instead of the plain `plugin` export. It takes a
-`CustomizePluginOptions` object — `tags: TagFilterOptions` and `name` are both optional, and omitting `tags`
-keeps everything — and returns a `Plugin` whose parser filters segments by tag itself, before cspell ever
-sees them.
+By default every segment the parser emits gets spell checked, except `code`. Use `customizePlugin` to change what is sent on to the spell checker.
+See also: [Customization options](#customization-options)
+
+**`cspell.config.ts`** or **`cspell.config.mjs`**
 
 ```js
-// cspell.config.mjs — customizePlugin returns a live Plugin object, so it needs a JS/TS config file
-// (.mjs/.ts/.cjs), not .json/.jsonc/.yaml, where "plugins" can only be a list of module-specifier strings.
 import { customizePlugin } from '@cspell/parser-typescript/plugin';
 
+const customPlugin = customizePlugin({
+  // set the parser name to be used in languageSettings
+  name: 'typescript-comments-only',
+  tags: { '*': false, comment: true }, // only check comments
+});
+
 export default {
-  plugins: [customizePlugin({ tags: { '*': false, comment: true } })], // only check comments
+  plugins: [customPlugin],
   languageSettings: [
     {
+      // select the customized parser by name, for typescript and tsx files only
       languageId: 'typescript,typescriptreact',
-      parser: 'typescript',
+      parser: 'typescript-comments-only',
     },
   ],
 };
 ```
 
-`tags` keys are matched hierarchically against the tags below — `comment` also matches the more specific
-`comment.block.doc` unless a more specific key overrides it — and may use `*` as a wildcard
-(`comment.block.*`, `comment*`, or a bare `*` for "everything not otherwise matched", which defaults to
-`true`). See the [Tags](#tags) table below for every tag this parser can emit.
+**NOTE:**
 
-`name` overrides the parser's registered name (`typescript` by default). This matters when registering more
-than one customized copy of this parser — e.g. under different `languageSettings` — since cspell selects a
-parser by name and two parsers can't share one:
+> `name` overrides the parser's registered name (`typescript` by default). This matters when registering more
+> than one customized copy of this parser — e.g. under different `languageSettings` — since cspell selects a
+> parser by name and two parsers can't share one:
+>
+> ```js
+> plugins: [
+>   customizePlugin({ name: 'typescript-comments-only', tags: { '*': false, comment: true } }),
+>   customizePlugin({ name: 'typescript-strings-only', tags: { '*': false, string: true } }),
+> ],
+> ```
 
-```js
-plugins: [
-  customizePlugin({ name: 'typescript-comments-only', tags: { '*': false, comment: true } }),
-  customizePlugin({ name: 'typescript-strings-only', tags: { '*': false, string: true } }),
-],
-```
+**NOTE:**
+
+> `tags` keys are matched hierarchically against the [tags](#tags) below.
+>
+> The key `comment` also matches the more specific
+> `comment.block.doc` unless a more specific key overrides it. See: [`CustomizePluginOptions`](#customizepluginoptions) and [`TagFilterOptions`](#tagfilteroptions) below.
 
 ## What it does differently
 
-- Only checks identifiers, string/template contents, comments, and JSX text — never keywords, punctuation,
-  or numbers.
+- Checks identifiers, string/template contents, comments, and JSX text by default; keywords, punctuation,
+  and numbers are tagged `code` and off by default - see [The `code` tag](#the-code-tag).
 - Doesn't flag a package name in an `import`/`export ... from` (`'lodash'`, `'@scope/pkg'`, `'node:fs'`) —
   that's not spelling you authored.
 - Doesn't flag a named import's original export name, or properties accessed on an imported value —
@@ -137,6 +145,110 @@ plugins: [
 | `code`                         | Everything else (off by default)                                                                         |
 
 <!--- @@inject-end: docs/tags-table.md --->
+
+### The `code` tag
+
+By default, text tagged `code` is not spell checked. To check it too, use `customizePlugin`:
+
+**`cspell.config.ts`** or **`cspell.config.mjs`**
+
+```js
+import { customizePlugin } from '@cspell/parser-typescript/plugin';
+
+export default {
+  plugins: [customizePlugin({ tags: { code: true } })],
+  languageSettings: [
+    {
+      languageId: 'typescript,typescriptreact',
+      parser: 'typescript',
+    },
+  ],
+};
+```
+
+## Customization options
+
+The customization options have two purposes:
+
+- Change the name of the registered parser (not the plugin's own name)
+- Set up a `tags` filter to specify what is passed to the spell checker based upon
+  the attributed tags.
+
+### `CustomizePluginOptions`
+
+```ts
+interface CustomizePluginOptions {
+  /**
+   * Set the name of the parser. Does not change the plugin's own name.
+   */
+  name?: string;
+  /**
+   * Define which tagged segments to keep. Omit to keep the parser's own defaults (`code` excluded).
+   */
+  tags?: TagFilterOptions;
+}
+```
+
+### Examples
+
+**Everything including `code`**
+
+```ts
+const option = { tags: { '*': true } };
+```
+
+**Everything except `code`**
+
+```ts
+const option = { tags: { '*': true, code: false } };
+```
+
+**Only comments**
+
+Change the parser `name` to `only-comments` and allow only comments.
+
+```ts
+const option = { name: 'only-comments', tags: { '*': false, comment: true } };
+```
+
+**Turn off `identifier.type`**
+
+```ts
+const option = { tags: { 'identifier.type': false } };
+```
+
+### `TagFilterOptions`
+
+`TagFilterOptions` are used to set the filter criteria for the text sent to the spell checker.
+
+The values are inherited hierarchically
+
+- `comment: false` also implies `comment.line` is `false` unless overwritten by `'comment.line': true`
+
+Wildcards
+
+- `*` wildcards are weak matches. A more specific match will win.
+
+```ts
+/**
+ * A tag name, or a `*`-wildcard pattern matching one.
+ */
+type TagPattern = string;
+
+interface TagFilterOptions {
+  /**
+   * The default filter setting for any tag not otherwise matched.
+   */
+  '*'?: boolean | undefined;
+
+  /**
+   * Filter setting for the specific tag or wildcard pattern.
+   *
+   * If not specified, the default (`'*'`) will be used.
+   */
+  [tag: TagPattern]: boolean | undefined;
+}
+```
 
 ## Notes
 
