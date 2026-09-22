@@ -22,11 +22,11 @@ export const plugin: ParserPlugin = {
 /** Options for {@link customizePlugin}: the parser's name, and which tagged segments to keep. */
 export interface CustomizePluginOptions {
   /**
-   * Set the name of the plugin and parser.
+   * Set the name of the parser. Does not change the plugin's own name.
    */
   name?: string;
   /**
-   * Define which tagged segments to keep. Omit to keep everything.
+   * Define which tagged segments to keep. Omit to keep the parser's own defaults (`code` excluded).
    */
   tags?: TagFilterOptions;
 }

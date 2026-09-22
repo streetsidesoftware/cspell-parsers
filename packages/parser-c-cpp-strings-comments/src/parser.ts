@@ -30,7 +30,7 @@ export const parser: PluginParser = createPluginParser(
 export interface CustomizeParserOptions {
   /** Overrides the registered parser name (default: `c-cpp-strings-comments`). */
   name?: string;
-  /** Which tagged segments to keep; omitting keeps everything. */
+  /** Which tagged segments to keep; omitting keeps the parser's own defaults (`code` excluded). */
   tags?: TagFilterOptions;
 }
 
