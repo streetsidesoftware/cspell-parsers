@@ -43,7 +43,7 @@ choose the language IDs to use it for:
 By default every comment/string the parser emits gets spell checked. Use `customizePlugin` to change what is sent on to the spell checker.
 See also: [Customization options](#customization-options)
 
-**`cspell.config.ts`** or **`cspell.config.js`**
+**`cspell.config.ts`** or **`cspell.config.mjs`**
 
 ```js
 import { customizePlugin } from '@cspell/parser-python-strings-comments/plugin';
@@ -106,7 +106,7 @@ nested inside one keeps its own normal tag rather than `string.interpolated` - f
 
 By default, text tagged `code` is not spell checked. To check it too, use `customizePlugin`:
 
-**`cspell.config.ts`** or **`cspell.config.js`**
+**`cspell.config.ts`** or **`cspell.config.mjs`**
 
 ```js
 import { customizePlugin } from '@cspell/parser-python-strings-comments/plugin';
@@ -126,7 +126,7 @@ export default {
 
 The customization options have two purposes:
 
-- Change the name of the plugin and parser
+- Change the name of the registered parser (not the plugin's own name)
 - Setup a `tags` filter to specify what is passed to the spell checker based upon
   the attributed tags.
 
@@ -135,11 +135,11 @@ The customization options have two purposes:
 ```ts
 interface CustomizePluginOptions {
   /**
-   * Set the name of the plugin and parser.
+   * Set the name of the parser. Does not change the plugin's own name.
    */
   name?: string;
   /**
-   * Define which tagged segments to keep. Omit to keep everything.
+   * Define which tagged segments to keep. Omit to keep the parser's own defaults (`code` excluded).
    */
   tags?: TagFilterOptions;
 }

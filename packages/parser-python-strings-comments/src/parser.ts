@@ -30,7 +30,7 @@ export const parser: PluginParser = createPluginParser(
 export interface CustomizeParserOptions {
   /** Overrides the parser's registered name. */
   name?: string;
-  /** Tagged segments to keep; omit to keep everything. */
+  /** Tagged segments to keep; omit to keep the parser's own defaults (`code` excluded). */
   tags?: TagFilterOptions;
 }
 
