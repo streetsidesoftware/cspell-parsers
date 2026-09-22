@@ -40,28 +40,28 @@ plugin in yourself and choose the language IDs to use it for:
 | `c`         |
 | `cpp`       |
 
-### Filtering by tag
+### Filtering by tag and file type
 
-By default every comment/string the parser emits gets spell checked, and `code` (everything else -
-identifiers, keywords, punctuation, numbers, preprocessor tokens) is excluded. To change which segments get
-checked - for example, only doc comments, or also checking `code` - use `customizePlugin` instead of the
-plain `plugin` export. It takes a `CustomizePluginOptions` object - `tags: TagFilterOptions` and `name` are
-both optional, and omitting `tags` keeps the defaults above - and returns a `Plugin` that only spell checks
-segments matching the filter. This works with any cspell version, since the filtering doesn't rely on cspell
-itself supporting it.
+By default every comment/string the parser emits gets spell checked. Use `customizePlugin` to change what is sent on to the spell checker.
+See also: [Customization options](#customization-options)
+
+**`cspell.config.ts`** or **`cspell.config.js`**
 
 ```js
-// cspell.config.mjs — customizePlugin returns a live Plugin object, so it needs a JS/TS config file
-// (.mjs/.ts/.cjs), not .json/.jsonc/.yaml, where "plugins" can only be a list of module-specifier strings.
 import { customizePlugin } from '@cspell/parser-c-cpp-strings-comments/plugin';
 
+const customPlugin = customizePlugin({
+  name: 'c-cpp-only-docs',
+  tags: { '*': false, 'comment.line.doc': true, 'comment.block.doc': true }, // only check Doxygen doc comments
+});
+
 export default {
-  // only check Doxygen doc comments - "///"/"//!" lines and "/** ... */" blocks
-  plugins: [customizePlugin({ tags: { '*': false, 'comment.line.doc': true, 'comment.block.doc': true } })],
+  plugins: [customPlugin],
   languageSettings: [
     {
+      // select the customized parser by its own name, for cpp files only
       languageId: 'cpp',
-      parser: 'c-cpp-strings-comments',
+      parser: 'c-cpp-only-docs',
     },
   ],
 };
@@ -80,20 +80,106 @@ parsers can't share one.
 
 <!--- @@inject: docs/tags-table.md --->
 
-| Tag                  | Meaning                                                                                                      |
-| -------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `comment`            | Any comment                                                                                                  |
-| `comment.line`       | A `//` line comment                                                                                          |
-| `comment.line.doc`   | A Doxygen-style `///` or `//!` doc-comment line                                                              |
-| `comment.block`      | A `/* ... */` block comment                                                                                  |
-| `comment.block.doc`  | A `/** ... */` doc comment (Doxygen-style)                                                                   |
-| `string`             | Any string-like literal                                                                                      |
-| `string.singleQuote` | A `'...'` char literal                                                                                       |
-| `string.doubleQuote` | A `"..."` string literal                                                                                     |
-| `string.raw`         | A C++11 raw string literal (`R"delim(...)delim"`)                                                            |
-| `code`               | C/C++ code that isn't a comment or string (identifiers, keywords, punctuation, numbers, preprocessor tokens) |
+| Tag                  | Meaning                                           |
+| -------------------- | ------------------------------------------------- |
+| `comment`            | Any comment                                       |
+| `comment.line`       | A `//` line comment                               |
+| `comment.line.doc`   | A Doxygen-style `///` or `//!` doc-comment line   |
+| `comment.block`      | A `/* ... */` block comment                       |
+| `comment.block.doc`  | A `/** ... */` doc comment (Doxygen-style)        |
+| `string`             | Any string-like literal                           |
+| `string.singleQuote` | A `'...'` char literal                            |
+| `string.doubleQuote` | A `"..."` string literal                          |
+| `string.raw`         | A C++11 raw string literal (`R"delim(...)delim"`) |
+| `code`               | Everything else (off by default)                  |
 
 <!--- @@inject-end: docs/tags-table.md --->
+
+### The `code` tag
+
+By default, text tagged `code` is not spell checked. To check it too, use `customizePlugin`:
+
+**`cspell.config.ts`** or **`cspell.config.js`**
+
+```js
+import { customizePlugin } from '@cspell/parser-c-cpp-strings-comments/plugin';
+
+export default {
+  plugins: [customizePlugin({ tags: { code: true } })],
+  languageSettings: [
+    {
+      languageId: 'cpp',
+      parser: 'c-cpp-strings-comments',
+    },
+  ],
+};
+```
+
+## Customization options
+
+The customization options have two purposes:
+
+- Change the name of the plugin and parser
+- Setup a `tags` filter to specify what is passed to the spell checker based upon
+  the attributed tags.
+
+### `CustomizePluginOptions`
+
+```ts
+interface CustomizePluginOptions {
+  /**
+   * Set the name of the plugin and parser.
+   */
+  name?: string;
+  /**
+   * Define which tagged segments to keep. Omit to keep everything.
+   */
+  tags?: TagFilterOptions;
+}
+```
+
+### Examples
+
+**Everything including `code`**
+
+```ts
+const option = { tags: { '*': true } };
+```
+
+**Everything except `code`**
+
+```ts
+const option = { tags: { '*': true, code: false } };
+```
+
+**Only comments**
+
+```ts
+const option = { tags: { '*': false, comment: true } };
+```
+
+### `TagFilterOptions`
+
+```ts
+/**
+ * A tag name, or a `*`-wildcard pattern matching one.
+ */
+type TagPattern = string;
+
+interface TagFilterOptions {
+  /**
+   * The default filter setting for any tag not otherwise matched.
+   */
+  '*'?: boolean | undefined;
+
+  /**
+   * Filter setting for the specific tag or wildcard pattern.
+   *
+   * If not specified, the default (`'*'`) will be used.
+   */
+  [tag: TagPattern]: boolean | undefined;
+}
+```
 
 ## Known limitations
 
