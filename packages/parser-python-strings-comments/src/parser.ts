@@ -3,12 +3,13 @@ import type { PluginParser, TagFilterOptions } from '@internal/utils';
 import { createPluginParser, customizeParser } from '@internal/utils';
 
 import { Scanner } from './scanner.js';
-import { tags } from './tags.js';
+import { TAGS, tags } from './tags.js';
 
 /**
- * Extracts comments and string literals from Python source into the `ParseResult` cspell uses to spell
- * check just those parts of the file. Most consumers should register the exported {@link parser} (or a
- * {@link createParser} customization) with cspell rather than calling this directly.
+ * Extracts comments and string literals from Python source, tagging everything else (identifiers, keywords,
+ * punctuation, numbers, operators) as plain `code` - so the full file content is covered. Most consumers
+ * should register the exported {@link parser} (or a {@link createParser} customization) with cspell rather
+ * than calling this directly.
  */
 export function parse(content: string, filename: string): ParseResult {
   return { content, filename, parsedTexts: new Scanner(content).run() };
@@ -16,12 +17,15 @@ export function parse(content: string, filename: string): ParseResult {
 
 export const supportedFileTypes: Readonly<string[]> = Object.freeze(['python']);
 
-export const parser: PluginParser = createPluginParser({
-  name: 'python-strings-comments',
-  parse,
-  supportedFileTypes,
-  tags,
-});
+export const parser: PluginParser = createPluginParser(
+  {
+    name: 'python-strings-comments',
+    parse,
+    supportedFileTypes,
+    tags,
+  },
+  (p) => p.tags !== TAGS.CODE,
+);
 
 /** Options for {@link createParser}: the parser's name, and which tagged segments to keep. */
 export interface CustomizeParserOptions {
