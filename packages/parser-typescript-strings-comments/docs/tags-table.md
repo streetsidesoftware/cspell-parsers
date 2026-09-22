@@ -13,3 +13,4 @@
 | `module`                    | Any module specifier string                                                                                                 |
 | `module.specifier`          | Any module specifier string (same as `module`, for a more specific filter)                                                  |
 | `module.specifier.literal`  | The module specifier string of an `import`/`export ... from` statement, a dynamic `import('...')`, or a `require(...)` call |
+| `code`                      | Everything else (off by default)                                                                                            |

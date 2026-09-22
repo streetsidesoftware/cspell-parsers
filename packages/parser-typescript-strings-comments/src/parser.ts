@@ -3,12 +3,9 @@ import type { PluginParser, TagFilterOptions } from '@internal/utils';
 import { createPluginParser, customizeParser } from '@internal/utils';
 
 import { Scanner } from './scanner.js';
-import { tags } from './tags.js';
+import { TAGS, tags } from './tags.js';
 
-/**
- * Extracts comments and string/template literal contents from JavaScript, JSX, TypeScript, and TSX source
- * for cspell to spell check, leaving identifiers, keywords, punctuation, and JSX markup unchecked.
- */
+/** Extracts comments and string/template literals from JS/JSX/TS/TSX source; everything else is tagged `code`. */
 export function parse(content: string, filename: string): ParseResult {
   return { content, filename, parsedTexts: new Scanner(content).run() };
 }
@@ -20,22 +17,20 @@ export const supportedFileTypes: Readonly<string[]> = Object.freeze([
   'typescriptreact',
 ]);
 
-export const parser: PluginParser = createPluginParser({
-  name: 'typescript-strings-comments',
-  parse,
-  supportedFileTypes,
-  tags,
-});
+export const parser: PluginParser = createPluginParser(
+  {
+    name: 'typescript-strings-comments',
+    parse,
+    supportedFileTypes,
+    tags,
+  },
+  (p) => p.tags !== TAGS.CODE,
+);
 
 /** Options for {@link createParser}: the parser's name, and which tagged segments to keep. */
 export interface CustomizeParserOptions {
-  /**
-   * Set the name of the parser.
-   */
   name?: string;
-  /**
-   * Define which tagged segments to keep. Omit to keep everything.
-   */
+  /** Omit to keep the parser's own defaults (`code` excluded). */
   tags?: TagFilterOptions;
 }
 

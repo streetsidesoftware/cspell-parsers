@@ -1,5 +1,5 @@
 import type { ParsedText, SourceMap } from '@cspell/cspell-types';
-import { stripCommentMarkers } from '@internal/utils';
+import { createCodeTagsEmitter, stripCommentMarkers } from '@internal/utils';
 
 import { TAGS, type Tags } from './tags.js';
 
@@ -147,18 +147,17 @@ function isModuleSpecifierContext(content: string, quoteIndex: number): boolean 
 }
 
 /**
- * Scans JavaScript/JSX/TypeScript/TSX source for comments and string/template literals, yielding one
- * `ParsedText` per segment and silently skipping everything else (identifiers, keywords, punctuation,
- * numbers, JSX markup) - the same "only emit what should be spell checked" approach as
- * `@cspell/parser-example`, extended to also emit string contents.
+ * Scans JavaScript/JSX/TypeScript/TSX source for comments and string/template literals, tagging everything
+ * else - including regex literals, JSX markup, and `RegExp(...)` call arguments - as `code`.
  */
 export class Scanner {
   private i = 0;
 
   constructor(private readonly content: string) {}
 
-  *run(): Generator<ParsedText> {
-    yield* this.scanCode(this.content.length, false);
+  run(): Iterable<ParsedText> {
+    const codeInjector = createCodeTagsEmitter(TAGS.CODE, this.content);
+    return codeInjector(this.scanCode(this.content.length, false));
   }
 
   /**
