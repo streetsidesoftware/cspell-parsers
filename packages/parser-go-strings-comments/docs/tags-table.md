@@ -8,3 +8,4 @@
 | `string.singleQuote` | A `'...'` rune literal                                                                        |
 | `string.doubleQuote` | A `"..."` interpreted string literal                                                          |
 | `string.raw`         | A `` `...` `` raw string literal                                                              |
+| `code`               | Everything else (off by default)                                                              |
