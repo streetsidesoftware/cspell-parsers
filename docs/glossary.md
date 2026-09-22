@@ -1,0 +1,24 @@
+# Glossary
+
+Terminology introduced or clarified while designing features with the `feature-adr` skill. Alphabetical.
+
+## `code` tag
+
+A catch-all tag emitted for any parsed segment that isn't already covered by a more specific tag
+(`comment`, `string`, `identifier`, etc.) — the leftover keywords, punctuation, operators, and numbers that
+make up the rest of the source. Off by default (a consumer must opt in via `customizePlugin`), since it's
+the noisiest, least useful thing to spell check. Established for `parser-php-strings-comments`; extended to
+the other scanner- and tree-sitter-based parsers in
+[code-tag-rollout/0002](./ADRs/code-tag-rollout/0002-code-tag-definition-and-default.md) and
+[code-tag-rollout/0003](./ADRs/code-tag-rollout/0003-tree-sitter-code-tag-semantics.md).
+
+## `createCodeTagsEmitter`
+
+A shared factory in `@internal/utils` (`codeTagEmitter.ts`) that takes a frozen `code` `Tags` value and the
+original file content, and returns a `ParsedTextEmitter` — a function taking an `Iterable<ParsedText>` and
+yielding it back interleaved with new `code`-tagged segments filling any byte range the input didn't cover
+(including the tail of the file after the last item). Used by every package in the code-tag rollout —
+scanner-based (piping a `Scanner`'s tagged-segment generator through it) and tree-sitter-based (piping an
+AST walk through it) alike — so gap-filling semantics are identical everywhere rather than each package
+reimplementing its own copy. Established in
+[code-tag-rollout/0004](./ADRs/code-tag-rollout/0004-shared-fillcodegaps-helper.md).
