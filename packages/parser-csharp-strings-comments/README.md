@@ -1,9 +1,10 @@
 # @cspell/parser-csharp-strings-comments
 
-A cspell plugin that extracts C# comments and string-like literals, so cspell only spell checks those, not
-identifiers, keywords, or other code. It understands C#'s several string literal forms: plain `'...'`/`"..."`,
-verbatim `@"..."`, interpolated `$"..."`, the combined `$@"..."`/`@$"..."`, and the C# 11 raw string literal
-(`"""..."""`).
+A cspell plugin that extracts C# comments and string-like literals, so cspell only spell checks those by
+default, not identifiers, keywords, or other code (everything else is still tagged `code`, so it can be
+opted into with `customizePlugin` if you want it checked too). It understands C#'s several string literal
+forms: plain `'...'`/`"..."`, verbatim `@"..."`, interpolated `$"..."`, the combined `$@"..."`/`@$"..."`, and
+the C# 11 raw string literal (`"""..."""`).
 
 It implements cspell's [`Parser`](https://www.npmjs.com/package/@cspell/cspell-types) contract and exports a
 [`Plugin`](https://www.npmjs.com/package/@cspell/cspell-types) so it can be wired into a cspell configuration.
@@ -45,11 +46,12 @@ choose the language IDs to use it for:
 
 ### Filtering by tag
 
-By default every comment/string the parser emits gets spell checked. To check only some of them - for
-example, only XML doc comments - use `customizePlugin` instead of the plain `plugin` export. It takes a
-`CustomizePluginOptions` object - `tags: TagFilterOptions` and `name` are both optional, and omitting `tags`
-keeps everything - and returns a `Plugin` whose parser filters segments by tag itself, before cspell ever
-sees them.
+By default every comment/string the parser emits gets spell checked, and `code` (everything else -
+identifiers, keywords, punctuation, numbers, preprocessor directives) is excluded. To change which segments
+get checked - for example, only XML doc comments, or also checking `code` - use `customizePlugin` instead of
+the plain `plugin` export. It takes a `CustomizePluginOptions` object - `tags: TagFilterOptions` and `name`
+are both optional, and omitting `tags` keeps the defaults above - and returns a `Plugin` whose parser
+filters segments by tag itself, before cspell ever sees them.
 
 ```js
 // cspell.config.mjs — customizePlugin returns a live Plugin object, so it needs a JS/TS config file
