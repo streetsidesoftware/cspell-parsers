@@ -3,29 +3,29 @@ import type { PluginParser, TagFilterOptions } from '@internal/utils';
 import { createPluginParser, customizeParser } from '@internal/utils';
 
 import { Scanner } from './scanner.js';
-import { tags } from './tags.js';
+import { TAGS, tags } from './tags.js';
 
-/**
- * Extracts comments and string literals from Rust source (char literals are recognized but never spell
- * checked).
- */
+/** Extracts comments and string literals from Rust source; everything else is tagged `code`. */
 export function parse(content: string, filename: string): ParseResult {
   return { content, filename, parsedTexts: new Scanner(content).run() };
 }
 
 export const supportedFileTypes: Readonly<string[]> = Object.freeze(['rust']);
 
-export const parser: PluginParser = createPluginParser({
-  name: 'rust-strings-comments',
-  parse,
-  supportedFileTypes,
-  tags,
-});
+export const parser: PluginParser = createPluginParser(
+  {
+    name: 'rust-strings-comments',
+    parse,
+    supportedFileTypes,
+    tags,
+  },
+  (p) => p.tags !== TAGS.CODE,
+);
 
 /** Options for {@link createParser}: the parser's name, and which tagged segments to keep. */
 export interface CustomizeParserOptions {
   name?: string;
-  /** Omit to keep everything. */
+  /** Omit to keep the parser's own defaults (`code` excluded). */
   tags?: TagFilterOptions;
 }
 

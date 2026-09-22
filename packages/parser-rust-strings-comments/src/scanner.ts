@@ -1,5 +1,5 @@
 import type { ParsedText, SourceMap } from '@cspell/cspell-types';
-import { stripCommentMarkers } from '@internal/utils';
+import { createCodeTagsEmitter, stripCommentMarkers } from '@internal/utils';
 
 import { TAGS } from './tags.js';
 
@@ -58,23 +58,23 @@ function isIdentChar(ch: string | undefined): boolean {
 }
 
 /**
- * Scans Rust source for comments and string literals, yielding one `ParsedText` per segment and silently
- * skipping everything else - identifiers, keywords, punctuation, numbers, lifetimes, and char literals -
- * the same "only emit what should be spell checked" approach as `@cspell/parser-example`.
+ * Scans Rust source for comments and string literals, tagging everything else - including unrecognized char
+ * literals and lifetimes - as `code`.
  *
- * Char/byte-char literals and lifetimes/labels get no general recognition; a bare `'` is just ordinary,
- * unrecognized code. The one exception is a `'` that opens a double-quote char literal (`'"'` or `'\"'`),
- * which `run()` special-cases - see CONTRIBUTING.md for why.
- *
- * No construct here splits into multiple fragments (Rust has no string interpolation), and block comments
- * nest (`scanBlockComment` tracks depth) - see CONTRIBUTING.md.
+ * A `'` is just ordinary code except when it opens a double-quote char literal (`'"'` or `'\"'`), which
+ * `scanTagged` special-cases so the embedded `"` isn't misread as starting a real string.
  */
 export class Scanner {
   private i = 0;
 
   constructor(private readonly content: string) {}
 
-  *run(): Generator<ParsedText> {
+  run(): Iterable<ParsedText> {
+    const codeInjector = createCodeTagsEmitter(TAGS.CODE, this.content);
+    return codeInjector(this.scanTagged());
+  }
+
+  private *scanTagged(): Generator<ParsedText> {
     const { content } = this;
 
     while (this.i < content.length) {

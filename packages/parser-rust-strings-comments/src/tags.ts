@@ -14,6 +14,7 @@ export const tagsAndMeaning = {
   'string.byte.raw': 'A byte raw string literal (`br"..."`, `br#"..."#`, ...)',
   'string.c': 'A `c"..."` C string literal (also carried by `string.c.raw`)',
   'string.c.raw': 'A C raw string literal (`cr"..."`, `cr#"..."#`, ...)',
+  code: 'Everything else (off by default)',
 } as const satisfies Record<string, string>;
 
 export type TagName = keyof typeof tagsAndMeaning;
@@ -30,8 +31,11 @@ function defineTag(tag: Tags): Readonly<Tags> {
   return Object.freeze(tag);
 }
 
+/** Tags excluded from "spell checked by default". `code` is the one tag consumers must opt into. */
+const NOT_ON_BY_DEFAULT: ReadonlySet<TagName> = new Set(['code']);
+
 export const tags: Readonly<AllTags> = Object.freeze(
-  Object.fromEntries(Object.keys(tagsAndMeaning).map((tag) => [tag, true])),
+  Object.fromEntries(Object.keys(tagsAndMeaning).map((tag) => [tag, !NOT_ON_BY_DEFAULT.has(tag as TagName)])),
 ) as Readonly<AllTags>;
 
 const COMMENT_TAG: Tags = defineTag({ comment: true });
@@ -52,6 +56,9 @@ const STRING_BYTE_RAW_TAG: Tags = defineTag({ ...STRING_BYTE_TAG, 'string.byte.r
 const STRING_C_TAG: Tags = defineTag({ ...STRING_TAG, 'string.c': true });
 const STRING_C_RAW_TAG: Tags = defineTag({ ...STRING_C_TAG, 'string.c.raw': true });
 
+/** Identifiers, keywords, punctuation, numbers, and attributes - everything not a comment or string. */
+const CODE_TAG: Tags = defineTag({ code: true });
+
 export const TAGS = {
   COMMENT: COMMENT_TAG,
   COMMENT_LINE: COMMENT_LINE_TAG,
@@ -64,4 +71,5 @@ export const TAGS = {
   STRING_BYTE_RAW: STRING_BYTE_RAW_TAG,
   STRING_C: STRING_C_TAG,
   STRING_C_RAW: STRING_C_RAW_TAG,
+  CODE: CODE_TAG,
 } as const;

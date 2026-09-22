@@ -11,3 +11,4 @@
 | `string.byte.raw`   | A byte raw string literal (`br"..."`, `br#"..."#`, ...)                       |
 | `string.c`          | A `c"..."` C string literal (also carried by `string.c.raw`)                  |
 | `string.c.raw`      | A C raw string literal (`cr"..."`, `cr#"..."#`, ...)                          |
+| `code`              | Everything else (off by default)                                              |
