@@ -3,20 +3,28 @@ import type { PluginParser, TagFilterOptions } from '@internal/utils';
 import { createPluginParser, customizeParser } from '@internal/utils';
 
 import { Scanner } from './scanner.js';
-import { tags } from './tags.js';
+import { TAGS, tags } from './tags.js';
 
+/**
+ * Extracts comments and character/string/text-block literals from Java source, tagging everything else
+ * (identifiers, keywords, punctuation, numbers, annotations) as plain `code` - so the full file content is
+ * covered.
+ */
 export function parse(content: string, filename: string): ParseResult {
   return { content, filename, parsedTexts: new Scanner(content).run() };
 }
 
 export const supportedFileTypes: Readonly<string[]> = Object.freeze(['java']);
 
-export const parser: PluginParser = createPluginParser({
-  name: 'java-strings-comments',
-  parse,
-  supportedFileTypes,
-  tags,
-});
+export const parser: PluginParser = createPluginParser(
+  {
+    name: 'java-strings-comments',
+    parse,
+    supportedFileTypes,
+    tags,
+  },
+  (p) => p.tags !== TAGS.CODE,
+);
 
 /** Options for {@link createParser}: the parser's name, and which tagged segments to keep. */
 export interface CustomizeParserOptions {

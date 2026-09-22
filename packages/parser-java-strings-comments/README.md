@@ -1,7 +1,8 @@
 # @cspell/parser-java-strings-comments
 
 A cspell plugin that extracts Java comments and string-like literals - including Java 15+ text blocks - so
-cspell only spell checks those, not identifiers, keywords, or other code.
+cspell only spell checks those by default, not identifiers, keywords, or other code (everything else is
+still tagged `code`, so it can be opted into with `customizePlugin` if you want it checked too).
 
 It implements cspell's [`Parser`](https://www.npmjs.com/package/@cspell/cspell-types) contract and exports a
 [`Plugin`](https://www.npmjs.com/package/@cspell/cspell-types) so it can be wired into a cspell configuration.
@@ -43,11 +44,12 @@ choose the language IDs to use it for:
 
 ### Filtering by tag
 
-By default every comment/string the parser emits gets spell checked. To check only some of them - for
-example, only Javadoc comments - use `customizePlugin` instead of the plain `plugin` export. It takes a
-`CustomizePluginOptions` object - `tags: TagFilterOptions` and `name` are both optional, and omitting `tags`
-keeps everything - and returns a `Plugin` whose parser filters segments by tag itself, before cspell ever
-sees them.
+By default every comment/string the parser emits gets spell checked, and `code` (everything else -
+identifiers, keywords, punctuation, numbers, annotations) is excluded. To change which segments get checked,
+for example to keep only Javadoc comments or to also check `code`, use `customizePlugin` instead of the
+plain `plugin` export. It takes a `CustomizePluginOptions` object - `tags: TagFilterOptions` and `name` are
+both optional, and omitting `tags` keeps the defaults above - and returns a `Plugin` whose parser filters
+segments by tag itself, before cspell ever sees them.
 
 ```js
 // cspell.config.mjs — customizePlugin returns a live Plugin object, so it needs a JS/TS config file

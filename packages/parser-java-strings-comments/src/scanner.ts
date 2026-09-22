@@ -1,5 +1,5 @@
 import type { ParsedText, SourceMap } from '@cspell/cspell-types';
-import { stripCommentMarkers } from '@internal/utils';
+import { createCodeTagsEmitter, stripCommentMarkers } from '@internal/utils';
 
 import { TAGS } from './tags.js';
 
@@ -32,18 +32,28 @@ function skipEscape(content: string, i: number): number {
 }
 
 /**
- * Scans Java source for comments and character/string/text-block literals, yielding one `ParsedText` per
- * segment and skipping everything else (identifiers, keywords, punctuation, numbers).
+ * Scans Java source for comments and character/string/text-block literals (each tagged with its own
+ * specific tag), and passes everything else through too - identifiers, keywords, punctuation, numbers,
+ * annotations - as `code`, so every byte of the file ends up in exactly one `ParsedText`.
  *
- * No string interpolation or regex/division ambiguity to resolve here, so `run` is a single flat loop and
- * every scan method returns exactly one `ParsedText` - no `emitFragment`-style recursion needed.
+ * `run` fills in the `code`-tagged gaps between what `scanTagged` itself yields via `@internal/utils`'s
+ * `createCodeTagsEmitter`, shared with every other package in this rollout rather than each one
+ * reimplementing its own trailing-cursor logic.
+ *
+ * No string interpolation or regex/division ambiguity to resolve here, so `scanTagged` is a single flat loop
+ * and every scan method returns exactly one `ParsedText` - no `emitFragment`-style recursion needed.
  */
 export class Scanner {
   private i = 0;
 
   constructor(private readonly content: string) {}
 
-  *run(): Generator<ParsedText> {
+  run(): Iterable<ParsedText> {
+    const codeInjector = createCodeTagsEmitter(TAGS.CODE, this.content);
+    return codeInjector(this.scanTagged());
+  }
+
+  private *scanTagged(): Generator<ParsedText> {
     const { content } = this;
 
     while (this.i < content.length) {
