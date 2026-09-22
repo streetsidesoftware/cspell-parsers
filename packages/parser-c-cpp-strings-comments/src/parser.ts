@@ -6,9 +6,8 @@ import { Scanner } from './scanner.js';
 import { TAGS, tags } from './tags.js';
 
 /**
- * Extracts comments and string/char/raw-string literals from C/C++ source, tagging everything else
- * (identifiers, keywords, punctuation, numbers, preprocessor tokens) as plain `code` - so the full file
- * content is covered. Most consumers won't call this directly; use the `parser`/`plugin` exports, or the
+ * Extracts comments and string/char/raw-string literals from C/C++ source; everything else is tagged
+ * `code`. Most consumers won't call this directly; use the `parser`/`plugin` exports, or the
  * `recommended`/`index` settings modules, to wire it into cspell.
  */
 export function parse(content: string, filename: string): ParseResult {
@@ -31,7 +30,7 @@ export const parser: PluginParser = createPluginParser(
 export interface CustomizeParserOptions {
   /** Overrides the registered parser name (default: `c-cpp-strings-comments`). */
   name?: string;
-  /** Which tagged segments to keep; omitting keeps everything. */
+  /** Which tagged segments to keep; omitting keeps the parser's own defaults (`code` excluded). */
   tags?: TagFilterOptions;
 }
 

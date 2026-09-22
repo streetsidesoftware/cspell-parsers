@@ -12,7 +12,7 @@ export const tagsAndMeaning = {
   'string.singleQuote': "A `'...'` char literal",
   'string.doubleQuote': 'A `"..."` string literal',
   'string.raw': 'A C++11 raw string literal (`R"delim(...)delim"`)',
-  code: "C/C++ code that isn't a comment or string (identifiers, keywords, punctuation, numbers, preprocessor tokens)",
+  code: 'Everything else (off by default)',
 } as const satisfies Record<string, string>;
 
 export type TagName = keyof typeof tagsAndMeaning;

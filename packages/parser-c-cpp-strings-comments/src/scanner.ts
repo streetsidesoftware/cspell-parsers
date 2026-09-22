@@ -47,19 +47,7 @@ function isIdentChar(ch: string | undefined): boolean {
   return !!ch && /[A-Za-z0-9_]/.test(ch);
 }
 
-/**
- * Scans C/C++ source for comments and string/char literals (each tagged with its own specific tag), and
- * passes everything else through too - identifiers, keywords, punctuation, numbers, preprocessor tokens -
- * as `code`, so every byte of the file ends up in exactly one `ParsedText`.
- *
- * `run` fills in the `code`-tagged gaps between what `scanTagged` itself yields via `@internal/utils`'s
- * `createCodeTagsEmitter`, shared with every other package in this rollout rather than each one
- * reimplementing its own trailing-cursor logic (see that package for the mechanics).
- *
- * Emits lazily via a generator rather than collecting into an array - nothing here holds onto a tree or other
- * resource a consumer could leak by not fully draining the result, so there's no reason to force eager
- * collection.
- */
+/** Scans C/C++ source for comments and string/char literals, tagging everything else as `code`. */
 export class Scanner {
   private i = 0;
 
