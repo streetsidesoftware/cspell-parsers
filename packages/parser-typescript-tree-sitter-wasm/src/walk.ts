@@ -2,7 +2,7 @@ import { createRequire } from 'node:module';
 
 import type { ParsedText } from '@cspell/cspell-types/Parser';
 import type { StringPart } from '@internal/utils';
-import { decodeStringParts, stripCommentMarkers } from '@internal/utils';
+import { createCodeTagsEmitter, decodeStringParts, stripCommentMarkers } from '@internal/utils';
 import type { Node as WasmNode } from '@vscode/tree-sitter-wasm';
 import TreeSitterWasm from '@vscode/tree-sitter-wasm';
 
@@ -509,13 +509,18 @@ function* walk(
   for (const child of namedChildrenOf(node)) yield* walk(child, innerBindingScope, imports);
 }
 
-/** Parses `content` and walks the resulting tree into the `ParsedText`s cspell should spell check. */
+/**
+ * Parses `content` and walks the resulting tree into the `ParsedText`s cspell should spell check, filling
+ * the gaps `walk` leaves between them (punctuation, keywords, and anything else it doesn't visit) with a
+ * `code`-tagged segment.
+ */
 export function collectParsedTexts(content: string, filename: string): ParsedText[] {
   const tsxMode = isTsx(filename);
   const tree = (tsxMode ? getTsxParser() : getTsParser()).parse(content);
   if (!tree) throw new Error(`Failed to parse ${filename}`);
   const imports = collectImportBindings(tree.rootNode);
+  const codeInjector = createCodeTagsEmitter(TAGS.CODE, content);
 
   // Make it greedy for now so that the parse tree gets released.
-  return [...walk(tree.rootNode, undefined, imports)];
+  return [...codeInjector(walk(tree.rootNode, undefined, imports))];
 }

@@ -1,6 +1,6 @@
 import type { ParsedText } from '@cspell/cspell-types/Parser';
 import type { StringPart } from '@internal/utils';
-import { decodeStringParts, stripCommentMarkers } from '@internal/utils';
+import { createCodeTagsEmitter, decodeStringParts, stripCommentMarkers } from '@internal/utils';
 import TreeSitterParser from 'tree-sitter';
 import TypeScriptLanguages from 'tree-sitter-typescript';
 
@@ -463,13 +463,18 @@ function* walk(
   for (const child of node.namedChildren) yield* walk(child, innerBindingScope, imports);
 }
 
-/** Parses `content` and walks the resulting tree into the `ParsedText`s cspell should spell check. */
+/**
+ * Parses `content` and walks the resulting tree into the `ParsedText`s cspell should spell check, filling
+ * the gaps `walk` leaves between them (punctuation, keywords, and anything else it doesn't visit) with a
+ * `code`-tagged segment.
+ */
 export function collectParsedTexts(content: string, filename: string): ParsedText[] {
   const tsxMode = isTsx(filename);
   const tree = (tsxMode ? getTsxParser() : getTsParser()).parse(content);
   const imports = collectImportBindings(tree.rootNode);
+  const codeInjector = createCodeTagsEmitter(TAGS.CODE, content);
 
   // Collect eagerly so nothing keeps `tree` - and the native parse-tree memory behind it - alive
   // after `parse()` returns.
-  return [...walk(tree.rootNode, undefined, imports)];
+  return [...codeInjector(walk(tree.rootNode, undefined, imports))];
 }

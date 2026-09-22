@@ -34,8 +34,14 @@ describe('javascript parser', () => {
     expect(parser.name).toBe('javascript');
   });
 
-  it('re-exports parse straight from @cspell/parser-typescript, unchanged', () => {
-    expect(parse).toBe(parser.parse);
+  it('parser.parse wraps parse from @cspell/parser-typescript, filtering out code by default', () => {
+    const content = 'const x = 1;\n';
+
+    const raw = [...parse(content, 'file.js').parsedTexts];
+    const filtered = [...parser.parse(content, 'file.js').parsedTexts];
+
+    expect(raw.some((p) => p.tags?.code)).toBe(true);
+    expect(filtered.some((p) => p.tags?.code)).toBe(false);
   });
 
   it('preserves the filename and full content on the result', () => {
