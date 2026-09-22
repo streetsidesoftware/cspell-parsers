@@ -128,7 +128,7 @@ export default {
 The customization options have two purposes:
 
 - Change the name of the registered parser (not the plugin's own name)
-- Setup a `tags` filter to specify what is passed to the spell checker based upon
+- Set up a `tags` filter to specify what is passed to the spell checker based upon
   the attributed tags.
 
 ### `CustomizePluginOptions`
