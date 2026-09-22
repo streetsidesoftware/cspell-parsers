@@ -51,6 +51,7 @@ See also: [Customization options](#customization-options)
 import { customizePlugin } from '@cspell/parser-c-cpp-strings-comments/plugin';
 
 const customPlugin = customizePlugin({
+  // set the parser name to be used in languageSettings
   name: 'c-cpp-only-docs',
   tags: { '*': false, 'comment.line.doc': true, 'comment.block.doc': true }, // only check Doxygen doc comments
 });
@@ -59,7 +60,7 @@ export default {
   plugins: [customPlugin],
   languageSettings: [
     {
-      // select the customized parser by its own name, for cpp files only
+      // select the customized parser by name, for cpp files only
       languageId: 'cpp',
       parser: 'c-cpp-only-docs',
     },
@@ -67,14 +68,18 @@ export default {
 };
 ```
 
-`tags` keys are matched hierarchically against the tags below - `string` also matches the more specific
-`string.raw` unless a more specific key overrides it - and may use `*` as a wildcard (`string.*`, or a bare
-`*` for "everything not otherwise matched", which defaults to `true`). See the [Tags](#tags) table below for
-every tag this parser can emit.
+**NOTE:**
 
-`name` overrides the parser's registered name (`c-cpp-strings-comments` by default). This matters when
-registering more than one customized copy of this parser, since cspell selects a parser by name and two
-parsers can't share one.
+> `name` overrides the parser's registered name (`c-cpp-strings-comments` by default). This matters when
+> registering more than one customized copy of this parser, since cspell selects a parser by name and two
+> parsers can't share one.
+
+**NOTE:**
+
+> `tags` keys are matched hierarchically against the [tags](#tags) below.
+>
+> The key `string` also matches the more specific
+> `string.raw` unless a more specific key overrides it. See: [`CustomizePluginOptions`](#customizepluginoptions) and [`TagFilterOptions`](#tagfilteroptions) below.
 
 ## Tags
 
@@ -158,7 +163,23 @@ const option = { tags: { '*': true, code: false } };
 const option = { tags: { '*': false, comment: true } };
 ```
 
+**Turn off `comment.*.doc`**
+
+```ts
+const option = { tags: { 'comment.*.doc': false } };
+```
+
 ### `TagFilterOptions`
+
+`TagFilterOptions` are used to set the filter criteria for the text sent to the spell checker.
+
+The values are inherited hierarchically
+
+- `comment: false` also implies `comment.line` is `false` unless overwritten by `'comment.line': true`
+
+Wildcards
+
+- `*` wildcards are weak matches. A more specific match will win.
 
 ```ts
 /**
