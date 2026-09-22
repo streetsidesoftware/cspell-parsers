@@ -1,13 +1,7 @@
 # @cspell/parser-csharp-strings-comments
 
-A cspell plugin that extracts C# comments and string-like literals, so cspell only spell checks those by
-default, not identifiers, keywords, or other code (everything else is still tagged `code`, so it can be
-opted into with `customizePlugin` if you want it checked too). It understands C#'s several string literal
-forms: plain `'...'`/`"..."`, verbatim `@"..."`, interpolated `$"..."`, the combined `$@"..."`/`@$"..."`, and
-the C# 11 raw string literal (`"""..."""`).
-
-It implements cspell's [`Parser`](https://www.npmjs.com/package/@cspell/cspell-types) contract and exports a
-[`Plugin`](https://www.npmjs.com/package/@cspell/cspell-types) so it can be wired into a cspell configuration.
+A cspell plugin that spell checks only the comments and string literals in C# files, leaving identifiers,
+keywords, and the rest of the code alone.
 
 ## Usage
 
