@@ -46,7 +46,7 @@ describe('createCodeTagsEmitter', () => {
   });
 
   it('does not insert a spurious segment between two adjacent items with no gap between them', () => {
-    const content = 'AAAAABBBBB';
+    const content = 'AAAAABBBBB'; // cspell:disable-line
     const items = [mkText('AAAAA', [0, 5]), mkText('BBBBB', [5, 10])];
 
     expect(run(content, items)).toEqual(items);
