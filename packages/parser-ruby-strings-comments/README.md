@@ -1,10 +1,7 @@
 # @cspell/parser-ruby-strings-comments
 
-A cspell plugin that extracts Ruby comments and string-like literals - including heredocs and backtick
-command strings (`` `...` ``) - so cspell only spell checks those, not identifiers, keywords, or other code.
-
-It implements cspell's [`Parser`](https://www.npmjs.com/package/@cspell/cspell-types) contract and exports a
-[`Plugin`](https://www.npmjs.com/package/@cspell/cspell-types) so it can be wired into a cspell configuration.
+A cspell plugin for spell checking only the comments and string literals in Ruby files, leaving identifiers,
+keywords, and the rest of the code alone.
 
 ## Usage
 
@@ -41,38 +38,46 @@ choose the language IDs to use it for:
 | ----------- |
 | `ruby`      |
 
-### Filtering by tag
+### Filtering by tag and file type
 
-By default every comment/string the parser emits gets spell checked. To check only some of them - for
-example, to exclude heredocs, which are often SQL or other text blobs that aren't meant to be spell checked -
-use `customizePlugin` instead of the plain `plugin` export. It takes a `CustomizePluginOptions` object -
-`tags: TagFilterOptions` and `name` are both optional, and omitting `tags` keeps everything - and returns a
-`Plugin` whose parser filters segments by tag itself, before cspell ever sees them.
+By default every comment/string the parser emits gets spell checked. Use `customizePlugin` to change what is sent on to the spell checker.
+See also: [Customization options](#customization-options)
+
+**`cspell.config.ts`** or **`cspell.config.mjs`**
 
 ```js
-// cspell.config.mjs — customizePlugin returns a live Plugin object, so it needs a JS/TS config file
-// (.mjs/.ts/.cjs), not .json/.jsonc/.yaml, where "plugins" can only be a list of module-specifier strings.
 import { customizePlugin } from '@cspell/parser-ruby-strings-comments/plugin';
 
+const customPlugin = customizePlugin({
+  // set the parser name to be used in languageSettings
+  name: 'ruby-no-heredocs',
+  tags: { 'string.heredoc': false }, // exclude heredocs - often SQL/text blobs
+});
+
 export default {
-  plugins: [customizePlugin({ tags: { 'string.heredoc': false } })], // exclude heredocs
+  plugins: [customPlugin],
   languageSettings: [
     {
+      // select the customized parser by name, for ruby files only
       languageId: 'ruby',
-      parser: 'ruby-strings-comments',
+      parser: 'ruby-no-heredocs',
     },
   ],
 };
 ```
 
-`tags` keys are matched hierarchically against the tags below - `string` also matches the more specific
-`string.heredoc` unless a more specific key overrides it - and may use `*` as a wildcard (`string.*`, or a
-bare `*` for "everything not otherwise matched", which defaults to `true`). See the [Tags](#tags) table below
-for every tag this parser can emit.
+**NOTE:**
 
-`name` overrides the parser's registered name (`ruby-strings-comments` by default). This matters when
-registering more than one customized copy of this parser, since cspell selects a parser by name and two
-parsers can't share one.
+> `name` overrides the parser's registered name (`ruby-strings-comments` by default). This matters when
+> registering more than one customized copy of this parser, since cspell selects a parser by name and two
+> parsers can't share one.
+
+**NOTE:**
+
+> `tags` keys are matched hierarchically against the [tags](#tags) below.
+>
+> The key `string` also matches the more specific
+> `string.heredoc` unless a more specific key overrides it. See: [`CustomizePluginOptions`](#customizepluginoptions) and [`TagFilterOptions`](#tagfilteroptions) below.
 
 A `#{...}` interpolation hole inside a double-quoted string, backtick command string, or interpolated
 heredoc is scanned like the rest of the file, so a string or comment nested inside one keeps its own normal
@@ -92,12 +97,117 @@ tag rather than the surrounding literal's tag.
 | `string.doubleQuote` | A `"..."` string literal (including interpolated fragments)              |
 | `string.heredoc`     | A `<<~ID`/`<<-ID`/`<<ID` heredoc body (any of its fragments)             |
 | `string.backtick`    | A `` `...` `` backtick command string (including interpolated fragments) |
+| `code`               | Everything else (off by default)                                         |
 
 <!--- @@inject-end: docs/tags-table.md --->
 
 Regex literals (`/pattern/flags`) and percent-literals (`%w[]`, `%q()`, `%r{}`, ...) never appear in this
 table: they're recognized and skipped as opaque units, but nothing is ever spell checked inside either, so
 there's no tag to filter by. See [Known limitations](#known-limitations).
+
+### The `code` tag
+
+By default, text tagged `code` is not spell checked. To check it too, use `customizePlugin`:
+
+**`cspell.config.ts`** or **`cspell.config.mjs`**
+
+```js
+import { customizePlugin } from '@cspell/parser-ruby-strings-comments/plugin';
+
+export default {
+  plugins: [customizePlugin({ tags: { code: true } })],
+  languageSettings: [
+    {
+      languageId: 'ruby',
+      parser: 'ruby-strings-comments',
+    },
+  ],
+};
+```
+
+## Customization options
+
+The customization options have two purposes:
+
+- Change the name of the registered parser (not the plugin's own name)
+- Set up a `tags` filter to specify what is passed to the spell checker based upon
+  the attributed tags.
+
+### `CustomizePluginOptions`
+
+```ts
+interface CustomizePluginOptions {
+  /**
+   * Set the name of the parser. Does not change the plugin's own name.
+   */
+  name?: string;
+  /**
+   * Define which tagged segments to keep. Omit to keep the parser's own defaults (`code` excluded).
+   */
+  tags?: TagFilterOptions;
+}
+```
+
+### Examples
+
+**Everything including `code`**
+
+```ts
+const option = { tags: { '*': true } };
+```
+
+**Everything except `code`**
+
+```ts
+const option = { tags: { '*': true, code: false } };
+```
+
+**Only comments**
+
+Change the parser `name` to `only-comments` and allow only comments.
+
+```ts
+const option = { name: 'only-comments', tags: { '*': false, comment: true } };
+```
+
+**Turn off `string.backtick`**
+
+```ts
+const option = { tags: { 'string.backtick': false } };
+```
+
+### `TagFilterOptions`
+
+`TagFilterOptions` are used to set the filter criteria for the text sent to the spell checker.
+
+The values are inherited hierarchically
+
+- `comment: false` also implies `comment.line` is `false` unless overwritten by `'comment.line': true`
+
+Wildcards
+
+- `*` wildcards are weak matches. A more specific match will win.
+
+```ts
+/**
+ * A tag name, or a `*`-wildcard pattern matching one.
+ */
+type TagPattern = string;
+
+interface TagFilterOptions {
+  /**
+   * The default filter setting for any tag not otherwise matched.
+   */
+  '*'?: boolean | undefined;
+
+  /**
+   * Filter setting for the specific tag or wildcard pattern.
+   *
+   * If not specified, the default (`'*'`) will be used.
+   */
+  [tag: TagPattern]: boolean | undefined;
+}
+```
 
 ## Known limitations
 

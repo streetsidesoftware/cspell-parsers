@@ -3,11 +3,11 @@ import type { PluginParser, TagFilterOptions } from '@internal/utils';
 import { createPluginParser, customizeParser } from '@internal/utils';
 
 import { Scanner } from './scanner.js';
-import { tags } from './tags.js';
+import { TAGS, tags } from './tags.js';
 
 /**
- * Extracts comments and string/heredoc literals from Ruby source. See the `Scanner` class for the actual
- * scanning logic.
+ * Extracts comments and string/heredoc literals from Ruby source; everything else is tagged `code`. See
+ * the `Scanner` class for the actual scanning logic.
  */
 export function parse(content: string, filename: string): ParseResult {
   return { content, filename, parsedTexts: new Scanner(content).run() };
@@ -15,12 +15,15 @@ export function parse(content: string, filename: string): ParseResult {
 
 export const supportedFileTypes: Readonly<string[]> = Object.freeze(['ruby']);
 
-export const parser: PluginParser = createPluginParser({
-  name: 'ruby-strings-comments',
-  parse,
-  supportedFileTypes,
-  tags,
-});
+export const parser: PluginParser = createPluginParser(
+  {
+    name: 'ruby-strings-comments',
+    parse,
+    supportedFileTypes,
+    tags,
+  },
+  (p) => p.tags !== TAGS.CODE,
+);
 
 /** Options for {@link createParser}: the parser's name, and which tagged segments to keep. */
 export interface CustomizeParserOptions {
@@ -29,7 +32,7 @@ export interface CustomizeParserOptions {
    */
   name?: string;
   /**
-   * Define which tagged segments to keep. Omit to keep everything.
+   * Define which tagged segments to keep. Omit to keep the parser's own defaults (`code` excluded).
    */
   tags?: TagFilterOptions;
 }

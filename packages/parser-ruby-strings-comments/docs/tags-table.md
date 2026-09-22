@@ -8,3 +8,4 @@
 | `string.doubleQuote` | A `"..."` string literal (including interpolated fragments)              |
 | `string.heredoc`     | A `<<~ID`/`<<-ID`/`<<ID` heredoc body (any of its fragments)             |
 | `string.backtick`    | A `` `...` `` backtick command string (including interpolated fragments) |
+| `code`               | Everything else (off by default)                                         |
