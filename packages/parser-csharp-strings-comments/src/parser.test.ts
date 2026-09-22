@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import type { ParsedText } from '@cspell/cspell-types';
@@ -200,13 +200,15 @@ describe('csharp-strings-comments parser', () => {
 
     it('a plain double-quoted string', () => {
       const content = 'var s = "abc\\';
-      const [str] = [...parse(content, 'file.cs').parsedTexts];
+      const parsedTexts = [...parse(content, 'file.cs').parsedTexts];
+      const str = parsedTexts.find((p) => p.tags?.string);
       expectRangeMatchesRawText(str, content);
     });
 
     it('a C# interpolated string (scanCSharpInterpolatedString)', () => {
       const content = 'var s = $"abc\\';
-      const [str] = [...parse(content, 'file.cs').parsedTexts];
+      const parsedTexts = [...parse(content, 'file.cs').parsedTexts];
+      const str = parsedTexts.find((p) => p.tags?.string);
       expectRangeMatchesRawText(str, content);
     });
   });
@@ -221,7 +223,7 @@ describe('csharp-strings-comments parser', () => {
     it('treats a backslash-escaped quote as staying inside the char literal', () => {
       const content = "var c = '\\'';\n";
       const parsed = [...parse(content, 'file.cs').parsedTexts];
-      expect(parsed).toHaveLength(1);
+      expect(parsed.filter((p) => p.tags?.string)).toHaveLength(1);
     });
   });
 
@@ -254,9 +256,54 @@ describe('csharp-strings-comments parser', () => {
     });
   });
 
+  it('tags the unhandled C# code between segments (identifiers, keywords, punctuation) as code', () => {
+    const rawTexts = [...parse(readFixture('csharp-strings.cs'), 'fixtures/csharp-strings.cs').parsedTexts];
+    const code = rawTexts.filter((p) => p.tags?.code);
+    expect(code.length).toBeGreaterThan(0);
+    expect(code.every((p) => p.tags?.code === true)).toBe(true);
+    // "public class Greeting" is ordinary C# code, not a comment/string segment, so it should surface via `code`.
+    expect(code.some((p) => p.text.includes('public class Greeting'))).toBe(true);
+  });
+
   describe('parse (named export used directly by the Parser)', () => {
-    it('is the same function wired into the exported parser', () => {
-      expect(parser.parse).toBe(parse);
+    it('parser.parse wraps the raw parse export, filtering out code by default', () => {
+      const content = '// a comment\nint total = 0;\n"a string"\n';
+      const raw = [...parse(content, 'file.cs').parsedTexts];
+      const filtered = [...parser.parse(content, 'file.cs').parsedTexts];
+
+      expect(raw.some((p) => p.tags?.code)).toBe(true);
+      expect(filtered.some((p) => p.tags?.code)).toBe(false);
+      expect(filtered).toEqual(raw.filter((p) => !p.tags?.code));
+    });
+  });
+
+  describe('tags', () => {
+    it('declares every tag the Scanner actually emits, across every fixture', () => {
+      // Regression coverage for a tag silently becoming impossible to filter: `PluginParser.customize` only
+      // knows about tags listed in `parser.tags`, so a tag the Scanner emits but `tags` doesn't declare
+      // would never be reachable via `createParser`/`customizePlugin`'s `tags` option, with no error to
+      // catch the mistake.
+      const emittedTags = new Set<string>();
+      for (const fixture of readdirSync(fixturesDir)) {
+        const content = readFixture(fixture);
+        for (const p of [...parse(content, `fixtures/${fixture}`).parsedTexts]) {
+          for (const tag in p.tags) emittedTags.add(tag);
+        }
+      }
+
+      expect(emittedTags.size).toBeGreaterThan(0); // sanity check the fixtures actually exercised something
+      for (const tag of emittedTags) {
+        expect(parser.tags).toHaveProperty(tag);
+      }
+    });
+
+    it('is off by default for "code", the one tag a consumer has to opt into', () => {
+      expect(parser.tags.code).toBe(false);
+    });
+
+    it('is on by default for every other declared tag', () => {
+      const { code: _code, ...rest } = parser.tags;
+      expect(Object.values(rest).every((value) => value === true)).toBe(true);
     });
   });
 });

@@ -14,6 +14,7 @@ export const tagsAndMeaning = {
   'string.verbatim': 'A `@"..."` verbatim string literal',
   'string.interpolated': 'A `$"..."` interpolated string literal fragment',
   'string.raw': 'A C# 11 `"""..."""` raw string literal',
+  code: 'Everything else (off by default)',
 } as const satisfies Record<string, string>;
 
 export type TagName = keyof typeof tagsAndMeaning;
@@ -30,8 +31,11 @@ function defineTag(tag: Tags): Readonly<Tags> {
   return Object.freeze(tag);
 }
 
+/** Tags excluded from "spell checked by default". `code` is the one tag consumers must opt into. */
+const NOT_ON_BY_DEFAULT: ReadonlySet<TagName> = new Set(['code']);
+
 export const tags: Readonly<AllTags> = Object.freeze(
-  Object.fromEntries(Object.keys(tagsAndMeaning).map((tag) => [tag, true])),
+  Object.fromEntries(Object.keys(tagsAndMeaning).map((tag) => [tag, !NOT_ON_BY_DEFAULT.has(tag as TagName)])),
 ) as Readonly<AllTags>;
 
 const COMMENT_TAG: Tags = defineTag({ comment: true });
@@ -57,6 +61,9 @@ const STRING_RAW_INTERPOLATED_TAG: Tags = defineTag({
   'string.interpolated': true,
 });
 
+/** Identifiers, keywords, punctuation, numbers, and preprocessor directives - everything not a comment or string. */
+const CODE_TAG: Tags = defineTag({ code: true });
+
 export const TAGS = {
   COMMENT: COMMENT_TAG,
   COMMENT_LINE: COMMENT_LINE_TAG,
@@ -71,4 +78,5 @@ export const TAGS = {
   STRING_VERBATIM_INTERPOLATED: STRING_VERBATIM_INTERPOLATED_TAG,
   STRING_RAW: STRING_RAW_TAG,
   STRING_RAW_INTERPOLATED: STRING_RAW_INTERPOLATED_TAG,
+  CODE: CODE_TAG,
 } as const;

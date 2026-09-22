@@ -1,7 +1,6 @@
 import type { Plugin } from '@cspell/cspell-types';
-import { customizeParser, type ParserPlugin } from '@internal/utils';
+import { customizeParser, type ParserPlugin, type TagFilterOptions } from '@internal/utils';
 
-import type { CustomizeParserOptions } from './parser.js';
 import { parser, supportedFileTypes } from './parser.js';
 
 export { supportedFileTypes } from './parser.js';
@@ -21,7 +20,16 @@ export const plugin: ParserPlugin = {
 };
 
 /** Options for {@link customizePlugin}: the parser's name, and which tagged segments to keep. */
-export type CustomizePluginOptions = CustomizeParserOptions;
+export interface CustomizePluginOptions {
+  /**
+   * Set the name of the parser. Does not change the plugin's own name.
+   */
+  name?: string;
+  /**
+   * Define which tagged segments to keep. Omit to keep the parser's own defaults (`code` excluded).
+   */
+  tags?: TagFilterOptions;
+}
 
 /**
  * Create a customized copy of {@link plugin} - rename its parser and/or choose which tagged segments get

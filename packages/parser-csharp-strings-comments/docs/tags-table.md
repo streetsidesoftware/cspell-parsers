@@ -11,3 +11,4 @@
 | `string.verbatim`     | A `@"..."` verbatim string literal                                               |
 | `string.interpolated` | A `$"..."` interpolated string literal fragment                                  |
 | `string.raw`          | A C# 11 `"""..."""` raw string literal                                           |
+| `code`                | Everything else (off by default)                                                 |

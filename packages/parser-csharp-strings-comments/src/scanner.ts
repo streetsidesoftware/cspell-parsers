@@ -1,5 +1,5 @@
 import type { ParsedTags, ParsedText, SourceMap } from '@cspell/cspell-types';
-import { stripCommentMarkers } from '@internal/utils';
+import { createCodeTagsEmitter, stripCommentMarkers } from '@internal/utils';
 
 import { TAGS } from './tags.js';
 
@@ -42,23 +42,15 @@ function skipEscape(content: string, i: number): number {
   return Math.min(i + 2, content.length);
 }
 
-/**
- * Scans C# source for comments and string/character literals, yielding one `ParsedText` per segment and
- * silently skipping everything else (identifiers, keywords, punctuation, numbers) - the same "only emit
- * what should be spell checked" approach as `@cspell/parser-example`, extended to also emit string contents
- * with per-form tags for C#'s several string literal kinds (plain, verbatim, interpolated, raw).
- *
- * Emits lazily via generators rather than collecting into an array - nothing here holds onto a tree or other
- * resource a consumer could leak by not fully draining the result, so there's no reason to force eager
- * collection.
- */
+/** Scans C# source for comments and string/character literals, tagging everything else as `code`. */
 export class Scanner {
   private i = 0;
 
   constructor(private readonly content: string) {}
 
-  *run(): Generator<ParsedText> {
-    yield* this.scanCode(this.content.length, false);
+  run(): Iterable<ParsedText> {
+    const codeInjector = createCodeTagsEmitter(TAGS.CODE, this.content);
+    return codeInjector(this.scanCode(this.content.length, false));
   }
 
   /**
