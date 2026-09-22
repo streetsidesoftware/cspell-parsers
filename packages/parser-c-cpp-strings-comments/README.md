@@ -1,12 +1,8 @@
 # @cspell/parser-c-cpp-strings-comments
 
-A cspell plugin that extracts C and C++ comments and string/char-literal contents - including C++11 raw
-strings - so cspell only spell checks those by default, not identifiers, keywords, or other code (everything
-else is still tagged `code`, so it can be opted into with `customizePlugin` if you want it checked too). C
-and C++ share identical comment and string/char-literal syntax, so one parser covers both.
-
-It implements cspell's [`Parser`](https://www.npmjs.com/package/@cspell/cspell-types) contract and exports a
-[`Plugin`](https://www.npmjs.com/package/@cspell/cspell-types) so it can be wired into a cspell configuration.
+A cspell plugin that spell checks only the comments and string/char literals in C and C++ files, leaving
+identifiers, keywords, and the rest of the code alone. C and C++ share identical comment and string/char
+syntax, so one parser covers both.
 
 ## Usage
 
@@ -84,17 +80,18 @@ parsers can't share one.
 
 <!--- @@inject: docs/tags-table.md --->
 
-| Tag                  | Meaning                                           |
-| -------------------- | ------------------------------------------------- |
-| `comment`            | Any comment                                       |
-| `comment.line`       | A `//` line comment                               |
-| `comment.line.doc`   | A Doxygen-style `///` or `//!` doc-comment line   |
-| `comment.block`      | A `/* ... */` block comment                       |
-| `comment.block.doc`  | A `/** ... */` doc comment (Doxygen-style)        |
-| `string`             | Any string-like literal                           |
-| `string.singleQuote` | A `'...'` char literal                            |
-| `string.doubleQuote` | A `"..."` string literal                          |
-| `string.raw`         | A C++11 raw string literal (`R"delim(...)delim"`) |
+| Tag                  | Meaning                                                                                                      |
+| -------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `comment`            | Any comment                                                                                                  |
+| `comment.line`       | A `//` line comment                                                                                          |
+| `comment.line.doc`   | A Doxygen-style `///` or `//!` doc-comment line                                                              |
+| `comment.block`      | A `/* ... */` block comment                                                                                  |
+| `comment.block.doc`  | A `/** ... */` doc comment (Doxygen-style)                                                                   |
+| `string`             | Any string-like literal                                                                                      |
+| `string.singleQuote` | A `'...'` char literal                                                                                       |
+| `string.doubleQuote` | A `"..."` string literal                                                                                     |
+| `string.raw`         | A C++11 raw string literal (`R"delim(...)delim"`)                                                            |
+| `code`               | C/C++ code that isn't a comment or string (identifiers, keywords, punctuation, numbers, preprocessor tokens) |
 
 <!--- @@inject-end: docs/tags-table.md --->
 
