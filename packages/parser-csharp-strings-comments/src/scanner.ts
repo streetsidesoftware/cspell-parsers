@@ -42,20 +42,7 @@ function skipEscape(content: string, i: number): number {
   return Math.min(i + 2, content.length);
 }
 
-/**
- * Scans C# source for comments and string/character literals (each tagged with its own specific tag,
- * covering C#'s several string literal kinds - plain, verbatim, interpolated, raw), and passes everything
- * else through too - identifiers, keywords, punctuation, numbers, preprocessor directives - as `code`, so
- * every byte of the file ends up in exactly one `ParsedText`.
- *
- * `run` fills in the `code`-tagged gaps between what `scanCode` itself yields via `@internal/utils`'s
- * `createCodeTagsEmitter`, shared with every other package in this rollout rather than each one
- * reimplementing its own trailing-cursor logic.
- *
- * Emits lazily via generators rather than collecting into an array - nothing here holds onto a tree or other
- * resource a consumer could leak by not fully draining the result, so there's no reason to force eager
- * collection.
- */
+/** Scans C# source for comments and string/character literals, tagging everything else as `code`. */
 export class Scanner {
   private i = 0;
 

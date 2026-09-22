@@ -5,11 +5,7 @@ import { createPluginParser, customizeParser } from '@internal/utils';
 import { Scanner } from './scanner.js';
 import { TAGS, tags } from './tags.js';
 
-/**
- * cspell `Parser.parse` implementation for C#: returns the file's comments and string/character literals,
- * tagging everything else (identifiers, keywords, punctuation, numbers, preprocessor directives) as plain
- * `code` - so the full file content is covered.
- */
+/** cspell `Parser.parse` implementation for C#: returns comments and string/character literals, tagging everything else as `code`. */
 export function parse(content: string, filename: string): ParseResult {
   return { content, filename, parsedTexts: new Scanner(content).run() };
 }
