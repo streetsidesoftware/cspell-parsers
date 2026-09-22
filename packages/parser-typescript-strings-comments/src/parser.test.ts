@@ -6,6 +6,7 @@ import type { ParsedText } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
 import { createParser, parse, parser } from './parser.js';
+import { tags } from './tags.js';
 
 const fixturesDir = join(import.meta.dirname, '../fixtures');
 
@@ -297,13 +298,15 @@ describe('typescript-strings-comments parser', () => {
 
     it('a plain double-quoted string', () => {
       const content = 'const s = "abc\\';
-      const [str] = [...parse(content, 'file.ts').parsedTexts];
+      const parsed = [...parse(content, 'file.ts').parsedTexts];
+      const str = parsed.find((p) => p.tags?.string);
       expectRangeMatchesRawText(str, content);
     });
 
     it('a template literal', () => {
       const content = 'const s = `abc\\';
-      const [str] = [...parse(content, 'file.ts').parsedTexts];
+      const parsed = [...parse(content, 'file.ts').parsedTexts];
+      const str = parsed.find((p) => p.tags?.['string.templateLiteral']);
       expectRangeMatchesRawText(str, content);
     });
   });
@@ -329,9 +332,44 @@ describe('typescript-strings-comments parser', () => {
     });
   });
 
-  describe('parse (named export used directly by the Parser)', () => {
-    it('is the same function wired into the exported parser', () => {
-      expect(parser.parse).toBe(parse);
+  it('tags the unhandled TypeScript code between comments and strings as code', () => {
+    const content = 'const x = 1; // comment\n';
+    const parsedTexts = [...parse(content, 'file.ts').parsedTexts];
+
+    const code = parsedTexts.find((p) => p.tags?.code);
+    expect(code?.text).toBe('const x = 1; ');
+  });
+
+  it('parser.parse wraps the raw parse export, filtering out code by default', () => {
+    const content = 'const x = 1; // comment\n';
+
+    const raw = [...parse(content, 'file.ts').parsedTexts];
+    const filtered = [...parser.parse(content, 'file.ts').parsedTexts];
+
+    expect(raw.some((p) => p.tags?.code)).toBe(true);
+    expect(filtered.some((p) => p.tags?.code)).toBe(false);
+  });
+
+  describe('tags', () => {
+    it('declares every tag the scanner can emit', () => {
+      const content = readFixture('comments-and-strings.ts');
+      const parsedTexts = [...parse(content, 'file.ts').parsedTexts];
+      const emittedTags = new Set(parsedTexts.flatMap((p) => Object.keys(p.tags ?? {})));
+
+      for (const tag of emittedTags) {
+        expect(tags).toHaveProperty(tag);
+      }
+    });
+
+    it('is off by default for code', () => {
+      expect(tags.code).toBe(false);
+    });
+
+    it('is on by default for everything else', () => {
+      for (const [tag, onByDefault] of Object.entries(tags)) {
+        if (tag === 'code') continue;
+        expect(onByDefault).toBe(true);
+      }
     });
   });
 });

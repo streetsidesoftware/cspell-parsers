@@ -17,6 +17,7 @@ export const tagsAndMeaning = {
   'module.specifier': 'Any module specifier string (same as `module`, for a more specific filter)',
   'module.specifier.literal':
     "The module specifier string of an `import`/`export ... from` statement, a dynamic `import('...')`, or a `require(...)` call",
+  code: 'Everything else (off by default)',
 } as const satisfies Record<string, string>;
 
 export type TagName = keyof typeof tagsAndMeaning;
@@ -33,8 +34,11 @@ function defineTag(tag: Tags): Readonly<Tags> {
   return Object.freeze(tag);
 }
 
+/** Tags excluded from "spell checked by default". `code` is the one tag consumers must opt into. */
+const NOT_ON_BY_DEFAULT: ReadonlySet<TagName> = new Set(['code']);
+
 export const tags: Readonly<AllTags> = Object.freeze(
-  Object.fromEntries(Object.keys(tagsAndMeaning).map((tag) => [tag, true])),
+  Object.fromEntries(Object.keys(tagsAndMeaning).map((tag) => [tag, !NOT_ON_BY_DEFAULT.has(tag as TagName)])),
 ) as Readonly<AllTags>;
 
 const COMMENT_TAG: Tags = defineTag({ comment: true });
@@ -70,6 +74,9 @@ const STRING_DOUBLE_MODULE_TAG: Tags = defineTag({
   ...MODULE_SPECIFIER_LITERAL_TAG,
 });
 
+/** Identifiers, keywords, punctuation, numbers, and non-module-specifier code - everything not a comment or string. */
+const CODE_TAG: Tags = defineTag({ code: true });
+
 export const TAGS = {
   COMMENT: COMMENT_TAG,
   COMMENT_LINE: COMMENT_LINE_TAG,
@@ -81,4 +88,5 @@ export const TAGS = {
   STRING_TEMPLATE: STRING_TEMPLATE_TAG,
   STRING_SINGLE_MODULE: STRING_SINGLE_MODULE_TAG,
   STRING_DOUBLE_MODULE: STRING_DOUBLE_MODULE_TAG,
+  CODE: CODE_TAG,
 } as const;
