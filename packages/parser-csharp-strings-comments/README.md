@@ -43,8 +43,7 @@ choose the language IDs to use it for:
 By default every comment/string the parser emits gets spell checked. Use `customizePlugin` to change what is sent on to the spell checker.
 See also: [Customization options](#customization-options)
 
-**`cspell.config.ts`** or **`cspell.config.mjs`** - `customizePlugin` returns a live `Plugin` object, so it
-needs a JS/TS config file, not `.json`/`.jsonc`/`.yaml`, where `plugins` can only be a list of strings.
+**`cspell.config.ts`** or **`cspell.config.mjs`**
 
 ```js
 import { customizePlugin } from '@cspell/parser-csharp-strings-comments/plugin';
@@ -108,8 +107,7 @@ string; `string.raw` and `string.interpolated` are combined for an interpolated 
 
 By default, text tagged `code` is not spell checked. To check it too, use `customizePlugin`:
 
-**`cspell.config.ts`** or **`cspell.config.mjs`** - `customizePlugin` returns a live `Plugin` object, so it
-needs a JS/TS config file, not `.json`/`.jsonc`/`.yaml`, where `plugins` can only be a list of strings.
+**`cspell.config.ts`** or **`cspell.config.mjs`**
 
 ```js
 import { customizePlugin } from '@cspell/parser-csharp-strings-comments/plugin';
@@ -138,11 +136,11 @@ The customization options have two purposes:
 ```ts
 interface CustomizePluginOptions {
   /**
-   * Set the name of the plugin and parser.
+   * Set the name of the parser. Does not change the plugin's own name.
    */
   name?: string;
   /**
-   * Define which tagged segments to keep. Omit to keep everything.
+   * Define which tagged segments to keep. Omit to keep the parser's own defaults (`code` excluded).
    */
   tags?: TagFilterOptions;
 }
