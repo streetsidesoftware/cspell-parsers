@@ -92,6 +92,7 @@ parsers can't share one.
 | `string.singleQuote` | A `'...'` rune literal                                                                        |
 | `string.doubleQuote` | A `"..."` interpreted string literal                                                          |
 | `string.raw`         | A `` `...` `` raw string literal                                                              |
+| `code`               | Go code that isn't a comment or string (identifiers, keywords, punctuation, numbers)          |
 
 <!--- @@inject-end: docs/tags-table.md --->
 
