@@ -1,6 +1,6 @@
 # @cspell/parser-csharp-strings-comments
 
-A cspell plugin that spell checks only the comments and string literals in C# files, leaving identifiers,
+A cspell plugin for spell checking only the comments and string literals in C# files, leaving identifiers,
 keywords, and the rest of the code alone.
 
 ## Usage
