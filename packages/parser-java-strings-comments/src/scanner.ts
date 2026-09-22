@@ -32,13 +32,8 @@ function skipEscape(content: string, i: number): number {
 }
 
 /**
- * Scans Java source for comments and character/string/text-block literals (each tagged with its own
- * specific tag), and passes everything else through too - identifiers, keywords, punctuation, numbers,
- * annotations - as `code`, so every byte of the file ends up in exactly one `ParsedText`.
- *
- * `run` fills in the `code`-tagged gaps between what `scanTagged` itself yields via `@internal/utils`'s
- * `createCodeTagsEmitter`, shared with every other package in this rollout rather than each one
- * reimplementing its own trailing-cursor logic.
+ * Scans Java source for comments and character/string/text-block literals, tagging everything else as
+ * `code`.
  *
  * No string interpolation or regex/division ambiguity to resolve here, so `scanTagged` is a single flat loop
  * and every scan method returns exactly one `ParsedText` - no `emitFragment`-style recursion needed.

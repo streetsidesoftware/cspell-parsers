@@ -1,11 +1,7 @@
 # @cspell/parser-java-strings-comments
 
-A cspell plugin that extracts Java comments and string-like literals - including Java 15+ text blocks - so
-cspell only spell checks those by default, not identifiers, keywords, or other code (everything else is
-still tagged `code`, so it can be opted into with `customizePlugin` if you want it checked too).
-
-It implements cspell's [`Parser`](https://www.npmjs.com/package/@cspell/cspell-types) contract and exports a
-[`Plugin`](https://www.npmjs.com/package/@cspell/cspell-types) so it can be wired into a cspell configuration.
+A cspell plugin that spell checks only the comments and string literals in Java files, leaving identifiers,
+keywords, and the rest of the code alone.
 
 ## Usage
 
@@ -80,16 +76,17 @@ parsers can't share one.
 
 <!--- @@inject: docs/tags-table.md --->
 
-| Tag                  | Meaning                             |
-| -------------------- | ----------------------------------- |
-| `comment`            | Any comment                         |
-| `comment.line`       | A `//` line comment                 |
-| `comment.block`      | A `/* ... */` block comment         |
-| `comment.block.doc`  | A `/** ... */` Javadoc comment      |
-| `string`             | Any string-like literal             |
-| `string.singleQuote` | A `'...'` character literal         |
-| `string.doubleQuote` | A `"..."` string literal            |
-| `string.textBlock`   | A `"""..."""` text block (Java 15+) |
+| Tag                  | Meaning                                                                                             |
+| -------------------- | --------------------------------------------------------------------------------------------------- |
+| `comment`            | Any comment                                                                                         |
+| `comment.line`       | A `//` line comment                                                                                 |
+| `comment.block`      | A `/* ... */` block comment                                                                         |
+| `comment.block.doc`  | A `/** ... */` Javadoc comment                                                                      |
+| `string`             | Any string-like literal                                                                             |
+| `string.singleQuote` | A `'...'` character literal                                                                         |
+| `string.doubleQuote` | A `"..."` string literal                                                                            |
+| `string.textBlock`   | A `"""..."""` text block (Java 15+)                                                                 |
+| `code`               | Java code that isn't a comment or string (identifiers, keywords, punctuation, numbers, annotations) |
 
 <!--- @@inject-end: docs/tags-table.md --->
 
