@@ -38,26 +38,31 @@ choose the language IDs to use it for:
 | ----------- |
 | `csharp`    |
 
-### Filtering by tag
+### Filtering by tag and file type
 
-By default every comment/string the parser emits gets spell checked, and `code` (everything else -
-identifiers, keywords, punctuation, numbers, preprocessor directives) is excluded. To change which segments
-get checked - for example, only XML doc comments, or also checking `code` - use `customizePlugin` instead of
-the plain `plugin` export. It takes a `CustomizePluginOptions` object - `tags: TagFilterOptions` and `name`
-are both optional, and omitting `tags` keeps the defaults above - and returns a `Plugin` whose parser
-filters segments by tag itself, before cspell ever sees them.
+By default every comment/string the parser emits gets spell checked. To change which segments get checked -
+for example, only XML doc comments - use `customizePlugin` instead of the plain `plugin` export. It takes a
+`CustomizePluginOptions` object - `tags: TagFilterOptions` and `name` are both optional, and omitting `tags`
+keeps the defaults - and returns a `Plugin` whose parser filters segments by tag itself, before cspell ever
+sees them.
+
+**`cspell.config.ts`** or **`cspell.config.js`**
 
 ```js
-// cspell.config.mjs — customizePlugin returns a live Plugin object, so it needs a JS/TS config file
-// (.mjs/.ts/.cjs), not .json/.jsonc/.yaml, where "plugins" can only be a list of module-specifier strings.
 import { customizePlugin } from '@cspell/parser-csharp-strings-comments/plugin';
 
+const customPlugin = customizePlugin({
+  name: 'csharp-only-line-doc',
+  tags: { '*': false, 'comment.line.doc': true }, // only check XML doc comments
+});
+
 export default {
-  plugins: [customizePlugin({ tags: { '*': false, 'comment.line.doc': true } })], // only check XML doc comments
+  plugins: [customPlugin],
   languageSettings: [
     {
+      // select the customized parser by its own name, for csharp files only
       languageId: 'csharp',
-      parser: 'csharp-strings-comments',
+      parser: 'csharp-only-line-doc',
     },
   ],
 };
@@ -76,25 +81,45 @@ parsers can't share one.
 
 <!--- @@inject: docs/tags-table.md --->
 
-| Tag                   | Meaning                                                                                                       |
-| --------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `comment`             | Any comment                                                                                                   |
-| `comment.line`        | A `//` line comment                                                                                           |
-| `comment.line.doc`    | A `///` XML doc comment line (not a `////`-or-more separator line)                                            |
-| `comment.block`       | A `/* ... */` block comment                                                                                   |
-| `comment.block.doc`   | A `/** ... */` doc-style block comment (not a conventional C# form, but handled)                              |
-| `string`              | Any string-like literal                                                                                       |
-| `string.singleQuote`  | A `'...'` character literal                                                                                   |
-| `string.doubleQuote`  | A `"..."` string literal                                                                                      |
-| `string.verbatim`     | A `@"..."` verbatim string literal                                                                            |
-| `string.interpolated` | A `$"..."` interpolated string literal fragment                                                               |
-| `string.raw`          | A C# 11 `"""..."""` raw string literal                                                                        |
-| `code`                | C# code that isn't a comment or string (identifiers, keywords, punctuation, numbers, preprocessor directives) |
+| Tag                   | Meaning                                                                          |
+| --------------------- | -------------------------------------------------------------------------------- |
+| `comment`             | Any comment                                                                      |
+| `comment.line`        | A `//` line comment                                                              |
+| `comment.line.doc`    | A `///` XML doc comment line (not a `////`-or-more separator line)               |
+| `comment.block`       | A `/* ... */` block comment                                                      |
+| `comment.block.doc`   | A `/** ... */` doc-style block comment (not a conventional C# form, but handled) |
+| `string`              | Any string-like literal                                                          |
+| `string.singleQuote`  | A `'...'` character literal                                                      |
+| `string.doubleQuote`  | A `"..."` string literal                                                         |
+| `string.verbatim`     | A `@"..."` verbatim string literal                                               |
+| `string.interpolated` | A `$"..."` interpolated string literal fragment                                  |
+| `string.raw`          | A C# 11 `"""..."""` raw string literal                                           |
+| `code`                | Everything else (off by default)                                                 |
 
 <!--- @@inject-end: docs/tags-table.md --->
 
 `string.verbatim` and `string.interpolated` are combined on the same segment for a `$@"..."`/`@$"..."`
 string; `string.raw` and `string.interpolated` are combined for an interpolated raw string literal.
+
+### The `code` tag
+
+By default, text tagged `code` is not spell checked. To check it too, use `customizePlugin`:
+
+**`cspell.config.ts`** or **`cspell.config.js`**
+
+```js
+import { customizePlugin } from '@cspell/parser-csharp-strings-comments/plugin';
+
+export default {
+  plugins: [customizePlugin({ tags: { code: true } })],
+  languageSettings: [
+    {
+      languageId: 'csharp',
+      parser: 'csharp-strings-comments',
+    },
+  ],
+};
+```
 
 ## Known limitations
 

@@ -14,7 +14,7 @@ export const tagsAndMeaning = {
   'string.verbatim': 'A `@"..."` verbatim string literal',
   'string.interpolated': 'A `$"..."` interpolated string literal fragment',
   'string.raw': 'A C# 11 `"""..."""` raw string literal',
-  code: "C# code that isn't a comment or string (identifiers, keywords, punctuation, numbers, preprocessor directives)",
+  code: 'Everything else (off by default)',
 } as const satisfies Record<string, string>;
 
 export type TagName = keyof typeof tagsAndMeaning;
