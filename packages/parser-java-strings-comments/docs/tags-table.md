@@ -8,3 +8,4 @@
 | `string.singleQuote` | A `'...'` character literal         |
 | `string.doubleQuote` | A `"..."` string literal            |
 | `string.textBlock`   | A `"""..."""` text block (Java 15+) |
+| `code`               | Everything else (off by default)    |

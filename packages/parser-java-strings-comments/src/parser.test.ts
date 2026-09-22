@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import type { ParsedText } from '@cspell/cspell-types';
@@ -136,17 +136,19 @@ describe('java-strings-comments parser', () => {
     it('treats "" (two quotes) as an empty ordinary string, not a text-block open', () => {
       const content = 'String s = "";\n';
       const parsed = [...parse(content, 'File.java').parsedTexts];
-      expect(parsed).toHaveLength(1);
-      expect(parsed[0]?.tags).toEqual({ string: true, 'string.doubleQuote': true });
-      expect(parsed[0]?.text).toBe('');
+      const strings = parsed.filter((p) => p.tags?.string);
+      expect(strings).toHaveLength(1);
+      expect(strings[0]?.tags).toEqual({ string: true, 'string.doubleQuote': true });
+      expect(strings[0]?.text).toBe('');
     });
 
     it('treats """""" (three-then-three quotes) as an empty text block', () => {
       const content = 'String s = """""";\n';
       const parsed = [...parse(content, 'File.java').parsedTexts];
-      expect(parsed).toHaveLength(1);
-      expect(parsed[0]?.tags).toEqual({ string: true, 'string.textBlock': true });
-      expect(parsed[0]?.text).toBe('');
+      const strings = parsed.filter((p) => p.tags?.string);
+      expect(strings).toHaveLength(1);
+      expect(strings[0]?.tags).toEqual({ string: true, 'string.textBlock': true });
+      expect(strings[0]?.text).toBe('');
     });
 
     it('recognizes a real text block immediately followed by an ordinary string on the next statement', () => {
@@ -199,14 +201,16 @@ describe('java-strings-comments parser', () => {
 
     it('an unterminated plain double-quoted string, ending in a trailing lone backslash', () => {
       const content = 'String s = "abc\\';
-      const [str] = [...parse(content, 'file.java').parsedTexts];
+      const parsedTexts = [...parse(content, 'file.java').parsedTexts];
+      const str = parsedTexts.find((p) => p.tags?.string);
       expectRangeMatchesRawText(str, content);
       expect(str?.tags).toEqual({ string: true, 'string.doubleQuote': true });
     });
 
     it('an unterminated char literal, with no closing quote at all', () => {
       const content = "char c = 'a";
-      const [str] = [...parse(content, 'file.java').parsedTexts];
+      const parsedTexts = [...parse(content, 'file.java').parsedTexts];
+      const str = parsedTexts.find((p) => p.tags?.string);
       expectRangeMatchesRawText(str, content);
       expect(str?.tags).toEqual({ string: true, 'string.singleQuote': true });
       expect(str?.text).toBe('a');
@@ -214,7 +218,8 @@ describe('java-strings-comments parser', () => {
 
     it('an unterminated text block, with no closing """ at all', () => {
       const content = 'String s = """\nblock content';
-      const [str] = [...parse(content, 'file.java').parsedTexts];
+      const parsedTexts = [...parse(content, 'file.java').parsedTexts];
+      const str = parsedTexts.find((p) => p.tags?.string);
       expectRangeMatchesRawText(str, content);
       expect(str?.tags).toEqual({ string: true, 'string.textBlock': true });
       expect(str?.text).toBe('\nblock content');
@@ -222,7 +227,8 @@ describe('java-strings-comments parser', () => {
 
     it('an unterminated text block ending in a trailing lone backslash', () => {
       const content = 'String s = """\nblock\\';
-      const [str] = [...parse(content, 'file.java').parsedTexts];
+      const parsedTexts = [...parse(content, 'file.java').parsedTexts];
+      const str = parsedTexts.find((p) => p.tags?.string);
       expectRangeMatchesRawText(str, content);
       expect(str?.tags).toEqual({ string: true, 'string.textBlock': true });
     });
@@ -249,9 +255,56 @@ describe('java-strings-comments parser', () => {
     });
   });
 
+  it('tags the unhandled Java code between segments (identifiers, keywords, punctuation) as code', () => {
+    const rawTexts = [
+      ...parse(readFixture('comments-and-strings.java'), 'fixtures/comments-and-strings.java').parsedTexts,
+    ];
+    const code = rawTexts.filter((p) => p.tags?.code);
+    expect(code.length).toBeGreaterThan(0);
+    expect(code.every((p) => p.tags?.code === true)).toBe(true);
+    // "public class Accumulator" is ordinary Java code, not a comment/string segment, so it should surface via `code`.
+    expect(code.some((p) => p.text.includes('public class Accumulator'))).toBe(true);
+  });
+
   describe('parse (named export used directly by the Parser)', () => {
-    it('is the same function wired into the exported parser', () => {
-      expect(parser.parse).toBe(parse);
+    it('parser.parse wraps the raw parse export, filtering out code by default', () => {
+      const content = '// a comment\nint total = 0;\n"a string"\n';
+      const raw = [...parse(content, 'file.java').parsedTexts];
+      const filtered = [...parser.parse(content, 'file.java').parsedTexts];
+
+      expect(raw.some((p) => p.tags?.code)).toBe(true);
+      expect(filtered.some((p) => p.tags?.code)).toBe(false);
+      expect(filtered).toEqual(raw.filter((p) => !p.tags?.code));
+    });
+  });
+
+  describe('tags', () => {
+    it('declares every tag the Scanner actually emits, across every fixture', () => {
+      // Regression coverage for a tag silently becoming impossible to filter: `PluginParser.customize` only
+      // knows about tags listed in `parser.tags`, so a tag the Scanner emits but `tags` doesn't declare
+      // would never be reachable via `createParser`/`customizePlugin`'s `tags` option, with no error to
+      // catch the mistake.
+      const emittedTags = new Set<string>();
+      for (const fixture of readdirSync(fixturesDir)) {
+        const content = readFixture(fixture);
+        for (const p of [...parse(content, `fixtures/${fixture}`).parsedTexts]) {
+          for (const tag in p.tags) emittedTags.add(tag);
+        }
+      }
+
+      expect(emittedTags.size).toBeGreaterThan(0); // sanity check the fixtures actually exercised something
+      for (const tag of emittedTags) {
+        expect(parser.tags).toHaveProperty(tag);
+      }
+    });
+
+    it('is off by default for "code", the one tag a consumer has to opt into', () => {
+      expect(parser.tags.code).toBe(false);
+    });
+
+    it('is on by default for every other declared tag', () => {
+      const { code: _code, ...rest } = parser.tags;
+      expect(Object.values(rest).every((value) => value === true)).toBe(true);
     });
   });
 });

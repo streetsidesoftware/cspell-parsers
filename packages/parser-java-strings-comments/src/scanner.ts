@@ -1,5 +1,5 @@
 import type { ParsedText, SourceMap } from '@cspell/cspell-types';
-import { stripCommentMarkers } from '@internal/utils';
+import { createCodeTagsEmitter, stripCommentMarkers } from '@internal/utils';
 
 import { TAGS } from './tags.js';
 
@@ -32,18 +32,20 @@ function skipEscape(content: string, i: number): number {
 }
 
 /**
- * Scans Java source for comments and character/string/text-block literals, yielding one `ParsedText` per
- * segment and skipping everything else (identifiers, keywords, punctuation, numbers).
- *
- * No string interpolation or regex/division ambiguity to resolve here, so `run` is a single flat loop and
- * every scan method returns exactly one `ParsedText` - no `emitFragment`-style recursion needed.
+ * Scans Java source for comments and character/string/text-block literals, tagging everything else as
+ * `code`.
  */
 export class Scanner {
   private i = 0;
 
   constructor(private readonly content: string) {}
 
-  *run(): Generator<ParsedText> {
+  run(): Iterable<ParsedText> {
+    const codeInjector = createCodeTagsEmitter(TAGS.CODE, this.content);
+    return codeInjector(this.scanTagged());
+  }
+
+  private *scanTagged(): Generator<ParsedText> {
     const { content } = this;
 
     while (this.i < content.length) {
