@@ -35,10 +35,6 @@ function skipEscape(content: string, i: number): number {
 /**
  * Scans Go source for comments and string/rune/raw-string literals, tagging everything else as `code`.
  *
- * Go has no template-literal-style interpolation and no regex-literal-vs-division ambiguity to resolve, so
- * unlike the JS/TS-family scanner this is split from, no construct here ever splits into multiple fragments
- * or needs lookahead/lookbehind - each scan method below emits exactly one `ParsedText`.
- *
  * Emits lazily via a generator rather than an array - nothing here needs eager draining to release a resource.
  */
 export class Scanner {
