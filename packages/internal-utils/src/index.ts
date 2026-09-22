@@ -1,3 +1,5 @@
+export type { ParsedTextEmitter } from './codeTagEmitter.js';
+export { createCodeTagsEmitter } from './codeTagEmitter.js';
 export type { CommentText } from './comments.js';
 export { stripCommentMarkers } from './comments.js';
 export { createParsedTextFilter } from './customize.js';

@@ -1,5 +1,5 @@
 import type { ParsedText, SourceMap } from '@cspell/cspell-types';
-import { stripCommentMarkers } from '@internal/utils';
+import { createCodeTagsEmitter, stripCommentMarkers } from '@internal/utils';
 
 import { TAGS } from './tags.js';
 
@@ -48,9 +48,13 @@ function isIdentChar(ch: string | undefined): boolean {
 }
 
 /**
- * Scans C/C++ source for comments and string/char literals, yielding one `ParsedText` per segment and
- * silently skipping everything else (identifiers, keywords, punctuation, numbers) - the same "only emit what
- * should be spell checked" approach as `@cspell/parser-example`, extended to also emit string contents.
+ * Scans C/C++ source for comments and string/char literals (each tagged with its own specific tag), and
+ * passes everything else through too - identifiers, keywords, punctuation, numbers, preprocessor tokens -
+ * as `code`, so every byte of the file ends up in exactly one `ParsedText`.
+ *
+ * `run` fills in the `code`-tagged gaps between what `scanTagged` itself yields via `@internal/utils`'s
+ * `createCodeTagsEmitter`, shared with every other package in this rollout rather than each one
+ * reimplementing its own trailing-cursor logic (see that package for the mechanics).
  *
  * Emits lazily via a generator rather than collecting into an array - nothing here holds onto a tree or other
  * resource a consumer could leak by not fully draining the result, so there's no reason to force eager
@@ -61,7 +65,12 @@ export class Scanner {
 
   constructor(private readonly content: string) {}
 
-  *run(): Generator<ParsedText> {
+  run(): Iterable<ParsedText> {
+    const codeInjector = createCodeTagsEmitter(TAGS.CODE, this.content);
+    return codeInjector(this.scanTagged());
+  }
+
+  private *scanTagged(): Generator<ParsedText> {
     const { content } = this;
 
     while (this.i < content.length) {

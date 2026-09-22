@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import type { ParsedText } from '@cspell/cspell-types';
@@ -12,9 +12,9 @@ function readFixture(name: string): string {
   return readFileSync(join(fixturesDir, name), 'utf8');
 }
 
-function parseFixture(name: string): ParsedText[] {
+function parseFixture(name: string, parseFn = parser.parse): ParsedText[] {
   const content = readFixture(name);
-  return [...parser.parse(content, `fixtures/${name}`).parsedTexts];
+  return [...parseFn(content, `fixtures/${name}`).parsedTexts];
 }
 
 function byText(parsedTexts: ParsedText[], text: string): ParsedText | undefined {
@@ -75,6 +75,15 @@ describe('c-cpp-strings-comments parser', () => {
     it('treats a backslash-escaped quote as staying inside the string', () => {
       const str = byText(parsedTexts, 'she said \\"hi\\" then left');
       expect(str).toBeDefined();
+    });
+
+    it('tags the unhandled C/C++ code between segments (identifiers, keywords, punctuation) as code', () => {
+      const rawTexts = parseFixture('comments-and-strings.c', parse);
+      const code = rawTexts.filter((p) => p.tags?.code);
+      expect(code.length).toBeGreaterThan(0);
+      expect(code.every((p) => p.tags?.code === true)).toBe(true);
+      // "int total" is ordinary C code, not a comment/string segment, so it should surface via `code`.
+      expect(code.some((p) => p.text.includes('int total'))).toBe(true);
     });
   });
 
@@ -197,13 +206,15 @@ describe('c-cpp-strings-comments parser', () => {
 
     it('a plain double-quoted string', () => {
       const content = 'const char *s = "abc\\';
-      const [str] = [...parse(content, 'file.c').parsedTexts];
+      const parsedTexts = [...parse(content, 'file.c').parsedTexts];
+      const str = parsedTexts.find((p) => p.tags?.string);
       expectRangeMatchesRawText(str, content);
     });
 
     it('a plain single-quoted char literal', () => {
       const content = "char c = 'a\\";
-      const [str] = [...parse(content, 'file.c').parsedTexts];
+      const parsedTexts = [...parse(content, 'file.c').parsedTexts];
+      const str = parsedTexts.find((p) => p.tags?.string);
       expectRangeMatchesRawText(str, content);
     });
   });
@@ -230,8 +241,43 @@ describe('c-cpp-strings-comments parser', () => {
   });
 
   describe('parse (named export used directly by the Parser)', () => {
-    it('is the same function wired into the exported parser', () => {
-      expect(parser.parse).toBe(parse);
+    it('parser.parse wraps the raw parse export, filtering out code by default', () => {
+      const content = '// a comment\nint total = 0;\n"a string"\n';
+      const raw = [...parse(content, 'file.c').parsedTexts];
+      const filtered = [...parser.parse(content, 'file.c').parsedTexts];
+
+      expect(raw.some((p) => p.tags?.code)).toBe(true);
+      expect(filtered.some((p) => p.tags?.code)).toBe(false);
+      expect(filtered).toEqual(raw.filter((p) => !p.tags?.code));
+    });
+  });
+
+  describe('tags', () => {
+    it('declares every tag the Scanner actually emits, across every fixture', () => {
+      // Regression coverage for a tag silently becoming impossible to filter: `PluginParser.customize` only
+      // knows about tags listed in `parser.tags`, so a tag the Scanner emits but `tags` doesn't declare
+      // would never be reachable via `createParser`/`customizePlugin`'s `tags` option, with no error to
+      // catch the mistake.
+      const emittedTags = new Set<string>();
+      for (const fixture of readdirSync(fixturesDir)) {
+        for (const p of parseFixture(fixture, parse)) {
+          for (const tag in p.tags) emittedTags.add(tag);
+        }
+      }
+
+      expect(emittedTags.size).toBeGreaterThan(0); // sanity check the fixtures actually exercised something
+      for (const tag of emittedTags) {
+        expect(parser.tags).toHaveProperty(tag);
+      }
+    });
+
+    it('is off by default for "code", the one tag a consumer has to opt into', () => {
+      expect(parser.tags.code).toBe(false);
+    });
+
+    it('is on by default for every other declared tag', () => {
+      const { code: _code, ...rest } = parser.tags;
+      expect(Object.values(rest).every((value) => value === true)).toBe(true);
     });
   });
 });
