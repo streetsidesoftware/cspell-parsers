@@ -1,4 +1,5 @@
 import type { ParsedText, SourceMap } from '@cspell/cspell-types';
+import { createCodeTagsEmitter } from '@internal/utils';
 
 import { TAGS, type Tags } from './tags.js';
 
@@ -115,17 +116,15 @@ function isClosingDelimiterAt(content: string, i: number, quote: string, delimLe
   return content[i + 1] === quote && content[i + 2] === quote;
 }
 
-/**
- * Scans Python source for comments and string literals, yielding one `ParsedText` per segment and silently
- * skipping everything else (identifiers, keywords, punctuation, numbers, operators).
- */
+/** Scans Python source for comments and string literals, tagging everything else as `code`. */
 export class Scanner {
   private i = 0;
 
   constructor(private readonly content: string) {}
 
-  *run(): Generator<ParsedText> {
-    yield* this.scanCode(this.content.length, false);
+  run(): Iterable<ParsedText> {
+    const codeInjector = createCodeTagsEmitter(TAGS.CODE, this.content);
+    return codeInjector(this.scanCode(this.content.length, false));
   }
 
   /**

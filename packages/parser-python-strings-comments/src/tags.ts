@@ -11,6 +11,7 @@ export const tagsAndMeaning = {
   'string.tripleQuote': 'A `\'\'\'...\'\'\'` or `"""..."""` string literal',
   'string.raw': 'Any `r`-prefixed string (`r`, `rb`/`br`, `rf`/`fr`) - composes with the tags above',
   'string.interpolated': 'Any `f`-prefixed string (an f-string) - composes with the tags above',
+  code: 'Everything else (off by default)',
 } as const satisfies Record<string, string>;
 
 export type TagName = keyof typeof tagsAndMeaning;
@@ -27,8 +28,11 @@ function defineTag(tag: Tags): Readonly<Tags> {
   return Object.freeze(tag);
 }
 
+/** Tags excluded from "spell checked by default". `code` is the one tag consumers must opt into. */
+const NOT_ON_BY_DEFAULT: ReadonlySet<TagName> = new Set(['code']);
+
 export const tags: Readonly<AllTags> = Object.freeze(
-  Object.fromEntries(Object.keys(tagsAndMeaning).map((tag) => [tag, true])),
+  Object.fromEntries(Object.keys(tagsAndMeaning).map((tag) => [tag, !NOT_ON_BY_DEFAULT.has(tag as TagName)])),
 ) as Readonly<AllTags>;
 
 const COMMENT_TAG: Tags = defineTag({ comment: true });
@@ -48,6 +52,9 @@ const STRING_TRIPLE_TAG: Tags = defineTag({ ...STRING_TAG, 'string.tripleQuote':
 const STRING_RAW_FLAG: Tags = defineTag({ 'string.raw': true });
 const STRING_INTERPOLATED_FLAG: Tags = defineTag({ 'string.interpolated': true });
 
+/** Identifiers, keywords, punctuation, and numbers - everything not a comment or string. */
+const CODE_TAG: Tags = defineTag({ code: true });
+
 export const TAGS = {
   COMMENT: COMMENT_TAG,
   COMMENT_LINE: COMMENT_LINE_TAG,
@@ -57,4 +64,5 @@ export const TAGS = {
   STRING_TRIPLE: STRING_TRIPLE_TAG,
   STRING_RAW_FLAG,
   STRING_INTERPOLATED_FLAG,
+  CODE: CODE_TAG,
 } as const;
