@@ -34,9 +34,6 @@ function skipEscape(content: string, i: number): number {
 /**
  * Scans Java source for comments and character/string/text-block literals, tagging everything else as
  * `code`.
- *
- * No string interpolation or regex/division ambiguity to resolve here, so `scanTagged` is a single flat loop
- * and every scan method returns exactly one `ParsedText` - no `emitFragment`-style recursion needed.
  */
 export class Scanner {
   private i = 0;

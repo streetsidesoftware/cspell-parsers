@@ -122,7 +122,7 @@ export default {
 The customization options have two purposes:
 
 - Change the name of the registered parser (not the plugin's own name)
-- Setup a `tags` filter to specify what is passed to the spell checker based upon
+- Set up a `tags` filter to specify what is passed to the spell checker based upon
   the attributed tags.
 
 ### `CustomizePluginOptions`
@@ -156,8 +156,10 @@ const option = { tags: { '*': true, code: false } };
 
 **Only comments**
 
+Change the parser `name` to `only-comments` and allow only comments.
+
 ```ts
-const option = { tags: { '*': false, comment: true } };
+const option = { name: 'only-comments', tags: { '*': false, comment: true } };
 ```
 
 **Turn off `comment.block.doc`**
