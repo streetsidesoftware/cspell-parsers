@@ -5,10 +5,7 @@ import { createPluginParser, customizeParser } from '@internal/utils';
 import { Scanner } from './scanner.js';
 import { TAGS, tags } from './tags.js';
 
-/**
- * Extracts comments and string/rune/raw-string literals from Go source, tagging everything else
- * (identifiers, keywords, punctuation, numbers) as plain `code` - so the full file content is covered.
- */
+/** Extracts comments and string/rune/raw-string literals from Go source, tagging everything else as `code`. */
 export function parse(content: string, filename: string): ParseResult {
   return { content, filename, parsedTexts: new Scanner(content).run() };
 }

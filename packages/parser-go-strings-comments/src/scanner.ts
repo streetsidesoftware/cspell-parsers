@@ -33,13 +33,7 @@ function skipEscape(content: string, i: number): number {
 }
 
 /**
- * Scans Go source for comments and string/rune/raw-string literals (each tagged with its own specific tag),
- * and passes everything else through too - identifiers, keywords, punctuation, numbers - as `code`, so every
- * byte of the file ends up in exactly one `ParsedText`.
- *
- * `run` fills in the `code`-tagged gaps between what `scanTagged` itself yields via `@internal/utils`'s
- * `createCodeTagsEmitter`, shared with every other package in this rollout rather than each one
- * reimplementing its own trailing-cursor logic.
+ * Scans Go source for comments and string/rune/raw-string literals, tagging everything else as `code`.
  *
  * Go has no template-literal-style interpolation and no regex-literal-vs-division ambiguity to resolve, so
  * unlike the JS/TS-family scanner this is split from, no construct here ever splits into multiple fragments
