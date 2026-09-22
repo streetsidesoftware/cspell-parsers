@@ -38,22 +38,76 @@ choose the language IDs to use it for:
 | ----------- |
 | `java`      |
 
-### Filtering by tag
+### Filtering by tag and file type
 
-By default every comment/string the parser emits gets spell checked, and `code` (everything else -
-identifiers, keywords, punctuation, numbers, annotations) is excluded. To change which segments get checked,
-for example to keep only Javadoc comments or to also check `code`, use `customizePlugin` instead of the
-plain `plugin` export. It takes a `CustomizePluginOptions` object - `tags: TagFilterOptions` and `name` are
-both optional, and omitting `tags` keeps the defaults above - and returns a `Plugin` whose parser filters
-segments by tag itself, before cspell ever sees them.
+By default every comment/string the parser emits gets spell checked. Use `customizePlugin` to change what is sent on to the spell checker.
+See also: [Customization options](#customization-options)
+
+**`cspell.config.ts`** or **`cspell.config.js`**
 
 ```js
-// cspell.config.mjs — customizePlugin returns a live Plugin object, so it needs a JS/TS config file
-// (.mjs/.ts/.cjs), not .json/.jsonc/.yaml, where "plugins" can only be a list of module-specifier strings.
+import { customizePlugin } from '@cspell/parser-java-strings-comments/plugin';
+
+const customPlugin = customizePlugin({
+  // set the parser name to be used in languageSettings
+  name: 'javadoc-only',
+  tags: { '*': false, 'comment.block.doc': true }, // only check Javadoc comments
+});
+
+export default {
+  plugins: [customPlugin],
+  languageSettings: [
+    {
+      // select the customized parser by name, for java files only
+      languageId: 'java',
+      parser: 'javadoc-only',
+    },
+  ],
+};
+```
+
+**NOTE:**
+
+> `name` overrides the parser's registered name (`java-strings-comments` by default). This matters when
+> registering more than one customized copy of this parser, since cspell selects a parser by name and two
+> parsers can't share one.
+
+**NOTE:**
+
+> `tags` keys are matched hierarchically against the [tags](#tags) below.
+>
+> The key `string` also matches the more specific
+> `string.textBlock` unless a more specific key overrides it. See: [`CustomizePluginOptions`](#customizepluginoptions) and [`TagFilterOptions`](#tagfilteroptions) below.
+
+## Tags
+
+<!--- @@inject: docs/tags-table.md --->
+
+| Tag                  | Meaning                             |
+| -------------------- | ----------------------------------- |
+| `comment`            | Any comment                         |
+| `comment.line`       | A `//` line comment                 |
+| `comment.block`      | A `/* ... */` block comment         |
+| `comment.block.doc`  | A `/** ... */` Javadoc comment      |
+| `string`             | Any string-like literal             |
+| `string.singleQuote` | A `'...'` character literal         |
+| `string.doubleQuote` | A `"..."` string literal            |
+| `string.textBlock`   | A `"""..."""` text block (Java 15+) |
+| `code`               | Everything else (off by default)    |
+
+<!--- @@inject-end: docs/tags-table.md --->
+
+### The `code` tag
+
+By default, text tagged `code` is not spell checked. To check it too, use `customizePlugin`:
+
+**`cspell.config.ts`** or **`cspell.config.js`**
+
+```js
 import { customizePlugin } from '@cspell/parser-java-strings-comments/plugin';
 
 export default {
-  plugins: [customizePlugin({ tags: { '*': false, 'comment.block.doc': true } })], // only check Javadoc comments
+  plugins: [customizePlugin({ tags: { code: true } })],
   languageSettings: [
     {
       languageId: 'java',
@@ -63,32 +117,87 @@ export default {
 };
 ```
 
-`tags` keys are matched hierarchically against the tags below - `string` also matches the more specific
-`string.textBlock` unless a more specific key overrides it - and may use `*` as a wildcard (`string.*`, or a
-bare `*` for "everything not otherwise matched", which defaults to `true`). See the [Tags](#tags) table below
-for every tag this parser can emit.
+## Customization options
 
-`name` overrides the parser's registered name (`java-strings-comments` by default). This matters when
-registering more than one customized copy of this parser, since cspell selects a parser by name and two
-parsers can't share one.
+The customization options have two purposes:
 
-## Tags
+- Change the name of the plugin and parser
+- Setup a `tags` filter to specify what is passed to the spell checker based upon
+  the attributed tags.
 
-<!--- @@inject: docs/tags-table.md --->
+### `CustomizePluginOptions`
 
-| Tag                  | Meaning                                                                                             |
-| -------------------- | --------------------------------------------------------------------------------------------------- |
-| `comment`            | Any comment                                                                                         |
-| `comment.line`       | A `//` line comment                                                                                 |
-| `comment.block`      | A `/* ... */` block comment                                                                         |
-| `comment.block.doc`  | A `/** ... */` Javadoc comment                                                                      |
-| `string`             | Any string-like literal                                                                             |
-| `string.singleQuote` | A `'...'` character literal                                                                         |
-| `string.doubleQuote` | A `"..."` string literal                                                                            |
-| `string.textBlock`   | A `"""..."""` text block (Java 15+)                                                                 |
-| `code`               | Java code that isn't a comment or string (identifiers, keywords, punctuation, numbers, annotations) |
+```ts
+interface CustomizePluginOptions {
+  /**
+   * Set the name of the plugin and parser.
+   */
+  name?: string;
+  /**
+   * Define which tagged segments to keep. Omit to keep everything.
+   */
+  tags?: TagFilterOptions;
+}
+```
 
-<!--- @@inject-end: docs/tags-table.md --->
+### Examples
+
+**Everything including `code`**
+
+```ts
+const option = { tags: { '*': true } };
+```
+
+**Everything except `code`**
+
+```ts
+const option = { tags: { '*': true, code: false } };
+```
+
+**Only comments**
+
+```ts
+const option = { tags: { '*': false, comment: true } };
+```
+
+**Turn off `comment.block.doc`**
+
+```ts
+const option = { tags: { 'comment.block.doc': false } };
+```
+
+### `TagFilterOptions`
+
+`TagFilterOptions` are used to set the filter criteria for the text sent to the spell checker.
+
+The values are inherited hierarchically
+
+- `comment: false` also implies `comment.line` is `false` unless overwritten by `'comment.line': true`
+
+Wildcards
+
+- `*` wildcards are weak matches. A more specific match will win.
+
+```ts
+/**
+ * A tag name, or a `*`-wildcard pattern matching one.
+ */
+type TagPattern = string;
+
+interface TagFilterOptions {
+  /**
+   * The default filter setting for any tag not otherwise matched.
+   */
+  '*'?: boolean | undefined;
+
+  /**
+   * Filter setting for the specific tag or wildcard pattern.
+   *
+   * If not specified, the default (`'*'`) will be used.
+   */
+  [tag: TagPattern]: boolean | undefined;
+}
+```
 
 ## Known limitations
 

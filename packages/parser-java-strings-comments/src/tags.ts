@@ -11,7 +11,7 @@ export const tagsAndMeaning = {
   'string.singleQuote': "A `'...'` character literal",
   'string.doubleQuote': 'A `"..."` string literal',
   'string.textBlock': 'A `"""..."""` text block (Java 15+)',
-  code: "Java code that isn't a comment or string (identifiers, keywords, punctuation, numbers, annotations)",
+  code: 'Everything else (off by default)',
 } as const satisfies Record<string, string>;
 
 export type TagName = keyof typeof tagsAndMeaning;
