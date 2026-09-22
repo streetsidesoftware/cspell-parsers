@@ -1,16 +1,9 @@
-import type { ParsedText, ParseResult } from '@cspell/cspell-types';
+import type { ParseResult } from '@cspell/cspell-types';
 import type { PluginParser, TagFilterOptions } from '@internal/utils';
-import { createPluginParser, customizeParser, stripCommentMarkers } from '@internal/utils';
+import { createPluginParser, customizeParser } from '@internal/utils';
 
-import { TAGS, type Tags, tags } from './tags.js';
-
-function commentTag(text: string): Tags {
-  return text.startsWith('//')
-    ? TAGS.COMMENT_LINE
-    : text.startsWith('/**')
-      ? TAGS.COMMENT_BLOCK_DOC
-      : TAGS.COMMENT_BLOCK;
-}
+import { Scanner } from './scanner.js';
+import { tags } from './tags.js';
 
 /**
  * Extracts C-style comments - `//` line comments and `/*`-delimited block comments - from
@@ -19,51 +12,7 @@ function commentTag(text: string): Tags {
  * start of a real comment.
  */
 export function parse(content: string, filename: string): ParseResult {
-  const parsedTexts: ParsedText[] = [];
-  let i = 0;
-
-  while (i < content.length) {
-    const twoChars = content.slice(i, i + 2);
-
-    if (twoChars === '//') {
-      const newlineIndex = content.indexOf('\n', i);
-      const end = newlineIndex === -1 ? content.length : newlineIndex;
-      const rawText = content.slice(i, end);
-      const { text, map } = stripCommentMarkers(rawText);
-      parsedTexts.push({ text, rawText, map, range: [i, end], tags: commentTag(rawText) });
-      i = end;
-      continue;
-    }
-
-    if (twoChars === '/*') {
-      const closeIndex = content.indexOf('*/', i + 2);
-      const end = closeIndex === -1 ? content.length : closeIndex + 2;
-      const rawText = content.slice(i, end);
-      const { text, map } = stripCommentMarkers(rawText);
-      parsedTexts.push({ text, rawText, map, range: [i, end], tags: commentTag(rawText) });
-      i = end;
-      continue;
-    }
-
-    const char = content[i];
-    if (char === '"' || char === "'" || char === '`') {
-      i = skipStringLiteral(content, i, char);
-      continue;
-    }
-
-    i++;
-  }
-
-  return { content, filename, parsedTexts };
-}
-
-/** Returns the index just past the closing `quote`, treating `\x` as one escaped character. */
-function skipStringLiteral(content: string, start: number, quote: string): number {
-  let i = start + 1;
-  while (i < content.length && content[i] !== quote) {
-    i += content[i] === '\\' ? 2 : 1;
-  }
-  return i + 1;
+  return { content, filename, parsedTexts: new Scanner(content).run() };
 }
 
 export const supportedFileTypes: Readonly<string[]> = Object.freeze([
