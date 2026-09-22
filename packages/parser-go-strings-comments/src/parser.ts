@@ -25,7 +25,7 @@ export const parser: PluginParser = createPluginParser(
 /** Options for {@link createParser}. */
 export interface CustomizeParserOptions {
   name?: string;
-  /** Omit to keep every tagged segment. */
+  /** Omit to keep the parser's own defaults (`code` excluded). */
   tags?: TagFilterOptions;
 }
 

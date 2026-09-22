@@ -43,7 +43,8 @@ choose the language IDs to use it for:
 By default every comment/string the parser emits gets spell checked. Use `customizePlugin` to change what is sent on to the spell checker.
 See also: [Customization options](#customization-options)
 
-**`cspell.config.ts`** or **`cspell.config.js`**
+**`cspell.config.ts`** or **`cspell.config.mjs`** - `customizePlugin` returns a live `Plugin` object, so it
+needs a JS/TS config file, not `.json`/`.jsonc`/`.yaml`, where `plugins` can only be a list of strings.
 
 ```js
 import { customizePlugin } from '@cspell/parser-go-strings-comments/plugin';
@@ -101,7 +102,8 @@ export default {
 
 By default, text tagged `code` is not spell checked. To check it too, use `customizePlugin`:
 
-**`cspell.config.ts`** or **`cspell.config.js`**
+**`cspell.config.ts`** or **`cspell.config.mjs`** - `customizePlugin` returns a live `Plugin` object, so it
+needs a JS/TS config file, not `.json`/`.jsonc`/`.yaml`, where `plugins` can only be a list of strings.
 
 ```js
 import { customizePlugin } from '@cspell/parser-go-strings-comments/plugin';
@@ -121,7 +123,7 @@ export default {
 
 The customization options have two purposes:
 
-- Change the name of the plugin and parser
+- Change the name of the registered parser (not the plugin's own name)
 - Setup a `tags` filter to specify what is passed to the spell checker based upon
   the attributed tags.
 
@@ -201,10 +203,8 @@ interface TagFilterOptions {
 
 ## Known limitations
 
-This parser is a small hand-written scanner, not a real grammar. Go's syntax has no regex-literal-vs-division
-ambiguity, no string interpolation, and no escape sequences inside a raw string, so - unlike this repo's
-JS/TS-family parser - there's nothing here that's only heuristically resolved: comments and every string form
-are recognized unambiguously from their delimiters alone.
+This parser is a small hand-written scanner, not a real grammar. It doesn't build an AST, so it can't tell
+you anything about what a string or comment is being used for - only where it is and how it was delimited.
 
 ## Requirements
 
