@@ -52,9 +52,9 @@ function isIdentChar(ch: string | undefined): boolean {
  * passes everything else through too - identifiers, keywords, punctuation, numbers, preprocessor tokens -
  * as `code`, so every byte of the file ends up in exactly one `ParsedText`.
  *
- * `run` fills in the `code`-tagged gaps between what `scanTagged` itself yields, via `j` - a second cursor
- * trailing `i`, marking how far the emitted segments have covered so far - the same approach
- * `@cspell/parser-php-strings-comments`'s `Scanner` uses.
+ * `run` fills in the `code`-tagged gaps between what `scanTagged` itself yields via `@internal/utils`'s
+ * `createCodeTagsEmitter`, shared with every other package in this rollout rather than each one
+ * reimplementing its own trailing-cursor logic (see that package for the mechanics).
  *
  * Emits lazily via a generator rather than collecting into an array - nothing here holds onto a tree or other
  * resource a consumer could leak by not fully draining the result, so there's no reason to force eager
