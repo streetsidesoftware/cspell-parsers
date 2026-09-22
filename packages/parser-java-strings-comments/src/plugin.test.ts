@@ -27,10 +27,11 @@ describe('customizePlugin', () => {
     const [customizedParser] = (customized.parsers ?? []) as Parser[];
     const result = customizedParser?.parse('// hello\n', 'Example.java');
 
-    // Only `comment` is excluded, so the trailing "\n" `code` segment still comes through (`'*': true`
-    // overrides code's own default-off behavior) - check that the comment text is gone rather than
-    // asserting an empty result.
-    expect([...(result?.parsedTexts ?? [])].some((p) => p.text === 'hello')).toBe(false);
+    const parsedTexts = [...(result?.parsedTexts ?? [])];
+    expect(parsedTexts.some((p) => p.text === 'hello')).toBe(false);
+    // Only `comment` is excluded, not everything - the trailing "\n" `code` segment still comes through
+    // (`'*': true` overrides code's own default-off behavior), so this can't have filtered out everything.
+    expect(parsedTexts.some((p) => p.tags?.code)).toBe(true);
   });
 
   it('wires name customization into the java-strings-comments parser', () => {
