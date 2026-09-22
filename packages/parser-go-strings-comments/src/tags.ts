@@ -11,6 +11,7 @@ export const tagsAndMeaning = {
   'string.singleQuote': "A `'...'` rune literal",
   'string.doubleQuote': 'A `"..."` interpreted string literal',
   'string.raw': 'A `` `...` `` raw string literal',
+  code: "Go code that isn't a comment or string (identifiers, keywords, punctuation, numbers)",
 } as const satisfies Record<string, string>;
 
 export type TagName = keyof typeof tagsAndMeaning;
@@ -27,8 +28,11 @@ function defineTag(tag: Tags): Readonly<Tags> {
   return Object.freeze(tag);
 }
 
+/** Tags excluded from "spell checked by default". `code` is the one tag consumers must opt into. */
+const NOT_ON_BY_DEFAULT: ReadonlySet<TagName> = new Set(['code']);
+
 export const tags: Readonly<AllTags> = Object.freeze(
-  Object.fromEntries(Object.keys(tagsAndMeaning).map((tag) => [tag, true])),
+  Object.fromEntries(Object.keys(tagsAndMeaning).map((tag) => [tag, !NOT_ON_BY_DEFAULT.has(tag as TagName)])),
 ) as Readonly<AllTags>;
 
 const COMMENT_TAG: Tags = defineTag({ comment: true });
@@ -41,6 +45,9 @@ const STRING_SINGLE_TAG: Tags = defineTag({ ...STRING_TAG, 'string.singleQuote':
 const STRING_DOUBLE_TAG: Tags = defineTag({ ...STRING_TAG, 'string.doubleQuote': true });
 const STRING_RAW_TAG: Tags = defineTag({ ...STRING_TAG, 'string.raw': true });
 
+/** Identifiers, keywords, punctuation, and numbers - everything not a comment or string. */
+const CODE_TAG: Tags = defineTag({ code: true });
+
 export const TAGS = {
   COMMENT: COMMENT_TAG,
   COMMENT_LINE: COMMENT_LINE_TAG,
@@ -50,4 +57,5 @@ export const TAGS = {
   STRING_SINGLE: STRING_SINGLE_TAG,
   STRING_DOUBLE: STRING_DOUBLE_TAG,
   STRING_RAW: STRING_RAW_TAG,
+  CODE: CODE_TAG,
 } as const;

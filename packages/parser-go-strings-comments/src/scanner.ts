@@ -1,5 +1,5 @@
 import type { ParsedText, SourceMap } from '@cspell/cspell-types';
-import { stripCommentMarkers } from '@internal/utils';
+import { createCodeTagsEmitter, stripCommentMarkers } from '@internal/utils';
 
 import { TAGS } from './tags.js';
 
@@ -33,8 +33,13 @@ function skipEscape(content: string, i: number): number {
 }
 
 /**
- * Scans Go source for comments and string/rune/raw-string literals, yielding one `ParsedText` per segment
- * and skipping everything else (identifiers, keywords, punctuation, numbers).
+ * Scans Go source for comments and string/rune/raw-string literals (each tagged with its own specific tag),
+ * and passes everything else through too - identifiers, keywords, punctuation, numbers - as `code`, so every
+ * byte of the file ends up in exactly one `ParsedText`.
+ *
+ * `run` fills in the `code`-tagged gaps between what `scanTagged` itself yields via `@internal/utils`'s
+ * `createCodeTagsEmitter`, shared with every other package in this rollout rather than each one
+ * reimplementing its own trailing-cursor logic.
  *
  * Go has no template-literal-style interpolation and no regex-literal-vs-division ambiguity to resolve, so
  * unlike the JS/TS-family scanner this is split from, no construct here ever splits into multiple fragments
@@ -47,7 +52,12 @@ export class Scanner {
 
   constructor(private readonly content: string) {}
 
-  *run(): Generator<ParsedText> {
+  run(): Iterable<ParsedText> {
+    const codeInjector = createCodeTagsEmitter(TAGS.CODE, this.content);
+    return codeInjector(this.scanTagged());
+  }
+
+  private *scanTagged(): Generator<ParsedText> {
     const { content } = this;
 
     while (this.i < content.length) {

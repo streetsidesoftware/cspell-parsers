@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import type { ParsedText } from '@cspell/cspell-types';
@@ -165,13 +165,15 @@ describe('go-strings-comments parser', () => {
 
     it('a plain double-quoted string', () => {
       const content = 'var s = "abc\\';
-      const [str] = [...parse(content, 'file.go').parsedTexts];
+      const parsedTexts = [...parse(content, 'file.go').parsedTexts];
+      const str = parsedTexts.find((p) => p.tags?.string);
       expectRangeMatchesRawText(str, content);
     });
 
     it('a single-quoted rune literal', () => {
       const content = "var r = 'a\\";
-      const [str] = [...parse(content, 'file.go').parsedTexts];
+      const parsedTexts = [...parse(content, 'file.go').parsedTexts];
+      const str = parsedTexts.find((p) => p.tags?.string);
       expectRangeMatchesRawText(str, content);
     });
   });
@@ -197,9 +199,54 @@ describe('go-strings-comments parser', () => {
     });
   });
 
+  it('tags the unhandled Go code between segments (identifiers, keywords, punctuation) as code', () => {
+    const rawTexts = [...parse(readFixture('comments-and-strings.go'), 'fixtures/comments-and-strings.go').parsedTexts];
+    const code = rawTexts.filter((p) => p.tags?.code);
+    expect(code.length).toBeGreaterThan(0);
+    expect(code.every((p) => p.tags?.code === true)).toBe(true);
+    // "func Add(a, b int) int" is ordinary Go code, not a comment/string segment, so it should surface via `code`.
+    expect(code.some((p) => p.text.includes('func Add(a, b int) int'))).toBe(true);
+  });
+
   describe('parse (named export used directly by the Parser)', () => {
-    it('is the same function wired into the exported parser', () => {
-      expect(parser.parse).toBe(parse);
+    it('parser.parse wraps the raw parse export, filtering out code by default', () => {
+      const content = '// a comment\nvar total = 0\n"a string"\n';
+      const raw = [...parse(content, 'file.go').parsedTexts];
+      const filtered = [...parser.parse(content, 'file.go').parsedTexts];
+
+      expect(raw.some((p) => p.tags?.code)).toBe(true);
+      expect(filtered.some((p) => p.tags?.code)).toBe(false);
+      expect(filtered).toEqual(raw.filter((p) => !p.tags?.code));
+    });
+  });
+
+  describe('tags', () => {
+    it('declares every tag the Scanner actually emits, across every fixture', () => {
+      // Regression coverage for a tag silently becoming impossible to filter: `PluginParser.customize` only
+      // knows about tags listed in `parser.tags`, so a tag the Scanner emits but `tags` doesn't declare
+      // would never be reachable via `createParser`/`customizePlugin`'s `tags` option, with no error to
+      // catch the mistake.
+      const emittedTags = new Set<string>();
+      for (const fixture of readdirSync(fixturesDir)) {
+        const content = readFixture(fixture);
+        for (const p of [...parse(content, `fixtures/${fixture}`).parsedTexts]) {
+          for (const tag in p.tags) emittedTags.add(tag);
+        }
+      }
+
+      expect(emittedTags.size).toBeGreaterThan(0); // sanity check the fixtures actually exercised something
+      for (const tag of emittedTags) {
+        expect(parser.tags).toHaveProperty(tag);
+      }
+    });
+
+    it('is off by default for "code", the one tag a consumer has to opt into', () => {
+      expect(parser.tags.code).toBe(false);
+    });
+
+    it('is on by default for every other declared tag', () => {
+      const { code: _code, ...rest } = parser.tags;
+      expect(Object.values(rest).every((value) => value === true)).toBe(true);
     });
   });
 });
