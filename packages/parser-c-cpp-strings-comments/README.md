@@ -159,8 +159,10 @@ const option = { tags: { '*': true, code: false } };
 
 **Only comments**
 
+Change the parser `name` to `only-comments` and allow only comments.
+
 ```ts
-const option = { tags: { '*': false, comment: true } };
+const option = { name: 'only-comments', tags: { '*': false, comment: true } };
 ```
 
 **Turn off `comment.*.doc`**
