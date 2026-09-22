@@ -1,4 +1,5 @@
 import type { ParsedText, SourceMap } from '@cspell/cspell-types';
+import { createCodeTagsEmitter } from '@internal/utils';
 
 import { TAGS, type Tags } from './tags.js';
 
@@ -161,11 +162,8 @@ interface HeredocHeader {
 }
 
 /**
- * Scans Ruby source for comments and string/heredoc literals, yielding one `ParsedText` per segment. Regex
- * literals and percent-literals are recognized and consumed as opaque units but never emitted; everything
- * else (identifiers, keywords, punctuation, numbers, symbols) is silently skipped - the same "only emit what
- * should be spell checked" approach as `@cspell/parser-example`, extended to also emit string/heredoc
- * contents.
+ * Scans Ruby source for comments and string/heredoc literals, tagging everything else - including
+ * recognized-but-not-emitted regex/percent-literals - as `code`.
  *
  * Emits lazily via generators rather than collecting into an array - nothing here holds onto a tree or other
  * resource a consumer could leak by not fully draining the result.
@@ -175,8 +173,9 @@ export class Scanner {
 
   constructor(private readonly content: string) {}
 
-  *run(): Generator<ParsedText> {
-    yield* this.scanCode(this.content.length, false);
+  run(): Iterable<ParsedText> {
+    const codeInjector = createCodeTagsEmitter(TAGS.CODE, this.content);
+    return codeInjector(this.scanCode(this.content.length, false));
   }
 
   /**

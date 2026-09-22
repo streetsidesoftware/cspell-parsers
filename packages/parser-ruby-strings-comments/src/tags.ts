@@ -11,6 +11,7 @@ export const tagsAndMeaning = {
   'string.doubleQuote': 'A `"..."` string literal (including interpolated fragments)',
   'string.heredoc': 'A `<<~ID`/`<<-ID`/`<<ID` heredoc body (any of its fragments)',
   'string.backtick': 'A `` `...` `` backtick command string (including interpolated fragments)',
+  code: 'Everything else (off by default)',
 } as const satisfies Record<string, string>;
 
 export type TagName = keyof typeof tagsAndMeaning;
@@ -27,8 +28,11 @@ function defineTag(tag: Tags): Readonly<Tags> {
   return Object.freeze(tag);
 }
 
+/** Tags excluded from "spell checked by default". `code` is the one tag consumers must opt into. */
+const NOT_ON_BY_DEFAULT: ReadonlySet<TagName> = new Set(['code']);
+
 export const tags: Readonly<AllTags> = Object.freeze(
-  Object.fromEntries(Object.keys(tagsAndMeaning).map((tag) => [tag, true])),
+  Object.fromEntries(Object.keys(tagsAndMeaning).map((tag) => [tag, !NOT_ON_BY_DEFAULT.has(tag as TagName)])),
 ) as Readonly<AllTags>;
 
 const COMMENT_TAG: Tags = defineTag({ comment: true });
@@ -41,6 +45,9 @@ const STRING_DOUBLE_TAG: Tags = defineTag({ ...STRING_TAG, 'string.doubleQuote':
 const STRING_HEREDOC_TAG: Tags = defineTag({ ...STRING_TAG, 'string.heredoc': true });
 const STRING_BACKTICK_TAG: Tags = defineTag({ ...STRING_TAG, 'string.backtick': true });
 
+/** Identifiers, keywords, punctuation, and numbers - everything not a comment or string. */
+const CODE_TAG: Tags = defineTag({ code: true });
+
 export const TAGS = {
   COMMENT: COMMENT_TAG,
   COMMENT_LINE: COMMENT_LINE_TAG,
@@ -50,4 +57,5 @@ export const TAGS = {
   STRING_DOUBLE: STRING_DOUBLE_TAG,
   STRING_HEREDOC: STRING_HEREDOC_TAG,
   STRING_BACKTICK: STRING_BACKTICK_TAG,
+  CODE: CODE_TAG,
 } as const;
