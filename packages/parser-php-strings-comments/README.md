@@ -79,7 +79,7 @@ parsers can't share one.
 
 ## Tags
 
-<!--- @@inject: docs/tags-table.md --->
+<!--- @@inject: docs/tags-table.csv#markdown --->
 
 | Tag                  | Meaning                                                                                               |
 | -------------------- | ----------------------------------------------------------------------------------------------------- |
@@ -95,7 +95,7 @@ parsers can't share one.
 | `html`               | HTML (or other non-PHP) content outside `<?php`/`<?=`/`<?` ... `?>`                                   |
 | `code`               | PHP code that isn't a comment or string (identifiers, keywords, punctuation, numbers, tag delimiters) |
 
-<!--- @@inject-end: docs/tags-table.md --->
+<!--- @@inject-end: docs/tags-table.csv#markdown --->
 
 ## Known limitations
 

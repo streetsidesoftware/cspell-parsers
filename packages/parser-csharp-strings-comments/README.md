@@ -81,7 +81,7 @@ export default {
 
 ## Tags
 
-<!--- @@inject: docs/tags-table.md --->
+<!--- @@inject: docs/tags-table.csv#markdown --->
 
 | Tag                   | Meaning                                                                          |
 | --------------------- | -------------------------------------------------------------------------------- |
@@ -98,7 +98,7 @@ export default {
 | `string.raw`          | A C# 11 `"""..."""` raw string literal                                           |
 | `code`                | Everything else (off by default)                                                 |
 
-<!--- @@inject-end: docs/tags-table.md --->
+<!--- @@inject-end: docs/tags-table.csv#markdown --->
 
 `string.verbatim` and `string.interpolated` are combined on the same segment for a `$@"..."`/`@$"..."`
 string; `string.raw` and `string.interpolated` are combined for an interpolated raw string literal.

@@ -85,7 +85,7 @@ share one.
 
 ## Tags
 
-<!--- @@inject: docs/tags-table.md --->
+<!--- @@inject: docs/tags-table.csv#markdown --->
 
 | Tag                 | Meaning                     |
 | ------------------- | --------------------------- |
@@ -94,7 +94,7 @@ share one.
 | `comment.block`     | A `/* ... */` block comment |
 | `comment.block.doc` | A `/** ... */` doc comment  |
 
-<!--- @@inject-end: docs/tags-table.md --->
+<!--- @@inject-end: docs/tags-table.csv#markdown --->
 
 ## Requirements
 

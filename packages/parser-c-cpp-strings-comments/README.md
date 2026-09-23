@@ -83,7 +83,7 @@ export default {
 
 ## Tags
 
-<!--- @@inject: docs/tags-table.md --->
+<!--- @@inject: docs/tags-table.csv#markdown --->
 
 | Tag                  | Meaning                                           |
 | -------------------- | ------------------------------------------------- |
@@ -98,7 +98,7 @@ export default {
 | `string.raw`         | A C++11 raw string literal (`R"delim(...)delim"`) |
 | `code`               | Everything else (off by default)                  |
 
-<!--- @@inject-end: docs/tags-table.md --->
+<!--- @@inject-end: docs/tags-table.csv#markdown --->
 
 ### The `code` tag
 

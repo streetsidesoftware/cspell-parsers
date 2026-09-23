@@ -81,7 +81,7 @@ export default {
 
 ## Tags
 
-<!--- @@inject: docs/tags-table.md --->
+<!--- @@inject: docs/tags-table.csv#markdown --->
 
 | Tag                  | Meaning                                                                                       |
 | -------------------- | --------------------------------------------------------------------------------------------- |
@@ -95,7 +95,7 @@ export default {
 | `string.raw`         | A `` `...` `` raw string literal                                                              |
 | `code`               | Everything else (off by default)                                                              |
 
-<!--- @@inject-end: docs/tags-table.md --->
+<!--- @@inject-end: docs/tags-table.csv#markdown --->
 
 ### The `code` tag
 

@@ -85,7 +85,7 @@ tag rather than the surrounding literal's tag.
 
 ## Tags
 
-<!--- @@inject: docs/tags-table.md --->
+<!--- @@inject: docs/tags-table.csv#markdown --->
 
 | Tag                  | Meaning                                                                  |
 | -------------------- | ------------------------------------------------------------------------ |
@@ -99,7 +99,7 @@ tag rather than the surrounding literal's tag.
 | `string.backtick`    | A `` `...` `` backtick command string (including interpolated fragments) |
 | `code`               | Everything else (off by default)                                         |
 
-<!--- @@inject-end: docs/tags-table.md --->
+<!--- @@inject-end: docs/tags-table.csv#markdown --->
 
 Regex literals (`/pattern/flags`) and percent-literals (`%w[]`, `%q()`, `%r{}`, ...) never appear in this
 table: they're recognized and skipped as opaque units, but nothing is ever spell checked inside either, so
