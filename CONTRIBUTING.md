@@ -184,10 +184,11 @@ below that applies.
   another repo, or walk through exploration/dead ends). Group by theme (what changed, not which file it
   lives in) — label each group with a short effect/topic phrase, e.g. `**Hidden refactors**`, not a file
   path like `**release-please-config.json**`. A single-item group reads fine as a short paragraph after its
-  label; only reach for bullets under a label when the group covers several distinct changes. Not
-  `<details>`-gated, since a reviewer needs to see it to review the PR. A `##`/`###` heading or a bold label
-  (`**Topic**` on its own line before the paragraph/bullets) both work; use a bold label when a full heading
-  would be heavier than the group needs.
+  label; reach for bullets when the group covers several distinct changes, or when one change's rationale
+  stacks up more than about two independent facts — that reads as a dense wall however few changes it
+  describes. Not `<details>`-gated, since a reviewer needs to see it to review the PR. A `##`/`###` heading
+  or a bold label (`**Topic**` on its own line before the paragraph/bullets) both work; use a bold label
+  when a full heading would be heavier than the group needs.
 - If needed, further detail in `<details>` blocks (e.g. `<summary>Usage</summary>`, `<summary>Details</summary>`),
   as bullet points, not prose paragraphs — these stay collapsed, unlike the `##` headings above, so lead with
   what actually needs a click.
