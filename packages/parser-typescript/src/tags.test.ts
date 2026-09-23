@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { tags, tagsAndMeaning } from './tags.js';
+import { tags, tagsAndMeaning } from './tags.ts';
 
 describe('tags (re-exported from @cspell/parser-typescript-tree-sitter)', () => {
   it('documents every tag the parser can emit', () => {

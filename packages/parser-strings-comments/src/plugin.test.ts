@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { customizePlugin, getParsersByFileType, plugin } from './plugin.js';
+import { customizePlugin, getParsersByFileType, plugin } from './plugin.ts';
 
 describe('plugin', () => {
   it('exposes the strings-comments parser', () => {

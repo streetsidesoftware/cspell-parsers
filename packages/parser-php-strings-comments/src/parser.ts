@@ -2,8 +2,8 @@ import type { ParseResult } from '@cspell/cspell-types';
 import type { PluginParser, TagFilterOptions } from '@internal/utils';
 import { createPluginParser } from '@internal/utils';
 
-import { Scanner } from './scanner.js';
-import { TAGS, tags } from './tags.js';
+import { Scanner } from './scanner.ts';
+import { TAGS, tags } from './tags.ts';
 
 /**
  * Parses PHP source, tagging its comments, string/heredoc/nowdoc literals, and the HTML markup surrounding

@@ -1,7 +1,7 @@
 import type { ParsedText } from '@cspell/cspell-types';
 import { stripCommentMarkers } from '@internal/utils';
 
-import { TAGS, type Tags } from './tags.js';
+import { TAGS, type Tags } from './tags.ts';
 
 function commentTag(text: string): Tags {
   return text.startsWith('//')

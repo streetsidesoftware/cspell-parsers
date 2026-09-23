@@ -1,7 +1,7 @@
 import type { ParsedText } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
-import { createCodeTagsEmitter } from './codeTagEmitter.js';
+import { createCodeTagsEmitter } from './codeTagEmitter.ts';
 
 const CODE_TAG = Object.freeze({ code: true });
 

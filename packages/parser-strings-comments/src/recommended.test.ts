@@ -1,8 +1,8 @@
 import type { AdvancedCSpellSettings } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
-import { plugin } from './plugin.js';
-import recommended from './recommended.js';
+import { plugin } from './plugin.ts';
+import recommended from './recommended.ts';
 
 describe('recommended (cspell settings entry point)', () => {
   it('wires the plugin into a set of cspell settings', () => {

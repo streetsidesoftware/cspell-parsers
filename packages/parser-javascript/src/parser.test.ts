@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import type { ParsedText } from '@cspell/cspell-types/Parser';
 import { describe, expect, it } from 'vitest';
 
-import { createParser, parse, parser, supportedFileTypes } from './parser.js';
+import { createParser, parse, parser, supportedFileTypes } from './parser.ts';
 
 const fixturesDir = join(import.meta.dirname, '../fixtures');
 

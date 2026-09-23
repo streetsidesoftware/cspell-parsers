@@ -2,8 +2,8 @@ import type { ParseResult } from '@cspell/cspell-types';
 import type { PluginParser, TagFilterOptions } from '@internal/utils';
 import { createPluginParser, customizeParser } from '@internal/utils';
 
-import { Scanner } from './scanner.js';
-import { TAGS, tags } from './tags.js';
+import { Scanner } from './scanner.ts';
+import { TAGS, tags } from './tags.ts';
 
 /**
  * Extracts comments and string/char/raw-string literals from C/C++ source; everything else is tagged

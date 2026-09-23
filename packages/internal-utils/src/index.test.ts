@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { stripCommentMarkers as stripCommentMarkersImpl } from './comments.js';
-import { customizeParser, decodeStringParts, stripCommentMarkers } from './index.js';
-import { customizeParser as customizeParserImpl } from './parser.js';
-import { decodeStringParts as decodeStringPartsImpl } from './strings.js';
+import { stripCommentMarkers as stripCommentMarkersImpl } from './comments.ts';
+import { customizeParser, decodeStringParts, stripCommentMarkers } from './index.ts';
+import { customizeParser as customizeParserImpl } from './parser.ts';
+import { decodeStringParts as decodeStringPartsImpl } from './strings.ts';
 
 describe('index', () => {
   it('re-exports stripCommentMarkers from comments.js', () => {

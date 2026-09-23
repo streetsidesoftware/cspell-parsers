@@ -1,7 +1,7 @@
 import type { ParsedText, SourceMap } from '@cspell/cspell-types';
 import { createCodeTagsEmitter } from '@internal/utils';
 
-import { TAGS, type Tags } from './tags.js';
+import { TAGS, type Tags } from './tags.ts';
 
 /**
  * Composes a base quote-style tag with the `string.raw`/`string.interpolated` flags for a given prefix,

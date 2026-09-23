@@ -2,8 +2,8 @@ import type { ParseResult } from '@cspell/cspell-types';
 import type { PluginParser, TagFilterOptions } from '@internal/utils';
 import { createPluginParser, customizeParser } from '@internal/utils';
 
-import { Scanner } from './scanner.js';
-import { tags } from './tags.js';
+import { Scanner } from './scanner.ts';
+import { tags } from './tags.ts';
 
 /**
  * Extracts C-style comments - `//` line comments and `/*`-delimited block comments - from

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { stripCommentMarkers } from './comments.js';
+import { stripCommentMarkers } from './comments.ts';
 
 /**
  * Reconstructs the transformed text implied by `map` (see the `SourceMap` doc comment in
