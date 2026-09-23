@@ -4,7 +4,8 @@ import { join } from 'node:path';
 import type { ParsedText } from '@cspell/cspell-types/Parser';
 import { describe, expect, it } from 'vitest';
 
-import { createParser, parser } from './parser.js';
+import { createParser, parse, parser } from './parser.js';
+import { tags } from './tags.js';
 
 const fixturesDir = join(import.meta.dirname, '../fixtures');
 
@@ -330,6 +331,47 @@ describe('typescript parser', () => {
     expect(after.tags).toEqual({ string: true, 'string.templateLiteral': true });
 
     expect(find(parsedTexts, 'name').tags).toEqual({ identifier: true, 'identifier.variable': true });
+  });
+
+  it('tags the gaps between visited nodes (punctuation, keywords) as code', () => {
+    const content = 'const x = 1;\n';
+    const parsedTexts = [...parse(content, 'file.ts').parsedTexts];
+
+    const code = parsedTexts.find((p) => p.tags?.code);
+    expect(code?.text).toBe('const ');
+  });
+
+  it('parser.parse wraps the raw parse export, filtering out code by default', () => {
+    const content = 'const x = 1;\n';
+
+    const raw = [...parse(content, 'file.ts').parsedTexts];
+    const filtered = [...parser.parse(content, 'file.ts').parsedTexts];
+
+    expect(raw.some((p) => p.tags?.code)).toBe(true);
+    expect(filtered.some((p) => p.tags?.code)).toBe(false);
+  });
+
+  describe('tags', () => {
+    it('declares every tag the walk can emit', () => {
+      const content = readFixture('tags.ts');
+      const parsedTexts = [...parse(content, 'file.ts').parsedTexts];
+      const emittedTags = new Set(parsedTexts.flatMap((p) => Object.keys(p.tags ?? {})));
+
+      for (const tag of emittedTags) {
+        expect(tags).toHaveProperty(tag);
+      }
+    });
+
+    it('is off by default for code', () => {
+      expect(tags.code).toBe(false);
+    });
+
+    it('is on by default for everything else', () => {
+      for (const [tag, onByDefault] of Object.entries(tags)) {
+        if (tag === 'code') continue;
+        expect(onByDefault).toBe(true);
+      }
+    });
   });
 });
 

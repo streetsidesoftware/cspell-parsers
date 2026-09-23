@@ -1,4 +1,5 @@
 import { parse } from '@cspell/parser-typescript/parser';
+import { TAGS } from '@cspell/parser-typescript/tags';
 import type { PluginParser, TagFilterOptions } from '@internal/utils';
 import { createPluginParser, customizeParser } from '@internal/utils';
 
@@ -8,17 +9,20 @@ export { parse };
 
 export const supportedFileTypes: Readonly<string[]> = Object.freeze(['javascript', 'javascriptreact']);
 
-export const parser: PluginParser = createPluginParser({
-  name: 'javascript',
-  parse,
-  supportedFileTypes,
-  tags,
-});
+export const parser: PluginParser = createPluginParser(
+  {
+    name: 'javascript',
+    parse,
+    supportedFileTypes,
+    tags,
+  },
+  (p) => p.tags !== TAGS.CODE,
+);
 
 /** Options for {@link createParser}: the parser's name, and which tagged segments to keep. */
 export interface CustomizeParserOptions {
   name?: string;
-  /** Omit to keep everything. */
+  /** Omit to keep the parser's own defaults (`code` excluded). */
   tags?: TagFilterOptions;
 }
 

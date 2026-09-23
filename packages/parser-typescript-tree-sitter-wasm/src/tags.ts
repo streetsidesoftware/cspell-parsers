@@ -28,6 +28,7 @@ export const tagsAndMeaning = {
   'identifier.label': 'A statement label',
   'identifier.importBinding': 'A renamed import alias, default import name, or namespace import name',
   'identifier.exportBinding': 'A renamed export alias (`export { x as y }`)',
+  code: 'Everything else (off by default)',
 } as const satisfies Record<string, string>;
 
 export type TagName = keyof typeof tagsAndMeaning;
@@ -44,8 +45,11 @@ function defineTag(tag: Tags): Readonly<Tags> {
   return Object.freeze(tag);
 }
 
+/** Tags excluded from "spell checked by default". `code` is the one tag consumers must opt into. */
+const NOT_ON_BY_DEFAULT: ReadonlySet<TagName> = new Set(['code']);
+
 export const tags: Readonly<AllTags> = Object.freeze(
-  Object.fromEntries(Object.keys(tagsAndMeaning).map((tag) => [tag, true])),
+  Object.fromEntries(Object.keys(tagsAndMeaning).map((tag) => [tag, !NOT_ON_BY_DEFAULT.has(tag as TagName)])),
 ) as Readonly<AllTags>;
 
 /**
@@ -116,6 +120,9 @@ const identifierTagByKind: Record<IdentifierKind, Tags> = {
   exportBinding: defineTag(hierarchicalTags('identifier.exportBinding')),
 };
 
+/** Punctuation, keywords, and anything else `walk` doesn't visit - everything not a comment, string, or identifier. */
+const CODE_TAG: Tags = defineTag({ code: true });
+
 export const TAGS = {
   STRING: STRING_TAG,
   STRING_SINGLE_QUOTE: STRING_SINGLE_QUOTE_TAG,
@@ -128,4 +135,5 @@ export const TAGS = {
   COMMENT_BLOCK: COMMENT_BLOCK_TAG,
   COMMENT_BLOCK_DOC: COMMENT_BLOCK_DOC_TAG,
   IDENTIFIER_BY_KIND: identifierTagByKind,
+  CODE: CODE_TAG,
 } as const;

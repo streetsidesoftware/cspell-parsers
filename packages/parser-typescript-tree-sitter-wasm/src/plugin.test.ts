@@ -33,6 +33,18 @@ describe('customizePlugin', () => {
     expect(parsedTexts.some((p) => p.text === 'greeting')).toBe(false);
   });
 
+  it('keeps the catch-all `code` segments when they are explicitly included', () => {
+    const customized = customizePlugin({ tags: { '*': true, comment: false } });
+    const [customizedParser] = (customized.parsers ?? []) as Parser[];
+    const result = customizedParser?.parse("// a comment\nconst greeting = 'hello';\n", 'example.ts');
+    const parsedTexts = [...(result?.parsedTexts ?? [])];
+
+    expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(false);
+    // Only `comment` is excluded, not everything - the "const "/"= "/";" `code` segments still come through
+    // (`'*': true` overrides code's own default-off behavior), so this can't have filtered out everything.
+    expect(parsedTexts.some((p) => p.tags?.code)).toBe(true);
+  });
+
   it('wires name customization into the typescript parser', () => {
     const customized = customizePlugin({ name: 'custom-typescript', tags: {} });
     const [customizedParser] = (customized.parsers ?? []) as Parser[];
