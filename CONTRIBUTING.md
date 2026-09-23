@@ -176,10 +176,15 @@ below that applies.
     it was designed that way (e.g. why a tag is opt-in, why `customizePlugin` takes a struct instead of a
     bare options object).
 - `refactor:`/`chore:` PRs are for reviewers, not consumers, so implementation detail belongs here rather
-  than being trimmed out. Group it by theme (e.g. what moved where, what got simplified), each group with
-  bullets on what changed and how — not `<details>`-gated, since a reviewer needs to see it to review the
-  PR. A `##`/`###` heading or a bold label (`**Theme:**` on its own line before the bullets) both work; use
-  a bold label when a full heading would be heavier than the group needs.
+  than being trimmed out — but keep it to the *what* and *why it matters to a reviewer*, not a mechanical
+  *how* or a narration of the steps taken to get there (e.g. don't mention that something was adapted from
+  another repo, or walk through exploration/dead ends). Group by theme (what changed, not which file it
+  lives in) — label each group with a short effect/topic phrase, e.g. `**Hidden refactors**`, not a file
+  path like `**release-please-config.json**`. A single-item group reads fine as a short paragraph after its
+  label; only reach for bullets under a label when the group covers several distinct changes. Not
+  `<details>`-gated, since a reviewer needs to see it to review the PR. A `##`/`###` heading or a bold label
+  (`**Topic**` on its own line before the paragraph/bullets) both work; use a bold label when a full heading
+  would be heavier than the group needs.
 - If needed, further detail in `<details>` blocks (e.g. `<summary>Usage</summary>`, `<summary>Details</summary>`),
   as bullet points, not prose paragraphs — these stay collapsed, unlike the `##` headings above, so lead with
   what actually needs a click.
@@ -191,6 +196,8 @@ below that applies.
 Do not:
 
 - Restate the diff or narrate file-by-file changes.
+- Narrate the process of arriving at the change (where content was copied from, exploration or dead ends,
+  which attempt fixed what) — describe the resulting change and why it matters, not the journey there.
 - On `fix:`/`feat:` PRs, explain internal implementation, refactors, or code structure the user doesn't
   interact with — that's what `refactor:`/`chore:` PRs are for.
 - Add tables, code walkthroughs, or before/after examples for internal behavior.
