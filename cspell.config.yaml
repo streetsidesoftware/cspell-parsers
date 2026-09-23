@@ -2,9 +2,10 @@ version: '0.2'
 language: en
 enableGlobDot: true
 languageSettings:
-  - languageId: yaml,markdown
+  - languageId: yaml,markdown,skill
     substitutions:
-      - ["''", "'"]
+      - - "''"
+        - "'"
 dictionaries:
   - typescript
   - node
@@ -19,6 +20,7 @@ ignorePaths:
   - dist
   - dist-test
   - coverage
+  - '**/.claude/worktrees/**'
   - pnpm-lock.yaml
   - '**/*.log'
   - CHANGELOG.md
@@ -31,8 +33,9 @@ words:
   - gitdir
   - heredocs
   - inlines
-  - Precomputes
+  - miscategorized
   - prebuilds
+  - Precomputes
   - sigstore
   - unaliased
   - unpadded

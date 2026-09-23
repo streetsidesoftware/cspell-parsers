@@ -31,6 +31,11 @@ CI runs `build` + `typecheck` + `test` in `.github/workflows/test.yml` and `lint
 Once you're done making changes, run `pnpm lint` from the repo root — it auto-fixes what it can (ESLint +
 `prettier --write`) rather than just reporting, so run it before a final `pnpm run lint-ci`/`pnpm test` pass.
 
+## Pull requests
+
+After pushing more commits to an already-open PR, re-check that its body still matches — see CONTRIBUTING.md's
+"Commits & pull requests" section for what the body should contain.
+
 ## Code style
 
 Use explicit escape sequences (e.g. `\u2028`, `\u2029`) rather than literal invisible/non-printing

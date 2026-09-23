@@ -128,6 +128,84 @@ pnpm test
 
 All of the above run in CI and must pass.
 
-## Commit style
+## Commits & pull requests
 
 Keep commits focused and describe the _why_ in the commit message, not just the _what_.
+
+Follow [Conventional Commits](https://www.conventionalcommits.org/). Release Please derives the version bump
+and changelog from the type, so pick it by user-facing impact, not by how much code changed:
+
+- `feat:` — a feature or other change a user of a published package would notice.
+- `fix:` — a bug fix that changes published behavior.
+- `feat!:` / `fix!:` — either of the above, but breaking.
+- `perf:` — a performance improvement a consumer would notice, with no behavior change.
+- `revert:` — undoes a previously merged commit. Visible in the changelog under its own "Reverts" section, so
+  consumers can see a shipped `feat:`/`fix:` got undone.
+- `refactor:` — internal restructuring with no behavior change.
+- `docs:` — documentation only (README, ADRs, CONTRIBUTING.md, etc.).
+- `style:` — formatting-only changes with no logic difference (e.g. rewrapping a comment, fixing whitespace).
+- `test:` — test-only changes.
+- `ci:` — GitHub Actions/workflow changes, including automated dependency bumps.
+- `chore:` — everything else that doesn't touch published behavior: repo tooling, Claude Code skills/config,
+  dev dependencies, lint/format config, build tooling (tsdown, pnpm catalog), etc.
+
+Repo maintenance and internal restructuring are never `fix:`/`feat:`, even for a large diff — those two are
+reserved for changes to a published package's behavior, because `fix:`/`feat:` are what show up in the
+changelog and bump the version.
+
+This repo's release notes span every `packages/*` package in one PR (see `release-please-config.json`'s
+`packages` map), so scope commits to the affected package's directory name when a change is package-specific
+— e.g. `feat(parser-ruby-strings-comments): add catch-all code tag` — so a reader can tell which package a
+changelog line is about.
+
+If a PR merges under the wrong type, see the `release-notes` Claude Code skill for correcting the entry after
+the fact via a `BEGIN_COMMIT_OVERRIDE` block, rather than rewriting history.
+
+### PR descriptions
+
+Keep PR descriptions short — no one reads a long one. Prefer bullet points over prose paragraphs; a sentence
+packed with more than one or two `inline code` spans is hard to parse — break it into a list instead.
+
+Use `##` headings to break up sections rather than running everything together as prose — one for each part
+below that applies.
+
+- `## Summary` — a one- or two-sentence TL;DR that stands on its own: what changed and why, in plain prose.
+  It should be readable without anything that follows, not a fragment a later section completes. If the why
+  needs more room than that, give it its own sentence or two right after.
+- `fix:` and `feat:` PRs are user-facing and feed release notes — write for a reader deciding whether a
+  change affects them, not for a reviewer reviewing the diff.
+  - For `feat:` PRs, add a `## Feature` heading with a short paragraph on the feature itself: what it lets
+    the user do that they couldn't before, and — where it shapes how they should think about using it — why
+    it was designed that way (e.g. why a tag is opt-in, why `customizePlugin` takes a struct instead of a
+    bare options object).
+- `refactor:`/`chore:` PRs are for reviewers, not consumers, so implementation detail belongs here rather
+  than being trimmed out — but keep it to the _what_ and _why it matters to a reviewer_, not a mechanical
+  _how_ or a narration of the steps taken to get there (e.g. don't mention that something was adapted from
+  another repo, or walk through exploration/dead ends). Group by theme (what changed, not which file it
+  lives in) — label each group with a short effect/topic phrase, e.g. `**Hidden refactors**`, not a file
+  path like `**release-please-config.json**`. A single-item group reads fine as a short paragraph after its
+  label; only reach for bullets under a label when the group covers several distinct changes. Not
+  `<details>`-gated, since a reviewer needs to see it to review the PR. A `##`/`###` heading or a bold label
+  (`**Topic**` on its own line before the paragraph/bullets) both work; use a bold label when a full heading
+  would be heavier than the group needs.
+- If needed, further detail in `<details>` blocks (e.g. `<summary>Usage</summary>`, `<summary>Details</summary>`),
+  as bullet points, not prose paragraphs — these stay collapsed, unlike the `##` headings above, so lead with
+  what actually needs a click.
+  - For a `feat:`/`fix:` PR touching a parser's output, `Usage` should cover any change to
+    `supportedFileTypes`, the `tags` a segment can carry, or `customizePlugin`'s filtering options — with a
+    cspell config snippet where it helps.
+- No test plan section — CI covers that.
+
+Do not:
+
+- Restate the diff or narrate file-by-file changes.
+- Narrate the process of arriving at the change (where content was copied from, exploration or dead ends,
+  which attempt fixed what) — describe the resulting change and why it matters, not the journey there.
+- On `fix:`/`feat:` PRs, explain internal implementation, refactors, or code structure the user doesn't
+  interact with — that's what `refactor:`/`chore:` PRs are for.
+- Add tables, code walkthroughs, or before/after examples for internal behavior.
+- Compress the TL;DR into a bare fragment or list of renamed symbols that only makes sense once you've read
+  the bullets below it.
+- Add auto-generated links back to individual diff hunks or lines (e.g. `[[1]]`/`[[2]]` permalinks) — the
+  diff is already there for anyone reviewing.
+- Write a separate section per commit or sub-change — one TL;DR covers the whole PR.
