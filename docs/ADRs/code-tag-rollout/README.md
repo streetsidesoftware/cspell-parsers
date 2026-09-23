@@ -8,9 +8,9 @@ than scanned inline), several decisions needed pinning down before implementatio
 
 ## Decisions
 
-| #    | Title                                                          | Status   |
-| ---- | --------------------------------------------------------------- | -------- |
-| 0001 | Rollout scope: which packages get a `code` tag                | Accepted |
-| 0002 | `code` tag definition and default-off convention (scanners)   | Accepted |
-| 0003 | Tree-sitter `code` tag semantics (range-gap catch-all)         | Accepted |
-| 0004 | Shared `fillCodeGaps` helper in `@internal/utils`              | Accepted |
+| #    | Title                                                       | Status   |
+| ---- | ----------------------------------------------------------- | -------- |
+| 0001 | Rollout scope: which packages get a `code` tag              | Accepted |
+| 0002 | `code` tag definition and default-off convention (scanners) | Accepted |
+| 0003 | Tree-sitter `code` tag semantics (range-gap catch-all)      | Accepted |
+| 0004 | Shared `createCodeTagsEmitter` helper in `@internal/utils`  | Accepted |

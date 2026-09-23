@@ -21,4 +21,4 @@ yielding it back interleaved with new `code`-tagged segments filling any byte ra
 scanner-based (piping a `Scanner`'s tagged-segment generator through it) and tree-sitter-based (piping an
 AST walk through it) alike — so gap-filling semantics are identical everywhere rather than each package
 reimplementing its own copy. Established in
-[code-tag-rollout/0004](./ADRs/code-tag-rollout/0004-shared-fillcodegaps-helper.md).
+[code-tag-rollout/0004](./ADRs/code-tag-rollout/0004-shared-code-tags-emitter.md).

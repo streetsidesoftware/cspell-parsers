@@ -8,8 +8,8 @@ Both tree-sitter packages need the same range-gap-filling step (0003), and their
 already structurally parallel (the diff between them is backend setup — native `tree-sitter` vs.
 `@vscode/tree-sitter-wasm` — not the walking logic itself). `@internal/utils` already exists for exactly
 this kind of cross-package shared logic (`compileTagFilter`, `stripCommentMarkers`, `decodeStringParts`),
-and — per `CLAUDE.md` — is safe to depend on for shared *runtime* logic: the dist-size/dependency caution
-in `CLAUDE.md` is specifically about a workspace dependency's *type* declarations getting inlined whole
+and — per `CLAUDE.md` — is safe to depend on for shared _runtime_ logic: the dist-size/dependency caution
+in `CLAUDE.md` is specifically about a workspace dependency's _type_ declarations getting inlined whole
 into `dist/*.d.ts` with no tree-shaking, not about sharing a small function's implementation.
 
 While implementing the first scanner-based package (`parser-c-cpp-strings-comments`), it became clear this
@@ -23,9 +23,9 @@ supersedes that part of 0002: **every** package in this rollout (scanner-based a
 uses one shared helper instead of each reimplementing its own copy - consistency across all parsers matters
 more here than which package happened to be implemented first.
 
-The chosen shape is a factory - `createCodeTagsEmitter(tags, fileContent)` returning a reusable
+The chosen shape is a factory - `createCodeTagsEmitter(codeTags, fileContent)` returning a reusable
 `ParsedTextEmitter` closure - rather than a single `fillCodeGaps(parsedTexts, content, codeTag)` generator
-call as first proposed. It also asserts its `tags` argument is frozen, to catch a caller passing a fresh
+call as first proposed. It also asserts its `codeTags` argument is frozen, to catch a caller passing a fresh
 object literal instead of the package's own module-level `TAGS.CODE` constant.
 
 ## Decision
@@ -35,15 +35,15 @@ object literal instead of the package's own module-level `TAGS.CODE` constant.
 ```ts
 import type { ParsedText } from '@cspell/cspell-types';
 
-import { assert } from './assert.js';
+import { assert } from './assert.ts';
 
 export type ParsedTextEmitter = (src: Iterable<ParsedText>) => Iterable<ParsedText>;
 
 export function createCodeTagsEmitter<T extends Record<string, boolean>>(
-  tags: T,
+  codeTags: T,
   fileContent: string,
 ): ParsedTextEmitter {
-  assert(Object.isFrozen(tags), 'Tag object must be frozen');
+  assert(Object.isFrozen(codeTags), 'Tag object must be frozen');
 
   function* emitter(src: Iterable<ParsedText>): Iterable<ParsedText> {
     let i = 0;
@@ -51,20 +51,20 @@ export function createCodeTagsEmitter<T extends Record<string, boolean>>(
       const [a, b] = item.range;
       if (a > i) {
         const text = fileContent.slice(i, a);
-        yield { text, range: [i, a], tags };
+        yield { text, range: [i, a], tags: codeTags };
       }
       i = b;
       yield item;
     }
     if (i < fileContent.length) {
-      yield { text: fileContent.slice(i), range: [i, fileContent.length], tags };
+      yield { text: fileContent.slice(i), range: [i, fileContent.length], tags: codeTags };
     }
   }
   return emitter;
 }
 ```
 
-`fileContent` is the full source text (needed to slice actual gap text, not just track ranges); `tags` is
+`fileContent` is the full source text (needed to slice actual gap text, not just track ranges); `codeTags` is
 the calling package's own frozen `TAGS.CODE`-equivalent value, so this helper stays independent of any
 package's tag vocabulary. It assumes `src` is already in non-decreasing `range` order (true for every
 scanner's `Generator<ParsedText>` and both tree-sitter walkers) — it does not sort. `i` advances to each
@@ -84,7 +84,7 @@ run(): Iterable<ParsedText> {
 The two tree-sitter packages' `collectParsedTexts` wire `walk(...)` through the same helper. This
 supersedes 0002's plan for each scanner package to duplicate PHP's inline `j`-cursor pattern —
 `parser-php-strings-comments` itself is unchanged (out of scope for this rollout; it already has its own
-working inline implementation and isn't being retrofitted here), but every package added *by this rollout*
+working inline implementation and isn't being retrofitted here), but every package added _by this rollout_
 uses `createCodeTagsEmitter` uniformly, whether it's scanner-based or tree-sitter-based.
 
 Covered by `packages/internal-utils/src/codeTagEmitter.test.ts`, including regression coverage for two bugs
@@ -107,7 +107,7 @@ before it existed at all.
   generator through it) instead of maintaining its own trailing-cursor field and `emitCodeSegment` method -
   see `parser-c-cpp-strings-comments/src/scanner.ts` for the resulting shape, which every later scanner
   package in this rollout should match.
-- The frozen-`tags` assertion means every package must define its `TAGS.CODE` constant via the existing
+- The frozen-`codeTags` assertion means every package must define its `TAGS.CODE` constant via the existing
   `defineTag`/`Object.freeze` convention (already true everywhere) - passing an inline `{ code: true }`
   object literal fails fast with a clear error instead of silently working.
 - If a future need arises for gap-filling logic beyond a single forward pass (e.g. merging adjacent `code`

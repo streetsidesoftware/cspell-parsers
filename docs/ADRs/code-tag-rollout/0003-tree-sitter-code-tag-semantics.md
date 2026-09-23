@@ -26,8 +26,8 @@ existing output plus the source text.
 ## Decision
 
 We will use the range-gap approach (option 2): the walker (`walk.ts`) keeps working exactly as it does
-today, and its output gets passed through `fillCodeGaps` (see
-[0004](./0004-shared-fillcodegaps-helper.md)) to fill any byte range of `content` not already covered by a
+today, and its output gets passed through `createCodeTagsEmitter` (see
+[0004](./0004-shared-code-tags-emitter.md)) to fill any byte range of `content` not already covered by a
 yielded `ParsedText`, tagged `code`. This includes whitespace-only gaps — no special-casing to skip them,
 matching how PHP's scanner also yields raw code chunks (whitespace included) rather than trimming them.
 
@@ -46,7 +46,7 @@ off-by-default tag at all (every tag in `tags` today is `true`).
   untagged bytes (keywords, punctuation, operators, numbers, whitespace) become `code`.
 - If the walker is later extended to tag some currently-ignored construct explicitly (e.g. a future
   `keyword` tag), that construct's ranges simply stop showing up as `code` gaps automatically — no
-  `fillCodeGaps` change needed.
+  `createCodeTagsEmitter` change needed.
 - Relies on the walker's yielded `ParsedText`s being in non-decreasing `range` order (true today, since the
-  recursive descent visits nodes in source order) — `fillCodeGaps` assumes this rather than sorting, per
-  [0004](./0004-shared-fillcodegaps-helper.md)'s scope.
+  recursive descent visits nodes in source order) — `createCodeTagsEmitter` assumes this rather than sorting, per
+  [0004](./0004-shared-code-tags-emitter.md)'s scope.

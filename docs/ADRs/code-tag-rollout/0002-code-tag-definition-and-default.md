@@ -36,7 +36,7 @@ wording pattern, substituted for that language's own terms and constructs, e.g.:
   `tagsAndMeaning` for what other constructs already exist to reference).
 
 Each package's `CODE_TAG` constant is `defineTag({ code: true })`, added to that package's `TAGS` export as
-`CODE: CODE_TAG`. **Superseded by [0004](./0004-shared-fillcodegaps-helper.md):** rather than each scanner
+`CODE: CODE_TAG`. **Superseded by [0004](./0004-shared-code-tags-emitter.md):** rather than each scanner
 threading its own copy of PHP's inline `j`-cursor/`emitCodeSegment` pattern, every package in this rollout
 (scanner-based and tree-sitter-based alike) pipes its scan/walk generator through one shared
 `createCodeTagsEmitter` helper in `@internal/utils` instead — see 0004 for why and for the resulting
