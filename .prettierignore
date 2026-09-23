@@ -11,3 +11,4 @@ pnpm-lock.yaml
 **/fixtures/**
 test-packages/*/tests/*/**
 packages/*/samples/*/**
+.claude/worktrees/**

@@ -176,8 +176,8 @@ below that applies.
     it was designed that way (e.g. why a tag is opt-in, why `customizePlugin` takes a struct instead of a
     bare options object).
 - `refactor:`/`chore:` PRs are for reviewers, not consumers, so implementation detail belongs here rather
-  than being trimmed out — but keep it to the *what* and *why it matters to a reviewer*, not a mechanical
-  *how* or a narration of the steps taken to get there (e.g. don't mention that something was adapted from
+  than being trimmed out — but keep it to the _what_ and _why it matters to a reviewer_, not a mechanical
+  _how_ or a narration of the steps taken to get there (e.g. don't mention that something was adapted from
   another repo, or walk through exploration/dead ends). Group by theme (what changed, not which file it
   lives in) — label each group with a short effect/topic phrase, e.g. `**Hidden refactors**`, not a file
   path like `**release-please-config.json**`. A single-item group reads fine as a short paragraph after its

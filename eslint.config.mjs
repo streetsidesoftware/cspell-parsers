@@ -13,6 +13,7 @@ export default defineConfig(
       '**/coverage/**',
       '**/node_modules/**',
       '**/fixtures/**',
+      '.claude/worktrees/**',
       'test-packages/*/tests/*/**',
       'packages/*/samples/*/**',
     ],

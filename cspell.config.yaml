@@ -20,6 +20,7 @@ ignorePaths:
   - dist
   - dist-test
   - coverage
+  - '**/.claude/worktrees/**'
   - pnpm-lock.yaml
   - '**/*.log'
   - CHANGELOG.md
