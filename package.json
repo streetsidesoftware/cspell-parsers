@@ -34,7 +34,7 @@
     "eslint-plugin-n": "^18.3.0",
     "eslint-plugin-simple-import-sort": "^14.0.0",
     "globals": "^17.12.0",
-    "inject-markdown": "^5.0.3",
+    "inject-markdown": "^6.1.0",
     "prettier": "^3.9.6",
     "shx": "^0.4.0",
     "tsdown": "^0.23.0",

@@ -21,6 +21,7 @@ minimumReleaseAgeExclude:
   - '@cspell/*'
   - cspell
   - cspell-*
+  - inject-markdown
 
 nodeLinker: isolated
 
