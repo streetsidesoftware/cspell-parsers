@@ -8,8 +8,8 @@ Package,Description
 [`@cspell/parser-python-strings-comments`](../packages/parser-python-strings-comments),A strings-and-comments parser plugin for cspell covering Python.
 [`@cspell/parser-ruby-strings-comments`](../packages/parser-ruby-strings-comments),A strings-and-comments parser plugin for cspell covering Ruby.
 [`@cspell/parser-rust-strings-comments`](../packages/parser-rust-strings-comments),A strings-and-comments parser plugin for cspell covering Rust.
-[`@cspell/parser-strings-comments`](../packages/parser-strings-comments),"A combined strings-and-comments parser plugin for cspell covering C, C++, C#, Go, Java, JavaScript, JSX, TypeScript, TSX, and PHP."
+[`@cspell/parser-strings-comments`](../packages/parser-strings-comments),"A combined strings-and-comments parser plugin for cspell covering C, C++, C#, Go, Java, JavaScript, JSX, TypeScript, TSX, PHP, Python, Ruby, and Rust."
 [`@cspell/parser-typescript`](../packages/parser-typescript),A TypeScript parser plugin for cspell.
 [`@cspell/parser-typescript-strings-comments`](../packages/parser-typescript-strings-comments),"A strings-and-comments parser plugin for cspell covering JavaScript, JSX, TypeScript, and TSX."
-[`@cspell/parser-typescript-tree-sitter`](../packages/parser-typescript-tree-sitter),A TypeScript parser plugin using tree-sitter for cspell.
-[`@cspell/parser-typescript-tree-sitter-wasm`](../packages/parser-typescript-tree-sitter-wasm),A TypeScript parser plugin using tree-sitter for cspell.
+[`@cspell/parser-typescript-tree-sitter`](../packages/parser-typescript-tree-sitter),A TypeScript parser plugin for cspell using tree-sitter's native Node.js bindings.
+[`@cspell/parser-typescript-tree-sitter-wasm`](../packages/parser-typescript-tree-sitter-wasm),A TypeScript parser plugin for cspell using tree-sitter compiled to WebAssembly (no native build step).

@@ -1,10 +1,10 @@
 # @cspell/parser-strings-comments
 
 A combined strings-and-comments parser plugin for cspell, covering C, C++, C#, Go, Java, JavaScript, JSX,
-TypeScript, TSX, and PHP - the languages in this family share enough comment/string syntax that one parser
-can handle all of them, extension by extension, including each language's own extra forms (JSDoc/Javadoc/
-PHPDoc/C# XML doc comments, JS/TS template literals, C# verbatim/interpolated/raw strings, Java/C# text
-blocks, C++/Go raw strings, and PHP heredoc/nowdoc).
+TypeScript, TSX, PHP, Python, Ruby, and Rust. It bundles this repo's per-language strings-and-comments parsers
+and picks the right one for each file, including each language's own extra forms (JSDoc/Javadoc/PHPDoc/C# XML
+doc comments, JS/TS template literals, C# verbatim/interpolated/raw strings, Java/C# text blocks, C++/Go raw
+strings, and PHP heredoc/nowdoc).
 
 It implements cspell's [`Parser`](https://www.npmjs.com/package/@cspell/cspell-types) contract and exports a
 [`Plugin`](https://www.npmjs.com/package/@cspell/cspell-types) so it can be wired into a cspell configuration.

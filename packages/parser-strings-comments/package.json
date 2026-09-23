@@ -1,7 +1,7 @@
 {
   "name": "@cspell/parser-strings-comments",
   "version": "1.0.0",
-  "description": "A combined strings-and-comments parser plugin for cspell covering C, C++, C#, Go, Java, JavaScript, JSX, TypeScript, TSX, and PHP.",
+  "description": "A combined strings-and-comments parser plugin for cspell covering C, C++, C#, Go, Java, JavaScript, JSX, TypeScript, TSX, PHP, Python, Ruby, and Rust.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/streetsidesoftware/cspell-parsers.git",
