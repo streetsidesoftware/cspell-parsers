@@ -1,5 +1,5 @@
 import type { ParsedText } from '@cspell/cspell-types';
-import { stripCommentMarkers } from '@internal/utils';
+import { createCodeTagsEmitter, stripCommentMarkers } from '@internal/utils';
 
 import { TAGS, type Tags } from './tags.ts';
 
@@ -13,8 +13,8 @@ function commentTag(text: string): Tags {
 
 /**
  * Scans C-style source for `//` line comments and `/* ... *\/` block comments, yielding one `ParsedText` per
- * comment and skipping everything else, including quoted string contents - so a comment marker inside a
- * string literal isn't mistaken for the start of a real comment.
+ * comment and tagging everything else as `code`. Quoted strings are skipped as a unit, so a comment marker
+ * inside a string literal isn't mistaken for the start of a real comment.
  *
  * Emits lazily via a generator rather than an array - nothing here needs eager draining to release a resource.
  */
@@ -23,7 +23,12 @@ export class Scanner {
 
   constructor(private readonly content: string) {}
 
-  *run(): Generator<ParsedText> {
+  run(): Iterable<ParsedText> {
+    const codeInjector = createCodeTagsEmitter(TAGS.CODE, this.content);
+    return codeInjector(this.scanTagged());
+  }
+
+  private *scanTagged(): Generator<ParsedText> {
     const { content } = this;
 
     while (this.i < content.length) {

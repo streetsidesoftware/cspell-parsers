@@ -56,8 +56,8 @@ The plugin provides these parsers. Where Recommended is `yes`, `recommended` ena
 
 ### Filtering by tag
 
-By default every comment the parser emits gets spell checked. To check only some of them — for example, only
-doc comments — use `customizePlugin` instead of the plain `plugin` export. It takes a
+By default every comment the parser emits gets spell checked, but not `code`. To check only some of them —
+for example, only doc comments — or to opt into `code` as well, use `customizePlugin` instead of the plain `plugin` export. It takes a
 `CustomizePluginOptions` object — `tags: TagFilterOptions` and `name` are both optional, and omitting `tags`
 keeps everything — and returns a `Plugin` that only spell checks the tagged segments you keep. This filtering
 works with any cspell version.
@@ -91,12 +91,13 @@ share one.
 
 <!--- @@inject: docs/tags-table.csv#markdown --->
 
-| Tag                 | Meaning                     |
-| ------------------- | --------------------------- |
-| `comment`           | Any comment                 |
-| `comment.line`      | A `//` line comment         |
-| `comment.block`     | A `/* ... */` block comment |
-| `comment.block.doc` | A `/** ... */` doc comment  |
+| Tag                 | Meaning                                                     |
+| ------------------- | ----------------------------------------------------------- |
+| `comment`           | Any comment                                                 |
+| `comment.line`      | A `//` line comment                                         |
+| `comment.block`     | A `/* ... */` block comment                                 |
+| `comment.block.doc` | A `/** ... */` doc comment                                  |
+| `code`              | Everything else, including string literals (off by default) |
 
 <!--- @@inject-end: docs/tags-table.csv#markdown --->
 
