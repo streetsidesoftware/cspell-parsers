@@ -20,7 +20,7 @@ ignorePaths:
   - dist
   - dist-test
   - coverage
-  - '**/.claude/worktrees/**'
+  - .claude/worktrees
   - pnpm-lock.yaml
   - '**/*.log'
   - CHANGELOG.md
@@ -28,17 +28,21 @@ ignorePaths:
   - test-packages/*/tests
   - test-packages/*/__snapshots
 words:
+  - adrs
   - COMMIT_EDITMSG
   - dedup
   - gitdir
   - heredocs
   - inlines
   - miscategorized
+  - mistagged
   - prebuilds
   - Precomputes
   - sigstore
+  - subtags
   - unaliased
   - unpadded
+  - worktree
   - worktrees
 ignoreWords:
   - .mtsx
