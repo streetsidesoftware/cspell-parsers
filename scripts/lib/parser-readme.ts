@@ -16,6 +16,12 @@ export const PLUGIN_SOURCE_GLOB = 'packages/*/dist/plugin.js';
 /** Where the generated language ID table lives, relative to a package's own root. */
 export const LANGUAGE_ID_TABLE_RELATIVE_PATH = 'docs/language-id-n-parser-name.csv';
 
+/** Glob for every package's `package.json`, which the root README's package table is generated from. */
+export const PACKAGE_JSON_GLOB = 'packages/*/package.json';
+
+/** Where the root README's generated package table lives, relative to the repo root. */
+export const PACKAGES_TABLE_PATH = 'static/packages.csv';
+
 interface TagsModule {
   tagsAndMeaning?: Readonly<Record<string, string>>;
 }
@@ -27,6 +33,13 @@ interface ParserInfo {
 
 interface PluginModule {
   plugin?: { parsers?: readonly ParserInfo[] };
+}
+
+export interface PackageInfo {
+  name: string;
+  description: string;
+  /** The package's directory, relative to the generated table's directory. */
+  dir: string;
 }
 
 /**
@@ -81,6 +94,17 @@ export function renderLanguageIdTable(parsers: readonly ParserInfo[]): string {
     return [languageId, parser, recommended].map(csvField).join(',');
   });
   return ['Language ID,Parser Name,Recommended', ...rows, ''].join('\n');
+}
+
+/**
+ * Renders a `Package,Description` CSV with one row per package, sorted by name. Injected with `#markdown`
+ * (like {@link renderTagsTable}) so each package name renders as a link to its directory.
+ */
+export function renderPackagesTable(packages: readonly PackageInfo[]): string {
+  const rows = [...packages]
+    .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
+    .map(({ name, description, dir }) => [`[\`${name}\`](${dir})`, description].map(csvField).join(','));
+  return ['Package,Description', ...rows, ''].join('\n');
 }
 
 async function findFiles(pattern: string): Promise<string[]> {
@@ -160,9 +184,35 @@ export async function updateLanguageIdTables(options: UpdateParserReadmeTablesOp
   return needsFix;
 }
 
+/**
+ * Regenerates `static/packages.csv` from every publishable (non-`private`) package's `package.json`, so the
+ * root `README.md`'s Available parsers table stays in sync with `packages/*`.
+ * @returns `true` if the table needed updating, `false` if it was already up to date.
+ */
+export async function updatePackagesTable(options: UpdateParserReadmeTablesOptions = {}): Promise<boolean> {
+  const packages: PackageInfo[] = [];
+
+  for (const packageJsonFile of await findFiles(PACKAGE_JSON_GLOB)) {
+    const pkg = JSON.parse(await fs.readFile(packageJsonFile, 'utf-8')) as {
+      name: string;
+      description?: string;
+      private?: boolean;
+    };
+    if (pkg.private) continue;
+
+    // inject-markdown rebases links from the CSV's own directory, so link relative to it, not the repo root.
+    const tableDir = Path.dirname(Path.join(REPO_ROOT_DIR, PACKAGES_TABLE_PATH));
+    const dir = Path.relative(tableDir, Path.dirname(packageJsonFile)).split(Path.sep).join('/');
+    packages.push({ name: pkg.name, description: pkg.description ?? '', dir });
+  }
+
+  return writeIfChanged(Path.join(REPO_ROOT_DIR, PACKAGES_TABLE_PATH), renderPackagesTable(packages), options.dryRun);
+}
+
 /** Runs every README table generator. @returns `true` if any table needed updating. */
 export async function updateParserReadmeTables(options: UpdateParserReadmeTablesOptions = {}): Promise<boolean> {
   const tagsNeedFix = await updateTagsTables(options);
   const languageIdsNeedFix = await updateLanguageIdTables(options);
-  return tagsNeedFix || languageIdsNeedFix;
+  const packagesNeedFix = await updatePackagesTable(options);
+  return tagsNeedFix || languageIdsNeedFix || packagesNeedFix;
 }
