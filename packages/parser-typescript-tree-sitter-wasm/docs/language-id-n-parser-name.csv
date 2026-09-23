@@ -1,4 +1,4 @@
-Language ID,Parser,Recommended
+Language ID,Parser Name,Recommended
 javascript,typescript,yes
 javascriptreact,typescript,yes
 typescript,typescript,yes

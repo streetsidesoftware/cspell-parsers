@@ -45,12 +45,12 @@ The plugin provides these parsers for these cspell language IDs; `recommended` s
 
 <!--- @@inject: docs/language-id-n-parser-name.csv --->
 
-| Language ID     | Parser     | Recommended |
-| --------------- | ---------- | ----------- |
-| javascript      | typescript | yes         |
-| javascriptreact | typescript | yes         |
-| typescript      | typescript | yes         |
-| typescriptreact | typescript | yes         |
+| Language ID     | Parser Name | Recommended |
+| --------------- | ----------- | ----------- |
+| javascript      | typescript  | yes         |
+| javascriptreact | typescript  | yes         |
+| typescript      | typescript  | yes         |
+| typescriptreact | typescript  | yes         |
 
 <!--- @@inject-end: docs/language-id-n-parser-name.csv --->
 

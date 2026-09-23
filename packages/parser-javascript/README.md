@@ -44,10 +44,10 @@ The plugin provides these parsers for these cspell language IDs; `recommended` s
 
 <!--- @@inject: docs/language-id-n-parser-name.csv --->
 
-| Language ID     | Parser     | Recommended |
-| --------------- | ---------- | ----------- |
-| javascript      | javascript | yes         |
-| javascriptreact | javascript | yes         |
+| Language ID     | Parser Name | Recommended |
+| --------------- | ----------- | ----------- |
+| javascript      | javascript  | yes         |
+| javascriptreact | javascript  | yes         |
 
 <!--- @@inject-end: docs/language-id-n-parser-name.csv --->
 

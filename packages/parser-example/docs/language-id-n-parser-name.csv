@@ -1,4 +1,4 @@
-Language ID,Parser,Recommended
+Language ID,Parser Name,Recommended
 c,c-style-comments,yes
 cpp,c-style-comments,yes
 csharp,c-style-comments,yes

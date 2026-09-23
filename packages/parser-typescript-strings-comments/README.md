@@ -39,7 +39,7 @@ The plugin provides these parsers for these cspell language IDs; `recommended` s
 
 <!--- @@inject: docs/language-id-n-parser-name.csv --->
 
-| Language ID     | Parser                      | Recommended |
+| Language ID     | Parser Name                 | Recommended |
 | --------------- | --------------------------- | ----------- |
 | javascript      | typescript-strings-comments | yes         |
 | javascriptreact | typescript-strings-comments | yes         |

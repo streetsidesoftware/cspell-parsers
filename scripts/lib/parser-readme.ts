@@ -62,7 +62,7 @@ export function renderTagsTable(tagsAndMeaning: Readonly<Record<string, string>>
 }
 
 /**
- * Renders a `Language ID,Parser,Recommended` CSV with one row per (language ID, parser) pair, sorted by
+ * Renders a `Language ID,Parser Name,Recommended` CSV with one row per (language ID, parser) pair, sorted by
  * language ID and then by the parser's index in `parsers` (its last index, if listed more than once). The last
  * parser for each language ID is marked `yes`, since the last one wins in cspell.
  */
@@ -80,7 +80,7 @@ export function renderLanguageIdTable(parsers: readonly ParserInfo[]): string {
     const recommended = pairs[i + 1]?.languageId === languageId ? '' : 'yes';
     return [languageId, parser, recommended].map(csvField).join(',');
   });
-  return ['Language ID,Parser,Recommended', ...rows, ''].join('\n');
+  return ['Language ID,Parser Name,Recommended', ...rows, ''].join('\n');
 }
 
 async function findFiles(pattern: string): Promise<string[]> {
