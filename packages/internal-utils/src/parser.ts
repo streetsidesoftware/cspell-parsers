@@ -1,5 +1,5 @@
-import { createParsedTextFilter } from './customize.js';
-import type { CustomizeParserOptions, ParsedTextFilter, ParseFunction, ParserTags, PluginParser } from './types.js';
+import { createParsedTextFilter } from './customize.ts';
+import type { CustomizeParserOptions, ParsedTextFilter, ParseFunction, ParserTags, PluginParser } from './types.ts';
 
 export type CreatePluginParserOptions = Pick<PluginParser, 'name' | 'parse' | 'supportedFileTypes' | 'tags'>;
 

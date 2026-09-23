@@ -1,7 +1,7 @@
 import type { ParsedText, SourceMap } from '@cspell/cspell-types';
 import { stripCommentMarkers } from '@internal/utils';
 
-import { TAGS } from './tags.js';
+import { TAGS } from './tags.ts';
 
 /**
  * Strips a line comment's marker - PHP's own markers aren't a fixed length: `#` is 1 character, `//` is 2 -

@@ -1,12 +1,12 @@
-export type { ParsedTextEmitter } from './codeTagEmitter.js';
-export { createCodeTagsEmitter } from './codeTagEmitter.js';
-export type { CommentText } from './comments.js';
-export { stripCommentMarkers } from './comments.js';
-export { createParsedTextFilter } from './customize.js';
-export type { CreatePluginParserOptions } from './parser.js';
-export { createParse, createPluginParser, customizeParser } from './parser.js';
-export type { DecodedText, StringPart } from './strings.js';
-export { decodeStringParts } from './strings.js';
+export type { ParsedTextEmitter } from './codeTagEmitter.ts';
+export { createCodeTagsEmitter } from './codeTagEmitter.ts';
+export type { CommentText } from './comments.ts';
+export { stripCommentMarkers } from './comments.ts';
+export { createParsedTextFilter } from './customize.ts';
+export type { CreatePluginParserOptions } from './parser.ts';
+export { createParse, createPluginParser, customizeParser } from './parser.ts';
+export type { DecodedText, StringPart } from './strings.ts';
+export { decodeStringParts } from './strings.ts';
 export type {
   CustomizeParserOptions,
   ParsedTextFilter,
@@ -20,4 +20,4 @@ export type {
   TagFilterOptions,
   TagPattern,
   TagsFilter,
-} from './types.js';
+} from './types.ts';

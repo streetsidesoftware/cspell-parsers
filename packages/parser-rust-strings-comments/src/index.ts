@@ -1,6 +1,6 @@
 import type { CSpellPlugin } from '@cspell/cspell-types';
 
-import { plugin } from './plugin.js';
+import { plugin } from './plugin.ts';
 
 /**
  * Registers the plugin without selecting it for any file type - add your own `languageSettings`, or use

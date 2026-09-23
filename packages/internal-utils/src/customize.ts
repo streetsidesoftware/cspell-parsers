@@ -1,6 +1,6 @@
 import type { ParsedTags, ParsedText, Parser } from '@cspell/cspell-types';
 
-import type { PluginParser, TagFilterOptions, TagsFilter } from './types.js';
+import type { PluginParser, TagFilterOptions, TagsFilter } from './types.ts';
 
 export function customizeParserWithFilter(
   parser: PluginParser,

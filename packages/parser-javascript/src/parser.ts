@@ -3,7 +3,7 @@ import { TAGS } from '@cspell/parser-typescript/tags';
 import type { PluginParser, TagFilterOptions } from '@internal/utils';
 import { createPluginParser, customizeParser } from '@internal/utils';
 
-import { tags } from './tags.js';
+import { tags } from './tags.ts';
 
 export { parse };
 

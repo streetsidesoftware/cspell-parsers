@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { StringPart } from './strings.js';
-import { decodeStringParts } from './strings.js';
+import type { StringPart } from './strings.ts';
+import { decodeStringParts } from './strings.ts';
 
 /**
  * Checks a map's `(srcLen, dstLen)` pairs are internally consistent with `parts` and the text they

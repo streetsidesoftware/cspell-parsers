@@ -1,9 +1,9 @@
 import type { Plugin } from '@cspell/cspell-types';
 import { customizeParser, type ParserPlugin, type TagFilterOptions } from '@internal/utils';
 
-import { parser, supportedFileTypes } from './parser.js';
+import { parser, supportedFileTypes } from './parser.ts';
 
-export { supportedFileTypes } from './parser.js';
+export { supportedFileTypes } from './parser.ts';
 
 export const recommendedLanguageSettings = [
   {

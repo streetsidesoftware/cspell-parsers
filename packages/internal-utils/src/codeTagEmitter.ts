@@ -1,6 +1,6 @@
 import type { ParsedText } from '@cspell/cspell-types';
 
-import { assert } from './assert.js';
+import { assert } from './assert.ts';
 
 export type ParsedTextEmitter = (src: Iterable<ParsedText>) => Iterable<ParsedText>;
 

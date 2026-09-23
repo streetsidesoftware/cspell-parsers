@@ -1,6 +1,6 @@
 import type { CSpellPlugin } from '@cspell/cspell-types';
 
-import { plugin } from './plugin.js';
+import { plugin } from './plugin.ts';
 
 /**
  * The shape of this package's default export - a minimal cspell settings object that registers the

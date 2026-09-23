@@ -1,9 +1,9 @@
 import type { ParsedTags, ParsedText } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
-import { compileTagFilter, createParsedTextFilter } from './customize.js';
-import { createPluginParser, customizeParser } from './parser.js';
-import type { PluginParser } from './types.js';
+import { compileTagFilter, createParsedTextFilter } from './customize.ts';
+import { createPluginParser, customizeParser } from './parser.ts';
+import type { PluginParser } from './types.ts';
 
 function mkText(content: string, tags: ParsedText['tags']): ParsedText {
   return { text: content, range: [0, content.length], tags };

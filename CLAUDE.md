@@ -70,6 +70,9 @@ is a standalone npm package implementing cspell's `Parser`/`Plugin` contract (ty
 - `tsdown`/`vitest`/`typescript` are declared once as root `devDependencies` (not duplicated per package) and
   resolve into packages via Node's normal ancestor `node_modules` lookup, which works even though
   `pnpm-workspace.yaml` sets `nodeLinker: isolated`.
+- Relative imports use `.ts` extensions (e.g. `from './parser.ts'`), not `.js` — `tsconfig.base.json` sets
+  `allowImportingTsExtensions: true` (permitted because `noEmit` is also `true`), and tsdown resolves and
+  rewrites these to `.js` in `dist/` output.
 
 **Shared dependency versions** live in the pnpm catalog in `pnpm-workspace.yaml`
 (`typescript`, `tsdown`, `vitest`, `@cspell/cspell-types`). New packages should reference these via
@@ -97,7 +100,7 @@ Every package publishes **four** things, each its own file under `src/` and its 
   the parser is meant to handle, kept alphabetically sorted — as the single source of truth `recommended.ts`
   builds its `languageSettings` from, so the list only needs updating in one place.
 - `src/plugin.ts` — thin wiring: `export const plugin: ParserPlugin = { parsers: [parser] }`, plus
-  `export { supportedFileTypes } from './parser.js'` so it's reachable from the `./plugin` subpath too.
+  `export { supportedFileTypes } from './parser.ts'` so it's reachable from the `./plugin` subpath too.
   Published as `./plugin` → `dist/plugin.js`. If `parser.ts` emits `tags`, also export a local
   `CustomizePluginOptions` interface (`{ tags: TagFilterOptions }` — a struct rather than a bare
   `TagFilterOptions` so it can grow more options later without a breaking signature change) and

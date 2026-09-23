@@ -2,8 +2,8 @@ import type { ParseResult } from '@cspell/cspell-types/Parser';
 import type { PluginParser, TagFilterOptions } from '@internal/utils';
 import { createPluginParser, customizeParser } from '@internal/utils';
 
-import { TAGS, tags } from './tags.js';
-import { collectParsedTexts } from './walk.js';
+import { TAGS, tags } from './tags.ts';
+import { collectParsedTexts } from './walk.ts';
 
 /** Extracts comments, strings, and identifiers from JS/JSX/TS/TSX source; everything else is tagged `code`. */
 export function parse(content: string, filename: string): ParseResult {

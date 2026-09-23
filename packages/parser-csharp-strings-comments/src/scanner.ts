@@ -1,7 +1,7 @@
 import type { ParsedTags, ParsedText, SourceMap } from '@cspell/cspell-types';
 import { createCodeTagsEmitter, stripCommentMarkers } from '@internal/utils';
 
-import { TAGS } from './tags.js';
+import { TAGS } from './tags.ts';
 
 /**
  * Strips a line comment's marker (`//` or C#'s XML-doc `///`) - and one following space, if present - from
