@@ -2,9 +2,10 @@ version: '0.2'
 language: en
 enableGlobDot: true
 languageSettings:
-  - languageId: yaml,markdown
+  - languageId: yaml,markdown,skill
     substitutions:
-      - ["''", "'"]
+      - - "''"
+        - "'"
 dictionaries:
   - typescript
   - node
@@ -31,8 +32,9 @@ words:
   - gitdir
   - heredocs
   - inlines
-  - Precomputes
+  - miscategorized
   - prebuilds
+  - Precomputes
   - sigstore
   - unaliased
   - unpadded
