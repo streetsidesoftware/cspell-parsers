@@ -32,11 +32,15 @@ choose the language IDs to use it for:
 
 ## Supported file types
 
-`recommended` selects the parser for these cspell language IDs:
+The plugin provides these parsers. Where Recommended is `yes`, `recommended` enables the named parser for files with that Language ID:
 
-| Language ID |
-| ----------- |
-| `csharp`    |
+<!--- @@inject: docs/language-id-n-parser-name.csv --->
+
+| Language ID | Parser Name             | Recommended |
+| ----------- | ----------------------- | ----------- |
+| csharp      | csharp-strings-comments | yes         |
+
+<!--- @@inject-end: docs/language-id-n-parser-name.csv --->
 
 ### Filtering by tag and file type
 

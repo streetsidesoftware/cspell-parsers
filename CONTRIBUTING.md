@@ -104,8 +104,9 @@ lint-ci`/`pnpm test` pass, since it auto-fixes what it can rather than just repo
    the filter, the way `packages/parser-typescript/samples/customize` does — see its `cspell.config.mts` and
    `example.ts` for the pattern to copy.
 6. Write `README.md` for someone **using** the plugin, not reading its source — lead with how to add it to a
-   cspell config; keep internals secondary. Include a "Supported file types" section listing every language
-   ID in `supportedFileTypes`. If `parser.ts` emits `tags`, also include a table listing every tag it can
+   cspell config; keep internals secondary. Include a "Supported file types" section whose table is injected from
+   the generated `docs/language-id-n-parser-name.csv` (copy the inject markers from an existing package's
+   README, then run `pnpm run build && pnpm run build:readme`). If `parser.ts` emits `tags`, also include a table listing every tag it can
    emit (including implied ancestor tags, e.g. `comment` alongside `comment.block.doc`) and what each one
    means — see `CLAUDE.md`'s "`README.md`" note for why these belong in the README rather than being omitted
    with the rest of the internals. Also add a short "Filtering by tag" section showing `customizePlugin` in

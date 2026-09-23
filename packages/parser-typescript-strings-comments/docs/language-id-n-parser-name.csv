@@ -1,0 +1,5 @@
+Language ID,Parser Name,Recommended
+javascript,typescript-strings-comments,yes
+javascriptreact,typescript-strings-comments,yes
+typescript,typescript-strings-comments,yes
+typescriptreact,typescript-strings-comments,yes

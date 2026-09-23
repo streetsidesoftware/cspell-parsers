@@ -40,12 +40,16 @@ plugin in yourself and choose the language IDs to use it for:
 
 ## Supported file types
 
-`recommended` selects the parser for these cspell language IDs:
+The plugin provides these parsers. Where Recommended is `yes`, `recommended` enables the named parser for files with that Language ID:
 
-| Language ID       |
-| ----------------- |
-| `javascript`      |
-| `javascriptreact` |
+<!--- @@inject: docs/language-id-n-parser-name.csv --->
+
+| Language ID     | Parser Name | Recommended |
+| --------------- | ----------- | ----------- |
+| javascript      | javascript  | yes         |
+| javascriptreact | javascript  | yes         |
+
+<!--- @@inject-end: docs/language-id-n-parser-name.csv --->
 
 For TypeScript, TSX, or a single plugin that covers all four, use
 [`@cspell/parser-typescript`](https://www.npmjs.com/package/@cspell/parser-typescript) directly instead.

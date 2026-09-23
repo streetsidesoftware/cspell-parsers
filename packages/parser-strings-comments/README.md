@@ -42,20 +42,27 @@ plugin in yourself and choose the language IDs to use it for:
 
 ## Supported file types
 
-`recommended` selects the parser for these cspell language IDs:
+The plugin provides these parsers. Where Recommended is `yes`, `recommended` enables the named parser for files with that Language ID:
 
-| Language ID       |
-| ----------------- |
-| `c`               |
-| `cpp`             |
-| `csharp`          |
-| `go`              |
-| `java`            |
-| `javascript`      |
-| `javascriptreact` |
-| `php`             |
-| `typescript`      |
-| `typescriptreact` |
+<!--- @@inject: docs/language-id-n-parser-name.csv --->
+
+| Language ID     | Parser Name                 | Recommended |
+| --------------- | --------------------------- | ----------- |
+| c               | c-cpp-strings-comments      | yes         |
+| cpp             | c-cpp-strings-comments      | yes         |
+| csharp          | csharp-strings-comments     | yes         |
+| go              | go-strings-comments         | yes         |
+| java            | java-strings-comments       | yes         |
+| javascript      | typescript-strings-comments | yes         |
+| javascriptreact | typescript-strings-comments | yes         |
+| php             | php-strings-comments        | yes         |
+| python          | python-strings-comments     | yes         |
+| ruby            | ruby-strings-comments       | yes         |
+| rust            | rust-strings-comments       | yes         |
+| typescript      | typescript-strings-comments | yes         |
+| typescriptreact | typescript-strings-comments | yes         |
+
+<!--- @@inject-end: docs/language-id-n-parser-name.csv --->
 
 An unrecognized file extension falls back to a plain `//`/`/* */`/`'...'`/`"..."` baseline instead of failing.
 

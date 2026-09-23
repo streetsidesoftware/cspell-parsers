@@ -5,7 +5,7 @@
   "bin": {
     "fix-package-json": "./fix-package-json.ts",
     "fix-release-please-config": "./fix-release-please-config.ts",
-    "fix-tags-readme": "./fix-tags-readme.ts"
+    "fix-parser-readme": "./fix-parser-readme.ts"
   },
   "devDependencies": {
     "prettier": "^3.9.6",
