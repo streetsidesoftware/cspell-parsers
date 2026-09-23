@@ -230,9 +230,12 @@ implementation detail to omit: it's what a consumer needs to write a `customizeP
 by tag. Keep it to a plain two-column `Tag` / `Meaning` table — no discussion of how the parser computes or
 assigns the tags.
 
-`README.md` must also include a "Supported file types" section listing every language ID in
-`supportedFileTypes` (a single-column table is enough) — this is what a consumer checks before deciding
-whether `recommended` already covers their file types or they need to wire `languageSettings` themselves.
+`README.md` must also include a "Supported file types" section — this is what a consumer checks before
+deciding whether `recommended` already covers their file types or they need to wire `languageSettings`
+themselves. Don't hand-write its table: add
+`<!--- @@inject: docs/language-id-n-parser-name.csv --->` / `<!--- @@inject-end: docs/language-id-n-parser-name.csv --->`
+markers and run `pnpm run build && pnpm run build:readme`. `fix-parser-readme` generates that CSV from the
+built plugin's `parsers` (see `scripts/README.md`).
 
 The same "if the parser emits `tags`" condition also means `plugin.ts` exports `customizePlugin` (see
 "Package shape" above), and `README.md` must show it: a short "Filtering by tag" (or similarly named)

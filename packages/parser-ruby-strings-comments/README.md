@@ -32,11 +32,15 @@ choose the language IDs to use it for:
 
 ## Supported file types
 
-`recommended` selects the parser for this cspell language ID:
+The plugin provides these parsers for these cspell language IDs; `recommended` selects the one marked Recommended:
 
-| Language ID |
-| ----------- |
-| `ruby`      |
+<!--- @@inject: docs/language-id-n-parser-name.csv --->
+
+| Language ID | Parser                | Recommended |
+| ----------- | --------------------- | ----------- |
+| ruby        | ruby-strings-comments | yes         |
+
+<!--- @@inject-end: docs/language-id-n-parser-name.csv --->
 
 ### Filtering by tag and file type
 

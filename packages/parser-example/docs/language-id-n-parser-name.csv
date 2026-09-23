@@ -1,0 +1,7 @@
+Language ID,Parser,Recommended
+c,c-style-comments,yes
+cpp,c-style-comments,yes
+csharp,c-style-comments,yes
+java,c-style-comments,yes
+javascript,c-style-comments,yes
+typescript,c-style-comments,yes

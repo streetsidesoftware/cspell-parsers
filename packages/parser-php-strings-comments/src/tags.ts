@@ -1,6 +1,6 @@
 /**
  * Every tag this parser can emit, and what each one means. Source of truth for both `tags` below and
- * `README.md`'s Tags table, which is generated from this object (`scripts/fix-tags-readme.ts`).
+ * `README.md`'s Tags table, which is generated from this object (`scripts/fix-parser-readme.ts`).
  */
 export const tagsAndMeaning = {
   comment: 'Any comment',

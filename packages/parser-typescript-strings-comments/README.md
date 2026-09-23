@@ -35,14 +35,18 @@ plugin in yourself and choose the language IDs to use it for:
 
 ## Supported file types
 
-`recommended` selects the parser for these cspell language IDs:
+The plugin provides these parsers for these cspell language IDs; `recommended` selects the one marked Recommended:
 
-| Language ID       |
-| ----------------- |
-| `javascript`      |
-| `javascriptreact` |
-| `typescript`      |
-| `typescriptreact` |
+<!--- @@inject: docs/language-id-n-parser-name.csv --->
+
+| Language ID     | Parser                      | Recommended |
+| --------------- | --------------------------- | ----------- |
+| javascript      | typescript-strings-comments | yes         |
+| javascriptreact | typescript-strings-comments | yes         |
+| typescript      | typescript-strings-comments | yes         |
+| typescriptreact | typescript-strings-comments | yes         |
+
+<!--- @@inject-end: docs/language-id-n-parser-name.csv --->
 
 ### Filtering by tag and file type
 

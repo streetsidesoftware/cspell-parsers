@@ -1,0 +1,5 @@
+Language ID,Parser,Recommended
+javascript,typescript,yes
+javascriptreact,typescript,yes
+typescript,typescript,yes
+typescriptreact,typescript,yes

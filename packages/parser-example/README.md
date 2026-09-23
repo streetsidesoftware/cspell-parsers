@@ -39,16 +39,20 @@ plugin in yourself and choose the language IDs to use it for:
 
 ## Supported file types
 
-`recommended` selects the parser for these cspell language IDs:
+The plugin provides these parsers for these cspell language IDs; `recommended` selects the one marked Recommended:
 
-| Language ID  |
-| ------------ |
-| `c`          |
-| `cpp`        |
-| `csharp`     |
-| `java`       |
-| `javascript` |
-| `typescript` |
+<!--- @@inject: docs/language-id-n-parser-name.csv --->
+
+| Language ID | Parser           | Recommended |
+| ----------- | ---------------- | ----------- |
+| c           | c-style-comments | yes         |
+| cpp         | c-style-comments | yes         |
+| csharp      | c-style-comments | yes         |
+| java        | c-style-comments | yes         |
+| javascript  | c-style-comments | yes         |
+| typescript  | c-style-comments | yes         |
+
+<!--- @@inject-end: docs/language-id-n-parser-name.csv --->
 
 ### Filtering by tag
 
