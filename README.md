@@ -1,8 +1,8 @@
 # cspell-parsers
 
 A collection of parser plugins for [cspell](https://cspell.org), published as scoped `@cspell/parser-*`
-packages on npm. Each one teaches cspell how to read a specific file format, so spell checking sees only the
-text that was meant to be read as words — identifiers, comments, string contents — and skips the rest
+packages on npm. Each one parses a specific file format for cspell, so spell checking sees only the text
+that was meant to be read as words — identifiers, comments, string contents — and skips the rest
 (keywords, punctuation, numeric literals, import specifiers, and so on).
 
 ## Available parsers
