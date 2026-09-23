@@ -29,12 +29,43 @@ that was meant to be read as words — identifiers, comments, string contents �
 <!--- @@inject-end: static/packages.csv#markdown --->
 
 See each package's own README for install instructions, usage, and — where the parser emits `tags` — the
-table of tags it can produce for use with cspell's `validate`/`ValidationTags` setting.
+table of tags it can produce, for filtering with `customizePlugin`.
+
+## Choosing a parser
+
+- **Check identifiers too** — [`@cspell/parser-typescript`](packages/parser-typescript) checks identifiers,
+  comments, and strings in JavaScript, JSX, TypeScript, and TSX, and skips keywords and import specifiers.
+  [`@cspell/parser-javascript`](packages/parser-javascript) is the same parser, registered for JavaScript and
+  JSX only.
+- **Comments and strings only** — the `*-strings-comments` packages leave code alone and check only comments
+  and string literals. Pick the one for your language, or
+  [`@cspell/parser-strings-comments`](packages/parser-strings-comments) to cover all of them at once.
+- **tree-sitter backend** — `@cspell/parser-typescript` is built on
+  [`@cspell/parser-typescript-tree-sitter-wasm`](packages/parser-typescript-tree-sitter-wasm) (WebAssembly, no
+  native build step). Use [`@cspell/parser-typescript-tree-sitter`](packages/parser-typescript-tree-sitter)
+  directly for tree-sitter's native Node.js bindings instead.
+
+## Requirements
+
+<!--- @@inject: ./static/requirements.md --->
+
+| Tool                                                                                                            | Version    |
+| --------------------------------------------------------------------------------------------------------------- | ---------- |
+| [cspell](https://cspell.org)                                                                                    | `>=10.0.0` |
+| [Code Spell Checker](https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.code-spell-checker) | `>=4.4.0`  |
+
+<!--- @@inject-end: ./static/requirements.md --->
 
 ## Quick start
 
-Every parser package works the same way: import its `recommended` settings to register the plugin and select
-it for the relevant file types in one step.
+Every parser package works the same way. Install it:
+
+```sh
+npm install --save-dev @cspell/parser-typescript
+```
+
+Then import its `recommended` settings to register the plugin and select it for the relevant file types in
+one step:
 
 ```jsonc
 // cspell.config.jsonc (or cspell.config.yaml/.mjs/...)
@@ -54,17 +85,6 @@ Want to add a new parser, or work on one of the ones here? See [CONTRIBUTING.md]
 
 MIT — see [LICENSE](LICENSE).
 
-## Requirements
-
-<!--- @@inject: ./static/requirements.md --->
-
-| Tool                                                                                                            | Version    |
-| --------------------------------------------------------------------------------------------------------------- | ---------- |
-| [cspell](https://cspell.org)                                                                                    | `>=10.0.0` |
-| [Code Spell Checker](https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.code-spell-checker) | `>=4.4.0`  |
-
-<!--- @@inject-end: ./static/requirements.md --->
-
 ## Support Future Development
 
 <!--- @@inject: static/sponsor.md --->
@@ -78,16 +98,6 @@ Please show your support through one of the following sites:
 </p>
 
 <!--- @@inject-end: static/sponsor.md --->
-
-## CSpell for Enterprise
-
-<!--- @@inject: static/tidelift.md --->
-
-Available as part of the Tidelift Subscription.
-
-The maintainers of cspell and thousands of other packages are working with Tidelift to deliver commercial support and maintenance for the open source packages you use to build your applications. Save time, reduce risk, and improve code health, while paying the maintainers of the exact packages you use. [Learn more.](https://tidelift.com/subscription/pkg/npm-cspell?utm_source=npm-cspell&utm_medium=referral&utm_campaign=enterprise&utm_term=repo)
-
-<!--- @@inject-end: static/tidelift.md --->
 
 <!--- @@inject: static/footer.md --->
 
