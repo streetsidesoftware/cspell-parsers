@@ -29,8 +29,9 @@ This repo's release notes cover many packages at once (release-please's `node-wo
 or `docs(parser-go-strings-comments): ...` — the scope names the affected package. `release-please-config.json`'s
 `changelog-sections` (root of the repo, shared by all packages) maps commit types to headings; the two visible,
 non-hidden sections that matter for this audit are `### Features` (`feat`) and `### Updates and Bug Fixes`
-(`fix`) — `chore`/`docs`/`style`/`test`/`ci` are `hidden: true` and don't appear in the changelog at all, so
-reclassifying into one of those also means the line disappears from the release notes, not just moves section.
+(`fix`) — `chore`/`docs`/`style`/`refactor`/`test`/`ci` are `hidden: true` and don't appear in the changelog at
+all, so reclassifying into one of those also means the line disappears from the release notes, not just moves
+section. (`perf`/`revert` are also visible, but rare enough that they're not a typical audit target.)
 
 Fetch the release PR's body (`gh pr view <N> --json body --jq .body`) — it's a flat changelog grouped by those
 section headings, each line linking back to its source PR. Read CONTRIBUTING.md's "Commits & pull requests"
@@ -50,9 +51,8 @@ Present the flagged entries with your reasoning and PR numbers, and get the user
 
 For each PR to fix, decide the corrected `type: description` (optionally `type(scope): description`, or
 `type!:` for breaking) using the type list from CONTRIBUTING.md's "Commits & pull requests" section (`feat`,
-`fix`, `perf` are visible in the changelog; `refactor`, `chore`, `ci`, `docs`, `test` are hidden;
-`release-please-config.json`'s `changelog-sections` also has `revert`/`style`, rare enough that CONTRIBUTING.md
-doesn't call them out). Keep the `(scope)` matching the affected package directory name (e.g.
+`fix`, `perf`, `revert` are visible in the changelog; `refactor`, `chore`, `ci`, `docs`, `style`, `test` are
+hidden). Keep the `(scope)` matching the affected package directory name (e.g.
 `fix(parser-python-strings-comments): ...`), consistent with this repo's existing commit history. Keep the
 description close to the original PR title's wording unless that was also unclear — the goal is fixing the
 category, not rewriting history for its own sake.

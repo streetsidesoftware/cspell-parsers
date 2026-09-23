@@ -139,12 +139,15 @@ and changelog from the type, so pick it by user-facing impact, not by how much c
 - `fix:` — a bug fix that changes published behavior.
 - `feat!:` / `fix!:` — either of the above, but breaking.
 - `perf:` — a performance improvement a consumer would notice, with no behavior change.
+- `revert:` — undoes a previously merged commit. Visible in the changelog under its own "Reverts" section, so
+  consumers can see a shipped `feat:`/`fix:` got undone.
 - `refactor:` — internal restructuring with no behavior change.
 - `docs:` — documentation only (README, ADRs, CONTRIBUTING.md, etc.).
+- `style:` — formatting-only changes with no logic difference (e.g. rewrapping a comment, fixing whitespace).
 - `test:` — test-only changes.
 - `ci:` — GitHub Actions/workflow changes, including automated dependency bumps.
 - `chore:` — everything else that doesn't touch published behavior: repo tooling, Claude Code skills/config,
-  dev dependencies, lint/format config, etc.
+  dev dependencies, lint/format config, build tooling (tsdown, pnpm catalog), etc.
 
 Repo maintenance and internal restructuring are never `fix:`/`feat:`, even for a large diff — those two are
 reserved for changes to a published package's behavior, because `fix:`/`feat:` are what show up in the
