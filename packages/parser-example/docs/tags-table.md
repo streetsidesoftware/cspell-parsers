@@ -1,6 +1,0 @@
-| Tag                 | Meaning                     |
-| ------------------- | --------------------------- |
-| `comment`           | Any comment                 |
-| `comment.line`      | A `//` line comment         |
-| `comment.block`     | A `/* ... */` block comment |
-| `comment.block.doc` | A `/** ... */` doc comment  |

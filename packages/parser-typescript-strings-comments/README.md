@@ -91,7 +91,7 @@ Every segment carries its own tag plus every ancestor implied by it - a doc comm
 `comment.block.doc` together with `comment.block` and `comment` - so the `tags` filter above can match at
 whatever level of specificity it needs.
 
-<!--- @@inject: docs/tags-table.md --->
+<!--- @@inject: docs/tags-table.csv#markdown --->
 
 | Tag                         | Meaning                                                                                                                     |
 | --------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
@@ -110,7 +110,7 @@ whatever level of specificity it needs.
 | `module.specifier.literal`  | The module specifier string of an `import`/`export ... from` statement, a dynamic `import('...')`, or a `require(...)` call |
 | `code`                      | Everything else (off by default)                                                                                            |
 
-<!--- @@inject-end: docs/tags-table.md --->
+<!--- @@inject-end: docs/tags-table.csv#markdown --->
 
 ### The `code` tag
 

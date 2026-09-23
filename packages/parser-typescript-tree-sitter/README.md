@@ -108,7 +108,7 @@ export default {
 
 ## Tags
 
-<!--- @@inject: docs/tags-table.md --->
+<!--- @@inject: docs/tags-table.csv#markdown --->
 
 | Tag                            | Meaning                                                                                                  |
 | ------------------------------ | -------------------------------------------------------------------------------------------------------- |
@@ -137,7 +137,7 @@ export default {
 | `identifier.exportBinding`     | A renamed export alias (`export { x as y }`)                                                             |
 | `code`                         | Everything else (off by default)                                                                         |
 
-<!--- @@inject-end: docs/tags-table.md --->
+<!--- @@inject-end: docs/tags-table.csv#markdown --->
 
 ### The `code` tag
 

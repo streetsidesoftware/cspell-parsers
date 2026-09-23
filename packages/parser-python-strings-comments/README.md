@@ -86,7 +86,7 @@ nested inside one keeps its own normal tag rather than `string.interpolated` - f
 
 ## Tags
 
-<!--- @@inject: docs/tags-table.md --->
+<!--- @@inject: docs/tags-table.csv#markdown --->
 
 | Tag                   | Meaning                                                                            |
 | --------------------- | ---------------------------------------------------------------------------------- |
@@ -100,7 +100,7 @@ nested inside one keeps its own normal tag rather than `string.interpolated` - f
 | `string.interpolated` | Any `f`-prefixed string (an f-string) - composes with the tags above               |
 | `code`                | Everything else (off by default)                                                   |
 
-<!--- @@inject-end: docs/tags-table.md --->
+<!--- @@inject-end: docs/tags-table.csv#markdown --->
 
 ### The `code` tag
 

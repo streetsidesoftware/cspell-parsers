@@ -81,7 +81,7 @@ export default {
 
 ## Tags
 
-<!--- @@inject: docs/tags-table.md --->
+<!--- @@inject: docs/tags-table.csv#markdown --->
 
 | Tag                 | Meaning                                                                       |
 | ------------------- | ----------------------------------------------------------------------------- |
@@ -98,7 +98,7 @@ export default {
 | `string.c.raw`      | A C raw string literal (`cr"..."`, `cr#"..."#`, ...)                          |
 | `code`              | Everything else (off by default)                                              |
 
-<!--- @@inject-end: docs/tags-table.md --->
+<!--- @@inject-end: docs/tags-table.csv#markdown --->
 
 Since Rust only ever uses `"` for strings, string tags describe a literal's _kind_ (byte/raw/C) rather than
 quote style.
