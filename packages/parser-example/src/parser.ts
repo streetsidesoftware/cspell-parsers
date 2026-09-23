@@ -3,13 +3,11 @@ import type { PluginParser, TagFilterOptions } from '@internal/utils';
 import { createPluginParser, customizeParser } from '@internal/utils';
 
 import { Scanner } from './scanner.ts';
-import { tags } from './tags.ts';
+import { TAGS, tags } from './tags.ts';
 
 /**
- * Extracts C-style comments - `//` line comments and `/*`-delimited block comments - from
- * arbitrary source text, so only comment text (not code) gets spell checked. Quoted string
- * contents are skipped, so a comment marker inside a string literal isn't mistaken for the
- * start of a real comment.
+ * Extracts C-style comments - `//` line comments and `/*`-delimited block comments - from arbitrary source
+ * text, tagging everything else (including string literals) as `code`.
  */
 export function parse(content: string, filename: string): ParseResult {
   return { content, filename, parsedTexts: new Scanner(content).run() };
@@ -24,18 +22,21 @@ export const supportedFileTypes: Readonly<string[]> = Object.freeze([
   'typescript',
 ]);
 
-export const parser: PluginParser = createPluginParser({
-  name: 'c-style-comments',
-  parse,
-  supportedFileTypes,
-  tags,
-});
+export const parser: PluginParser = createPluginParser(
+  {
+    name: 'c-style-comments',
+    parse,
+    supportedFileTypes,
+    tags,
+  },
+  (p) => p.tags !== TAGS.CODE,
+);
 
 /** Options for {@link createParser}: the parser's name, and which tagged segments to keep. */
 export interface CustomizeParserOptions {
   /** Overrides the parser's name (defaults to `c-style-comments`). */
   name?: string;
-  /** Which tagged segments to keep. Omit to keep everything. */
+  /** Which tagged segments to keep. Omit to keep the parser's own defaults (`code` excluded). */
   tags?: TagFilterOptions;
 }
 

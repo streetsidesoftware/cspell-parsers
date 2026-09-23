@@ -1,10 +1,10 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import type { ParsedText } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
-import { createParser, parser } from './parser.ts';
+import { createParser, parse, parser } from './parser.ts';
 
 const fixturesDir = join(import.meta.dirname, '../fixtures');
 
@@ -63,17 +63,19 @@ describe('c-style-comments parser', () => {
   describe('strings.c', () => {
     const parsedTexts = parseFixture('strings.c');
 
-    it('does not mistake "//" inside a string literal for a line comment', () => {
+    it('does not mistake "//" or "/*" inside a string literal for a comment', () => {
       expect(parsedTexts).toHaveLength(1);
       expect(parsedTexts[0]?.text).toBe('a real comment');
     });
 
-    it('does not mistake "/*" inside a string literal for a block comment', () => {
-      expect(parsedTexts.some((p) => p.text.includes('not a comment'))).toBe(false);
-    });
-
     it('treats an escaped quote as staying inside the string', () => {
       expect(parsedTexts.some((p) => p.text.includes('still inside the string'))).toBe(false);
+    });
+
+    it('leaves string literals in the code segments', () => {
+      const raw = [...parse(readFixture('strings.c'), 'fixtures/strings.c').parsedTexts];
+      const code = raw.filter((p) => p.tags?.code);
+      expect(code.some((p) => p.text.includes('"https://example.com"'))).toBe(true);
     });
   });
 
@@ -89,6 +91,45 @@ describe('c-style-comments parser', () => {
 
   it('returns no parsed text when there are no comments', () => {
     expect(parseFixture('no-comments.c')).toEqual([]);
+  });
+
+  it('tags the code between segments (identifiers, keywords, punctuation) as code', () => {
+    const rawTexts = [...parse(readFixture('comments.c'), 'fixtures/comments.c').parsedTexts];
+    const code = rawTexts.filter((p) => p.tags?.code);
+    expect(code.some((p) => p.text.includes('function add(a, b)'))).toBe(true);
+    expect(code.every((p) => p.tags?.code === true)).toBe(true);
+  });
+
+  it('parser.parse wraps the raw parse export, filtering out code by default', () => {
+    const content = '// a comment\nint total = 0;\n';
+    const raw = [...parse(content, 'file.c').parsedTexts];
+    const filtered = [...parser.parse(content, 'file.c').parsedTexts];
+
+    expect(raw.some((p) => p.tags?.code)).toBe(true);
+    expect(filtered).toEqual(raw.filter((p) => !p.tags?.code));
+  });
+
+  describe('tags', () => {
+    it('declares every tag the Scanner actually emits, across every fixture', () => {
+      // A tag emitted but missing from `parser.tags` can't be filtered via `createParser`/`customizePlugin`.
+      const emittedTags = new Set<string>();
+      for (const fixture of readdirSync(fixturesDir)) {
+        for (const p of parse(readFixture(fixture), `fixtures/${fixture}`).parsedTexts) {
+          for (const tag in p.tags) emittedTags.add(tag);
+        }
+      }
+
+      expect(emittedTags.size).toBeGreaterThan(0);
+      for (const tag of emittedTags) {
+        expect(parser.tags).toHaveProperty(tag);
+      }
+    });
+
+    it('is off by default for "code" and on for every other tag', () => {
+      const { code, ...rest } = parser.tags;
+      expect(code).toBe(false);
+      expect(Object.values(rest).every((value) => value === true)).toBe(true);
+    });
   });
 });
 

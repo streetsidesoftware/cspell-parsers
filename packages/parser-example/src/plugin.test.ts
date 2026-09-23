@@ -27,7 +27,10 @@ describe('customizePlugin', () => {
     const [customizedParser] = (customized.parsers ?? []) as Parser[];
     const result = customizedParser?.parse('// hello\n', 'example.c');
 
-    expect([...(result?.parsedTexts ?? [])]).toEqual([]);
+    const parsedTexts = [...(result?.parsedTexts ?? [])];
+    expect(parsedTexts.some((p) => p.text === 'hello')).toBe(false);
+    // `'*': true` overrides code's default-off, so the trailing "\n" `code` segment still comes through.
+    expect(parsedTexts.some((p) => p.tags?.code)).toBe(true);
   });
 
   it('wires name customization into the c-style-comments parser', () => {
