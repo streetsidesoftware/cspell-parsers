@@ -1,23 +1,71 @@
 # cspell-parsers
 
 A collection of parser plugins for [cspell](https://cspell.org), published as scoped `@cspell/parser-*`
-packages on npm. Each one teaches cspell how to read a specific file format, so spell checking sees only the
-text that was meant to be read as words — identifiers, comments, string contents — and skips the rest
+packages on npm. Each one parses a specific file format for cspell, so spell checking sees only the text
+that was meant to be read as words — identifiers, comments, string contents — and skips the rest
 (keywords, punctuation, numeric literals, import specifiers, and so on).
 
 ## Available parsers
 
-| Package                                                   | Description                                                     |
-| --------------------------------------------------------- | --------------------------------------------------------------- |
-| [`@cspell/parser-typescript`](packages/parser-typescript) | TypeScript (`.ts`, `.mts`, `.cts`) and TSX/JSX (`.tsx`, `.jsx`) |
+<!--- @@inject: static/packages.csv#markdown --->
+
+| Package                                                                                     | Description                                                                                                                        |
+| ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| [`@cspell/parser-c-cpp-strings-comments`](packages/parser-c-cpp-strings-comments)           | A strings-and-comments parser plugin for cspell covering C and C++.                                                                |
+| [`@cspell/parser-csharp-strings-comments`](packages/parser-csharp-strings-comments)         | A strings-and-comments parser plugin for cspell covering C#.                                                                       |
+| [`@cspell/parser-go-strings-comments`](packages/parser-go-strings-comments)                 | A strings-and-comments parser plugin for cspell covering Go.                                                                       |
+| [`@cspell/parser-java-strings-comments`](packages/parser-java-strings-comments)             | A strings-and-comments parser plugin for cspell covering Java.                                                                     |
+| [`@cspell/parser-javascript`](packages/parser-javascript)                                   | A JavaScript parser plugin for cspell.                                                                                             |
+| [`@cspell/parser-php-strings-comments`](packages/parser-php-strings-comments)               | A strings-and-comments parser plugin for cspell covering PHP.                                                                      |
+| [`@cspell/parser-python-strings-comments`](packages/parser-python-strings-comments)         | A strings-and-comments parser plugin for cspell covering Python.                                                                   |
+| [`@cspell/parser-ruby-strings-comments`](packages/parser-ruby-strings-comments)             | A strings-and-comments parser plugin for cspell covering Ruby.                                                                     |
+| [`@cspell/parser-rust-strings-comments`](packages/parser-rust-strings-comments)             | A strings-and-comments parser plugin for cspell covering Rust.                                                                     |
+| [`@cspell/parser-strings-comments`](packages/parser-strings-comments)                       | A combined strings-and-comments parser plugin for cspell covering C, C++, C#, Go, Java, JavaScript, JSX, TypeScript, TSX, and PHP. |
+| [`@cspell/parser-typescript`](packages/parser-typescript)                                   | A TypeScript parser plugin for cspell.                                                                                             |
+| [`@cspell/parser-typescript-strings-comments`](packages/parser-typescript-strings-comments) | A strings-and-comments parser plugin for cspell covering JavaScript, JSX, TypeScript, and TSX.                                     |
+| [`@cspell/parser-typescript-tree-sitter`](packages/parser-typescript-tree-sitter)           | A TypeScript parser plugin using tree-sitter for cspell.                                                                           |
+| [`@cspell/parser-typescript-tree-sitter-wasm`](packages/parser-typescript-tree-sitter-wasm) | A TypeScript parser plugin using tree-sitter for cspell.                                                                           |
+
+<!--- @@inject-end: static/packages.csv#markdown --->
 
 See each package's own README for install instructions, usage, and — where the parser emits `tags` — the
-table of tags it can produce for use with cspell's `validate`/`ValidationTags` setting.
+table of tags it can produce, for filtering with `customizePlugin`.
+
+## Choosing a parser
+
+- **Check identifiers too** — [`@cspell/parser-typescript`](packages/parser-typescript) checks identifiers,
+  comments, and strings in JavaScript, JSX, TypeScript, and TSX, and skips keywords and import specifiers.
+  [`@cspell/parser-javascript`](packages/parser-javascript) is the same parser, registered for JavaScript and
+  JSX only.
+- **Comments and strings only** — the `*-strings-comments` packages leave code alone and check only comments
+  and string literals. Pick the one for your language, or
+  [`@cspell/parser-strings-comments`](packages/parser-strings-comments) to cover all of them at once.
+- **tree-sitter backend** — `@cspell/parser-typescript` is built on
+  [`@cspell/parser-typescript-tree-sitter-wasm`](packages/parser-typescript-tree-sitter-wasm) (WebAssembly, no
+  native build step). Use [`@cspell/parser-typescript-tree-sitter`](packages/parser-typescript-tree-sitter)
+  directly for tree-sitter's native Node.js bindings instead.
+
+## Requirements
+
+<!--- @@inject: ./static/requirements.md --->
+
+| Tool                                                                                                            | Version    |
+| --------------------------------------------------------------------------------------------------------------- | ---------- |
+| [cspell](https://cspell.org)                                                                                    | `>=10.0.0` |
+| [Code Spell Checker](https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.code-spell-checker) | `>=4.4.0`  |
+
+<!--- @@inject-end: ./static/requirements.md --->
 
 ## Quick start
 
-Every parser package works the same way: import its `recommended` settings to register the plugin and select
-it for the relevant file types in one step.
+Every parser package works the same way. Install it:
+
+```sh
+npm install --save-dev @cspell/parser-typescript
+```
+
+Then import its `recommended` settings to register the plugin and select it for the relevant file types in
+one step:
 
 ```jsonc
 // cspell.config.jsonc (or cspell.config.yaml/.mjs/...)
@@ -37,17 +85,6 @@ Want to add a new parser, or work on one of the ones here? See [CONTRIBUTING.md]
 
 MIT — see [LICENSE](LICENSE).
 
-## Requirements
-
-<!--- @@inject: ./static/requirements.md --->
-
-| Tool                                                                                                            | Version    |
-| --------------------------------------------------------------------------------------------------------------- | ---------- |
-| [cspell](https://cspell.org)                                                                                    | `>=10.0.0` |
-| [Code Spell Checker](https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.code-spell-checker) | `>=4.4.0`  |
-
-<!--- @@inject-end: ./static/requirements.md --->
-
 ## Support Future Development
 
 <!--- @@inject: static/sponsor.md --->
@@ -61,16 +98,6 @@ Please show your support through one of the following sites:
 </p>
 
 <!--- @@inject-end: static/sponsor.md --->
-
-## CSpell for Enterprise
-
-<!--- @@inject: static/tidelift.md --->
-
-Available as part of the Tidelift Subscription.
-
-The maintainers of cspell and thousands of other packages are working with Tidelift to deliver commercial support and maintenance for the open source packages you use to build your applications. Save time, reduce risk, and improve code health, while paying the maintainers of the exact packages you use. [Learn more.](https://tidelift.com/subscription/pkg/npm-cspell?utm_source=npm-cspell&utm_medium=referral&utm_campaign=enterprise&utm_term=repo)
-
-<!--- @@inject-end: static/tidelift.md --->
 
 <!--- @@inject: static/footer.md --->
 

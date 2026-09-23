@@ -2,6 +2,8 @@
 
 import {
   LANGUAGE_ID_TABLE_RELATIVE_PATH,
+  PACKAGE_JSON_GLOB,
+  PACKAGES_TABLE_PATH,
   PLUGIN_SOURCE_GLOB,
   TAGS_SOURCE_GLOB,
   TAGS_TABLE_RELATIVE_PATH,
@@ -17,7 +19,11 @@ Regenerates the CSV tables each package's README.md injects:
 - ${LANGUAGE_ID_TABLE_RELATIVE_PATH} from its \`${PLUGIN_SOURCE_GLOB}\`'s \`plugin.parsers\` (run
   \`pnpm run build\` first; packages without one are skipped).
 
-Run \`pnpm run build:readme\` afterward to inject the results into README.md.
+And the one the root README.md injects:
+
+- ${PACKAGES_TABLE_PATH} from every non-private \`${PACKAGE_JSON_GLOB}\`'s \`name\` and \`description\`.
+
+Run \`pnpm run build:readme\` afterward to inject the results into the READMEs.
 
 Options:
   --dry-run   Report which tables need regenerating without writing changes; exits with a
