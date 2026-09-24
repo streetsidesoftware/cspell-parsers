@@ -34,10 +34,11 @@ describe('customizePlugin', () => {
     expect(parsedTexts.some((p) => p.tags?.code)).toBe(true);
   });
 
-  it('wires name customization into the ruby-strings-comments parser', () => {
+  it('wires name customization, including recommendedLanguageSettings, into the ruby-strings-comments parser', () => {
     const customized = customizePlugin({ name: 'custom-example', tags: {} });
     const [customizedParser] = (customized.parsers ?? []) as Parser[];
 
     expect(customizedParser?.name).toBe('custom-example');
+    expect(customized).toMatchObject({ recommendedLanguageSettings: [{ parser: 'custom-example' }] });
   });
 });

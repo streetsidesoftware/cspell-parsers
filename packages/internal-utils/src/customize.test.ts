@@ -2,8 +2,8 @@ import type { ParsedTags, ParsedText } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
 import { compileTagFilter, createParsedTextFilter } from './customize.ts';
-import { createPluginParser, customizeParser } from './parser.ts';
-import type { PluginParser } from './types.ts';
+import { createPluginParser, customizeParser, customizeParserPlugin } from './parser.ts';
+import type { ParserPlugin, PluginParser } from './types.ts';
 
 function mkText(content: string, tags: ParsedText['tags']): ParsedText {
   return { text: content, range: [0, content.length], tags };
@@ -98,6 +98,27 @@ describe('customizeParser', () => {
   it('overrides the name when options.name is given', () => {
     const parser = customizeParser(fakeParser([]), { name: 'custom', tags: {} });
     expect(parser.name).toBe('custom');
+  });
+});
+
+describe('customizeParserPlugin', () => {
+  const plugin: ParserPlugin = {
+    name: 'fake-plugin',
+    parsers: [fakeParser([])],
+    supportedFileTypes: ['c'],
+    recommendedLanguageSettings: [{ languageId: 'c', parser: 'fake' }],
+  };
+
+  it('points recommendedLanguageSettings at a renamed parser', () => {
+    const customized = customizeParserPlugin(plugin, { name: 'custom' });
+    expect(customized.parsers.map((p) => p.name)).toEqual(['custom']);
+    expect(customized.recommendedLanguageSettings).toEqual([{ languageId: 'c', parser: 'custom' }]);
+  });
+
+  it('keeps the plugin name and recommendedLanguageSettings when the parser is not renamed', () => {
+    const customized = customizeParserPlugin(plugin, { tags: {} });
+    expect(customized.name).toBe('fake-plugin');
+    expect(customized.recommendedLanguageSettings).toEqual(plugin.recommendedLanguageSettings);
   });
 });
 

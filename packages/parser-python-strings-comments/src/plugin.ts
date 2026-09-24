@@ -1,5 +1,5 @@
 import type { Plugin } from '@cspell/cspell-types';
-import { customizeParser, type ParserPlugin, type TagFilterOptions } from '@internal/utils';
+import { customizeParserPlugin, type ParserPlugin, type TagFilterOptions } from '@internal/utils';
 
 import { parser, supportedFileTypes } from './parser.ts';
 
@@ -41,11 +41,11 @@ export interface CustomizePluginOptions {
  * import { customizePlugin } from '@cspell/parser-python-strings-comments/plugin';
  *
  * export default {
- *   plugins: [customizePlugin({ name: 'python-no-f-strings', tags: { '*': true, 'string.interpolated': false } })], // skip f-strings
+ *   plugins: [customizePlugin({ name: 'python-no-f-strings', tags: { 'string.interpolated': false } })], // skip f-strings
  *   languageSettings: [{ languageId: 'python', parser: 'python-no-f-strings' }],
  * };
  * ```
  */
 export function customizePlugin(options: CustomizePluginOptions): Plugin {
-  return { ...plugin, parsers: [customizeParser(parser, options)] };
+  return customizeParserPlugin(plugin, options);
 }

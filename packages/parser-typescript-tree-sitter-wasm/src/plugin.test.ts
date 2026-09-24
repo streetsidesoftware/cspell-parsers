@@ -45,10 +45,11 @@ describe('customizePlugin', () => {
     expect(parsedTexts.some((p) => p.tags?.code)).toBe(true);
   });
 
-  it('wires name customization into the typescript parser', () => {
+  it('wires name customization, including recommendedLanguageSettings, into the typescript parser', () => {
     const customized = customizePlugin({ name: 'custom-typescript', tags: {} });
     const [customizedParser] = (customized.parsers ?? []) as Parser[];
 
     expect(customizedParser?.name).toBe('custom-typescript');
+    expect(customized).toMatchObject({ recommendedLanguageSettings: [{ parser: 'custom-typescript' }] });
   });
 });

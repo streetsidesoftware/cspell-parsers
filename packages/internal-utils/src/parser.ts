@@ -1,5 +1,12 @@
 import { createParsedTextFilter } from './customize.ts';
-import type { CustomizeParserOptions, ParsedTextFilter, ParseFunction, ParserTags, PluginParser } from './types.ts';
+import type {
+  CustomizeParserOptions,
+  ParsedTextFilter,
+  ParseFunction,
+  ParserPlugin,
+  ParserTags,
+  PluginParser,
+} from './types.ts';
 
 export type CreatePluginParserOptions = Pick<PluginParser, 'name' | 'parse' | 'supportedFileTypes' | 'tags'>;
 
@@ -14,6 +21,21 @@ export function createPluginParser(options: CreatePluginParserOptions, filter?: 
  */
 export function customizeParser(parser: PluginParser, options: CustomizeParserOptions): PluginParser {
   return parser.customize(options);
+}
+
+/** Customizes each parser in `plugin`, pointing `recommendedLanguageSettings` at the renamed parsers. */
+export function customizeParserPlugin(plugin: ParserPlugin, options: CustomizeParserOptions): ParserPlugin {
+  const renamed = new Map<string, string>();
+  const parsers = plugin.parsers.map((parser) => {
+    const customized = customizeParser(parser, options);
+    renamed.set(parser.name, customized.name);
+    return customized;
+  });
+  const recommendedLanguageSettings = plugin.recommendedLanguageSettings.map((setting) => ({
+    ...setting,
+    parser: renamed.get(setting.parser) ?? setting.parser,
+  }));
+  return { ...plugin, parsers, recommendedLanguageSettings };
 }
 
 export function createParse(parse: ParseFunction, filter?: ParsedTextFilter): ParseFunction {
