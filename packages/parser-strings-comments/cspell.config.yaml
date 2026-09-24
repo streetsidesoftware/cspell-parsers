@@ -7,4 +7,5 @@ ignorePaths:
 words:
   - dedenting
   - dedents
+  - godoc
   - nowdoc
