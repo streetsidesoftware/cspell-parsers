@@ -100,16 +100,48 @@ export function renderLanguageIdTable(parsers: readonly ParserInfo[]): string {
   return ['Language ID,Parser Name,Recommended', ...rows, ''].join('\n');
 }
 
+/** Longest a {@link wrapList} line is allowed to get before wrapping to the next one. */
+const LIST_WRAP_WIDTH = 40;
+
+/**
+ * Joins `items` with `, `, breaking onto a new line (via a Markdown `<br>`, since a GFM table cell can't
+ * contain a literal newline) whenever the next item would push the current line past `maxWidth` characters -
+ * used to keep a package's `Languages` list from dominating the packages table's column widths.
+ */
+function wrapList(items: readonly string[], maxWidth: number): string {
+  const lines: string[] = [];
+  let line = '';
+  for (const item of items) {
+    const candidate = line ? `${line}, ${item}` : item;
+    if (line && candidate.length > maxWidth) {
+      lines.push(line);
+      line = item;
+    } else {
+      line = candidate;
+    }
+  }
+  if (line) lines.push(line);
+  return lines.join('<br>');
+}
+
 /**
  * Renders a `Package,Languages,Tags` CSV with one row per package, sorted by name. Injected with `#markdown`
  * (like {@link renderTagsTable}) so each package name renders as a link to its directory and each language/tag
- * renders as a code span.
+ * renders as a code span; `Languages` is wrapped with {@link wrapList} so a package supporting many languages
+ * doesn't force the whole table wide.
  */
 export function renderPackagesTable(packages: readonly PackageInfo[]): string {
   const rows = [...packages]
     .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
     .map(({ name, dir, languages, tags }) =>
-      [`[\`${name}\`](${dir})`, languages.map((l) => `\`${l}\``).join(', '), tags.map((t) => `\`${t}\``).join(', ')]
+      [
+        `[\`${name}\`](${dir})`,
+        wrapList(
+          languages.map((l) => `\`${l}\``),
+          LIST_WRAP_WIDTH,
+        ),
+        tags.map((t) => `\`${t}\``).join(', '),
+      ]
         .map(csvField)
         .join(','),
     );
