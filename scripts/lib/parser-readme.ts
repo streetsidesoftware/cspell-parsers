@@ -208,6 +208,124 @@ export async function updateTagsTables(options: UpdateParserReadmeTablesOptions 
   return needsFix;
 }
 
+/** One row of a bundle package's tags table: a tag, one of its meanings, and the languages using that meaning. */
+export interface BundledTagRow {
+  tag: string;
+  meaning: string;
+  languages: readonly string[];
+}
+
+/** A bundled workspace parser package's tags and the language IDs its parsers support. */
+export interface BundledPackageTags {
+  tagsAndMeaning: Readonly<Record<string, string>>;
+  languages: readonly string[];
+}
+
+/**
+ * Merges each bundled package's tags into rows sorted by tag, one per distinct meaning, so a tag whose meaning
+ * varies by language (e.g. `comment.line`) gets a row per variant.
+ */
+export function mergeBundledTags(bundled: readonly BundledPackageTags[]): BundledTagRow[] {
+  const byTag = new Map<string, Map<string, Set<string>>>();
+  for (const { tagsAndMeaning, languages } of bundled) {
+    for (const [tag, meaning] of Object.entries(tagsAndMeaning)) {
+      const byMeaning = byTag.get(tag) ?? new Map<string, Set<string>>();
+      byTag.set(tag, byMeaning);
+      const langs = byMeaning.get(meaning) ?? new Set<string>();
+      byMeaning.set(meaning, langs);
+      languages.forEach((l) => langs.add(l));
+    }
+  }
+
+  const rows: BundledTagRow[] = [];
+  for (const tag of [...byTag.keys()].sort()) {
+    const meanings = [...(byTag.get(tag) ?? [])].map(([meaning, langs]) => ({
+      tag,
+      meaning,
+      languages: [...langs].sort(),
+    }));
+    meanings.sort((a, b) => (a.languages[0] < b.languages[0] ? -1 : a.languages[0] > b.languages[0] ? 1 : 0));
+    rows.push(...meanings);
+  }
+  return rows;
+}
+
+/**
+ * Renders a bundle package's `Tag,Meaning,Languages` CSV (injected with `#markdown`, like {@link renderTagsTable}).
+ * A row used by every bundled language says `all` rather than listing them.
+ */
+export function renderBundledTagsTable(rows: readonly BundledTagRow[], allLanguages: readonly string[]): string {
+  const lines = rows.map(({ tag, meaning, languages }) => {
+    const langs =
+      languages.length === allLanguages.length
+        ? 'all'
+        : wrapList(
+            languages.map((l) => `\`${l}\``),
+            LIST_WRAP_WIDTH,
+          );
+    return [`\`${tag}\``, meaning, langs].map(csvField).join(',');
+  });
+  return ['Tag,Meaning,Languages', ...lines, ''].join('\n');
+}
+
+/**
+ * Loads the tags of every workspace parser `packageDir` bundles (a `workspace:` `dependencies` entry with its
+ * own `tagsAndMeaning`). Returns `undefined` if it bundles none, or one isn't built yet.
+ */
+async function loadBundledPackageTags(
+  packageDir: string,
+  workspaceDirsByName: ReadonlyMap<string, string>,
+): Promise<BundledPackageTags[] | undefined> {
+  const pkg = JSON.parse(await fs.readFile(Path.join(packageDir, 'package.json'), 'utf-8')) as {
+    dependencies?: Record<string, string>;
+  };
+  const bundled: BundledPackageTags[] = [];
+  for (const [name, spec] of Object.entries(pkg.dependencies ?? {})) {
+    const depDir = workspaceDirsByName.get(name);
+    if (!depDir || !spec.startsWith('workspace:')) continue;
+    const tagsAndMeaning = await loadTagsAndMeaningIfExists(Path.join(depDir, 'src/tags.ts'));
+    if (!tagsAndMeaning) continue;
+    const parsers = await loadPluginParsersIfBuilt(Path.join(depDir, 'dist/plugin.js'));
+    if (!parsers) return undefined;
+    const languages = [...new Set(parsers.flatMap((p) => p.supportedFileTypes ?? []))];
+    bundled.push({ tagsAndMeaning, languages });
+  }
+  return bundled.length ? bundled : undefined;
+}
+
+async function loadTagsAndMeaningIfExists(tagsTsFile: string): Promise<Readonly<Record<string, string>> | undefined> {
+  if ((await readIfExists(tagsTsFile)) === undefined) return undefined;
+  return loadTagsAndMeaning(tagsTsFile);
+}
+
+/**
+ * Regenerates `docs/tags-table.csv` for every package with no `tagsAndMeaning` of its own that bundles workspace
+ * parsers that do (e.g. `@cspell/parser-strings-comments`), merged via {@link mergeBundledTags}.
+ * @returns `true` if one or more tables needed updating, `false` if everything was already up to date.
+ */
+export async function updateBundledTagsTables(options: UpdateParserReadmeTablesOptions = {}): Promise<boolean> {
+  const workspaceDirsByName = new Map<string, string>();
+  for (const packageJsonFile of await findFiles(PACKAGE_JSON_GLOB)) {
+    const pkg = JSON.parse(await fs.readFile(packageJsonFile, 'utf-8')) as { name: string };
+    workspaceDirsByName.set(pkg.name, Path.dirname(packageJsonFile));
+  }
+
+  let needsFix = false;
+  for (const packageDir of workspaceDirsByName.values()) {
+    if (await loadTagsAndMeaningIfExists(Path.join(packageDir, 'src/tags.ts'))) continue;
+
+    const bundled = await loadBundledPackageTags(packageDir, workspaceDirsByName);
+    if (!bundled) continue;
+
+    const allLanguages = new Set(bundled.flatMap((b) => b.languages));
+    const table = renderBundledTagsTable(mergeBundledTags(bundled), [...allLanguages]);
+    const tableFile = Path.join(packageDir, TAGS_TABLE_RELATIVE_PATH);
+    needsFix = (await writeIfChanged(tableFile, table, options.dryRun)) || needsFix;
+  }
+
+  return needsFix;
+}
+
 /**
  * Regenerates `docs/language-id-n-parser-name.csv` for every package with a built `dist/plugin.js`, so
  * `README.md`'s Supported file types table is generated from the plugin's parsers.
@@ -282,7 +400,8 @@ export async function updatePackagesTable(options: UpdateParserReadmeTablesOptio
 /** Runs every README table generator. @returns `true` if any table needed updating. */
 export async function updateParserReadmeTables(options: UpdateParserReadmeTablesOptions = {}): Promise<boolean> {
   const tagsNeedFix = await updateTagsTables(options);
+  const bundledTagsNeedFix = await updateBundledTagsTables(options);
   const languageIdsNeedFix = await updateLanguageIdTables(options);
   const packagesNeedFix = await updatePackagesTable(options);
-  return tagsNeedFix || languageIdsNeedFix || packagesNeedFix;
+  return tagsNeedFix || bundledTagsNeedFix || languageIdsNeedFix || packagesNeedFix;
 }

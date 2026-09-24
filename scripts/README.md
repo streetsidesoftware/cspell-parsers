@@ -11,6 +11,10 @@ These scripts are used to help maintain the repo.
     are skipped). It's injected with `inject-markdown`'s `#markdown` option
     (`<!--- @@inject: docs/tags-table.csv#markdown --->`) so the backtick-wrapped tag names and inline code in
     `Meaning` render as code spans instead of literal text.
+    A package without its own `tagsAndMeaning` that bundles workspace parsers which have one (a `workspace:`
+    `dependencies` entry, e.g. `@cspell/parser-strings-comments`) gets a merged `Tag,Meaning,Languages` table
+    instead, with one row per distinct meaning of each tag. It reads each bundled parser's built
+    `dist/plugin.js` for its languages, so run `pnpm run build` first.
   - `docs/language-id-n-parser-name.csv` comes from `dist/plugin.js`'s `plugin.parsers`, so run
     `pnpm run build` first. It has one row per language ID/parser pair, sorted by language ID and then by
     parser order, and marks the last parser for each language ID as `Recommended`.
