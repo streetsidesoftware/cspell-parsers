@@ -101,12 +101,12 @@ Every package publishes **four** things, each its own file under `src/` and its 
   `supportedFileTypes: string[]` — the cspell/vscode language IDs (e.g. `'typescript'`, `'javascriptreact'`)
   the parser is meant to handle, kept alphabetically sorted — as the single source of truth `recommended.ts`
   builds its `languageSettings` from, so the list only needs updating in one place.
-- `src/plugin.ts` — thin wiring: `export const plugin: ParserPlugin = { parsers: [parser] }`, plus
+- `src/plugin.ts` — thin wiring: `export const plugin: IPlugin = { parsers: [parser] }`, plus
   `export { supportedFileTypes } from './parser.ts'` so it's reachable from the `./plugin` subpath too.
   Published as `./plugin` → `dist/plugin.js`. If `parser.ts` emits `tags`, also export a local
   `CustomizePluginOptions` interface (`{ tags: TagFilterOptions }` — a struct rather than a bare
   `TagFilterOptions` so it can grow more options later without a breaking signature change) and
-  `function customizePlugin(options: CustomizePluginOptions): Plugin` — a thin wrapper around
+  `function customizePlugin(options: CustomizePluginOptions): CSpellPlugin` — a thin wrapper around
   `@internal/utils`'s `customizeParserPlugin(plugin, options)` (see below) bound to this package's own
   `plugin`, so a consumer can filter which tagged segments get spell checked without needing cspell itself
   to support that filtering. See `packages/parser-typescript/src/plugin.ts` for the pattern.

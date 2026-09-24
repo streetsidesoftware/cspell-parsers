@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { compileTagFilter, createParsedTextFilter } from './customize.ts';
 import { createPluginParser, customizeParser, customizeParserPlugin } from './parser.ts';
-import type { ParserPlugin, PluginParser } from './types.ts';
+import type { IParser, IPlugin } from './types.ts';
 
 function mkText(content: string, tags: ParsedText['tags']): ParsedText {
   return { text: content, range: [0, content.length], tags };
@@ -15,7 +15,7 @@ function mkText(content: string, tags: ParsedText['tags']): ParsedText {
  * declares every tag any of `parsedTexts` actually carries (all defaulting to emitted/kept), the same way a
  * real parser's `tags` map is expected to list everything it can emit.
  */
-function fakeParser(parsedTexts: ParsedText[]): PluginParser {
+function fakeParser(parsedTexts: ParsedText[]): IParser {
   const tags: Record<string, boolean> = {};
   for (const { tags: parsedTags } of parsedTexts) {
     for (const tag in parsedTags) tags[tag] = true;
@@ -102,7 +102,7 @@ describe('customizeParser', () => {
 });
 
 describe('customizeParserPlugin', () => {
-  const plugin: ParserPlugin = {
+  const plugin: IPlugin = {
     name: 'fake-plugin',
     parsers: [fakeParser([])],
     supportedFileTypes: ['c'],

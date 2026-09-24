@@ -1,4 +1,4 @@
-import type { Parser } from '@cspell/cspell-types';
+import type { Parser as CSpellParser } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
 import { parser, supportedFileTypes as parserSupportedFileTypes } from './parser.ts';
@@ -14,7 +14,7 @@ describe('plugin', () => {
   });
 
   it('is usable to parse content', () => {
-    const [pluginParser] = (plugin.parsers ?? []) as Parser[];
+    const [pluginParser] = (plugin.parsers ?? []) as CSpellParser[];
     const result = pluginParser?.parse('<?php // hello\n', 'example.php');
 
     expect([...(result?.parsedTexts ?? [])].some((p) => p.text === 'hello')).toBe(true);
@@ -24,7 +24,7 @@ describe('plugin', () => {
 describe('customizePlugin', () => {
   it('wires tag filtering into the php-strings-comments parser', () => {
     const customized = customizePlugin({ tags: { '*': true, comment: false } });
-    const [customizedParser] = (customized.parsers ?? []) as Parser[];
+    const [customizedParser] = (customized.parsers ?? []) as CSpellParser[];
     const result = customizedParser?.parse('<?php // hello\n', 'example.php');
 
     // Only `comment` is excluded, so the surrounding "<?php " / "\n" `code` segments still come through -
@@ -34,7 +34,7 @@ describe('customizePlugin', () => {
 
   it('wires name customization, including recommendedLanguageSettings, into the php-strings-comments parser', () => {
     const customized = customizePlugin({ name: 'custom-example', tags: {} });
-    const [customizedParser] = (customized.parsers ?? []) as Parser[];
+    const [customizedParser] = (customized.parsers ?? []) as CSpellParser[];
 
     expect(customizedParser?.name).toBe('custom-example');
     expect(customized).toMatchObject({ recommendedLanguageSettings: [{ parser: 'custom-example' }] });

@@ -1,4 +1,4 @@
-import type { Parser } from '@cspell/cspell-types';
+import type { Parser as CSpellParser } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
 import { parser, supportedFileTypes as parserSupportedFileTypes } from './parser.ts';
@@ -14,7 +14,7 @@ describe('plugin', () => {
   });
 
   it('is usable to parse content', () => {
-    const [pluginParser] = (plugin.parsers ?? []) as Parser[];
+    const [pluginParser] = (plugin.parsers ?? []) as CSpellParser[];
     const result = pluginParser?.parse('// hello\n', 'example.c');
 
     expect([...(result?.parsedTexts ?? [])].some((p) => p.text === 'hello')).toBe(true);
@@ -24,7 +24,7 @@ describe('plugin', () => {
 describe('customizePlugin', () => {
   it('wires tag filtering into the c-style-comments parser', () => {
     const customized = customizePlugin({ tags: { '*': true, comment: false } });
-    const [customizedParser] = (customized.parsers ?? []) as Parser[];
+    const [customizedParser] = (customized.parsers ?? []) as CSpellParser[];
     const result = customizedParser?.parse('// hello\n', 'example.c');
 
     const parsedTexts = [...(result?.parsedTexts ?? [])];
@@ -35,7 +35,7 @@ describe('customizePlugin', () => {
 
   it('wires name customization, including recommendedLanguageSettings, into the c-style-comments parser', () => {
     const customized = customizePlugin({ name: 'custom-example', tags: {} });
-    const [customizedParser] = (customized.parsers ?? []) as Parser[];
+    const [customizedParser] = (customized.parsers ?? []) as CSpellParser[];
 
     expect(customizedParser?.name).toBe('custom-example');
     expect(customized).toMatchObject({ recommendedLanguageSettings: [{ parser: 'custom-example' }] });

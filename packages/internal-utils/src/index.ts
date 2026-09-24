@@ -10,11 +10,11 @@ export { decodeStringParts } from './strings.ts';
 export { codeTagMeaning } from './tags.ts';
 export type {
   CustomizeParserOptions,
+  IParser,
+  IPlugin,
   ParsedTextFilter,
   ParseFunction,
-  ParserPlugin,
   ParserTags,
-  PluginParser,
   RecommendedLanguageSetting,
   RecommendedLanguageSettings,
   RecommendedSettings,

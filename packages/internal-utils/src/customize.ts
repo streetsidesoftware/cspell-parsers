@@ -1,13 +1,13 @@
-import type { ParsedTags, ParsedText, Parser } from '@cspell/cspell-types';
+import type { ParsedTags, ParsedText, Parser as CSpellParser } from '@cspell/cspell-types';
 
-import type { PluginParser, TagFilterOptions, TagsFilter } from './types.ts';
+import type { IParser, TagFilterOptions, TagsFilter } from './types.ts';
 
 export function customizeParserWithFilter(
-  parser: PluginParser,
+  parser: IParser,
   isIncluded: TagsFilter,
   name: string | undefined,
-): Parser {
-  const newParser: Parser = {
+): CSpellParser {
+  const newParser: CSpellParser = {
     name: name ?? parser.name,
     parse(content, filename) {
       const result = parser.parse(content, filename);

@@ -1,5 +1,5 @@
 import type { ParseResult } from '@cspell/cspell-types';
-import type { PluginParser, TagFilterOptions } from '@internal/utils';
+import type { IParser, TagFilterOptions } from '@internal/utils';
 import { createPluginParser, customizeParser } from '@internal/utils';
 
 import { Scanner } from './scanner.ts';
@@ -12,7 +12,7 @@ export function parse(content: string, filename: string): ParseResult {
 
 export const supportedFileTypes: Readonly<string[]> = Object.freeze(['rust']);
 
-export const parser: PluginParser = createPluginParser(
+export const parser: IParser = createPluginParser(
   {
     name: 'rust-strings-comments',
     parse,
@@ -50,6 +50,6 @@ export interface CustomizeParserOptions {
  * };
  * ```
  */
-export function createParser(options: CustomizeParserOptions = {}): PluginParser {
+export function createParser(options: CustomizeParserOptions = {}): IParser {
   return customizeParser(parser, options);
 }

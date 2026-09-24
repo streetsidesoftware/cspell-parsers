@@ -1,6 +1,6 @@
 import { parse } from '@cspell/parser-typescript/parser';
 import { TAGS } from '@cspell/parser-typescript/tags';
-import type { PluginParser, TagFilterOptions } from '@internal/utils';
+import type { IParser, TagFilterOptions } from '@internal/utils';
 import { createPluginParser, customizeParser } from '@internal/utils';
 
 import { tags } from './tags.ts';
@@ -9,7 +9,7 @@ export { parse };
 
 export const supportedFileTypes: Readonly<string[]> = Object.freeze(['javascript', 'javascriptreact']);
 
-export const parser: PluginParser = createPluginParser(
+export const parser: IParser = createPluginParser(
   {
     name: 'javascript',
     parse,
@@ -48,6 +48,6 @@ export interface CustomizeParserOptions {
  * };
  * ```
  */
-export function createParser(options: CustomizeParserOptions = {}): PluginParser {
+export function createParser(options: CustomizeParserOptions = {}): IParser {
   return customizeParser(parser, options);
 }

@@ -1,4 +1,4 @@
-import type { ParsedTags, ParsedText, Parser, ParseResult, Plugin } from '@cspell/cspell-types';
+import type { CSpellPlugin, ParsedTags, ParsedText, Parser as CSpellParser, ParseResult } from '@cspell/cspell-types';
 
 export interface ParserTags {
   /**
@@ -7,7 +7,7 @@ export interface ParserTags {
   [tag: string]: boolean;
 }
 
-export interface PluginParser extends Parser {
+export interface IParser extends CSpellParser {
   /**
    * The known list of file types that this parser is capable of handling.
    */
@@ -28,18 +28,18 @@ export interface PluginParser extends Parser {
    * @param options - The customization options to apply to the parser.
    * @returns A new parser with the specified customizations applied.
    */
-  customize(options: CustomizeParserOptions): PluginParser;
+  customize(options: CustomizeParserOptions): IParser;
 
-  customizeFilter(filter: ParsedTextFilter): PluginParser;
-  customizeSupportedFileTypes(supportedFileTypes: Readonly<string[]>): PluginParser;
+  customizeFilter(filter: ParsedTextFilter): IParser;
+  customizeSupportedFileTypes(supportedFileTypes: Readonly<string[]>): IParser;
 }
 
 export type ParseFunction = (content: string, filename: string) => ParseResult;
 export type ParsedTextFilter = (parsedText: ParsedText) => boolean;
 
-export interface ParserPlugin extends Plugin {
+export interface IPlugin extends CSpellPlugin {
   name: string;
-  parsers: PluginParser[];
+  parsers: IParser[];
   supportedFileTypes: Readonly<string[]>;
   recommendedLanguageSettings: RecommendedLanguageSettings;
 }
@@ -52,7 +52,7 @@ export interface RecommendedLanguageSetting {
 export type RecommendedLanguageSettings = RecommendedLanguageSetting[];
 
 export interface RecommendedSettings {
-  plugins: ParserPlugin[];
+  plugins: IPlugin[];
   languageSettings: RecommendedLanguageSettings;
 }
 
@@ -89,7 +89,7 @@ export interface TagFilterOptions {
 export type TagsFilter = (tags: ParsedTags | undefined) => boolean;
 
 /**
- * Options for {@link PluginParser.customize}, as a struct rather than a bare `TagFilterOptions` so it can grow
+ * Options for {@link IParser.customize}, as a struct rather than a bare `TagFilterOptions` so it can grow
  * more options later without a breaking signature change.
  */
 export interface CustomizeParserOptions {
