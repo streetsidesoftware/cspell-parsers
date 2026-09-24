@@ -42,23 +42,7 @@ jobs:
         run: pnpm run typecheck
 
       - name: Test
-        if: runner.os != 'Windows'
         run: pnpm test
-
-      # @cspell/parser-typescript-tree-sitter (the raw native tree-sitter bindings) intermittently fails on
-      # windows-latest - see docs/debugging/workflows/windows-ci-tree-sitter-flake.md. @cspell/parser-typescript
-      # is backed by @cspell/parser-typescript-tree-sitter-wasm instead, so it and
-      # @internal/test-packages-typescript's harness (minus the raw native module) are unaffected. The
-      # dedicated Typecheck step above still covers every package in full; only the raw native package's
-      # runtime tests are skipped here.
-      - name: Test (excludes the native tree-sitter package on Windows)
-        if: runner.os == 'Windows'
-        run: pnpm --filter '!@cspell/parser-typescript-tree-sitter' --filter '!@internal/test-packages-typescript' -r run test
-
-      - name: Test typescript sample against non-native parsers only (Windows)
-        if: runner.os == 'Windows'
-        working-directory: test-packages/typescript
-        run: node exec-test.mts --module @cspell/parser-typescript --module @cspell/parser-typescript-tree-sitter-wasm
 
   # this is a workaround to have a final step that runs after all tests, regardless of OS
   test-finalize:
