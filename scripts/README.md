@@ -14,9 +14,14 @@ These scripts are used to help maintain the repo.
   - `docs/language-id-n-parser-name.csv` comes from `dist/plugin.js`'s `plugin.parsers`, so run
     `pnpm run build` first. It has one row per language ID/parser pair, sorted by language ID and then by
     parser order, and marks the last parser for each language ID as `Recommended`.
-  - `static/packages.csv` (for the root `README.md`) comes from the `name` and `description` of every
-    non-private `packages/*/package.json`, sorted by name. Like the tags table, it's injected with
-    `#markdown` so each package name renders as a link to its directory.
+  - `static/packages.csv` (for the root `README.md`) comes from the `name` of every non-private
+    `packages/*/package.json`, sorted by name, plus that package's built `dist/plugin.js` (run
+    `pnpm run build` first; packages without one are skipped) - its `Languages` column is the union of every
+    parser's `supportedFileTypes`, and its `Tags` column is the deduped first `.`-segment of every tag its
+    parsers emit _by default_ (e.g. `comment.block.doc` -> `comment`) - each parser's `tags` map marks which
+    of its tags are on by default, so the catch-all `code` tag (off by default) is excluded without special-
+    casing its name. Like the tags table, it's injected with `#markdown` so each package name renders as a
+    link to its directory and each language/tag renders as a code span.
 
 All three scripts accept a `--dry-run` flag that reports what would change (via stderr) and exits with a
 non-zero status if a fix is needed, without writing anything. `pnpm run lint` runs all three in fixing mode
