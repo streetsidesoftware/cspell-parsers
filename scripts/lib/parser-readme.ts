@@ -101,7 +101,7 @@ export function renderLanguageIdTable(parsers: readonly ParserInfo[]): string {
 }
 
 /** Longest a {@link wrapList} line is allowed to get before wrapping to the next one. */
-const LIST_WRAP_WIDTH = 32;
+const LIST_WRAP_WIDTH = 36;
 
 /**
  * Joins `items` with `, `, breaking onto a new line (via a Markdown `<br>`, since a GFM table cell can't
