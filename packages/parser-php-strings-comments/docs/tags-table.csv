@@ -8,5 +8,5 @@ Tag,Meaning
 `string.doubleQuote`,"A `""...""` string literal (interpolation-aware)"
 `string.heredoc`,A `<<<ID ... ID` heredoc body (interpolation-aware)
 `string.nowdoc`,A `<<<'ID' ... ID` nowdoc body (no interpolation)
-`html`,HTML (or other non-PHP) content outside `<?php`/`<?=`/`<?` ... `?>`
-`code`,"PHP code that isn't a comment or string (identifiers, keywords, punctuation, numbers, tag delimiters)"
+`html`,HTML (or other non-PHP) content outside `<?php`/`<?=`/`<?` ... `?>` (off by default)
+`code`,Everything else (off by default)

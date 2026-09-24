@@ -7,6 +7,7 @@ export type { CreatePluginParserOptions } from './parser.ts';
 export { createParse, createPluginParser, customizeParser } from './parser.ts';
 export type { DecodedText, StringPart } from './strings.ts';
 export { decodeStringParts } from './strings.ts';
+export { codeTagMeaning } from './tags.ts';
 export type {
   CustomizeParserOptions,
   ParsedTextFilter,

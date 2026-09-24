@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html>
 <body>
-<!-- A genuine typo, left in the markup on purpose - the "html: false" filter in cspell.config.mts must
-     keep this from being flagged, since the html tag is excluded here. -->
-<h1>Wecome to our sttore</h1>
+<!-- Checked, since cspell.config.mts opts into the html tag. -->
+<h1>Welcome to our store</h1>
 <?php
 /**
  * Counts widgets currently in stock.

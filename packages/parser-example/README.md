@@ -91,13 +91,13 @@ share one.
 
 <!--- @@inject: docs/tags-table.csv#markdown --->
 
-| Tag                 | Meaning                                                     |
-| ------------------- | ----------------------------------------------------------- |
-| `comment`           | Any comment                                                 |
-| `comment.line`      | A `//` line comment                                         |
-| `comment.block`     | A `/* ... */` block comment                                 |
-| `comment.block.doc` | A `/** ... */` doc comment                                  |
-| `code`              | Everything else, including string literals (off by default) |
+| Tag                 | Meaning                          |
+| ------------------- | -------------------------------- |
+| `comment`           | Any comment                      |
+| `comment.line`      | A `//` line comment              |
+| `comment.block`     | A `/* ... */` block comment      |
+| `comment.block.doc` | A `/** ... */` doc comment       |
+| `code`              | Everything else (off by default) |
 
 <!--- @@inject-end: docs/tags-table.csv#markdown --->
 

@@ -160,7 +160,7 @@ describe('php-strings-comments parser', () => {
   });
 
   describe('close-tag.php - "?>" drops back to HTML markup mode', () => {
-    const parsedTexts = parseFixture('close-tag.php');
+    const parsedTexts = parseFixture('close-tag.php', parse);
 
     it('extracts PHP code before the first "?>"', () => {
       expect(byText(parsedTexts, 'hello')?.tags).toEqual({ string: true, 'string.singleQuote': true });
@@ -190,7 +190,7 @@ describe('php-strings-comments parser', () => {
   });
 
   describe('short-echo.php - "<?=" is a short-echo PHP open tag', () => {
-    const parsedTexts = parseFixture('short-echo.php');
+    const parsedTexts = parseFixture('short-echo.php', parse);
 
     it('passes through the HTML around the PHP regions as html', () => {
       const html = parsedTexts.filter((p) => p.tags?.html);
@@ -305,17 +305,25 @@ describe('php-strings-comments parser', () => {
       expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(true);
       expect(parsedTexts.some((p) => p.text === 'a string')).toBe(false);
     });
+
+    it('keeps html once opted into, still leaving code off', () => {
+      const customized = createParser({ tags: { html: true } });
+      const parsedTexts = [...customized.parse('<p>markup</p>\n' + content, 'file.php').parsedTexts];
+
+      expect(parsedTexts.some((p) => p.tags?.html)).toBe(true);
+      expect(parsedTexts.some((p) => p.tags?.code)).toBe(false);
+    });
   });
 
   describe('parse (named export used directly by the Parser)', () => {
-    it('parser.parse wraps the raw parse export, filtering out code by default', () => {
-      const content = "<?php // a comment\n$s = 'a string';\n";
+    it('parser.parse wraps the raw parse export, filtering out code and html by default', () => {
+      const content = "<p>markup</p>\n<?php // a comment\n$s = 'a string';\n";
       const raw = [...parse(content, 'file.php').parsedTexts];
       const filtered = [...parser.parse(content, 'file.php').parsedTexts];
 
       expect(raw.some((p) => p.tags?.code)).toBe(true);
-      expect(filtered.some((p) => p.tags?.code)).toBe(false);
-      expect(filtered).toEqual(raw.filter((p) => !p.tags?.code));
+      expect(raw.some((p) => p.tags?.html)).toBe(true);
+      expect(filtered).toEqual(raw.filter((p) => !p.tags?.code && !p.tags?.html));
     });
   });
 
@@ -338,12 +346,13 @@ describe('php-strings-comments parser', () => {
       }
     });
 
-    it('is off by default for "code", the one tag a consumer has to opt into', () => {
+    it('is off by default for "code" and "html", the tags a consumer has to opt into', () => {
       expect(parser.tags.code).toBe(false);
+      expect(parser.tags.html).toBe(false);
     });
 
     it('is on by default for every other declared tag', () => {
-      const { code: _code, ...rest } = parser.tags;
+      const { code: _code, html: _html, ...rest } = parser.tags;
       expect(Object.values(rest).every((value) => value === true)).toBe(true);
     });
   });

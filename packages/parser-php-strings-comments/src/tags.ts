@@ -1,3 +1,5 @@
+import { codeTagMeaning } from '@internal/utils';
+
 /**
  * Every tag this parser can emit, and what each one means. Source of truth for both `tags` below and
  * `README.md`'s Tags table, which is generated from this object (`scripts/fix-parser-readme.ts`).
@@ -12,8 +14,8 @@ export const tagsAndMeaning = {
   'string.doubleQuote': 'A `"..."` string literal (interpolation-aware)',
   'string.heredoc': 'A `<<<ID ... ID` heredoc body (interpolation-aware)',
   'string.nowdoc': "A `<<<'ID' ... ID` nowdoc body (no interpolation)",
-  html: 'HTML (or other non-PHP) content outside `<?php`/`<?=`/`<?` ... `?>`',
-  code: "PHP code that isn't a comment or string (identifiers, keywords, punctuation, numbers, tag delimiters)",
+  html: 'HTML (or other non-PHP) content outside `<?php`/`<?=`/`<?` ... `?>` (off by default)',
+  code: codeTagMeaning,
 } as const satisfies Record<string, string>;
 
 export type TagName = keyof typeof tagsAndMeaning;
@@ -30,8 +32,8 @@ function defineTag(tag: Tags): Readonly<Tags> {
   return Object.freeze(tag);
 }
 
-/** Tags excluded from "spell checked by default". `code` is the one tag consumers must opt into. */
-const NOT_ON_BY_DEFAULT: ReadonlySet<TagName> = new Set(['code']);
+/** Tags excluded from "spell checked by default" - consumers must opt into these. */
+const NOT_ON_BY_DEFAULT: ReadonlySet<TagName> = new Set(['code', 'html']);
 
 export const tags: Readonly<AllTags> = Object.freeze(
   Object.fromEntries(Object.keys(tagsAndMeaning).map((tag) => [tag, !NOT_ON_BY_DEFAULT.has(tag as TagName)])),

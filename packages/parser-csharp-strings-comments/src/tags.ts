@@ -1,3 +1,5 @@
+import { codeTagMeaning } from '@internal/utils';
+
 /**
  * Every tag this parser can emit, and what each one means. Source of truth for both `tags` below and
  * `README.md`'s Tags table, which is generated from this object (`scripts/fix-parser-readme.ts`).
@@ -14,7 +16,7 @@ export const tagsAndMeaning = {
   'string.verbatim': 'A `@"..."` verbatim string literal',
   'string.interpolated': 'A `$"..."` interpolated string literal fragment',
   'string.raw': 'A C# 11 `"""..."""` raw string literal',
-  code: 'Everything else (off by default)',
+  code: codeTagMeaning,
 } as const satisfies Record<string, string>;
 
 export type TagName = keyof typeof tagsAndMeaning;

@@ -3,4 +3,4 @@ Tag,Meaning
 `comment.line`,A `//` line comment
 `comment.block`,A `/* ... */` block comment
 `comment.block.doc`,A `/** ... */` doc comment
-`code`,"Everything else, including string literals (off by default)"
+`code`,Everything else (off by default)
