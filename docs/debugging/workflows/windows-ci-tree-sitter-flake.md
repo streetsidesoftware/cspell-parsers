@@ -5,6 +5,9 @@ had previously only run on `ubuntu-latest`/Node 22. That surfaced two unrelated 
 document is the investigation log for the second, harder one, kept for whoever next sees
 `parser-typescript-tree-sitter` fail intermittently on Windows.
 
+> **Update:** Problem 2's real cause was found later and fixed in #157. It was a bug in this repo's code, not the
+> native binary. See [Root cause](#root-cause-fixed-in-157). The investigation log below is kept as it was.
+
 ## Problem 1: CRLF line endings (quick fix)
 
 The first `windows-latest` run failed across several packages (`parser-example`,
@@ -127,7 +130,23 @@ contention over the native binary file. What's left standing is that this is ver
 memory-layout-dependent non-determinism inside the native tree-sitter Windows binary itself, outside what
 this repo's code or config can control.
 
-## Resolution: stop depending on the native binding on Windows
+## Root cause (fixed in #157)
+
+That conclusion was wrong. `isModuleSpecifierString()` compared nodes with `===`, but the native binding caches
+node wrappers only through weak references, so after a GC the same node can come back as a different JS
+object and the comparison fails. It depends on GC timing, which explains every observation above:
+
+- It never failed in a single-parse script, which allocates too little for a GC to land mid-walk.
+- It moved between fixtures and runs, hitting whichever parse was running when a GC happened.
+- Every mitigation "passed" at random, because none of them touched node identity.
+- It showed up on Windows first because of that runner's heap and GC timing. It later reproduced on macOS
+  once allocation patterns shifted.
+
+#157 compares node `id`s instead (`isSameNode` in `src/walk.ts`). Running the `imports.ts` fixture 300 times
+under `node --max-semi-space-size=1` reproduced the bug in about 13% of parses before the fix, and in none after
+it. The Windows exclusions in `test.yml` were then removed.
+
+## Interim resolution: stop depending on the native binding on Windows
 
 Since the flake looks like it lives in the native tree-sitter/tree-sitter-typescript binary itself rather
 than in this repo's code, the fix taken was to stop exercising that code path on `windows-latest` rather than
@@ -148,10 +167,10 @@ keep chasing it there:
   step so the harness still covers both non-native parsers there. The dedicated `Typecheck` step still covers
   every package, including the native one, in full - only its runtime tests are skipped on `windows-latest`.
 
-**This does not fix the underlying native binding bug** - `@cspell/parser-typescript-tree-sitter` itself is
-still expected to fail intermittently on `windows-latest` if its tests were ever re-enabled there, and should
-stay excluded (or gain a CI-level retry) until there's an upstream fix. The `tree-sitter` version pin (attempt
-C above) is kept regardless, since it fixes a real, independently-verified problem on its own merits.
+This didn't fix the underlying bug, which was later found and fixed in this repo (see
+[Root cause](#root-cause-fixed-in-157)). The `test.yml` exclusions have since been removed.
+`@cspell/parser-typescript` stays on the wasm backend on its own merits (fewer production dependencies), and
+the `tree-sitter` version pin (attempt C above) is kept because it fixes a real, independently verified problem.
 
 One wrinkle hit while implementing this: GitHub's `pull_request` checkout tests a _merge_ of the PR branch
 into the current `main`, not the branch alone. `main` had moved forward mid-investigation with a change that
@@ -190,6 +209,13 @@ resolved it before it could confuse anyone as another dose of Windows flakiness.
   called. If an equivalent, already-tested alternative exists in the repo (here, the wasm build sitting right
   next to the native one), swapping a downstream consumer onto it can be less effort and more reliable than
   continuing to chase a native binary's internal bug.
+
+- **A native binding's JS wrapper objects aren't node identity.** Compare the binding's own id or `equals()`
+  instead of using `===`. If a wrapper cache holds weak references, identity silently changes with GC timing,
+  which looks exactly like platform-specific native corruption.
+- **To reproduce a GC-timing bug on demand, shrink the young generation.** Running a loop under
+  `node --max-semi-space-size=1 --min-semi-space-size=1` forces frequent scavenges and turns a rare CI flake
+  into a failure rate you can measure locally.
 
 ## Sources
 
