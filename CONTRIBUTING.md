@@ -64,8 +64,9 @@ lint-ci`/`pnpm test` pass, since it auto-fixes what it can rather than just repo
    note on `deps.onlyBundle`). If `parser.ts` will emit `tags` (see step 3), also add
    `"@internal/utils": "workspace:*"` as a `devDependencies` entry — it's a private, unpublished
    workspace package, and tsdown bundles workspace dependencies into `dist/*.js`/`dist/*.d.ts`
-   automatically, without needing a `deps.onlyBundle` entry of its own (see `CLAUDE.md`'s "Package shape"
-   note on `@internal/utils`).
+   automatically, without needing a `deps.onlyBundle` entry of its own. Keep `dts: { eager: true }` in
+   `tsdown.config.ts`, which declaration bundling from `@internal/utils`'s `.ts` source needs (see
+   `CLAUDE.md`'s "Package shape" note on `@internal/utils`).
 3. Implement the parser as four files under `src/`, each with a matching `package.json` `exports` subpath
    and `tsdown.config.ts` entry (see `CLAUDE.md`'s "Package shape" for why both matter):
    - `parser.ts` — `parse(content, filename): ParseResult`, `export const parser: Parser`, and

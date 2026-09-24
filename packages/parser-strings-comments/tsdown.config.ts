@@ -3,7 +3,8 @@ import { defineConfig } from 'tsdown';
 export default defineConfig({
   entry: ['src/index.ts', 'src/plugin.ts', 'src/recommended.ts'],
   format: ['esm'],
-  dts: true,
+  // eager: @internal/utils is imported as .ts source from outside this package's tsc program, which lazy dts can't emit.
+  dts: { eager: true },
   sourcemap: true,
   clean: true,
   // Single ESM format + "type": "module" makes plain .js/.d.ts unambiguous.
