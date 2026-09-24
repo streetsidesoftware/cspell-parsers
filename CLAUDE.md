@@ -155,10 +155,13 @@ Two more directories, both at the package root (not under `src/`):
   `"@internal/utils": "workspace:*"` as a `devDependencies` entry, same as `@cspell/cspell-types` —
   but unlike `@cspell/cspell-types`, it's a workspace package, so tsdown bundles its code and types into
   `dist/*.js`/`dist/*.d.ts` automatically and does **not** need (and warns as unused if given) its own
-  `deps.onlyBundle` entry. It has no build step: its `exports` point straight at `src/index.ts`, which
-  `tsc`, vitest, and tsdown all consume as source, so there's no `dist/` to go stale. That source sits outside a
-  consumer's own `tsc` program, so the shared tsdown config sets `dts: { eager: true }` — tsdown's
-  default lazy dts fails with `MISSING_EXPORT` on anything imported from `@internal/utils`.
+  `deps.onlyBundle` entry. Its build emits only `dist/index.d.ts`: `exports` maps `types` to that file and
+  `default` to `src/index.ts`, so vitest and tsdown bundle the JS straight from source while `tsc` and tsdown's
+  (lazy, fast) dts read the prebuilt declarations. Lazy dts fails with `MISSING_EXPORT` on `.ts` source outside
+  the consumer's own `tsc` program, and `dts: { eager: true }` avoids that but made the build ~3x slower. That
+  `dist/index.d.ts` keeps `@cspell/cspell-types` external (`deps.neverBundle`) so each consumer inlines a single
+  deduped copy. Rebuild it after changing `@internal/utils`'s exported types, or consumers typecheck against
+  stale declarations.
 - `@cspell/cspell-types` is a `devDependencies` entry (not `dependencies`) on each parser package. tsdown
   bundles the types of anything that isn't a production/peer/optional dependency straight into the emitted
   `dist/*.d.ts` (this is the same mechanism that decides what gets bundled into `dist/*.js` — see

@@ -3,8 +3,7 @@ import { defineConfig } from 'tsdown';
 /** Shared base for every package's `tsdown.config.ts`, which adds its own `entry` via `mergeConfig`. */
 export default defineConfig({
   format: ['esm'],
-  // eager: @internal/utils is imported as .ts source from outside a package's tsc program, which lazy dts can't emit.
-  dts: { eager: true },
+  dts: true,
   sourcemap: true,
   clean: true,
   // Single ESM format + "type": "module" makes plain .js/.d.ts unambiguous.
