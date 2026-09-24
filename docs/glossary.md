@@ -22,3 +22,16 @@ scanner-based (piping a `Scanner`'s tagged-segment generator through it) and tre
 AST walk through it) alike — so gap-filling semantics are identical everywhere rather than each package
 reimplementing its own copy. Established in
 [code-tag-rollout/0004](./ADRs/code-tag-rollout/0004-shared-code-tags-emitter.md).
+
+## `IPluginEx`
+
+The designed successor to `@internal/utils`'s ad hoc `IPlugin`: an immutable plugin whose customizations
+(rename, duplicate, tag filter, file-type changes, parser removal) always return a new object. It lives
+alongside `IPlugin` while packages migrate, then gets folded back into `IPlugin`. Established in
+[plugin-customization/0001](./ADRs/plugin-customization/0001-compatibility-policy.md).
+
+## Recommended parser
+
+For a given file type, the parser a plugin's `recommended` settings select: the last parser in the
+plugin's `parsers` order that lists that file type. It is derived, never stored. Established in
+[plugin-customization/0002](./ADRs/plugin-customization/0002-parsers-own-file-types.md).
