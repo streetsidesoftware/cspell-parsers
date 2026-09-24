@@ -64,7 +64,7 @@ export interface CustomizePluginOptions {
   /** Name for the customized plugin (and, when applicable, its parser(s)). */
   name?: string;
 
-  /** Tagged segments to keep; omit to keep everything. */
+  /** Tagged segments to keep; omit to keep each parser's defaults. */
   tags?: TagFilterOptions;
 }
 
@@ -81,10 +81,24 @@ function groupParsersByFileType(plugins: ParserPlugin[]): Map<string, ParserPlug
 }
 
 /**
+ * Create a customized copy of {@link plugin} for one language, or for every bundled language with `'*'`.
  *
- * @param fileType - customize for
- * @param options
- * @returns
+ * @param fileType - the language ID to customize (e.g. `'php'`), or `'*'` for every bundled language.
+ * @param options - the tags to keep, and an optional name; `name` isn't applied to the parsers for `'*'`, since they can't share one.
+ * @returns a plugin with only the selected languages' parsers, and `recommendedLanguageSettings` that select them.
+ *
+ * **`cspell.config.mjs`**
+ *
+ * ```js
+ * import { customizePlugin } from '@cspell/parser-strings-comments/plugin';
+ *
+ * const plugin = customizePlugin('*', { tags: { html: true } }); // also check the HTML in PHP files
+ *
+ * export default {
+ *   plugins: [plugin],
+ *   languageSettings: plugin.recommendedLanguageSettings,
+ * };
+ * ```
  */
 export function customizePlugin(fileType: string, options: CustomizePluginOptions): ParserPluginEx {
   const opts: CustomizePluginOptions = {};
