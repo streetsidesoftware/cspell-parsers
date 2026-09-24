@@ -56,17 +56,16 @@ lint-ci`/`pnpm test` pass, since it auto-fixes what it can rather than just repo
    `packages/parser-example` if you just want a minimal single-file starting point (bring it in line with
    the full shape before publishing it as a real plugin).
 2. Update `package.json`: `name`, `description`, `dependencies`, and the `exports` map for each file you're
-   publishing. Leave `files` (`["dist", "!dist/**/*.map"]`), `repository`, and `sourcemap: true` in
-   `tsdown.config.ts` as-is, and keep the copied `LICENSE` file — these are all required for `npm publish` to
+   publishing. Leave `files` (`["dist", "!dist/**/*.map"]`) and `repository` as-is, and keep the copied `LICENSE` file — these are all required for `npm publish` to
    ship a correct, provenance-verifiable package without leaking source maps (see `CLAUDE.md`'s "Package
    shape" note). Keep `@cspell/cspell-types` a `devDependencies` entry, not `dependencies` — tsdown bundles
    its types into `dist/*.d.ts`, so consumers don't need it installed (see `CLAUDE.md`'s "Package shape"
    note on `deps.onlyBundle`). If `parser.ts` will emit `tags` (see step 3), also add
    `"@internal/utils": "workspace:*"` as a `devDependencies` entry — it's a private, unpublished
    workspace package, and tsdown bundles workspace dependencies into `dist/*.js`/`dist/*.d.ts`
-   automatically, without needing a `deps.onlyBundle` entry of its own. Keep `dts: { eager: true }` in
-   `tsdown.config.ts`, which declaration bundling from `@internal/utils`'s `.ts` source needs (see
-   `CLAUDE.md`'s "Package shape" note on `@internal/utils`).
+   automatically, without needing a `deps.onlyBundle` entry of its own (see `CLAUDE.md`'s "Package shape"
+   note on `@internal/utils`). `tsdown.config.ts` only lists `entry`; every other build option comes from
+   the shared `.config/tsdown.config.ts`.
 3. Implement the parser as four files under `src/`, each with a matching `package.json` `exports` subpath
    and `tsdown.config.ts` entry (see `CLAUDE.md`'s "Package shape" for why both matter):
    - `parser.ts` — `parse(content, filename): ParseResult`, `export const parser: Parser`, and

@@ -61,8 +61,10 @@ is a standalone npm package implementing cspell's `Parser`/`Plugin` contract (ty
 
 **Toolchain split** — deliberately not the typical `tsc`-only setup:
 
-- **tsdown** builds each package's `dist/` output (config in each package's `tsdown.config.ts`). TypeScript
-  itself is used _only_ for type-checking (`tsc --noEmit`), never for emitting.
+- **tsdown** builds each package's `dist/` output. Every option except `entry` lives once in
+  `.config/tsdown.config.ts`; each package's `tsdown.config.ts` is just
+  `mergeConfig(base, { entry: [...] })` — put new shared build options in the base, not per package.
+  TypeScript itself is used _only_ for type-checking (`tsc --noEmit`), never for emitting.
 - There is no TypeScript project-reference/`composite` build graph — `tsconfig.base.json` sets `noEmit: true`
   and each package has its own flat `tsconfig.json` extending it. There is intentionally no root
   `tsconfig.json`.
@@ -155,18 +157,18 @@ Two more directories, both at the package root (not under `src/`):
   `dist/*.js`/`dist/*.d.ts` automatically and does **not** need (and warns as unused if given) its own
   `deps.onlyBundle` entry. It has no build step: its `exports` point straight at `src/index.ts`, which
   `tsc`, vitest, and tsdown all consume as source, so there's no `dist/` to go stale. That source sits outside a
-  consumer's own `tsc` program, so the consumer's `tsdown.config.ts` must set `dts: { eager: true }` —
-  tsdown's default lazy dts fails with `MISSING_EXPORT` on anything imported from `@internal/utils`.
+  consumer's own `tsc` program, so the shared tsdown config sets `dts: { eager: true }` — tsdown's
+  default lazy dts fails with `MISSING_EXPORT` on anything imported from `@internal/utils`.
 - `@cspell/cspell-types` is a `devDependencies` entry (not `dependencies`) on each parser package. tsdown
   bundles the types of anything that isn't a production/peer/optional dependency straight into the emitted
   `dist/*.d.ts` (this is the same mechanism that decides what gets bundled into `dist/*.js` — see
-  `deps.onlyBundle` in `tsdown.config.ts` below), so a devDependency's declarations end up inlined rather
+  `deps.onlyBundle` in the shared tsdown config below), so a devDependency's declarations end up inlined rather
   than referenced via an `import` a consumer would need to resolve. This means consumers get the
   `Parser`/`Plugin`/`AdvancedCSpellSettings` types without installing `@cspell/cspell-types` themselves.
-  Each package's `tsdown.config.ts` sets `deps: { onlyBundle: ['@cspell/cspell-types'] }` to make this
+  The shared tsdown config sets `deps: { onlyBundle: ['@cspell/cspell-types'] }` to make this
   intentional (tsdown otherwise only logs a hint about unexpected bundled dependencies) and to fail the
-  build if some other, unintended dependency ends up inlined. A new parser package should follow the same
-  pattern for any other type-only dependency it wants to avoid shipping as a production dependency.
+  build if some other, unintended dependency ends up inlined. A package that needs another type-only
+  dependency bundled the same way overrides `deps.onlyBundle` in its own `mergeConfig` call.
 - **Keep `dist` size and the number of production dependencies low** — both are deliberately optimized for
   in this repo. Verify `dist` size (especially `dist/index.d.ts`) before/after any change to how types or
   dependencies are shared across packages: tsdown's `.d.ts` bundler inlines a workspace dependency's _entire_
@@ -175,7 +177,7 @@ Two more directories, both at the package root (not under `src/`):
   locally per package over centralizing it in `@internal/utils`, and be conservative about adding any
   new production `dependencies` entry.
 - Build output is plain `dist/*.js` + `dist/*.d.ts` (ESM only, one pair per entry). This requires
-  `fixedExtension: false` in `tsdown.config.ts` — tsdown's default (`fixedExtension: true` on the default
+  `fixedExtension: false` in the shared tsdown config — tsdown's default (`fixedExtension: true` on the default
   `platform: 'node'`) would otherwise emit `.mjs`/`.d.mts`, which doesn't match a package's
   `main`/`types`/`exports` fields.
 - Every package's `package.json` sets `"files": ["dist", "!dist/**/*.map"]`, so `npm publish` ships only built
@@ -184,7 +186,7 @@ Two more directories, both at the package root (not under `src/`):
   included by npm regardless of `files`, so they don't need to be listed. Every package also carries its own
   copy of the root `LICENSE` (same MIT text) at its package root, since npm only bundles a `LICENSE` that lives
   inside the package being published, not one from the repo root.
-- `tsdown.config.ts` sets `sourcemap: true`, so `dist/*.js.map` is generated for local debugging from a
+- The shared tsdown config sets `sourcemap: true`, so `dist/*.js.map` is generated for local debugging from a
   checkout, but the `!dist/**/*.map` entry in `files` (above) keeps those `.map` files out of the published
   tarball.
 - Publishable packages (`publishConfig.provenance: true`) need a `repository` field —
