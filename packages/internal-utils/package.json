@@ -15,10 +15,14 @@
   "sideEffects": false,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./src/index.ts"
+    }
   },
   "scripts": {
-    "clean": "shx rm -rf coverage",
+    "build": "tsdown",
+    "clean": "shx rm -rf dist coverage",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
