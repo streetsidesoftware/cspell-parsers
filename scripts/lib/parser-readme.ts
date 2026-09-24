@@ -127,8 +127,8 @@ function wrapList(items: readonly string[], maxWidth: number): string {
 /**
  * Renders a `Package,Languages,Tags` CSV with one row per package, sorted by name. Injected with `#markdown`
  * (like {@link renderTagsTable}) so each package name renders as a link to its directory and each language/tag
- * renders as a code span; `Languages` is wrapped with {@link wrapList} so a package supporting many languages
- * doesn't force the whole table wide.
+ * renders as a code span; `Languages` and `Tags` are wrapped with {@link wrapList} so a package with many of
+ * either doesn't force the whole table wide.
  */
 export function renderPackagesTable(packages: readonly PackageInfo[]): string {
   const rows = [...packages]
@@ -140,7 +140,10 @@ export function renderPackagesTable(packages: readonly PackageInfo[]): string {
           languages.map((l) => `\`${l}\``),
           LIST_WRAP_WIDTH,
         ),
-        tags.map((t) => `\`${t}\``).join(', '),
+        wrapList(
+          tags.map((t) => `\`${t}\``),
+          LIST_WRAP_WIDTH,
+        ),
       ]
         .map(csvField)
         .join(','),
