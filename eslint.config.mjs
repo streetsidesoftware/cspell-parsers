@@ -64,6 +64,15 @@ export default defineConfig(
         'error',
         { prefer: 'type-imports', fixStyle: 'separate-type-imports', disallowTypeAnnotations: true },
       ],
+      // consistent-type-imports allows `import { a, type B }`; require a separate `import type` instead.
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "ImportDeclaration[importKind='value'] > ImportSpecifier[importKind='type']",
+          message:
+            'Move type imports into a separate `import type { ... }` statement instead of an inline `type` specifier.',
+        },
+      ],
     },
   },
   {
