@@ -1,3 +1,5 @@
+import { codeTagMeaning } from '@internal/utils';
+
 /**
  * Every tag this parser can emit, and what each one means. Source of truth for both `tags` below and
  * `README.md`'s Tags table, which is generated from this object (`scripts/fix-parser-readme.ts`).
@@ -28,7 +30,7 @@ export const tagsAndMeaning = {
   'identifier.label': 'A statement label',
   'identifier.importBinding': 'A renamed import alias, default import name, or namespace import name',
   'identifier.exportBinding': 'A renamed export alias (`export { x as y }`)',
-  code: 'Everything else (off by default)',
+  code: codeTagMeaning,
 } as const satisfies Record<string, string>;
 
 export type TagName = keyof typeof tagsAndMeaning;

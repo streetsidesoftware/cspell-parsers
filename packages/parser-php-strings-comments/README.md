@@ -1,10 +1,8 @@
 # @cspell/parser-php-strings-comments
 
-A cspell plugin that extracts PHP comments and string-like literals for spell checking. Unlike this repo's
-other language parsers, it checks the whole file by default, not just comments and strings: the HTML
-surrounding a `<?php ... ?>` block is tagged `html`, and any PHP code that isn't a comment or string
-(identifiers, keywords, punctuation, ...) is tagged `code` - so nothing is silently skipped, but both can be
-filtered out with `customizePlugin` (see below) if you don't want them checked.
+A cspell plugin that spell checks only the comments and string literals in PHP files. The HTML around a
+`<?php ... ?>` block (`html`) and everything else (`code`) are skipped by default - use `customizePlugin` to
+[opt into checking them](#checking-html-and-code).
 
 It implements cspell's [`Parser`](https://www.npmjs.com/package/@cspell/cspell-types) contract and exports a
 [`Plugin`](https://www.npmjs.com/package/@cspell/cspell-types) so it can be wired into a cspell configuration.
@@ -50,11 +48,11 @@ The plugin provides these parsers. Where Recommended is `yes`, `recommended` ena
 
 ### Filtering by tag
 
-By default every segment the parser emits gets spell checked. To check only some of them - for example,
-skipping the surrounding HTML markup - use `customizePlugin`
-instead of the plain `plugin` export. It takes a `CustomizePluginOptions` object - `tags: TagFilterOptions`
-and `name` are both optional, and omitting `tags` keeps everything - and returns a `Plugin` that only spell
-checks the tagged segments you keep. It works with any cspell version.
+By default every comment and string gets spell checked, and `html` and `code` don't. To change which tagged
+segments get checked - for example, only PHPDoc comments - use `customizePlugin` instead of the plain `plugin`
+export. It takes a `CustomizePluginOptions` object - `tags: TagFilterOptions` and `name` are both optional,
+and omitting `tags` keeps the defaults - and returns a `Plugin` that only spell checks the tagged segments you
+keep. It works with any cspell version.
 
 ```js
 // cspell.config.mjs — customizePlugin returns a live Plugin object, so it needs a JS/TS config file
@@ -62,7 +60,7 @@ checks the tagged segments you keep. It works with any cspell version.
 import { customizePlugin } from '@cspell/parser-php-strings-comments/plugin';
 
 export default {
-  plugins: [customizePlugin({ tags: { '*': true, html: false } })], // skip HTML outside <?php ?>
+  plugins: [customizePlugin({ tags: { '*': false, 'comment.block.doc': true } })], // only PHPDoc comments
   languageSettings: [
     {
       languageId: 'php',
@@ -74,30 +72,50 @@ export default {
 
 `tags` keys are matched hierarchically against the tags below - `string` also matches the more specific
 `string.heredoc` unless a more specific key overrides it - and may use `*` as a wildcard (`string.*`, or a
-bare `*` for "everything not otherwise matched", which defaults to `true`). See the [Tags](#tags) table below
+bare `*` for "everything not otherwise matched"; without one, each tag keeps its default). See the [Tags](#tags) table below
 for every tag this parser can emit.
 
 `name` overrides the parser's registered name (`php-strings-comments` by default). This matters when
 registering more than one customized copy of this parser, since cspell selects a parser by name and two
 parsers can't share one.
 
+### Checking HTML and code
+
+`html` (markup outside `<?php ... ?>`) and `code` (everything else) are off by default.
+Opt into either, or both, with `customizePlugin`:
+
+```js
+// cspell.config.mjs
+import { customizePlugin } from '@cspell/parser-php-strings-comments/plugin';
+
+export default {
+  plugins: [customizePlugin({ tags: { html: true, code: true } })],
+  languageSettings: [
+    {
+      languageId: 'php',
+      parser: 'php-strings-comments',
+    },
+  ],
+};
+```
+
 ## Tags
 
 <!--- @@inject: docs/tags-table.csv#markdown --->
 
-| Tag                  | Meaning                                                                                               |
-| -------------------- | ----------------------------------------------------------------------------------------------------- |
-| `comment`            | Any comment                                                                                           |
-| `comment.line`       | A `//` or `#` line comment (`#[` starts a PHP 8 attribute, not a comment)                             |
-| `comment.block`      | A `/* ... */` block comment                                                                           |
-| `comment.block.doc`  | A `/** ... */` PHPDoc-style comment                                                                   |
-| `string`             | Any string-like literal                                                                               |
-| `string.singleQuote` | A `'...'` string literal (no interpolation)                                                           |
-| `string.doubleQuote` | A `"..."` string literal (interpolation-aware)                                                        |
-| `string.heredoc`     | A `<<<ID ... ID` heredoc body (interpolation-aware)                                                   |
-| `string.nowdoc`      | A `<<<'ID' ... ID` nowdoc body (no interpolation)                                                     |
-| `html`               | HTML (or other non-PHP) content outside `<?php`/`<?=`/`<?` ... `?>`                                   |
-| `code`               | PHP code that isn't a comment or string (identifiers, keywords, punctuation, numbers, tag delimiters) |
+| Tag                  | Meaning                                                                              |
+| -------------------- | ------------------------------------------------------------------------------------ |
+| `comment`            | Any comment                                                                          |
+| `comment.line`       | A `//` or `#` line comment (`#[` starts a PHP 8 attribute, not a comment)            |
+| `comment.block`      | A `/* ... */` block comment                                                          |
+| `comment.block.doc`  | A `/** ... */` PHPDoc-style comment                                                  |
+| `string`             | Any string-like literal                                                              |
+| `string.singleQuote` | A `'...'` string literal (no interpolation)                                          |
+| `string.doubleQuote` | A `"..."` string literal (interpolation-aware)                                       |
+| `string.heredoc`     | A `<<<ID ... ID` heredoc body (interpolation-aware)                                  |
+| `string.nowdoc`      | A `<<<'ID' ... ID` nowdoc body (no interpolation)                                    |
+| `html`               | HTML (or other non-PHP) content outside `<?php`/`<?=`/`<?` ... `?>` (off by default) |
+| `code`               | Everything else (off by default)                                                     |
 
 <!--- @@inject-end: docs/tags-table.csv#markdown --->
 

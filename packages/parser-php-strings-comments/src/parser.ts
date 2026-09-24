@@ -23,7 +23,7 @@ export const parser: PluginParser = createPluginParser(
     supportedFileTypes,
     tags,
   },
-  (p) => p.tags !== TAGS.CODE,
+  (p) => p.tags !== TAGS.CODE && p.tags !== TAGS.HTML,
 );
 
 /** Options for {@link createParser}: the parser's name, and which tagged segments to keep. */

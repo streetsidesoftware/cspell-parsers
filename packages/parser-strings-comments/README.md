@@ -157,13 +157,12 @@ linked [above](#supported-file-types), for its full list.
 | `string.singleQuote` | A `'...'` string or char literal                                   |
 | `string.doubleQuote` | A `"..."` string literal                                           |
 | `string.raw`         | A raw string literal                                               |
-| `code`               | Everything else - off by default in every language except PHP      |
+| `code`               | Everything else (off by default)                                   |
 
 ### The `code` tag
 
-By default, text tagged `code` (identifiers, keywords, punctuation, ...) is not spell checked - except in PHP,
-where the whole file is checked by default, including any HTML outside `<?php ... ?>` (tagged `html`). To
-check `code` in every language:
+By default, text tagged `code` (identifiers, keywords, punctuation, ...) is not spell checked in any language,
+and neither is PHP's `html` (markup outside `<?php ... ?>`). To check `code` in every language:
 
 ```js
 // cspell.config.mjs

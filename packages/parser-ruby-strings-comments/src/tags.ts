@@ -1,3 +1,5 @@
+import { codeTagMeaning } from '@internal/utils';
+
 /**
  * Every tag this parser can emit, and what each one means. Source of truth for both `tags` below and
  * `README.md`'s Tags table, which is generated from this object (`scripts/fix-parser-readme.ts`).
@@ -11,7 +13,7 @@ export const tagsAndMeaning = {
   'string.doubleQuote': 'A `"..."` string literal (including interpolated fragments)',
   'string.heredoc': 'A `<<~ID`/`<<-ID`/`<<ID` heredoc body (any of its fragments)',
   'string.backtick': 'A `` `...` `` backtick command string (including interpolated fragments)',
-  code: 'Everything else (off by default)',
+  code: codeTagMeaning,
 } as const satisfies Record<string, string>;
 
 export type TagName = keyof typeof tagsAndMeaning;
