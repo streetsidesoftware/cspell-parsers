@@ -32,10 +32,11 @@ describe('customizePlugin', () => {
     expect([...(result?.parsedTexts ?? [])].some((p) => p.text === 'hello')).toBe(false);
   });
 
-  it('wires name customization into the php-strings-comments parser', () => {
+  it('wires name customization, including recommendedLanguageSettings, into the php-strings-comments parser', () => {
     const customized = customizePlugin({ name: 'custom-example', tags: {} });
     const [customizedParser] = (customized.parsers ?? []) as Parser[];
 
     expect(customizedParser?.name).toBe('custom-example');
+    expect(customized).toMatchObject({ recommendedLanguageSettings: [{ parser: 'custom-example' }] });
   });
 });

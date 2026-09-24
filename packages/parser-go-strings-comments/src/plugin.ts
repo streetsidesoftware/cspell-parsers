@@ -1,5 +1,5 @@
 import type { Plugin } from '@cspell/cspell-types';
-import { customizeParser, type ParserPlugin, type TagFilterOptions } from '@internal/utils';
+import { customizeParserPlugin, type ParserPlugin, type TagFilterOptions } from '@internal/utils';
 
 import { parser, supportedFileTypes } from './parser.ts';
 
@@ -47,5 +47,5 @@ export interface CustomizePluginOptions {
  * ```
  */
 export function customizePlugin(options: CustomizePluginOptions): Plugin {
-  return { ...plugin, parsers: [customizeParser(parser, options)] };
+  return customizeParserPlugin(plugin, options);
 }

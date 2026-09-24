@@ -105,7 +105,7 @@ Every package publishes **four** things, each its own file under `src/` and its 
   `CustomizePluginOptions` interface (`{ tags: TagFilterOptions }` — a struct rather than a bare
   `TagFilterOptions` so it can grow more options later without a breaking signature change) and
   `function customizePlugin(options: CustomizePluginOptions): Plugin` — a thin wrapper around
-  `@internal/utils`'s `customizePlugin(plugin, options)` (see below) bound to this package's own
+  `@internal/utils`'s `customizeParserPlugin(plugin, options)` (see below) bound to this package's own
   `plugin`, so a consumer can filter which tagged segments get spell checked without needing cspell itself
   to support that filtering. See `packages/parser-typescript/src/plugin.ts` for the pattern.
 - `src/index.ts` — the package's main entry (`.` / `main`). Exports a default settings object with just

@@ -32,10 +32,11 @@ describe('customizePlugin', () => {
     expect(parsedTexts.some((p) => p.text === 'greeting')).toBe(false);
   });
 
-  it('wires name customization into the javascript parser', () => {
+  it('wires name customization, including recommendedLanguageSettings, into the javascript parser', () => {
     const customized = customizePlugin({ name: 'custom-javascript', tags: {} });
     const [customizedParser] = (customized.parsers ?? []) as Parser[];
 
     expect(customizedParser?.name).toBe('custom-javascript');
+    expect(customized).toMatchObject({ recommendedLanguageSettings: [{ parser: 'custom-javascript' }] });
   });
 });

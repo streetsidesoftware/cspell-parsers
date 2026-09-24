@@ -99,7 +99,7 @@ export interface CustomizeParserOptions {
    */
   name?: string;
   /**
-   * Which tagged segments to keep. Omit to keep everything.
+   * Which tagged segments to keep. Omit to keep the parser's own defaults.
    */
   tags?: TagFilterOptions;
 }
