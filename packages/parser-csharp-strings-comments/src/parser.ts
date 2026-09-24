@@ -1,9 +1,11 @@
 import type { ParseResult } from '@cspell/cspell-types';
-import type { IParser, TagFilterOptions } from '@internal/utils';
+import type { CustomizeParserOptions, IParser } from '@internal/utils';
 import { createPluginParser, customizeParser } from '@internal/utils';
 
 import { Scanner } from './scanner.ts';
 import { TAGS, tags } from './tags.ts';
+
+export type { CustomizeParserOptions } from '@internal/utils';
 
 /** cspell `Parser.parse` implementation for C#: returns comments and string/character literals, tagging everything else as `code`. */
 export function parse(content: string, filename: string): ParseResult {
@@ -21,18 +23,6 @@ export const parser: IParser = createPluginParser(
   },
   (p) => p.tags !== TAGS.CODE,
 );
-
-/** Options for {@link createParser}: the parser's name, and which tagged segments to keep. */
-export interface CustomizeParserOptions {
-  /**
-   * Set the name of the parser.
-   */
-  name?: string;
-  /**
-   * Define which tagged segments to keep. Omit to keep the parser's own defaults (`code` excluded).
-   */
-  tags?: TagFilterOptions;
-}
 
 /**
  * Create a parser for C# files. You can set the name of the parser and filter on the tags if desired.

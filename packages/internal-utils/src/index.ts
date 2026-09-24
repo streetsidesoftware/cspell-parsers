@@ -10,6 +10,7 @@ export { decodeStringParts } from './strings.ts';
 export { codeTagMeaning } from './tags.ts';
 export type {
   CustomizeParserOptions,
+  CustomizePluginOptions,
   IParser,
   IPlugin,
   ParsedTextFilter,

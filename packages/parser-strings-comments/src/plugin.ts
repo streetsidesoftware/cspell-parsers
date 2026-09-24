@@ -8,9 +8,10 @@ import { plugin as pluginPython } from '@cspell/parser-python-strings-comments/p
 import { plugin as pluginRuby } from '@cspell/parser-ruby-strings-comments/plugin';
 import { plugin as pluginRust } from '@cspell/parser-rust-strings-comments/plugin';
 import { plugin as pluginTypescript } from '@cspell/parser-typescript-strings-comments/plugin';
-import type { IPlugin, RecommendedLanguageSettings } from '@internal/utils';
-import type { TagFilterOptions } from '@internal/utils';
+import type { CustomizePluginOptions, IPlugin, RecommendedLanguageSettings } from '@internal/utils';
 import { customizeParser } from '@internal/utils';
+
+export type { CustomizePluginOptions } from '@internal/utils';
 
 const allPlugins = [
   pluginC,
@@ -57,15 +58,6 @@ const parsersByFileType = groupParsersByFileType(allPlugins);
 
 export function getParsersByFileType(fileType?: string): IPlugin['parsers'] {
   return !fileType ? allParsers : parsersByFileType.get(fileType) || [];
-}
-
-/** Options for {@link customizePlugin}: optionally rename the customized plugin/parser(s), and choose which tagged segments to keep. */
-export interface CustomizePluginOptions {
-  /** Name for the customized plugin (and, when applicable, its parser(s)). */
-  name?: string;
-
-  /** Tagged segments to keep; omit to keep each parser's defaults. */
-  tags?: TagFilterOptions;
 }
 
 function groupParsersByFileType(plugins: IPlugin[]): Map<string, IPlugin['parsers']> {
