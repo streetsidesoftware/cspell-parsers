@@ -21,7 +21,9 @@ Regenerates the CSV tables each package's README.md injects:
 
 And the one the root README.md injects:
 
-- ${PACKAGES_TABLE_PATH} from every non-private \`${PACKAGE_JSON_GLOB}\`'s \`name\` and \`description\`.
+- ${PACKAGES_TABLE_PATH} from every non-private \`${PACKAGE_JSON_GLOB}\`'s \`name\`, plus the languages and
+  top-level tags of its built \`dist/plugin.js\` (run \`pnpm run build\` first; packages without one are
+  skipped).
 
 Run \`pnpm run build:readme\` afterward to inject the results into the READMEs.
 

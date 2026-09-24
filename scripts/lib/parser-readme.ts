@@ -29,6 +29,7 @@ interface TagsModule {
 interface ParserInfo {
   name: string;
   supportedFileTypes?: readonly string[];
+  tags?: Readonly<Record<string, boolean>>;
 }
 
 interface PluginModule {
@@ -37,7 +38,10 @@ interface PluginModule {
 
 export interface PackageInfo {
   name: string;
-  description: string;
+  /** Every language ID the package's parsers support, deduped and sorted. */
+  languages: readonly string[];
+  /** The first `.`-segment of every tag the package's parsers emit *by default*, deduped and sorted. */
+  tags: readonly string[];
   /** The package's directory, relative to the generated table's directory. */
   dir: string;
 }
@@ -96,15 +100,55 @@ export function renderLanguageIdTable(parsers: readonly ParserInfo[]): string {
   return ['Language ID,Parser Name,Recommended', ...rows, ''].join('\n');
 }
 
+/** Longest a {@link wrapList} line is allowed to get before wrapping to the next one. */
+const LIST_WRAP_WIDTH = 36;
+
 /**
- * Renders a `Package,Description` CSV with one row per package, sorted by name. Injected with `#markdown`
- * (like {@link renderTagsTable}) so each package name renders as a link to its directory.
+ * Joins `items` with `, `, breaking onto a new line (via a Markdown `<br>`, since a GFM table cell can't
+ * contain a literal newline) whenever the next item would push the current line past `maxWidth` characters -
+ * used to keep a package's `Languages` list from dominating the packages table's column widths.
+ */
+function wrapList(items: readonly string[], maxWidth: number): string {
+  const lines: string[] = [];
+  let line = '';
+  for (const item of items) {
+    const candidate = line ? `${line}, ${item}` : item;
+    if (line && candidate.length > maxWidth) {
+      lines.push(line);
+      line = item;
+    } else {
+      line = candidate;
+    }
+  }
+  if (line) lines.push(line);
+  return lines.join('<br>');
+}
+
+/**
+ * Renders a `Package,Languages,Tags` CSV with one row per package, sorted by name. Injected with `#markdown`
+ * (like {@link renderTagsTable}) so each package name renders as a link to its directory and each language/tag
+ * renders as a code span; `Languages` and `Tags` are wrapped with {@link wrapList} so a package with many of
+ * either doesn't force the whole table wide.
  */
 export function renderPackagesTable(packages: readonly PackageInfo[]): string {
   const rows = [...packages]
     .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
-    .map(({ name, description, dir }) => [`[\`${name}\`](${dir})`, description].map(csvField).join(','));
-  return ['Package,Description', ...rows, ''].join('\n');
+    .map(({ name, dir, languages, tags }) =>
+      [
+        `[\`${name}\`](${dir})`,
+        wrapList(
+          languages.map((l) => `\`${l}\``),
+          LIST_WRAP_WIDTH,
+        ),
+        wrapList(
+          tags.map((t) => `\`${t}\``),
+          LIST_WRAP_WIDTH,
+        ),
+      ]
+        .map(csvField)
+        .join(','),
+    );
+  return ['Package,Languages,Tags', ...rows, ''].join('\n');
 }
 
 async function findFiles(pattern: string): Promise<string[]> {
@@ -184,26 +228,52 @@ export async function updateLanguageIdTables(options: UpdateParserReadmeTablesOp
   return needsFix;
 }
 
+/** The `.`-segment before the first `.` in a tag name, e.g. `comment.block.doc` -> `comment`. */
+function firstTagSegment(tag: string): string {
+  return tag.split('.', 1)[0];
+}
+
 /**
- * Regenerates `static/packages.csv` from every publishable (non-`private`) package's `package.json`, so the
- * root `README.md`'s Available parsers table stays in sync with `packages/*`.
+ * Imports `pluginJsFile`'s `plugin.parsers`, or `undefined` if the package hasn't been built yet (run
+ * `pnpm run build` first - packages without a build are skipped, same as {@link updateLanguageIdTables}).
+ */
+async function loadPluginParsersIfBuilt(pluginJsFile: string): Promise<readonly ParserInfo[] | undefined> {
+  try {
+    return await loadPluginParsers(pluginJsFile);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ERR_MODULE_NOT_FOUND') return undefined;
+    throw error;
+  }
+}
+
+/**
+ * Regenerates `static/packages.csv` from every publishable (non-`private`) package's `package.json` and built
+ * `dist/plugin.js`, so the root `README.md`'s Available parsers table stays in sync with `packages/*`.
  * @returns `true` if the table needed updating, `false` if it was already up to date.
  */
 export async function updatePackagesTable(options: UpdateParserReadmeTablesOptions = {}): Promise<boolean> {
   const packages: PackageInfo[] = [];
 
   for (const packageJsonFile of await findFiles(PACKAGE_JSON_GLOB)) {
-    const pkg = JSON.parse(await fs.readFile(packageJsonFile, 'utf-8')) as {
-      name: string;
-      description?: string;
-      private?: boolean;
-    };
+    const pkg = JSON.parse(await fs.readFile(packageJsonFile, 'utf-8')) as { name: string; private?: boolean };
     if (pkg.private) continue;
+
+    const packageDir = Path.dirname(packageJsonFile);
+    const parsers = await loadPluginParsersIfBuilt(Path.join(packageDir, 'dist/plugin.js'));
+    if (!parsers) continue;
+
+    const languages = [...new Set(parsers.flatMap((p) => p.supportedFileTypes ?? []))].sort();
+    const onByDefaultTags = parsers.flatMap((p) =>
+      Object.entries(p.tags ?? {})
+        .filter(([, onByDefault]) => onByDefault)
+        .map(([tag]) => tag),
+    );
+    const tags = [...new Set(onByDefaultTags.map(firstTagSegment))].sort();
 
     // inject-markdown rebases links from the CSV's own directory, so link relative to it, not the repo root.
     const tableDir = Path.dirname(Path.join(REPO_ROOT_DIR, PACKAGES_TABLE_PATH));
-    const dir = Path.relative(tableDir, Path.dirname(packageJsonFile)).split(Path.sep).join('/');
-    packages.push({ name: pkg.name, description: pkg.description ?? '', dir });
+    const dir = Path.relative(tableDir, packageDir).split(Path.sep).join('/');
+    packages.push({ name: pkg.name, languages, tags, dir });
   }
 
   return writeIfChanged(Path.join(REPO_ROOT_DIR, PACKAGES_TABLE_PATH), renderPackagesTable(packages), options.dryRun);
