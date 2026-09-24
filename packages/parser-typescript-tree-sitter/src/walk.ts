@@ -59,6 +59,14 @@ function quoteTag(text: string, isModuleSpecifier: boolean): Tags {
   }
 }
 
+/**
+ * Compares by `id`, not `===`: the native binding caches node wrappers only weakly, so after a GC the same
+ * node can come back as a different object.
+ */
+function isSameNode(a: SyntaxNode | null | undefined, b: SyntaxNode): boolean {
+  return !!a && a.id === b.id;
+}
+
 /** True when `node` is a `call_expression` whose callee is the dynamic `import(...)` keyword. */
 function isDynamicImportCall(node: SyntaxNode): boolean {
   return node.type === 'call_expression' && node.childForFieldName('function')?.type === 'import';
@@ -81,7 +89,7 @@ function isRequireCall(node: SyntaxNode): boolean {
  */
 function isDynamicImportSpecifier(node: SyntaxNode): boolean {
   const args = node.parent;
-  if (!args || args.type !== 'arguments' || args.namedChildren[0] !== node) return false;
+  if (!args || args.type !== 'arguments' || !isSameNode(args.namedChild(0), node)) return false;
   const call = args.parent;
   return !!call && isDynamicImportCall(call);
 }
@@ -108,7 +116,7 @@ function isModuleSpecifierString(node: SyntaxNode): boolean {
   if (!parent) return false;
   if (
     (parent.type === 'import_statement' || parent.type === 'export_statement') &&
-    parent.childForFieldName('source') === node
+    isSameNode(parent.childForFieldName('source'), node)
   ) {
     return true;
   }
