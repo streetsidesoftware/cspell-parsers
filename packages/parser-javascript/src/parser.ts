@@ -1,9 +1,11 @@
 import { parse } from '@cspell/parser-typescript/parser';
 import { TAGS } from '@cspell/parser-typescript/tags';
-import type { IParser, TagFilterOptions } from '@internal/utils';
+import type { CustomizeParserOptions, IParser } from '@internal/utils';
 import { createPluginParser, customizeParser } from '@internal/utils';
 
 import { tags } from './tags.ts';
+
+export type { CustomizeParserOptions } from '@internal/utils';
 
 export { parse };
 
@@ -18,13 +20,6 @@ export const parser: IParser = createPluginParser(
   },
   (p) => p.tags !== TAGS.CODE,
 );
-
-/** Options for {@link createParser}: the parser's name, and which tagged segments to keep. */
-export interface CustomizeParserOptions {
-  name?: string;
-  /** Omit to keep the parser's own defaults (`code` excluded). */
-  tags?: TagFilterOptions;
-}
 
 /**
  * Create a parser for JavaScript and JSX files. You can set the name of the parser and filter on the tags

@@ -1,9 +1,11 @@
 import type { ParseResult } from '@cspell/cspell-types';
-import type { IParser, TagFilterOptions } from '@internal/utils';
+import type { CustomizeParserOptions, IParser } from '@internal/utils';
 import { createPluginParser, customizeParser } from '@internal/utils';
 
 import { Scanner } from './scanner.ts';
 import { TAGS, tags } from './tags.ts';
+
+export type { CustomizeParserOptions } from '@internal/utils';
 
 /**
  * Extracts comments and string/char/raw-string literals from C/C++ source; everything else is tagged
@@ -25,14 +27,6 @@ export const parser: IParser = createPluginParser(
   },
   (p) => p.tags !== TAGS.CODE,
 );
-
-/** Options for {@link createParser}: the parser's name, and which tagged segments to keep. */
-export interface CustomizeParserOptions {
-  /** Overrides the registered parser name (default: `c-cpp-strings-comments`). */
-  name?: string;
-  /** Which tagged segments to keep; omitting keeps the parser's own defaults (`code` excluded). */
-  tags?: TagFilterOptions;
-}
 
 /**
  * Create a parser for C and C++ files. You can set the name of the parser and filter on the tags if desired.

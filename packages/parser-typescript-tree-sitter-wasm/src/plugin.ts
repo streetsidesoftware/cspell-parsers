@@ -1,9 +1,10 @@
 import type { CSpellPlugin } from '@cspell/cspell-types';
-import { customizeParserPlugin, type IPlugin, type TagFilterOptions } from '@internal/utils';
+import { customizeParserPlugin, type CustomizePluginOptions, type IPlugin } from '@internal/utils';
 
 import { parser, supportedFileTypes } from './parser.ts';
 
 export { supportedFileTypes } from './parser.ts';
+export type { CustomizePluginOptions } from '@internal/utils';
 
 export const recommendedLanguageSettings = [
   {
@@ -18,18 +19,6 @@ export const plugin: IPlugin = {
   supportedFileTypes,
   recommendedLanguageSettings,
 };
-
-/** Options for {@link customizePlugin}: the parser's name, and which tagged segments to keep. */
-export interface CustomizePluginOptions {
-  /**
-   * Set the name of the parser. Does not change the plugin's own name.
-   */
-  name?: string;
-  /**
-   * Define which tagged segments to keep. Omit to keep the parser's own defaults (`code` excluded).
-   */
-  tags?: TagFilterOptions;
-}
 
 /**
  * Create a customized copy of {@link plugin} - rename its parser and/or choose which tagged segments get

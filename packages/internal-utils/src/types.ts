@@ -103,3 +103,6 @@ export interface CustomizeParserOptions {
    */
   tags?: TagFilterOptions;
 }
+
+/** Options for a plugin's `customizePlugin`; the same as {@link CustomizeParserOptions}, applied to each of its parsers. */
+export type CustomizePluginOptions = CustomizeParserOptions;
