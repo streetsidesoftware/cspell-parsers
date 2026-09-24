@@ -60,11 +60,11 @@ function quoteTag(text: string, isModuleSpecifier: boolean): Tags {
 }
 
 /**
- * Compares by `id`, not `===`: the native binding caches node wrappers only weakly, so after a GC the same
- * node can come back as a different object.
+ * Falls back to comparing `id`s: the native binding caches node wrappers only weakly, so after a GC the same
+ * node can come back as a different object. `===` first skips the two native calls `id` costs.
  */
 function isSameNode(a: SyntaxNode | null | undefined, b: SyntaxNode): boolean {
-  return !!a && a.id === b.id;
+  return a === b || (!!a && a.id === b.id);
 }
 
 /** True when `node` is a `call_expression` whose callee is the dynamic `import(...)` keyword. */
