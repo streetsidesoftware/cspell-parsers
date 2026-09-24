@@ -77,7 +77,7 @@ lint-ci`/`pnpm test` pass, since it auto-fixes what it can rather than just repo
      tag (`comment.block.doc` implies also emitting `comment` and `comment.block`) so cspell's `validate`
      setting can filter at any level of specificity — see `packages/parser-typescript/CONTRIBUTING.md`'s
      "Tags" section for the full convention.
-   - `plugin.ts` — `export const plugin: ParserPlugin = { parsers: [parser] }` plus
+   - `plugin.ts` — `export const plugin: IPlugin = { parsers: [parser] }` plus
      `export { supportedFileTypes } from './parser.ts'`. If `parser.ts` emits `tags`, also export
      `function customizePlugin(validate: ValidationTags): Plugin`, a thin wrapper around
      `@internal/utils`'s `customizePlugin(plugin, validate)` bound to this package's own `plugin` — see

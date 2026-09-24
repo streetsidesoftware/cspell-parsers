@@ -1,4 +1,4 @@
-import type { Parser } from '@cspell/cspell-types';
+import type { Parser as CSpellParser } from '@cspell/cspell-types';
 import { plugin as pluginC } from '@cspell/parser-c-cpp-strings-comments/plugin';
 import { plugin as pluginCsharp } from '@cspell/parser-csharp-strings-comments/plugin';
 import { plugin as pluginGo } from '@cspell/parser-go-strings-comments/plugin';
@@ -8,7 +8,7 @@ import { plugin as pluginPython } from '@cspell/parser-python-strings-comments/p
 import { plugin as pluginRuby } from '@cspell/parser-ruby-strings-comments/plugin';
 import { plugin as pluginRust } from '@cspell/parser-rust-strings-comments/plugin';
 import { plugin as pluginTypescript } from '@cspell/parser-typescript-strings-comments/plugin';
-import type { ParserPlugin, RecommendedLanguageSettings } from '@internal/utils';
+import type { IPlugin, RecommendedLanguageSettings } from '@internal/utils';
 import type { TagFilterOptions } from '@internal/utils';
 import { customizeParser } from '@internal/utils';
 
@@ -34,9 +34,9 @@ export const recommendedLanguageSettings: RecommendedLanguageSettings = allPlugi
   (p) => p.recommendedLanguageSettings,
 );
 
-export interface ParserPluginEx extends ParserPlugin {
+export interface ParserPluginEx extends IPlugin {
   getParserName(fileType?: string): string | undefined;
-  getParser(fileType?: string): Parser | undefined;
+  getParser(fileType?: string): CSpellParser | undefined;
 }
 
 export const plugin: ParserPluginEx = {
@@ -55,7 +55,7 @@ export const plugin: ParserPluginEx = {
 
 const parsersByFileType = groupParsersByFileType(allPlugins);
 
-export function getParsersByFileType(fileType?: string): ParserPlugin['parsers'] {
+export function getParsersByFileType(fileType?: string): IPlugin['parsers'] {
   return !fileType ? allParsers : parsersByFileType.get(fileType) || [];
 }
 
@@ -68,8 +68,8 @@ export interface CustomizePluginOptions {
   tags?: TagFilterOptions;
 }
 
-function groupParsersByFileType(plugins: ParserPlugin[]): Map<string, ParserPlugin['parsers']> {
-  const parsersByFileType: Map<string, ParserPlugin['parsers']> = new Map();
+function groupParsersByFileType(plugins: IPlugin[]): Map<string, IPlugin['parsers']> {
+  const parsersByFileType: Map<string, IPlugin['parsers']> = new Map();
   for (const plugin of plugins) {
     for (const fileType of plugin.supportedFileTypes) {
       const parsers = parsersByFileType.get(fileType) || [];
@@ -134,11 +134,11 @@ export function customizePlugin(fileType: string, options: CustomizePluginOption
   };
 }
 
-function customizeImportedPlugins(plugins: ParserPlugin[], options: CustomizePluginOptions): ParserPlugin[] {
+function customizeImportedPlugins(plugins: IPlugin[], options: CustomizePluginOptions): IPlugin[] {
   return plugins.map((plugin) => customizeImportedPlugin(plugin, options));
 }
 
-function customizeImportedPlugin(plugin: ParserPlugin, options: CustomizePluginOptions): ParserPlugin {
+function customizeImportedPlugin(plugin: IPlugin, options: CustomizePluginOptions): IPlugin {
   return { ...plugin, parsers: plugin.parsers.map((parser) => customizeParser(parser, options)) };
 }
 

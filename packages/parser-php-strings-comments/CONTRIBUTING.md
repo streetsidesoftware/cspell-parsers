@@ -158,13 +158,13 @@ for what each one means to a consumer.
 - That indirection is what makes `tags.ts` a true single source of truth rather than just a convention: since
   `TAGS` is the _only_ way to get a tag object at all, there's no way to add a new tag constant without it
   being part of `TAGS` - unlike a hand-maintained parallel list, which a new tag constant could simply never
-  be added to. `tags` (the `ParserTags` map `createPluginParser` is given - see `PluginParser.tags`'s own doc
+  be added to. `tags` (the `ParserTags` map `createPluginParser` is given - see `IParser.tags`'s own doc
   comment) is then derived from `TAGS` by taking the union of every key across `Object.values(TAGS)`, rather
   than hand-typed a second time.
 - `NOT_ON_BY_DEFAULT` is the short, explicit list of tags that deviate from "emitted and spell checked by
   default" - today, just `[CODE_TAG]`. It references the tag _object_ rather than the bare string `'code'`,
   so a rename of the underlying key can't silently drift out of sync with what it's supposed to exclude.
-- This matters because `tags` became load-bearing, not just descriptive, once `PluginParser.customize()` was
+- This matters because `tags` became load-bearing, not just descriptive, once `IParser.customize()` was
   rewritten (see `@internal/utils`'s `PluginParserImpl`/`createParsedTextFilter`) to resolve each known tag's
   default from this map - a tag `Scanner` emits that isn't a key in `tags` is invisible to that resolution
   and silently un-filterable via `createParser`/`customizePlugin`'s `tags` option. `parser.test.ts`'s `tags`

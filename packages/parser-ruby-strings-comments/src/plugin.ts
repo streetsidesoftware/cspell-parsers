@@ -1,5 +1,5 @@
-import type { Plugin } from '@cspell/cspell-types';
-import { customizeParserPlugin, type ParserPlugin, type TagFilterOptions } from '@internal/utils';
+import type { CSpellPlugin } from '@cspell/cspell-types';
+import { customizeParserPlugin, type IPlugin, type TagFilterOptions } from '@internal/utils';
 
 import { parser, supportedFileTypes } from './parser.ts';
 
@@ -12,7 +12,7 @@ export const recommendedLanguageSettings = [
   },
 ];
 
-export const plugin: ParserPlugin = {
+export const plugin: IPlugin = {
   name: 'ruby-strings-comments',
   parsers: [parser],
   supportedFileTypes,
@@ -47,6 +47,6 @@ export interface CustomizePluginOptions {
  * };
  * ```
  */
-export function customizePlugin(options: CustomizePluginOptions): Plugin {
+export function customizePlugin(options: CustomizePluginOptions): CSpellPlugin {
   return customizeParserPlugin(plugin, options);
 }

@@ -1,16 +1,9 @@
 import { createParsedTextFilter } from './customize.ts';
-import type {
-  CustomizeParserOptions,
-  ParsedTextFilter,
-  ParseFunction,
-  ParserPlugin,
-  ParserTags,
-  PluginParser,
-} from './types.ts';
+import type { CustomizeParserOptions, IParser, IPlugin, ParsedTextFilter, ParseFunction, ParserTags } from './types.ts';
 
-export type CreatePluginParserOptions = Pick<PluginParser, 'name' | 'parse' | 'supportedFileTypes' | 'tags'>;
+export type CreatePluginParserOptions = Pick<IParser, 'name' | 'parse' | 'supportedFileTypes' | 'tags'>;
 
-export function createPluginParser(options: CreatePluginParserOptions, filter?: ParsedTextFilter): PluginParser {
+export function createPluginParser(options: CreatePluginParserOptions, filter?: ParsedTextFilter): IParser {
   return new PluginParserImpl(options.name, options.parse, options.supportedFileTypes, options.tags, filter);
 }
 
@@ -19,12 +12,12 @@ export function createPluginParser(options: CreatePluginParserOptions, filter?: 
  * `options.tags`, and its `name` is `options.name` when given. `options.tags` is compiled into a
  * {@link TagsFilter} once here, before the parser ever runs - see {@link compileTagFilter}.
  */
-export function customizeParser(parser: PluginParser, options: CustomizeParserOptions): PluginParser {
+export function customizeParser(parser: IParser, options: CustomizeParserOptions): IParser {
   return parser.customize(options);
 }
 
 /** Customizes each parser in `plugin`, pointing `recommendedLanguageSettings` at the renamed parsers. */
-export function customizeParserPlugin(plugin: ParserPlugin, options: CustomizeParserOptions): ParserPlugin {
+export function customizeParserPlugin(plugin: IPlugin, options: CustomizeParserOptions): IPlugin {
   const renamed = new Map<string, string>();
   const parsers = plugin.parsers.map((parser) => {
     const customized = customizeParser(parser, options);
@@ -47,7 +40,7 @@ export function createParse(parse: ParseFunction, filter?: ParsedTextFilter): Pa
   };
 }
 
-class PluginParserImpl implements PluginParser {
+class PluginParserImpl implements IParser {
   #parse: ParseFunction;
   #supportedFileTypes: Readonly<string[]>;
   #tags: Readonly<ParserTags>;
@@ -82,16 +75,16 @@ class PluginParserImpl implements PluginParser {
     return this.#tags;
   }
 
-  customize(options: CustomizeParserOptions): PluginParser {
+  customize(options: CustomizeParserOptions): IParser {
     const filter = options?.tags ? createParsedTextFilter(options.tags, this.#tags) : this.#filter;
     return new PluginParserImpl(options?.name ?? this.#name, this.#parse, this.#supportedFileTypes, this.#tags, filter);
   }
 
-  customizeFilter(filter: ParsedTextFilter): PluginParser {
+  customizeFilter(filter: ParsedTextFilter): IParser {
     return new PluginParserImpl(this.#name, this.#parse, this.#supportedFileTypes, this.#tags, filter);
   }
 
-  customizeSupportedFileTypes(supportedFileTypes: Readonly<string[]>): PluginParser {
+  customizeSupportedFileTypes(supportedFileTypes: Readonly<string[]>): IParser {
     return new PluginParserImpl(this.#name, this.#parse, supportedFileTypes, this.#tags, this.#filter);
   }
 }

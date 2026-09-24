@@ -1,5 +1,5 @@
 import type { ParseResult } from '@cspell/cspell-types';
-import type { PluginParser, TagFilterOptions } from '@internal/utils';
+import type { IParser, TagFilterOptions } from '@internal/utils';
 import { createPluginParser, customizeParser } from '@internal/utils';
 
 import { Scanner } from './scanner.ts';
@@ -17,7 +17,7 @@ export const supportedFileTypes: Readonly<string[]> = Object.freeze([
   'typescriptreact',
 ]);
 
-export const parser: PluginParser = createPluginParser(
+export const parser: IParser = createPluginParser(
   {
     name: 'typescript-strings-comments',
     parse,
@@ -56,6 +56,6 @@ export interface CustomizeParserOptions {
  * };
  * ```
  */
-export function createParser(options: CustomizeParserOptions = {}): PluginParser {
+export function createParser(options: CustomizeParserOptions = {}): IParser {
   return customizeParser(parser, options);
 }

@@ -1,5 +1,5 @@
-import type { Plugin } from '@cspell/cspell-types';
-import { customizeParserPlugin, type ParserPlugin } from '@internal/utils';
+import type { CSpellPlugin } from '@cspell/cspell-types';
+import { customizeParserPlugin, type IPlugin } from '@internal/utils';
 
 import type { CustomizeParserOptions } from './parser.ts';
 import { parser, supportedFileTypes } from './parser.ts';
@@ -13,7 +13,7 @@ export const recommendedLanguageSettings = [
   },
 ];
 
-export const plugin: ParserPlugin = {
+export const plugin: IPlugin = {
   name: 'php-strings-comments',
   parsers: [parser],
   supportedFileTypes,
@@ -38,6 +38,6 @@ export type CustomizePluginOptions = CustomizeParserOptions;
  * };
  * ```
  */
-export function customizePlugin(options: CustomizePluginOptions): Plugin {
+export function customizePlugin(options: CustomizePluginOptions): CSpellPlugin {
   return customizeParserPlugin(plugin, options);
 }
