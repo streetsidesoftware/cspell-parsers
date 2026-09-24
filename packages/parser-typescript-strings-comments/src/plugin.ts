@@ -1,5 +1,6 @@
 import type { CSpellPlugin } from '@cspell/cspell-types';
-import { customizeParserPlugin, type CustomizePluginOptions, type IPlugin } from '@internal/utils';
+import type { CustomizePluginOptions, IPlugin } from '@internal/utils';
+import { customizeParserPlugin } from '@internal/utils';
 
 import { parser, supportedFileTypes } from './parser.ts';
 

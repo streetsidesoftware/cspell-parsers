@@ -4,7 +4,8 @@ import { createCodeTagsEmitter, decodeStringParts, stripCommentMarkers } from '@
 import TreeSitterParser from 'tree-sitter';
 import TypeScriptLanguages from 'tree-sitter-typescript';
 
-import { TAGS, type Tags } from './tags.ts';
+import type { Tags } from './tags.ts';
+import { TAGS } from './tags.ts';
 
 type SyntaxNode = TreeSitterParser.SyntaxNode;
 

@@ -6,7 +6,8 @@ import { createCodeTagsEmitter, decodeStringParts, stripCommentMarkers } from '@
 import type { Node as WasmNode } from '@vscode/tree-sitter-wasm';
 import TreeSitterWasm from '@vscode/tree-sitter-wasm';
 
-import { TAGS, type Tags } from './tags.ts';
+import type { Tags } from './tags.ts';
+import { TAGS } from './tags.ts';
 
 // `@vscode/tree-sitter-wasm`'s CommonJS build assigns its whole `module.exports` in one go, so Node's
 // ESM/CJS interop can't statically see `Parser`/`Language` as named exports - only as properties of the

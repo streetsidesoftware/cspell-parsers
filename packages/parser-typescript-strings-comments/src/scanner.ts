@@ -1,7 +1,8 @@
 import type { ParsedText, SourceMap } from '@cspell/cspell-types';
 import { createCodeTagsEmitter, stripCommentMarkers } from '@internal/utils';
 
-import { TAGS, type Tags } from './tags.ts';
+import type { Tags } from './tags.ts';
+import { TAGS } from './tags.ts';
 
 /**
  * Strips a fixed-length opening/closing delimiter pair (quotes) from `rawText`. `hasClose` must come from
