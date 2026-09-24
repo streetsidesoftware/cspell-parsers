@@ -15,20 +15,10 @@
   "sideEffects": false,
   "type": "module",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
+    ".": "./src/index.ts"
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "files": [
-    "dist",
-    "!dist/**/*.map"
-  ],
   "scripts": {
-    "build": "tsdown",
-    "clean": "shx rm -rf dist coverage",
+    "clean": "shx rm -rf coverage",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
