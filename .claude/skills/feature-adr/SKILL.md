@@ -20,7 +20,28 @@ feature (including you, in six months) doesn't have to reverse-engineer why a ta
    `json5-comments-parser`, `tags-negation-filter`). This names the ADR directory and anchors everything
    else — confirm it before creating any files.
 
-2. **Check/bootstrap the docs structure.** This repo has no `docs/ADRs/` or `docs/glossary.md` yet the first
+2. **Set up a worktree before writing anything.** Do every file write for this feature in its own git
+   worktree, so the design never sits as uncommitted changes in the user's main checkout, and they can
+   keep working or reviewing there in parallel. Check for an existing one first, in case this continues
+   an earlier session:
+
+   ```sh
+   git worktree list
+   git branch --list claude-adr-<feature-slug>
+   ```
+
+   If neither exists, create both from an up-to-date `origin/main`:
+
+   ```sh
+   git fetch origin
+   git worktree add -b claude-adr-<feature-slug> .claude/worktrees/claude-adr-<feature-slug> origin/main
+   ```
+
+   If the branch exists but has no worktree, attach it (without `-b`). If a worktree already exists, keep
+   working in it. Creating the worktree is local and reversible, so no need to ask first. Don't push the
+   branch or open a PR unless the user asks.
+
+3. **Check/bootstrap the docs structure.** This repo has no `docs/ADRs/` or `docs/glossary.md` yet the first
    time this skill runs — that's expected, not an error.
    - If `docs/ADRs/` doesn't exist, create it with a top-level `docs/ADRs/README.md` index (see
      `references/adr-template.md` for its skeleton).
@@ -29,7 +50,7 @@ feature (including you, in six months) doesn't have to reverse-engineer why a ta
    - Create `docs/ADRs/<feature-slug>/` and its own `README.md` index for this feature.
    - If either file already exists, read it first — don't clobber prior features' entries.
 
-3. **Interview one decision at a time.** Don't front-load a giant questionnaire. Ask a single, concrete
+4. **Interview one decision at a time.** Don't front-load a giant questionnaire. Ask a single, concrete
    question, let the user answer (or say "you decide" — then propose a default and state it as the
    decision), and only move to the next question once the current one is actually resolved. Read
    `references/interview-guide.md` before the first question — it's the question bank grounded in this
@@ -42,7 +63,7 @@ feature (including you, in six months) doesn't have to reverse-engineer why a ta
    answer once you look at the code, that's not an ADR-worthy decision — just note it in context and move
    on. ADRs are for decisions where a reasonable person could've gone the other way.
 
-4. **Write one ADR per resolved decision**, not one giant document. Batching several small, related
+5. **Write one ADR per resolved decision**, not one giant document. Batching several small, related
    decisions into a single ADR is fine (e.g. "which tags this parser emits" can cover the whole tag set in
    one ADR); keep separate what's separable, e.g. "which backend" and "which file types" almost always
    deserve their own ADRs because they can change independently later.
@@ -56,8 +77,13 @@ feature (including you, in six months) doesn't have to reverse-engineer why a ta
      file in place, don't delete it).
    - After writing the file, append a one-line entry (number, title, status) to
      `docs/ADRs/<feature-slug>/README.md`.
+   - Commit in the worktree right after writing or editing an ADR: one commit per ADR change, together
+     with its index row, never saved up for the end. If the session is cut short, the history shows how
+     far the design got and in what order. For example,
+     `docs: plugin-customization ADR 0003, duplicated parser is appended`. Commit glossary edits the same
+     way, as they happen.
 
-5. **Sync the glossary as terminology comes up**, not just at the end. Any time the interview mints or
+6. **Sync the glossary as terminology comes up**, not just at the end. Any time the interview mints or
    resolves a term that isn't self-explanatory from the code — a new tag name, a new concept specific to
    this feature — add or update its entry in `docs/glossary.md`: alphabetical placement, short definition,
    and a link back to the ADR that established it. If a term already has an entry and this feature changes
@@ -65,12 +91,16 @@ feature (including you, in six months) doesn't have to reverse-engineer why a ta
    Don't add entries for things that are just implementation detail with no shared vocabulary value (e.g. a
    local variable name).
 
-6. **Close the loop.** Once the open questions from step 3 are exhausted, summarize what was decided (a
+7. **Close the loop.** Once the open questions from step 4 are exhausted, summarize what was decided (a
    short list, one line per ADR) and point at the feature's `docs/ADRs/<feature-slug>/README.md`. If
    anything was explicitly left open (deferred rather than decided), say so plainly rather than letting it
    quietly vanish — a `Proposed` ADR with an unresolved question in its Context section is a fine way to
    carry that forward. Don't start writing implementation code as part of this skill; the ADRs are the
    handoff artifact, and the user can start a fresh task for implementation once they're ready.
+
+   Tell the user where the work lives: the `claude-adr-<feature-slug>` branch in
+   `.claude/worktrees/claude-adr-<feature-slug>`. Once its PR is merged, remove the worktree and delete the
+   branch.
 
 ## Notes
 
