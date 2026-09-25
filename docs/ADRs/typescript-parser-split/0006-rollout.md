@@ -21,6 +21,6 @@ Each is mergeable on its own, and each ships as a minor release.
 
 ## Consequences
 
-- Until the native PR lands, the two backends differ, so they aren't drop-in replacements for each other
+- Until both PRs land, the two backends differ, so they aren't drop-in replacements for each other
   between the two merges.
 - Samples cover JSX in a `.js` file, and each special case in the READMEs links to its test.

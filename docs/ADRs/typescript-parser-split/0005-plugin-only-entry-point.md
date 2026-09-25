@@ -21,7 +21,7 @@ subpath stays.
 
 - This is an exception to the package shape in `CLAUDE.md`, which says every package has `./parser`. The
   package-shape docs must say so for multi-parser packages.
-- `parser-javascript` takes its two parsers from `parser-typescript`'s plugin with `getParser`
+- `parser-javascript` builds its plugin from `parser-typescript`'s plugin
   ([0004](./0004-parser-javascript.md)).
 - Code that imported `@cspell/parser-typescript/parser` breaks, and the release notes say what replaces each
   export.
