@@ -26,5 +26,5 @@ This holds both for the config itself and for a JS config reached through a YAML
 
 - Names in a customized plugin stay unique and deliberate. Mistakes surface when the config loads.
 - Replacing a parser takes two visible steps.
-- Still to check: how the VS Code extension surfaces a config error. If it can get lost there, the error
-  should also be written with `console.error`.
+- No extra `console.error` is needed. The thrown error already reaches the user through cspell's own
+  configuration error reporting.
