@@ -1,22 +1,18 @@
 # @cspell/parser-example
 
-Starter parser package for the cspell-parsers monorepo.
-
-It implements cspell's [`Parser`](https://www.npmjs.com/package/@cspell/cspell-types) contract and exports a
-[`Plugin`](https://www.npmjs.com/package/@cspell/cspell-types) so it can be wired into a cspell configuration.
-
-The example parser extracts C-style comments - `//` line comments and `/*`-delimited block comments - out of
-arbitrary source text, so only comment text (not code) gets spell checked. It skips over quoted string
-contents, so a comment marker inside a string literal (`"see http://example.com"`) isn't mistaken for the
-start of a real comment.
+A starter parser package for the cspell-parsers monorepo. It spell checks only the comments in C-style
+source files: `//` line comments and `/* ... */` block comments. String literals and the rest of the code
+are skipped, and a comment marker inside a string, such as `"see http://example.com"`, isn't mistaken for a
+real comment.
 
 ## Usage
 
 The quickest way to get started is to import the recommended settings, which registers the plugin and
-selects it for a handful of C-style languages (C, C++, C#, Java, JavaScript, TypeScript):
+selects it for every supported file type:
+
+**`cspell.config.jsonc`**
 
 ```jsonc
-// cspell.config.jsonc (or cspell.config.yaml/.mjs/...)
 {
   "import": ["@cspell/parser-example/recommended"],
 }
@@ -24,6 +20,8 @@ selects it for a handful of C-style languages (C, C++, C#, Java, JavaScript, Typ
 
 For more control - for example, to apply it to only some file types, or alongside other settings - wire the
 plugin in yourself and choose the language IDs to use it for:
+
+**`cspell.config.jsonc`**
 
 ```jsonc
 {
@@ -39,7 +37,8 @@ plugin in yourself and choose the language IDs to use it for:
 
 ## Supported file types
 
-The plugin provides these parsers. Where Recommended is `yes`, `recommended` enables the named parser for files with that Language ID:
+The plugin provides these parsers. Where Recommended is `yes`, `recommended` enables the named parser for
+files with that Language ID:
 
 <!--- @@inject: docs/language-id-n-parser-name.csv --->
 
@@ -54,40 +53,59 @@ The plugin provides these parsers. Where Recommended is `yes`, `recommended` ena
 
 <!--- @@inject-end: docs/language-id-n-parser-name.csv --->
 
-### Filtering by tag
+## Filtering by tag
 
-By default every comment the parser emits gets spell checked, but not `code`. To check only some of them —
-for example, only doc comments — or to opt into `code` as well, use `customizePlugin` instead of the plain `plugin` export. It takes a
-`CustomizePluginOptions` object — `tags: TagFilterOptions` and `name` are both optional, and omitting `tags`
-keeps everything — and returns a `Plugin` that only spell checks the tagged segments you keep. This filtering
-works with any cspell version.
+By default, every comment is spell checked, and the rest of the code isn't. Use `customizePlugin` to change
+what gets checked. For example, to check only doc comments:
 
-```js
-// cspell.config.mjs — customizePlugin returns a live Plugin object, so it needs a JS/TS config file
-// (.mjs/.ts/.cjs), not .json/.jsonc/.yaml, where "plugins" can only be a list of module-specifier strings.
+**`cspell.config.ts`** or **`cspell.config.mjs`**
+
+<!--- @@inject: samples/customize/cspell.config.mts#lang=ts --->
+
+```ts
 import { customizePlugin } from '@cspell/parser-example/plugin';
 
+// Check only doc comments.
+const customPlugin = customizePlugin({ tags: { '*': false, 'comment.block.doc': true } });
+
 export default {
-  plugins: [customizePlugin({ tags: { '*': false, 'comment.block.doc': true } })], // only check doc comments
-  languageSettings: [
-    {
-      languageId: 'c,cpp',
-      parser: 'c-style-comments',
-    },
-  ],
+  plugins: [customPlugin],
+  languageSettings: customPlugin.languageSettings(),
 };
 ```
 
-`tags` keys are matched hierarchically against the tags below — `comment` also matches the more specific
-`comment.block.doc` unless a more specific key overrides it — and may use `*` as a wildcard (`comment.block.*`,
-or a bare `*` for "everything not otherwise matched", which defaults to `true`). See the [Tags](#tags) table
-below for every tag this parser can emit.
+<!--- @@inject-end: samples/customize/cspell.config.mts#lang=ts --->
 
-`name` overrides the parser's registered name (`c-style-comments` by default). This matters when registering
-more than one customized copy of this parser, since cspell selects a parser by name and two parsers can't
-share one.
+**NOTE:**
+
+> Keys in `tags` are matched hierarchically against the [tags](#tags) below. For example, the key `comment`
+> also matches the more specific `comment.block.doc`, unless a more specific key overrides it. A key can also
+> use `*` as a wildcard, such as `comment.*`, or a bare `*` for everything not otherwise matched.
+
+Calling `customizePlugin` gives you a customized copy of the plugin. You can add it to `plugins` straight
+away, or keep adjusting it first. For example, to give the parser a different name:
+
+```js
+customizePlugin({ tags: { '*': false, comment: true } }).renameParser('c-style-comments', 'c-comments-only');
+```
+
+Earlier versions of `customizePlugin` took a `name` option to rename the parser. It still works, but it's
+deprecated and will be removed in a future release. Use `renameParser` instead.
+
+## Checking code
+
+Everything that isn't a comment, including string literals, is tagged `code` and is off by default. To check
+it too:
+
+```js
+customizePlugin({ tags: { code: true } });
+```
 
 ## Tags
+
+Each part of a file gets its most specific tag plus the more general ones above it. For example, a doc
+comment is tagged `comment.block.doc`, `comment.block`, and `comment`, so a filter can use whichever level it
+needs.
 
 <!--- @@inject: docs/tags-table.csv#markdown --->
 
