@@ -172,15 +172,15 @@ and byte-raw/C-raw tags are built by spreading their non-raw counterpart (`STRIN
 `STRING_BYTE_TAG`, not `STRING_TAG`), so filtering on `string.byte` (or `string.c`) alone matches both the
 plain and raw forms.
 
-### Why `customizePlugin`/`createParser` filter in the parser, not via cspell
+### Why `customizePlugin` filters in the parser, not via cspell
 
-`customizePlugin` and `createParser` are thin wrappers around `@internal/utils`'s `customizePluginEx` and
-`customizeParserEx` (`packages/internal-utils/src/pluginEx.ts`). `createPluginParserWithFilterTags`
-(`parserEx.ts`) builds the default filter from `tags`. Every filter, a consumer's included, is compiled
-against the parser's unfiltered output and its `tags`, never on top of an earlier filter. The filtering
-happens inside the parser before cspell sees the result, so it works with any cspell version, including one
-too old to filter `ParsedText.tags` itself. See the plugin-customization ADRs
-(`docs/ADRs/plugin-customization/0006-tag-filtering.md`) for the design.
+`customizePlugin` is a thin wrapper around `@internal/utils`'s `customizePluginEx`
+(`packages/internal-utils/src/pluginEx.ts`). `createPluginParserWithFilterTags` (`parserEx.ts`) builds the
+default filter from `tags`. Every filter, a consumer's included, is compiled against the parser's unfiltered
+output and its `tags`, never on top of an earlier filter. The filtering happens inside the parser before
+cspell sees the result, so it works with any cspell version, including one too old to filter `ParsedText.tags`
+itself. See the plugin-customization ADRs (`docs/ADRs/plugin-customization/0006-tag-filtering.md`) for the
+design.
 
 ## Testing
 

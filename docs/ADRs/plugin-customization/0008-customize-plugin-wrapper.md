@@ -1,6 +1,6 @@
 # 0008. `customizePlugin` stays as a thin wrapper that returns a builder
 
-Status: Accepted
+Status: Accepted, amended (see [Amendment](#amendment-the-deprecated-forms-are-removed))
 
 ## Context
 
@@ -50,3 +50,14 @@ export function customizePlugin(options: CustomizeParserOptions): IPluginBuilder
 - Calls to the bundle's `getParser` with a file type now throw. The bundle's own
   `samples/plugin/cspell.config.mts` uses `plugin.getParser('php')?.name` (the parser is named
   `php-strings-comments`) and moves to `languageSettingsFor` or `parserNamesFor` in its migration step.
+
+## Amendment: the deprecated forms are removed
+
+The deprecated forms were removed early, in one step, rather than kept until the fold:
+
+- Each package's `createParser` is gone, along with the `CustomizeParserOptions` type its `./parser` subpath exported.
+- `customizePlugin({ name })` throws, pointing to `renameParser`. The overload that renamed a single parser is gone.
+- The bundle's `customizePlugin(fileType, options)` throws, pointing to `filterTagsForFileType`.
+
+Each package's `customizePlugin` now takes only `(options?: CustomizePluginOptions)`. The runtime checks cover JS
+configs, which don't see the type errors.

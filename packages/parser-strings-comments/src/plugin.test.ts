@@ -60,31 +60,13 @@ describe('customizePlugin', () => {
     expect(plugin.parserNamesFor('csharp')).toEqual(['csharp-strings-comments']);
   });
 
-  it('throws for the deprecated name option, since the bundle has several parsers', () => {
-    expect(() => customizePlugin({ name: 'custom', tags: {} })).toThrow(/renameParser/);
+  it('rejects the removed (fileType, options) form', () => {
+    const call = customizePlugin as unknown as (fileType: string, options: object) => unknown;
+    expect(() => call('csharp', { name: 'csharp-docs', tags: {} })).toThrow('filterTagsForFileType');
   });
 
-  describe('deprecated (fileType, options) form', () => {
-    it('keeps only the parsers for fileType, narrowed to it, and renames them', () => {
-      const custom = customizePlugin('csharp', { name: 'csharp-docs', tags: { '*': false, comment: true } });
-
-      expect(custom.name).toBe('csharp-docs');
-      expect(custom.languageSettings()).toEqual([{ languageId: 'csharp', parser: 'csharp-docs' }]);
-      expect(parse(custom, 'csharp-docs', '// note\nvar x = "text";\n', 'a.cs')).toEqual(['note']);
-    });
-
-    it('narrows a parser that lists several file types to just fileType', () => {
-      const custom = customizePlugin('cpp', { tags: {} });
-
-      expect(custom.languageSettings()).toEqual([{ languageId: 'cpp', parser: 'c-cpp-strings-comments' }]);
-    });
-
-    it("keeps every parser for '*', and names only the plugin", () => {
-      const custom = customizePlugin('*', { name: 'custom', tags: { '*': false, comment: true } });
-
-      expect(custom.name).toBe('custom');
-      expect(custom.parserNames()).toEqual(plugin.parserNames());
-      expect(parse(custom, 'go-strings-comments', '// note\nx := "text"\n', 'a.go')).toEqual(['note']);
-    });
+  it('rejects the removed name option', () => {
+    const options = { name: 'custom', tags: {} } as unknown as Parameters<typeof customizePlugin>[0];
+    expect(() => customizePlugin(options)).toThrow(/renameParser/);
   });
 });

@@ -7,7 +7,7 @@ import { plugin as pluginPython } from '@cspell/parser-python-strings-comments/p
 import { plugin as pluginRuby } from '@cspell/parser-ruby-strings-comments/plugin';
 import { plugin as pluginRust } from '@cspell/parser-rust-strings-comments/plugin';
 import { plugin as pluginTypescript } from '@cspell/parser-typescript-strings-comments/plugin';
-import type { CustomizeParserOptions, CustomizePluginExOptions, IPluginBuilder, IPluginEx } from '@internal/utils';
+import type { CustomizePluginExOptions, IPluginBuilder, IPluginEx } from '@internal/utils';
 import { createPluginEx, customizePluginEx } from '@internal/utils';
 
 export type { CustomizePluginExOptions as CustomizePluginOptions } from '@internal/utils';
@@ -47,36 +47,6 @@ export const recommendedLanguageSettings = plugin.languageSettings();
  * export default customizePlugin({ tags: { '*': false, comment: true } }).defineConfig();
  * ```
  */
-export function customizePlugin(options?: CustomizePluginExOptions): IPluginBuilder;
-/** @deprecated Rename a parser with `customizePlugin().renameParser(...)` instead of `name`. */
-export function customizePlugin(options: CustomizeParserOptions): IPluginBuilder;
-/**
- * @deprecated Use `customizePlugin().filterTagsForFileType(fileType, tags, newName)`, or
- * `customizePlugin({ tags })` for every language.
- *
- * Keeps only the parsers that list `fileType`, narrowed to `fileType`, and applies `options.tags`.
- * With `'*'`, it keeps every parser and doesn't rename them.
- */
-export function customizePlugin(fileType: string, options: CustomizeParserOptions): IPluginBuilder;
-export function customizePlugin(
-  fileTypeOrOptions?: string | CustomizePluginExOptions | CustomizeParserOptions,
-  options: CustomizeParserOptions = {},
-): IPluginBuilder {
-  if (typeof fileTypeOrOptions !== 'string') return customizePluginEx(plugin, fileTypeOrOptions);
-  return customizeForFileType(fileTypeOrOptions, options);
-}
-
-/** Implements the deprecated `customizePlugin(fileType, options)`, reproducing the result of the old bundle. */
-function customizeForFileType(fileType: string, options: CustomizeParserOptions): IPluginBuilder {
-  const builder = plugin.customize(options.name);
-  if (fileType !== '*') {
-    const keep = builder.parserNamesFor(fileType);
-    builder.removeParser(builder.parserNames().filter((name) => !keep.includes(name)));
-    builder.setFileTypes(keep, [fileType]);
-    if (options.name !== undefined) {
-      for (const name of keep) builder.renameParser(name, options.name);
-    }
-  }
-  if (options.tags) builder.filterTags('*', options.tags);
-  return builder;
+export function customizePlugin(options?: CustomizePluginExOptions): IPluginBuilder {
+  return customizePluginEx(plugin, options);
 }

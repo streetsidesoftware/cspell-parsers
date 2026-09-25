@@ -3,7 +3,7 @@ import { defineConfig } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
 import { createPluginParserWithFilterTags } from './parserEx.ts';
-import { createPluginEx, customizeParserEx, customizePluginEx } from './pluginEx.ts';
+import { createPluginEx, customizePluginEx } from './pluginEx.ts';
 import type { IParserEx, IPluginEx, RecommendedSettings } from './types.ts';
 
 const segments: ParsedText[] = [
@@ -181,7 +181,6 @@ describe('IPluginBuilder', () => {
     expect(() => b.addParser(mkParser('p', []), '')).toThrow(invalid);
     expect(() => b.addParser(mkParser('', []))).toThrow(invalid);
     expect(() => createPluginEx({ name: 'test', parsers: [mkParser('', [])] })).toThrow(invalid);
-    expect(() => customizeParserEx(mkParser('p', []), { name: '' })).toThrow(invalid);
   });
 
   it('names every unknown parser in the error', () => {
@@ -397,22 +396,16 @@ describe('customizePluginEx', () => {
     expect(customizePluginEx(mkPlugin()).parserNames()).toEqual(['typescript', 'php']);
   });
 
-  it('renames the only parser with the deprecated name, and throws when there are several', () => {
+  it('rejects a file type in place of options, as the old bundle form took', () => {
     const single = createPluginEx({ name: 'one', parsers: [mkParser('a', ['x'])] });
-    expect(customizePluginEx(single, { name: 'b', tags: {} }).parserNames()).toEqual(['b']);
-    expect(() => customizePluginEx(mkPlugin(), { name: 'b' })).toThrow('use renameParser instead');
-    expect(() => customizePluginEx(single, { name: '' })).toThrow('Invalid parser name ""');
+    const fileType = 'x' as unknown as Parameters<typeof customizePluginEx>[1];
+    expect(() => customizePluginEx(single, fileType)).toThrow('filterTagsForFileType');
   });
-});
 
-describe('customizeParserEx', () => {
-  it('returns a renamed, re-filtered copy and leaves the original alone', () => {
-    const original = mkParser('p', ['x']);
-    const copy = customizeParserEx(original, { name: 'q', tags: { code: true } });
-    expect(copy.name).toBe('q');
-    expect(texts(copy)).toEqual(['comment', 'string', 'code']);
-    expect(texts(original)).toEqual(['comment', 'string']);
-    expect(customizeParserEx(original)).toBe(original);
+  it('rejects the removed name option, even from a JS config that skips the type check', () => {
+    const options = { name: 'b', tags: {} } as unknown as Parameters<typeof customizePluginEx>[1];
+    const single = createPluginEx({ name: 'one', parsers: [mkParser('a', ['x'])] });
+    expect(() => customizePluginEx(single, options)).toThrow('use renameParser instead');
   });
 });
 

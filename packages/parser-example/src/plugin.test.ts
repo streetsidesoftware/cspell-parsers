@@ -33,8 +33,8 @@ describe('customizePlugin', () => {
     expect(parsedTexts.some((p) => p.tags?.code)).toBe(true);
   });
 
-  it('renames the parser with the deprecated name option, and languageSettings follow', () => {
-    const customized = customizePlugin({ name: 'custom-example', tags: {} });
+  it('renames the parser with renameParser, and languageSettings follow', () => {
+    const customized = customizePlugin().renameParser('c-style-comments', 'custom-example');
 
     expect(customized.parserNames()).toEqual(['custom-example']);
     expect(customized.languageSettings()).toEqual([

@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import type { ParsedText } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
-import { createParser, parse, parser } from './parser.ts';
+import { parse, parser } from './parser.ts';
 
 const fixturesDir = join(import.meta.dirname, '../fixtures');
 
@@ -242,27 +242,6 @@ describe('csharp-strings-comments parser', () => {
     });
   });
 
-  describe('createParser', () => {
-    const content = '// a comment\n"a string"\n';
-
-    it('defaults to the "csharp-strings-comments" name and keeps everything when called with no options', () => {
-      const customized = createParser();
-      expect(customized.name).toBe('csharp-strings-comments');
-
-      const parsedTexts = [...customized.parse(content, 'file.cs').parsedTexts];
-      expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(true);
-      expect(parsedTexts.some((p) => p.text === 'a string')).toBe(true);
-    });
-
-    it('filters segments by tag when tags is given', () => {
-      const customized = createParser({ tags: { '*': false, comment: true } });
-      const parsedTexts = [...customized.parse(content, 'file.cs').parsedTexts];
-
-      expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(true);
-      expect(parsedTexts.some((p) => p.text === 'a string')).toBe(false);
-    });
-  });
-
   it('tags the unhandled C# code between segments (identifiers, keywords, punctuation) as code', () => {
     const rawTexts = [...parse(readFixture('csharp-strings.cs'), 'fixtures/csharp-strings.cs').parsedTexts];
     const code = rawTexts.filter((p) => p.tags?.code);
@@ -288,7 +267,7 @@ describe('csharp-strings-comments parser', () => {
     it('declares every tag the Scanner actually emits, across every fixture', () => {
       // Regression coverage for a tag silently becoming impossible to filter: a tag filter only
       // knows about tags listed in `parser.tags`, so a tag the Scanner emits but `tags` doesn't declare
-      // would never be reachable via `createParser`/`customizePlugin`'s `tags` option, with no error to
+      // would never be reachable via `customizePlugin`'s `tags` option, with no error to
       // catch the mistake.
       const emittedTags = new Set<string>();
       for (const fixture of readdirSync(fixturesDir)) {

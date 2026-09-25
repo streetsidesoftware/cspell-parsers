@@ -22,6 +22,15 @@ describe('plugin', () => {
 });
 
 describe('customizePlugin', () => {
+  it('keeps html once opted into, still leaving code off', () => {
+    const customized = customizePlugin({ tags: { html: true } });
+    const content = '<p>markup</p>\n<?php\n$x = 1; // a comment\n';
+    const parsedTexts = [...customized.getParser('php-strings-comments').parse(content, 'file.php').parsedTexts];
+
+    expect(parsedTexts.some((p) => p.tags?.html)).toBe(true);
+    expect(parsedTexts.some((p) => p.tags?.code)).toBe(false);
+  });
+
   it('wires tag filtering into the php-strings-comments parser', () => {
     const customized = customizePlugin({ tags: { '*': true, comment: false } });
     const [customizedParser] = (customized.parsers ?? []) as CSpellParser[];
@@ -32,8 +41,8 @@ describe('customizePlugin', () => {
     expect([...(result?.parsedTexts ?? [])].some((p) => p.text === 'hello')).toBe(false);
   });
 
-  it('renames the parser with the deprecated name option, and languageSettings follow', () => {
-    const customized = customizePlugin({ name: 'custom-example', tags: {} });
+  it('renames the parser with renameParser, and languageSettings follow', () => {
+    const customized = customizePlugin().renameParser('php-strings-comments', 'custom-example');
 
     expect(customized.parserNames()).toEqual(['custom-example']);
     expect(customized.languageSettings()).toEqual([{ languageId: 'php', parser: 'custom-example' }]);
