@@ -3,6 +3,9 @@ import type { CustomizePluginExOptions, IPluginBuilder, IPluginEx } from '@inter
 
 export type { CustomizePluginExOptions as CustomizePluginOptions } from '@internal/utils';
 
+/** The parsers this plugin keeps; any other parser `@cspell/parser-typescript` has, now or later, is left out. */
+const javascriptParserNames: readonly string[] = ['javascript', 'javascriptreact'];
+
 /**
  * Has `@cspell/parser-typescript`'s `javascript` and `javascriptreact` parsers, the same objects under the same names.
  * Built with that package's own builder, so this package doesn't bundle a second copy of `@internal/utils`.
@@ -10,7 +13,7 @@ export type { CustomizePluginExOptions as CustomizePluginOptions } from '@intern
  */
 export const plugin: IPluginEx = typescriptPlugin
   .customize('javascript')
-  .removeParser(['typescript', 'typescriptreact'])
+  .removeParser(typescriptPlugin.parserNames().filter((name) => !javascriptParserNames.includes(name)))
   .build();
 
 export const recommendedLanguageSettings = plugin.languageSettings();
