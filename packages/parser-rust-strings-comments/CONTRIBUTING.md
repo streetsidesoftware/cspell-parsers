@@ -174,12 +174,13 @@ plain and raw forms.
 
 ### Why `customizePlugin`/`createParser` filter in the parser, not via cspell
 
-`customizePlugin` and `createParser` are thin wrappers around `@internal/utils`'s `customizeParser`, which
-wraps `parser.parse()` so excluded segments never appear in the returned `parsedTexts` at all - the filtering
-happens here, before cspell ever sees those segments, rather than relying on cspell's own tag-based `validate`
-filtering. That's what lets `customizePlugin` work with any cspell version, including one too old to filter
-`ParsedText.tags` itself. See `packages/internal-utils/src/customize.ts`'s `customizeParser`/`compileTagFilter`
-for the actual filtering logic.
+`customizePlugin` and `createParser` are thin wrappers around `@internal/utils`'s `customizePluginEx` and
+`customizeParserEx` (`packages/internal-utils/src/pluginEx.ts`). `createPluginParserWithFilterTags`
+(`parserEx.ts`) builds the default filter from `tags`. Every filter, a consumer's included, is compiled
+against the parser's unfiltered output and its `tags`, never on top of an earlier filter. The filtering
+happens inside the parser before cspell sees the result, so it works with any cspell version, including one
+too old to filter `ParsedText.tags` itself. See the plugin-customization ADRs
+(`docs/ADRs/plugin-customization/0006-tag-filtering.md`) for the design.
 
 ## Testing
 
