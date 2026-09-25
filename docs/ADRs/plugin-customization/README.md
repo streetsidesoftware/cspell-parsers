@@ -32,6 +32,7 @@ implementation.
 | 0018 | The builder holds each parser in a class that privately keeps its originals               | Accepted           |
 | 0019 | A parser's default filter comes only from its `tags`                                      | Accepted           |
 | 0020 | `IParser` exposes its unfiltered parse as `_parse`                                        | Accepted           |
+| 0021 | `customizePlugin` stays as a thin wrapper that returns a builder                          | Accepted           |
 
 ## Open questions
 
