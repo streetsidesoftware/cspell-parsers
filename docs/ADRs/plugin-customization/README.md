@@ -7,22 +7,26 @@ renaming, duplicating, tag-filtering, and adjusting the file types of its parser
 
 ## Decisions
 
-| #    | Title                                                                                     | Status   |
-| ---- | ----------------------------------------------------------------------------------------- | -------- |
-| 0001 | Compatibility policy: breaking externally, never internally                               | Accepted |
-| 0002 | Parsers own file types; plugin file types and recommendations derived                     | Accepted |
-| 0003 | A duplicated parser is appended to the end of the plugin's parsers                        | Accepted |
-| 0004 | Users customize a plugin through chained, immutable methods                               | Accepted |
-| 0005 | Design from the plugin user's perspective, within cspell's rules                          | Accepted |
-| 0006 | The user names every parser a customization creates                                       | Accepted |
-| 0007 | Plugins generate `languageSettings` through helper methods                                | Accepted |
-| 0008 | Methods take the target parser as a required first argument, with `'*'` for all           | Accepted |
-| 0009 | A duplicate or rename that reuses an existing parser name throws                          | Accepted |
-| 0010 | An unknown parser name throws                                                             | Accepted |
-| 0011 | A parser's file types only feed `languageSettings` generation; a parser with none is kept | Accepted |
-| 0012 | `filterTags` replaces a parser's filter; filters are never chained                        | Accepted |
-| 0013 | `duplicateParser` copies the original's current state                                     | Accepted |
-| 0014 | A renamed parser keeps its position                                                       | Accepted |
+This feature is still being designed. An Accepted ADR here can still be revised or superseded before
+implementation.
+
+| #    | Title                                                                                     | Status             |
+| ---- | ----------------------------------------------------------------------------------------- | ------------------ |
+| 0001 | Compatibility policy: breaking externally, never internally                               | Accepted           |
+| 0002 | Parsers own file types; plugin file types and recommendations derived                     | Accepted           |
+| 0003 | A duplicated parser is appended to the end of the plugin's parsers                        | Accepted           |
+| 0004 | Users customize a plugin through chained, immutable methods                               | Superseded by 0015 |
+| 0005 | Design from the plugin user's perspective, within cspell's rules                          | Accepted           |
+| 0006 | The user names every parser a customization creates                                       | Accepted           |
+| 0007 | Plugins generate `languageSettings` through helper methods                                | Accepted           |
+| 0008 | Methods take the target parser as a required first argument, with `'*'` for all           | Accepted           |
+| 0009 | A duplicate or rename that reuses an existing parser name throws                          | Accepted           |
+| 0010 | An unknown parser name throws                                                             | Accepted           |
+| 0011 | A parser's file types only feed `languageSettings` generation; a parser with none is kept | Accepted           |
+| 0012 | `filterTags` replaces a parser's filter; filters are never chained                        | Accepted           |
+| 0013 | `duplicateParser` copies the original's current state                                     | Accepted           |
+| 0014 | A renamed parser keeps its position                                                       | Accepted           |
+| 0015 | Packages export an immutable `IPluginEx`; customization happens on an `IPluginBuilder`    | Accepted           |
 
 ## Open questions
 

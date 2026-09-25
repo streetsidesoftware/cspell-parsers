@@ -1,6 +1,6 @@
 # 0004. Users customize a plugin through chained, immutable methods
 
-Status: Accepted
+Status: Superseded by [0015](./0015-immutable-plugin-and-builder.md)
 
 ## Context
 
