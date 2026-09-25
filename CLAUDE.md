@@ -36,6 +36,14 @@ Once you're done making changes, run `pnpm lint` from the repo root — it auto-
 After pushing more commits to an already-open PR, re-check that its body still matches — see CONTRIBUTING.md's
 "Commits & pull requests" section for what the body should contain.
 
+## Design principles
+
+An operation changes only what its caller targets or names. Don't add hidden side effects to avoid repetition
+or to keep data normalized. A convenience method is built from the explicit steps a user would write, minus any
+step that touches something the user didn't name. Where that leaves overlap, rely on order (for example, the
+last parser wins) rather than changing other entries. See
+`docs/ADRs/plugin-customization/0001-design-principles.md`.
+
 ## Code style
 
 Use explicit escape sequences (e.g. `\u2028`, `\u2029`) rather than literal invisible/non-printing
@@ -80,7 +88,7 @@ is a standalone npm package implementing cspell's `Parser`/`Plugin` contract (ty
 (`typescript`, `tsdown`, `vitest`, `@cspell/cspell-types`). New packages should reference these via
 `"catalog:"` rather than pinning their own versions, so every package stays in lockstep.
 
-**Package shape** — `packages/parser-typescript` is the canonical, fully-fledged template; `packages/parser-example`
+**Package shape** — `packages/parser-typescript-strings-comments` is the canonical, fully-fledged template; `packages/parser-example`
 predates this convention and is kept as a minimal single-file reference (fine to start from for a trivial
 parser, but bring it in line with the shape below if it needs `tags`/`scope`/a `recommended` entry point).
 
@@ -101,15 +109,17 @@ Every package publishes **four** things, each its own file under `src/` and its 
   `supportedFileTypes: string[]` — the cspell/vscode language IDs (e.g. `'typescript'`, `'javascriptreact'`)
   the parser is meant to handle, kept alphabetically sorted — as the single source of truth `recommended.ts`
   builds its `languageSettings` from, so the list only needs updating in one place.
-- `src/plugin.ts` — thin wiring: `export const plugin: IPlugin = { parsers: [parser] }`, plus
+- `src/plugin.ts` — thin wiring: `export const plugin: IPluginEx = createPluginEx({ name, parsers: [parser] })`
+  (with `parser` created by `@internal/utils`'s `createPluginParserWithFilterTags`), plus
   `export { supportedFileTypes } from './parser.ts'` so it's reachable from the `./plugin` subpath too.
-  Published as `./plugin` → `dist/plugin.js`. If `parser.ts` emits `tags`, also re-export
-  `@internal/utils`'s shared `CustomizePluginOptions` (`export type { CustomizePluginOptions } from '@internal/utils'`
-  — every package uses the same options rather than declaring its own) and
-  `function customizePlugin(options: CustomizePluginOptions): CSpellPlugin` — a thin wrapper around
-  `@internal/utils`'s `customizeParserPlugin(plugin, options)` (see below) bound to this package's own
-  `plugin`, so a consumer can filter which tagged segments get spell checked without needing cspell itself
-  to support that filtering. See `packages/parser-typescript/src/plugin.ts` for the pattern.
+  Published as `./plugin` → `dist/plugin.js`. If `parser.ts` emits `tags`, also re-export `@internal/utils`'s
+  shared options (`export type { CustomizePluginExOptions as CustomizePluginOptions } from '@internal/utils'`)
+  and `function customizePlugin(options?: CustomizePluginOptions): IPluginBuilder`, a thin wrapper around
+  `customizePluginEx(plugin, options)`, so a consumer can filter which tagged segments get spell checked
+  without needing cspell itself to support that filtering. The result can be adjusted further and turned into
+  a complete config with `defineConfig()`. See `packages/parser-typescript-strings-comments/src/plugin.ts` for
+  the pattern. Packages not yet migrated still use `IPlugin` and `customizeParserPlugin`; see
+  `docs/guides/plugin-author-guide.md`.
 - `src/index.ts` — the package's main entry (`.` / `main`). Exports a default settings object with just
   `plugins: [plugin]` — the parser is registered but not yet selected for any file type, so a consumer still
   has to add their own `languageSettings`. Typed as a small local `SelectedCSpellSettings` interface
@@ -117,9 +127,9 @@ Every package publishes **four** things, each its own file under `src/` and its 
   small — see the dist-size bullet below. `index.test.ts` separately checks the object is still assignable
   to `AdvancedCSpellSettings`.
 - `src/recommended.ts` — a batteries-included alternative, published as `./recommended` →
-  `dist/recommended.js`. Exports a default `AdvancedCSpellSettings` with `plugins: [plugin]` **and**
-  `languageSettings` mapping `supportedFileTypes.join(',')` to the parser by name, so a consumer only has to
-  `"import": ["@cspell/parser-x/recommended"]` and nothing else.
+  `dist/recommended.js`. Exports `plugin.defineConfig()`: `plugins: [plugin]` **and** the plugin's
+  `languageSettings`, so a consumer only has to `"import": ["@cspell/parser-x/recommended"]` and nothing
+  else.
 
 Every top-level `src/*.ts` file needs a matching entry in **both** `tsdown.config.ts`'s `entry` array and
 `package.json`'s `exports` map — these two lists are independent and tsdown does not infer one from the
@@ -231,6 +241,20 @@ contributor reading the source. Lead with the couple of lines needed to add it t
 (how the AST walk works, why a given segment gets the tag it does, etc.) secondary or omitted entirely —
 someone installing this off npm needs "how do I turn this on," not "how does it work."
 
+A package's `README.md` is rendered on npmjs.com on its own, so every link and image in it must be an absolute
+`https://` URL. Relative links (`./docs/…`, `../../CONTRIBUTING.md`, `samples/…`) resolve on GitHub but break on
+npm. Links to anchors on the same page (`#tags`) are fine. Don't point users at repo files such as
+`CONTRIBUTING.md` from a package README at all.
+
+In `README.md` and any other user-facing text (guides, doc comments users see in their editor, the release-note
+part of a `feat:`/`fix:` PR body), don't start a sentence in a paragraph or note with a code span: it reads as if
+the start of the sentence is missing. Lead with a word instead, e.g. "Use `customizePlugin` to…", "Both `a` and
+`b`…", "Keys in `tags`…". List items can start with code.
+
+Label every example that is a whole config file with its filename in bold, directly above the code block, e.g.
+**`cspell.config.jsonc`** or **`cspell.config.ts`** or **`cspell.config.mjs`**. Don't name the file in a comment
+inside the code. Snippets that aren't a whole file (a single call, an options object) don't need a label.
+
 If the parser emits `tags` on any segment, `README.md` must include a table listing every tag it can emit
 (including ancestor tags implied by `hierarchicalTags`, e.g. `comment` alongside `comment.block.doc`) with a
 one-line description of what each one means. This is reference material for using the plugin, not an
@@ -248,11 +272,9 @@ built plugin's `parsers` (see `scripts/README.md`).
 The same "if the parser emits `tags`" condition also means `plugin.ts` exports `customizePlugin` (see
 "Package shape" above), and `README.md` must show it: a short "Filtering by tag" (or similarly named)
 section, after the plain `plugin`/`languageSettings` wiring example, with a runnable snippet calling
-`customizePlugin({ tags: { ... } })` and pointing at the tags table for what keys are available. Call out
-that `customizePlugin` returns a live `Plugin` object, not a module-specifier string, so it only works from a
-JS/TS cspell config (`cspell.config.mjs`/`.ts`/`.cjs`) — not `.json`/`.jsonc`/`.yaml`, where `plugins` can
-only be a list of strings cspell resolves itself. See `packages/parser-typescript/README.md`'s "Filtering by
-tag" section for the pattern to copy.
+`customizePlugin({ tags: { ... } })` and pointing at the tags table for what keys are available. See
+`packages/parser-typescript-strings-comments/README.md`'s "Filtering by tag and file type" section for the
+pattern to copy.
 
 When adding or editing a `.md` file that contains deliberate spelling errors (e.g. demonstrating what a
 parser flags or ignores), add a `<!-- cspell:ignore ... -->` comment at the end of the file listing those

@@ -2,13 +2,36 @@
 
 Thanks for considering a contribution to cspell-parsers.
 
+## TL;DR
+
+This repo publishes cspell plugins: each package under `packages/` provides parsers that let cspell users
+control what gets spell checked. Start with the
+[plugin author guide](docs/guides/plugin-author-guide.md). It explains how cspell uses plugins and
+parsers, and how to write one here.
+
+- **No hidden side effects:** an operation changes only what its caller targets or names, even if that means
+  some repetition.
+- **Set up:** `pnpm install`, then `pnpm run build` and `pnpm test`.
+- **Add a parser:** copy `packages/parser-typescript-strings-comments` (the full template) and follow the guide.
+- **Before a PR:** `pnpm run build`, `pnpm run typecheck`, `pnpm run lint` (auto-fixes), `pnpm test`. CI runs
+  `build`, `typecheck`, and `test`, plus `pnpm run lint-ci` (a read-only lint) in a separate workflow.
+- **Commits:** [Conventional Commits](https://www.conventionalcommits.org/). Use `feat:`/`fix:` only for
+  changes a user of a published package would notice. Everything else is `chore:`, `refactor:`, `docs:`,
+  etc.
+- **PR descriptions:** short, with a `## Summary` that stands on its own.
+
+The rest of this file is the full reference, written mainly for coding agents.
+
+<details>
+<summary>Details for Agents</summary>
+
 ## Workspace layout
 
 This is a pnpm workspace monorepo (`packages/*`) for cspell parser packages — each package under `packages/`
 is a standalone npm package implementing cspell's `Parser`/`Plugin` contract (types from
 `@cspell/cspell-types`) so it can be loaded via a cspell configuration's `plugins` list.
 
-- `packages/parser-typescript` is the canonical, fully-fledged package — use it as the template for a new
+- `packages/parser-typescript-strings-comments` is the canonical, fully-fledged package — use it as the template for a new
   parser.
 - `packages/parser-example` is a minimal single-file starter that predates that convention; fine to start
   from for a trivial parser, but bring it in line with the full shape (see "Adding a new parser package"
@@ -52,7 +75,10 @@ lint-ci`/`pnpm test` pass, since it auto-fixes what it can rather than just repo
 
 ## Adding a new parser package
 
-1. Copy `packages/parser-typescript` to `packages/<your-parser-name>` for the full shape below, or
+Read the [plugin author guide](docs/guides/plugin-author-guide.md) first. It covers cspell's rules for
+plugins and parsers, what users do with a plugin, and what that means for how you write one.
+
+1. Copy `packages/parser-typescript-strings-comments` to `packages/<your-parser-name>` for the full shape below, or
    `packages/parser-example` if you just want a minimal single-file starting point (bring it in line with
    the full shape before publishing it as a real plugin).
 2. Update `package.json`: `name`, `description`, `dependencies`, and the `exports` map for each file you're
@@ -68,31 +94,30 @@ lint-ci`/`pnpm test` pass, since it auto-fixes what it can rather than just repo
    the shared `.config/tsdown.config.ts`.
 3. Implement the parser as four files under `src/`, each with a matching `package.json` `exports` subpath
    and `tsdown.config.ts` entry (see `CLAUDE.md`'s "Package shape" for why both matter):
-   - `parser.ts` — `parse(content, filename): ParseResult`, `export const parser: Parser`, and
+   - `parser.ts` — `parse(content, filename): ParseResult`, `export const parser: IParserEx` (created with
+     `@internal/utils`'s `createPluginParserWithFilterTags`, which applies the default filter from `tags`), and
      `export const supportedFileTypes: string[]` (the cspell/vscode language IDs the parser handles, e.g.
-     `'typescript'`, `'javascriptreact'`, kept alphabetically sorted) — the single source of truth
-     `recommended.ts` builds its `languageSettings` from. This is where all the real logic lives. If segments
-     carry `tags`, use dot-separated hierarchical tag names as the `ParsedTags` keys (e.g.
-     `comment.block.doc`), each with a `true` value, and include every ancestor alongside the most specific
-     tag (`comment.block.doc` implies also emitting `comment` and `comment.block`) so cspell's `validate`
-     setting can filter at any level of specificity — see `packages/parser-typescript/CONTRIBUTING.md`'s
-     "Tags" section for the full convention.
-   - `plugin.ts` — `export const plugin: IPlugin = { parsers: [parser] }` plus
+     `'typescript'`, `'javascriptreact'`, kept alphabetically sorted), which generate its `languageSettings`.
+     This is where all the real logic lives. If segments carry `tags`, use dot-separated hierarchical tag names
+     as the `ParsedTags` keys (e.g. `comment.block.doc`), each with a `true` value, and include every ancestor
+     alongside the most specific tag (`comment.block.doc` implies also emitting `comment` and `comment.block`)
+     so a `customizePlugin` filter can match at any level of specificity — see
+     `packages/parser-typescript/CONTRIBUTING.md`'s "Tags" section for the full convention.
+   - `plugin.ts` — `export const plugin: IPluginEx = createPluginEx({ name, parsers: [parser] })` plus
      `export { supportedFileTypes } from './parser.ts'`. If `parser.ts` emits `tags`, also export
-     `function customizePlugin(validate: ValidationTags): Plugin`, a thin wrapper around
-     `@internal/utils`'s `customizePlugin(plugin, validate)` bound to this package's own `plugin` — see
-     `packages/parser-typescript/src/plugin.ts` for the pattern to copy. This is what lets a consumer filter
-     which tagged segments get spell checked without needing a cspell version that already applies
-     `validate` itself.
+     `function customizePlugin(options?: CustomizePluginOptions): IPluginBuilder`, a thin wrapper around
+     `@internal/utils`'s `customizePluginEx(plugin, options)` — see
+     `packages/parser-typescript-strings-comments/src/plugin.ts` for the pattern to copy. This is what lets a
+     consumer filter which tagged segments get spell checked, then call `defineConfig()` for a complete config.
    - `index.ts` — default export: an `AdvancedCSpellSettings` with just `plugins: [plugin]`.
-   - `recommended.ts` — default export: an `AdvancedCSpellSettings` with `plugins: [plugin]` **and**
-     `languageSettings` mapping `supportedFileTypes.join(',')` to the parser by name, so it works standalone.
+   - `recommended.ts` — default export: `plugin.defineConfig()`, which has `plugins: [plugin]` **and** the
+     plugin's `languageSettings`, so it works standalone.
 4. Write tests: `parser.test.ts` for real parsing behavior — put realistic input in `fixtures/` (excluded
    from `tsc`/ESLint/Prettier, since a fixture's exact bytes are often what's being asserted on) rather than
    inline strings — plus thin `plugin.test.ts` / `index.test.ts` / `recommended.test.ts` that just check each
    file wires the layer below it together (including, if present, that `customizePlugin` actually filters
-   `parsedTexts` when wired to the real parser — see `packages/parser-typescript/src/plugin.test.ts`).
-5. Add a `samples/` package (copy `packages/parser-typescript/samples`) with one subfolder per usage pattern
+   `parsedTexts` when wired to the real parser — see `packages/parser-typescript-strings-comments/src/plugin.test.ts`).
+5. Add a `samples/` package (copy `packages/parser-typescript-strings-comments/samples`) with one subfolder per usage pattern
    — `plugin/`, `recommended/`, and, if `parser.ts` emits `tags`, `customize/` for `customizePlugin` — each
    holding a real cspell config and real source files it checks. This is what `test:cspell` (`cspell .`)
    exercises end-to-end, alongside `test:vitest`'s unit tests, combined as the package's `test` script. Give
@@ -101,7 +126,7 @@ lint-ci`/`pnpm test` pass, since it auto-fixes what it can rather than just repo
    cspell would otherwise flag in a segment `validate` excludes (not in a comment that explains the typo by name —
    that comment is itself checked unless its own tag is excluded too, which is exactly the mistake to avoid),
    and sanity-check by temporarily swapping in the plain `plugin` to confirm `cspell .` actually fails without
-   the filter, the way `packages/parser-typescript/samples/customize` does — see its `cspell.config.mts` and
+   the filter, the way `packages/parser-typescript-strings-comments/samples/customize` does — see its `cspell.config.mts` and
    `example.ts` for the pattern to copy.
 6. Write `README.md` for someone **using** the plugin, not reading its source — lead with how to add it to a
    cspell config; keep internals secondary. Include a "Supported file types" section whose table is injected from
@@ -111,8 +136,8 @@ lint-ci`/`pnpm test` pass, since it auto-fixes what it can rather than just repo
    means — see `CLAUDE.md`'s "`README.md`" note for why these belong in the README rather than being omitted
    with the rest of the internals. Also add a short "Filtering by tag" section showing `customizePlugin` in
    use, since it's how a consumer actually applies that tags table — see
-   `packages/parser-typescript/README.md`'s "Filtering by tag" section for the pattern to copy, and note
-   there that it needs a JS/TS cspell config (`.mjs`/`.ts`/`.cjs`), not `.json`/`.jsonc`/`.yaml`.
+   `packages/parser-typescript-strings-comments/README.md`'s "Filtering by tag and file type" section for the
+   pattern to copy.
 7. Run `pnpm install` from the repo root to link the new package(s) into the workspace.
 8. Run `pnpm run lint` before committing, and include whatever it changes (e.g. `release-please-config.json`)
    in your commit. Never hand-edit `release-please-config.json` or `.release-please-manifest.json` yourself —
@@ -211,3 +236,5 @@ Do not:
 - Add auto-generated links back to individual diff hunks or lines (e.g. `[[1]]`/`[[2]]` permalinks) — the
   diff is already there for anyone reviewing.
 - Write a separate section per commit or sub-change — one TL;DR covers the whole PR.
+
+</details>
