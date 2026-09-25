@@ -1,6 +1,6 @@
 import type { Parser as CSpellParser } from '@cspell/cspell-types';
 import { plugin as pluginCEx } from '@cspell/parser-c-cpp-strings-comments/plugin';
-import { plugin as pluginCsharp } from '@cspell/parser-csharp-strings-comments/plugin';
+import { plugin as pluginCsharpEx } from '@cspell/parser-csharp-strings-comments/plugin';
 import { plugin as pluginGo } from '@cspell/parser-go-strings-comments/plugin';
 import { plugin as pluginJava } from '@cspell/parser-java-strings-comments/plugin';
 import { plugin as pluginPhpEx } from '@cspell/parser-php-strings-comments/plugin';
@@ -15,6 +15,7 @@ export type { CustomizePluginOptions } from '@internal/utils';
 
 // Migrated packages go through the adapter until this bundle moves to the new API.
 const pluginC = toLegacyPlugin(pluginCEx);
+const pluginCsharp = toLegacyPlugin(pluginCsharpEx);
 const pluginPhp = toLegacyPlugin(pluginPhpEx);
 const pluginTypescript = toLegacyPlugin(pluginTypescriptEx);
 

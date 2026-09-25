@@ -10,6 +10,7 @@ public class Notifier
             // explains the fallback value used when count is negative
             (count < 0 ? 0 : count)
         } after clamping.";
+        var braces = $"Use {{braces}} around {visitor}.";
         return summary + withComment;
     }
 }
