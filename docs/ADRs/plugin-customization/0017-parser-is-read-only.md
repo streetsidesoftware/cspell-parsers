@@ -14,8 +14,9 @@ The options were: make `IParser` read-only data, give it its own builder, or lea
 ## Decision
 
 `IParser` is read-only data: `name`, `parse` (and `parseDocument` where supported), `supportedFileTypes`,
-`tags`, and the unfiltered `_parse` ([0020](./0020-parser-exposes-unfiltered-parse.md)). It has no customization methods. The plugin builder keeps each parser's filter and file types and
-creates the resulting parsers itself. Plugin authors create parsers with a factory function.
+`tags`, and the unfiltered `_parse` ([0020](./0020-parser-exposes-unfiltered-parse.md)). It has no
+customization methods. The plugin builder keeps each parser's filter and file types and creates the
+resulting parsers itself. Plugin authors create parsers with a factory function.
 
 ## Consequences
 
