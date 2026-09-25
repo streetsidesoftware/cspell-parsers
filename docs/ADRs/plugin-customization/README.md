@@ -18,6 +18,7 @@ their tags. The new types live alongside the old ones during the migration, then
 | 0006 | Tag filters replace, never chain; defaults come only from `tags`                          | Accepted |
 | 0007 | `IParserEx` is read-only data that carries its unfiltered parse and filter                | Accepted |
 | 0008 | `customizePlugin` stays as a thin wrapper that returns a builder                          | Accepted |
+| 0009 | `defineConfig` merges a plugin into the user's settings                                   | Accepted |
 
 ## Deliverables
 

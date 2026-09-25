@@ -42,10 +42,11 @@ provisional.
 
 The designed successor to `@internal/utils`'s ad hoc `IPlugin`: the immutable plugin each parser package
 exports. It has read-only helpers (`getParser()`, `hasParser()`, `parserNamesFor()`, `languageSettings()`,
-`languageSettingsFor()`) and `customize()`, which returns an `IPluginBuilder`. It lives alongside `IPlugin`
-while packages migrate, then gets folded back into `IPlugin`. Established in
+`languageSettingsFor()`, `defineConfig()`) and `customize()`, which returns an `IPluginBuilder`. It lives
+alongside `IPlugin` while packages migrate, then gets folded back into `IPlugin`. Established in
 [plugin-customization/0002](./ADRs/plugin-customization/0002-compatibility-and-migration.md) and
-[0004](./ADRs/plugin-customization/0004-immutable-plugin-and-builder.md).
+[0004](./ADRs/plugin-customization/0004-immutable-plugin-and-builder.md), with `defineConfig()` added in
+[0009](./ADRs/plugin-customization/0009-define-config.md).
 
 ## Parser file types
 
