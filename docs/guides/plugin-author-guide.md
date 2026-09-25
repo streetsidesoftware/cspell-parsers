@@ -57,6 +57,8 @@ A user customizes a plugin through the builder that `customize()` returns. Each 
 builder and returns it. The builder works directly as a plugin, and `build()` takes an immutable
 snapshot.
 
+**`cspell.config.mjs`**
+
 ```js
 import { defineConfig } from '@cspell/cspell-types';
 import { plugin } from '@cspell/parser-typescript/plugin';
