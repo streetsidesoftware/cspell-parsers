@@ -1,4 +1,7 @@
 import { customizePlugin } from '@cspell/parser-typescript-strings-comments/plugin';
 
-// Check only doc comments.
-export default customizePlugin({ tags: { '*': false, 'comment.block.doc': true } }).defineConfig();
+// TypeScript files: check only doc comments.
+// Other files: keep the defaults.
+export default customizePlugin()
+  .filterTagsForFileType('typescript', { '*': false, 'comment.block.doc': true }, 'ts-doc-comments')
+  .defineConfig();

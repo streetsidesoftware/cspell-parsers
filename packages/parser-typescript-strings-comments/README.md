@@ -56,7 +56,7 @@ files with that Language ID:
 By default, every comment and string is spell checked. Use `customizePlugin` to change what gets checked.
 See also: [Customization options](#customization-options)
 
-For example, to check only doc comments:
+For example, to check only doc comments in TypeScript files, and keep the defaults for other files:
 
 **`cspell.config.ts`** or **`cspell.config.mjs`**
 
@@ -65,11 +65,17 @@ For example, to check only doc comments:
 ```ts
 import { customizePlugin } from '@cspell/parser-typescript-strings-comments/plugin';
 
-// Check only doc comments.
-export default customizePlugin({ tags: { '*': false, 'comment.block.doc': true } }).defineConfig();
+// TypeScript files: check only doc comments.
+// Other files: keep the defaults.
+export default customizePlugin()
+  .filterTagsForFileType('typescript', { '*': false, 'comment.block.doc': true }, 'ts-doc-comments')
+  .defineConfig();
 ```
 
 <!--- @@inject-end: samples/customize/cspell.config.mts#lang=ts --->
+
+Calling `filterTagsForFileType` gives TypeScript files their own copy of the parser, named `ts-doc-comments`,
+with its own filter.
 
 **NOTE:**
 
