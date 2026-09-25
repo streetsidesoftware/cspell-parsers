@@ -30,7 +30,7 @@ Each package exports an immutable **`IPluginEx`**. Nothing on it looks like a ch
 | `languageSettingsFor(target)`           | Entries for the targeted parsers; each file type goes to the last one that lists it |
 | `languageSettingsFor(name, fileTypes?)` | Entries mapping `fileTypes` (default: its own) to the named parser                  |
 | `languageSettingsForFileType(fileType)` | Entries for only the given file types, each to the last parser that lists it        |
-| `customize()`                           | A new `IPluginBuilder` seeded from this plugin                                      |
+| `customize(name?)`                      | A new `IPluginBuilder` seeded from this plugin, optionally with a new plugin name   |
 
 `languageSettingsFor(target)` takes the same target as the builder methods
 ([0005](./0005-builder-operations.md)) and emits entries in parser order, with no file type mapped twice.
@@ -46,7 +46,8 @@ check before spreading the result into `languageSettings`.
 ([0005](./0005-builder-operations.md), [0006](./0006-tag-filtering.md)). Each method changes the builder and
 returns it, so calls chain or stand as separate statements. A builder works directly as a plugin.
 `build()` returns an immutable `IPluginEx` snapshot that later calls don't affect, and `customize()` forks
-the builder, e.g. for a renamed, filtered copy used under `overrides` for legacy files.
+the builder, e.g. for a renamed, filtered copy used under `overrides` for legacy files. The plugin's own name
+is set with `customize(name)` or `setName(name)`.
 
 ```js
 import { plugin } from '@cspell/parser-typescript/plugin';
