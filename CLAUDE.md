@@ -231,6 +231,11 @@ contributor reading the source. Lead with the couple of lines needed to add it t
 (how the AST walk works, why a given segment gets the tag it does, etc.) secondary or omitted entirely —
 someone installing this off npm needs "how do I turn this on," not "how does it work."
 
+In `README.md` and any other user-facing text (guides, doc comments users see in their editor, the release-note
+part of a `feat:`/`fix:` PR body), don't start a sentence in a paragraph or note with a code span: it reads as if
+the start of the sentence is missing. Lead with a word instead, e.g. "Use `customizePlugin` to…", "Both `a` and
+`b`…", "Keys in `tags`…". List items can start with code.
+
 If the parser emits `tags` on any segment, `README.md` must include a table listing every tag it can emit
 (including ancestor tags implied by `hierarchicalTags`, e.g. `comment` alongside `comment.block.doc`) with a
 one-line description of what each one means. This is reference material for using the plugin, not an
