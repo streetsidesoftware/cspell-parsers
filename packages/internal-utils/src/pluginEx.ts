@@ -231,13 +231,13 @@ export function customizePluginEx(
 ): IPluginBuilder {
   const builder = plugin.customize();
   if (options?.name !== undefined) {
-    const names = builder.parserNames();
-    if (names.length !== 1) {
+    const [only, ...others] = builder.parserNames();
+    if (only === undefined || others.length) {
       throw new Error(
         `"name" only works for a plugin with one parser; use renameParser instead (plugin "${plugin.name}").`,
       );
     }
-    builder.renameParser(names[0] ?? '', options.name);
+    builder.renameParser(only, options.name);
   }
   if (options?.tags) builder.filterTags('*', options.tags);
   return builder;
