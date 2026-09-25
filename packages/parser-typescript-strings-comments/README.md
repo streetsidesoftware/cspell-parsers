@@ -79,7 +79,7 @@ export default {
 > Keys in `tags` are used to filter the text sent to the spell checker. They are matched hierarchically against the [tags](#tags) below.
 
 Both `customizePlugin` and `plugin.customize()` give you a customized copy of the plugin. You can add it to
-`plugins` straight away, or keep adjusting it first. For example, this config checks TypeScript files as
+`plugins` straight away, or keep adjusting it first. For example, the next config checks TypeScript files as
 usual, but checks only the comments in JavaScript files. It does that by adding a second parser, named
 `js-comments-only`, for JavaScript files:
 
