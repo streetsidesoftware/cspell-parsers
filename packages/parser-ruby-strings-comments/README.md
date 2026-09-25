@@ -1,7 +1,8 @@
 # @cspell/parser-ruby-strings-comments
 
-A cspell plugin for spell checking only the comments and string literals in Ruby files, leaving identifiers,
-keywords, and the rest of the code alone.
+A lightweight Ruby parser for [cspell](https://cspell.org) that spell checks the prose in your code: comments
+and strings. It has no dependencies, and it gives you control over what gets checked, from `=begin` blocks to
+heredocs and interpolated strings.
 
 ## Usage
 
@@ -20,8 +21,8 @@ selects it for every supported file type:
 
 <!--- @@inject-end: samples/recommended/cspell.config.jsonc#lang=jsonc --->
 
-For more control - for example, to apply it alongside other settings - wire the plugin in yourself and
-choose the language IDs to use it for:
+For more control - for example, to apply it alongside other settings - wire the plugin in yourself and choose
+the language IDs to use it for:
 
 **`cspell.config.jsonc`**
 
@@ -43,7 +44,8 @@ choose the language IDs to use it for:
 
 ## Supported file types
 
-The plugin provides these parsers. Where Recommended is `yes`, `recommended` enables the named parser for files with that Language ID:
+The plugin provides these parsers. Where Recommended is `yes`, `recommended` enables the named parser for
+files with that Language ID:
 
 <!--- @@inject: docs/language-id-n-parser-name.csv --->
 
@@ -53,52 +55,41 @@ The plugin provides these parsers. Where Recommended is `yes`, `recommended` ena
 
 <!--- @@inject-end: docs/language-id-n-parser-name.csv --->
 
-### Filtering by tag and file type
+## Filtering by tag
 
-By default every comment/string the parser emits gets spell checked. Use `customizePlugin` to change what is sent on to the spell checker.
-See also: [Customization options](#customization-options)
+By default, every comment and string is spell checked, and the rest of the code isn't. Use `customizePlugin`
+to change what gets checked. For example, to skip heredocs, which often hold SQL or other text:
 
 **`cspell.config.ts`** or **`cspell.config.mjs`**
 
-```js
+<!--- @@inject: samples/customize/cspell.config.mts#lang=ts --->
+
+```ts
 import { customizePlugin } from '@cspell/parser-ruby-strings-comments/plugin';
 
-const customPlugin = customizePlugin({
-  // set the parser name to be used in languageSettings
-  name: 'ruby-no-heredocs',
-  tags: { 'string.heredoc': false }, // exclude heredocs - often SQL/text blobs
-});
-
-export default {
-  plugins: [customPlugin],
-  languageSettings: [
-    {
-      // select the customized parser by name, for ruby files only
-      languageId: 'ruby',
-      parser: 'ruby-no-heredocs',
-    },
-  ],
-};
+// Skip heredocs, which often hold SQL or other text.
+export default customizePlugin({ tags: { 'string.heredoc': false } }).defineConfig();
 ```
 
-**NOTE:**
-
-> `name` overrides the parser's registered name (`ruby-strings-comments` by default). This matters when
-> registering more than one customized copy of this parser, since cspell selects a parser by name and two
-> parsers can't share one.
+<!--- @@inject-end: samples/customize/cspell.config.mts#lang=ts --->
 
 **NOTE:**
 
-> `tags` keys are matched hierarchically against the [tags](#tags) below.
->
-> The key `string` also matches the more specific
-> `string.heredoc` unless a more specific key overrides it. See: [`CustomizePluginOptions`](#customizepluginoptions) and [`TagFilterOptions`](#tagfilteroptions) below.
+> Keys in `tags` are matched hierarchically against the [tags](#tags) below. For example, the key `string`
+> also matches the more specific `string.heredoc`, unless a more specific key overrides it. A key can also use
+> `*` as a wildcard, such as `comment.*`, or a bare `*` for everything not otherwise matched.
 
-A `#{...}` interpolation hole inside a double-quoted string, backtick command string, or interpolated
-heredoc is scanned like the rest of the file, so a string or comment nested inside one keeps its own normal
-tag rather than the surrounding literal's tag.
+Calling `customizePlugin` gives you a customized copy of the plugin. Call `defineConfig()` on it to get a
+complete cspell config, or keep adjusting it first. For example, to give the parser a different name:
+
+```js
+customizePlugin().renameParser('ruby-strings-comments', 'my-ruby-parser');
+```
 
 ## Tags
+
+Each part of a file gets its most specific tag plus the more general ones above it. For example, a heredoc is
+tagged `string.heredoc` and `string`, so a filter can use whichever level it needs.
 
 <!--- @@inject: docs/tags-table.csv#markdown --->
 
@@ -116,50 +107,48 @@ tag rather than the surrounding literal's tag.
 
 <!--- @@inject-end: docs/tags-table.csv#markdown --->
 
-Regex literals (`/pattern/flags`) and percent-literals (`%w[]`, `%q()`, `%r{}`, ...) never appear in this
-table: they're recognized and skipped as opaque units, but nothing is ever spell checked inside either, so
-there's no tag to filter by. See [Known limitations](#known-limitations).
+In a double-quoted string, backtick command string, or interpolated heredoc, the code in each `#{...}` hole
+is scanned like any other code, so a string inside it keeps its own tag rather than the surrounding string's.
+
+<!--- Tested by src/parser.test.ts: "keeps a string nested in a #{...} hole under its own tag, not the surrounding string's" --->
+
+Regex literals (`/pattern/flags`) and percent-literals (`%w[]`, `%q()`, `%r{}`, ...) have no tag of their own.
+They're part of the surrounding `code`, so they're checked only when `code` is.
+
+<!--- Tested by src/parser.test.ts: "leaves regex and percent-literal content in code, with no tag of its own" --->
+<!--- Tested by src/parser.test.ts: "emits only the file's comments and its two real strings - nothing from inside any regex" --->
+<!--- Tested by src/parser.test.ts: "emits only the comment and the one real string - nothing from inside any percent-literal" --->
 
 ### The `code` tag
 
-By default, text tagged `code` is not spell checked. To check it too, use `customizePlugin`:
+By default, keywords, identifiers, and everything else tagged `code` aren't spell checked. To check them too:
 
 **`cspell.config.ts`** or **`cspell.config.mjs`**
 
-```js
+<!--- @@inject: samples/check-code/cspell.config.mts#lang=ts --->
+
+```ts
 import { customizePlugin } from '@cspell/parser-ruby-strings-comments/plugin';
 
-export default {
-  plugins: [customizePlugin({ tags: { code: true } })],
-  languageSettings: [
-    {
-      languageId: 'ruby',
-      parser: 'ruby-strings-comments',
-    },
-  ],
-};
+// Also check code, such as identifiers and keywords.
+export default customizePlugin({ tags: { code: true } }).defineConfig();
 ```
+
+<!--- @@inject-end: samples/check-code/cspell.config.mts#lang=ts --->
 
 ## Customization options
 
-The customization options have two purposes:
-
-- Change the name of the registered parser (not the plugin's own name)
-- Set up a `tags` filter to specify what is passed to the spell checker based upon
-  the attributed tags.
+Use `customizePlugin(options)` to control which parts of a file get spell checked, based on the [tags](#tags)
+the parser gives each part.
 
 ### `CustomizePluginOptions`
 
 ```ts
 interface CustomizePluginOptions {
   /**
-   * Set the name of the parser. Does not change the plugin's own name.
+   * Define which tagged segments to keep.
    */
-  name?: string;
-  /**
-   * Define which tagged segments to keep. Omit to keep the parser's own defaults (`code` excluded).
-   */
-  tags?: TagFilterOptions;
+  tags: TagFilterOptions;
 }
 ```
 
@@ -179,13 +168,11 @@ const option = { tags: { '*': true, code: false } };
 
 **Only comments**
 
-Change the parser `name` to `only-comments` and allow only comments.
-
 ```ts
-const option = { name: 'only-comments', tags: { '*': false, comment: true } };
+const option = { tags: { '*': false, comment: true } };
 ```
 
-**Turn off `string.backtick`**
+**Turn off backtick command strings**
 
 ```ts
 const option = { tags: { 'string.backtick': false } };
@@ -193,7 +180,7 @@ const option = { tags: { 'string.backtick': false } };
 
 ### `TagFilterOptions`
 
-`TagFilterOptions` are used to set the filter criteria for the text sent to the spell checker.
+Use `TagFilterOptions` to set the filter criteria for the text sent to the spell checker.
 
 The values are inherited hierarchically
 
@@ -226,28 +213,20 @@ interface TagFilterOptions {
 
 ## Known limitations
 
-This parser is a small hand-written scanner, not a real grammar, which keeps it dependency-free but means a
-handful of Ruby constructs are deliberately out of scope. See `CONTRIBUTING.md` for the implementation
-rationale behind each of these.
-
-- **Regex and percent-literal content is never spell checked**, by design - see the Tags table above.
-  Percent-literal recognition only covers a curated set of delimiters (bracket pairs, plus `| ! # / ~ ^`), so
-  an exotic delimiter falls back to ordinary code instead.
-- **A handful of literal-vs-operator ambiguities are resolved with a heuristic, not full expression
-  tracking**: `/regex/` vs. division, `<<heredoc` vs. left-shift, `%w[]` vs. modulo, and `?'` vs. the ternary
-  operator. This covers the overwhelming majority of real code, but can still miss a literal passed as a bare
-  argument (no parens) to an uncommon method name, a regex spanning multiple lines, or a literal right after
-  a `}`.
-- **Only one heredoc is supported per line.** Real Ruby allows more code after a heredoc's marker on the same
-  line (a second heredoc, a trailing method call); this parser treats the rest of that line as part of the
-  heredoc's own unscanned header, so a real string placed there won't be spell checked.
-- **Symbols and char literals aren't spell checked.** A bare symbol (`:identifier`) and a char literal
-  (`?a`, `?\n`, ...) carry no prose worth checking, so both are skipped as ordinary code - except `?'`,
-  `?"`, and `?#`, which are recognized and skipped as a unit so they don't get misread as the start of a real
-  string or comment. A quoted symbol (`:"..."`/`:'...'`) is still spell checked, as an ordinary
-  double/single-quoted string.
-- **A squiggly heredoc's (`<<~ID`) leading-whitespace dedent is not simulated** - the raw, un-dedented body
-  text is checked instead, which doesn't affect spelling results.
+- **Some literals are told apart from operators by a heuristic.** This covers `/regex/` vs. division,
+  `<<heredoc` vs. left shift, `%w[]` vs. modulo, and `?'` vs. the ternary operator. It handles almost all real
+  code, but a literal passed as a bare argument (no parentheses) to an uncommon method, a regex spanning
+  several lines, or a literal right after a `}` can be read as code, and then it isn't checked.
+  <!--- Tested by src/parser.test.ts: "does not mistake ordinary division (identifier, number, call, paren, bracket) for a regex" --->
+  <!--- Tested by src/parser.test.ts: "treats a same-line "}" as division/append-like, so a real string right after it is never swallowed" --->
+  <!--- Tested by src/parser.test.ts: "does treat "puts <<~MSG" (a whitelisted bare method call) as a heredoc opener" --->
+- **Only one heredoc is checked per line.** Anything after a heredoc's marker on the same line, such as a
+  second heredoc or a string argument, isn't checked.
+  <!--- Tested by src/parser.test.ts: "does not check a second heredoc or a string after a heredoc marker on the same line" --->
+- **Symbols and char literals aren't checked.** A bare symbol (`:name`) and a char literal (`?a`) are code. A
+  quoted symbol (`:"..."` or `:'...'`) is checked as a string.
+  <!--- Tested by src/parser.test.ts: "skips a bare symbol but checks a quoted symbol as a string" --->
+  <!--- Tested by src/parser.test.ts: "does not emit anything for a plain char literal ("?a")" --->
 
 ## Requirements
 

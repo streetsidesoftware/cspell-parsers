@@ -334,6 +334,36 @@ describe('ruby-strings-comments parser', () => {
     });
   });
 
+  describe('special cases documented in README.md', () => {
+    it("keeps a string nested in a #{...} hole under its own tag, not the surrounding string's", () => {
+      const content = 'x = "Hi #{name ? \'nested\' : 1} there"\n';
+      const parsed = [...parse(content, 'file.rb').parsedTexts];
+      expect(byText(parsed, 'nested')?.tags).toEqual({ string: true, 'string.singleQuote': true });
+      expect(byText(parsed, 'Hi ')?.tags).toEqual({ string: true, 'string.doubleQuote': true });
+    });
+
+    it('does not check a second heredoc or a string after a heredoc marker on the same line', () => {
+      const content = 'foo(<<~A, <<~B, "trailing")\n  first\nA\n  second\nB\n';
+      const parsed = [...parse(content, 'file.rb').parsedTexts].filter((p) => !p.tags?.code);
+      expect(parsed.map((p) => p.text)).toEqual(['  first\n']);
+    });
+
+    it('leaves regex and percent-literal content in code, with no tag of its own', () => {
+      const content = 'if x =~ /pattern/\n  y = %w[words]\nend\n';
+      const parsed = [...parse(content, 'file.rb').parsedTexts];
+      expect(parsed.map((p) => p.tags)).toEqual([{ code: true }]);
+    });
+
+    it('skips a bare symbol but checks a quoted symbol as a string', () => {
+      const content = 'a = :bare\nb = :"double quoted"\nc = :\'single quoted\'\n';
+      const parsed = [...parse(content, 'file.rb').parsedTexts].filter((p) => !p.tags?.code);
+      expect(parsed.map((p) => [p.text, p.tags])).toEqual([
+        ['double quoted', { string: true, 'string.doubleQuote': true }],
+        ['single quoted', { string: true, 'string.singleQuote': true }],
+      ]);
+    });
+  });
+
   describe('unterminated literals ending in a trailing lone backslash', () => {
     // Regression coverage mirroring @cspell/parser-typescript-strings-comments's own test for the same class
     // of bug: an escape-skip that blindly advances two characters can land past `content.length` when the

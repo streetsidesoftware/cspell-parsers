@@ -7,15 +7,11 @@ file only covers what's specific to this package's parsing logic.
 
 ## Shape of the parser
 
-Like `@cspell/parser-typescript-strings-comments` and `@cspell/parser-go-strings-comments`, this parser is a
-single hand-written scanner (`Scanner`, a small stateful class holding a mutable cursor `i` over `content`).
-There's no AST and no tokenizer for the language as a whole - `Scanner.scanCode` walks `content` character by
-character, recognizing comments, strings, heredocs, backtick command strings, regex literals, and
-percent-literals, and silently advancing `i` past everything else (identifiers, keywords, punctuation,
-numbers, symbols, char literals). Since cspell only ever checks what's inside `parsedTexts`, this is how the
-parser excludes syntax noise: by simply never emitting it, not by filtering it out afterwards. Regex and
-percent-literals are recognized but never emitted either - see "Regex, percent-literals, division, modulo,
-and char-literal-vs-ternary" below for why that's load-bearing, not just a scope choice.
+This parser is a single hand-written scanner (`Scanner`, a small stateful class holding a mutable cursor `i`
+over `content`). There's no AST and no tokenizer for the language as a whole - `x` walks `content` character
+by character, recognizing only the handful of constructs that matter (comments and strings). Everything
+between them (x) is emitted as a `code` segment. `code` is `false` in `tags`, so the default filter built by
+`createPluginParserWithFilterTags` drops it, and a user can turn it back on with `customizePlugin`.
 
 ### `scanCode`'s one exit condition
 
@@ -253,7 +249,6 @@ never recognized in the first place.
   backslash at EOF" escape-handling edge cases.
 - `samples/` is a real, separate end-to-end check: actual cspell configs plus real source files, run for real
   by `pnpm run test:cspell` (`cspell .` from the package root). `samples/customize` in particular proves the
-  `customizePlugin` tag filter is doing something real (a genuine misspelling inside a heredoc that
-  `{ 'string.heredoc': false }` excludes) - sanity-checked by temporarily swapping in the plain `plugin` and
-  confirming `cspell .` actually fails without the filter before restoring it, the way
-  `packages/parser-typescript/samples/customize` does.
+  `customizePlugin` tag filter is doing something real (a genuine misspelling in a segment the filter
+  excludes). Check it both ways: run cspell with the sample's config and with `plugin.defineConfig()`, each with
+  `--no-config-search`, so the sample's own config doesn't apply to both runs.

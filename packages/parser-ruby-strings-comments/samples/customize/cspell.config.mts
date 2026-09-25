@@ -1,11 +1,4 @@
 import { customizePlugin } from '@cspell/parser-ruby-strings-comments/plugin';
 
-export default {
-  plugins: [customizePlugin({ tags: { 'string.heredoc': false } })], // exclude heredocs - often SQL/text blobs
-  languageSettings: [
-    {
-      languageId: 'ruby',
-      parser: 'ruby-strings-comments',
-    },
-  ],
-};
+// Skip heredocs, which often hold SQL or other text.
+export default customizePlugin({ tags: { 'string.heredoc': false } }).defineConfig();
