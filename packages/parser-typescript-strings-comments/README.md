@@ -175,6 +175,7 @@ A few kinds of code are handled in a specific way:
 
   A comment inside a `RegExp(...)` call is still checked. To check regular expressions too, turn on the
   [`code` tag](#the-code-tag).
+  <!--- Tested by src/parser.test.ts: "regex-literals.ts" --->
 
 - **Module specifiers are spell checked by default, but can be filtered out.** The path or package name in
   each of these is tagged `module`, `module.specifier`, and `module.specifier.literal`, as well as with its
@@ -190,6 +191,8 @@ A few kinds of code are handled in a specific way:
   ```js
   customizePlugin({ tags: { 'module.specifier': false } });
   ```
+
+  <!--- Tested by src/parser.test.ts: "module-specifiers.ts" --->
 
 ## Customization options
 
