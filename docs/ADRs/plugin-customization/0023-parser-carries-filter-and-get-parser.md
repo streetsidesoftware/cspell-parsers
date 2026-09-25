@@ -18,7 +18,8 @@ Getting a parser out of a plugin also meant indexing `parsers` by hand.
   `parse`, e.g. `filterTags?: TagFilterOptions`. It is absent when the parser uses the author's defaults.
   `addParser` copies it, so an added parser behaves exactly as it did in its source plugin.
 - `IPluginEx` and `IPluginBuilder` both have a read-only `getParser(name)` that returns that parser as an
-  `IParserEx`.
+  `IParserEx`. An unknown name throws, as in [0010](./0010-unknown-parser-name-throws.md). Both also have
+  `hasParser(name)` for checking whether a parser exists without a try/catch.
 
 ```js
 const b = pluginB.customize().addParser(commentsOnly.getParser('typescript'), 'a-comments');
@@ -30,4 +31,5 @@ const b = pluginB.customize().addParser(commentsOnly.getParser('typescript'), 'a
   re-filtered from the original output ([0012](./0012-filter-tags-replaces.md)) or left as it is.
 - `IParserEx` is plain data that fully describes a parser's current behavior.
 - The exact field name is provisional.
-- Still to decide: what `getParser` does with an unknown name.
+- Still to decide: the `parser-strings-comments` bundle already has a `getParser(fileType?)` that takes a
+  file type, not a name.
