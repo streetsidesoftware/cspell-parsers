@@ -50,4 +50,9 @@ describe('customizePlugin', () => {
     expect(customized.parserNames()).toContain('js-comments');
     expect(plugin.parserNames()).not.toContain('js-comments');
   });
+
+  it('rejects the old name option, since one name cannot cover every parser', () => {
+    const options = { name: 'custom', tags: {} } as unknown as Parameters<typeof customizePlugin>[0];
+    expect(() => customizePlugin(options)).toThrow('"name" only works for a plugin with one parser');
+  });
 });

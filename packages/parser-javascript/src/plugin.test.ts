@@ -22,4 +22,9 @@ describe('customizePlugin', () => {
       expect(parsedTexts.map((p) => p.text)).toEqual(['a comment']);
     }
   });
+
+  it('rejects the old name option, since one name cannot cover every parser', () => {
+    const options = { name: 'custom', tags: {} } as unknown as Parameters<typeof customizePlugin>[0];
+    expect(() => customizePlugin(options)).toThrow('"name" only works for a plugin with one parser');
+  });
 });
