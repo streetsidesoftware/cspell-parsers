@@ -28,37 +28,34 @@ reimplementing its own copy. Established in
 The read-only parser type: `name`, `parse` (filtered, what cspell calls), `_parse` (unfiltered),
 `supportedFileTypes`, `tags`, and its current tag filter options. It has no customization methods. It lives
 alongside today's `IParser` while packages migrate. Established in
-[plugin-customization/0017](./ADRs/plugin-customization/0017-parser-is-read-only.md),
-[0020](./ADRs/plugin-customization/0020-parser-exposes-unfiltered-parse.md),
-[0022](./ADRs/plugin-customization/0022-remove-and-add-parser.md), and
-[0023](./ADRs/plugin-customization/0023-parser-carries-filter-and-get-parser.md).
+[plugin-customization/0007](./ADRs/plugin-customization/0007-parser-data.md).
 
 ## `IPluginBuilder`
 
-The mutable object returned by `IPluginEx.customize()`. Its customization methods (duplicate, rename,
+The mutable object returned by `IPluginEx.customize()`. Its customization methods (duplicate, add, rename,
 remove, filter tags, change file types) change it in place and return it for chaining. It is usable directly
 as a cspell plugin, and `build()` takes an immutable `IPluginEx` snapshot. Established in
-[plugin-customization/0015](./ADRs/plugin-customization/0015-immutable-plugin-and-builder.md). The name is
+[plugin-customization/0004](./ADRs/plugin-customization/0004-immutable-plugin-and-builder.md). The name is
 provisional.
 
 ## `IPluginEx`
 
 The designed successor to `@internal/utils`'s ad hoc `IPlugin`: the immutable plugin each parser package
-exports. It has read-only helpers (`languageSettings()`, `languageSettingsFor()`, `parserNamesFor()`) and
-`customize()`, which returns an `IPluginBuilder`. It lives alongside `IPlugin` while packages migrate, then
-gets folded back into `IPlugin`. Established in
-[plugin-customization/0001](./ADRs/plugin-customization/0001-compatibility-policy.md) and
-[0015](./ADRs/plugin-customization/0015-immutable-plugin-and-builder.md).
+exports. It has read-only helpers (`getParser()`, `hasParser()`, `parserNamesFor()`, `languageSettings()`,
+`languageSettingsFor()`) and `customize()`, which returns an `IPluginBuilder`. It lives alongside `IPlugin`
+while packages migrate, then gets folded back into `IPlugin`. Established in
+[plugin-customization/0002](./ADRs/plugin-customization/0002-compatibility-and-migration.md) and
+[0004](./ADRs/plugin-customization/0004-immutable-plugin-and-builder.md).
 
 ## Parser file types
 
 A parser's `supportedFileTypes`: the file types used to generate `languageSettings` for it (`recommended`,
 `languageSettings()`, `languageSettingsFor`). They don't restrict what the parser can be used for. cspell
 selects a parser only by name. Established in
-[plugin-customization/0011](./ADRs/plugin-customization/0011-parsers-without-file-types.md).
+[plugin-customization/0003](./ADRs/plugin-customization/0003-plugin-model.md).
 
 ## Recommended parser
 
 For a given file type, the parser a plugin's `recommended` settings select: the last parser in the plugin's
 `parsers` order that lists that file type. It is derived, never stored. Established in
-[plugin-customization/0002](./ADRs/plugin-customization/0002-parsers-own-file-types.md).
+[plugin-customization/0003](./ADRs/plugin-customization/0003-plugin-model.md).

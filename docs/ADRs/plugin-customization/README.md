@@ -1,45 +1,24 @@
 # Plugin customization
 
-`IPlugin`/`IParser` in `@internal/utils` grew ad hoc as parser packages were added. This feature designs
-`IPluginEx` (and an `IPluginImpl` built on it) as a deliberate, immutable model for customizing a plugin —
-renaming, duplicating, tag-filtering, and adjusting the file types of its parsers — to be folded back into
-`IPlugin` once every parser package has been upgraded.
+`IPlugin`/`IParser` in `@internal/utils` grew ad hoc as parser packages were added. This feature replaces
+them with a deliberate model: each package exports an immutable `IPluginEx`, and users customize it through
+an `IPluginBuilder` to rename, duplicate, add, or remove parsers, change their file types, and filter their
+tags. The new types live alongside the old ones during the migration, then get folded back into
+`IPlugin`/`IParser`.
 
 ## Decisions
 
-This feature is still being designed. An Accepted ADR here can still be revised or superseded before
-implementation.
-
-| #    | Title                                                                                     | Status             |
-| ---- | ----------------------------------------------------------------------------------------- | ------------------ |
-| 0001 | Compatibility policy: breaking externally, never internally                               | Accepted           |
-| 0002 | Parsers own file types; plugin file types and recommendations derived                     | Accepted           |
-| 0003 | A duplicated parser is appended to the end of the plugin's parsers                        | Accepted           |
-| 0004 | Users customize a plugin through chained, immutable methods                               | Superseded by 0015 |
-| 0005 | Design from the plugin user's perspective, within cspell's rules                          | Accepted           |
-| 0006 | The user names every parser a customization creates                                       | Accepted           |
-| 0007 | Plugins generate `languageSettings` through helper methods                                | Accepted           |
-| 0008 | Methods take the target parser as a required first argument, with `'*'` for all           | Accepted           |
-| 0009 | A duplicate or rename that reuses an existing parser name throws                          | Accepted           |
-| 0010 | An unknown parser name throws                                                             | Accepted           |
-| 0011 | A parser's file types only feed `languageSettings` generation; a parser with none is kept | Accepted           |
-| 0012 | `filterTags` replaces a parser's filter; filters are never chained                        | Accepted           |
-| 0013 | `duplicateParser` copies the original's current state                                     | Accepted           |
-| 0014 | A renamed parser keeps its position                                                       | Accepted           |
-| 0015 | Packages export an immutable `IPluginEx`; customization happens on an `IPluginBuilder`    | Accepted           |
-| 0016 | A builder method's target can also be a list of parser names                              | Accepted           |
-| 0017 | `IParser` is read-only data with no customization methods                                 | Accepted           |
-| 0018 | The builder holds each parser in a class that privately keeps its originals               | Accepted           |
-| 0019 | A parser's default filter comes only from its `tags`                                      | Accepted           |
-| 0020 | `IParser` exposes its unfiltered parse as `_parse`                                        | Accepted           |
-| 0021 | `customizePlugin` stays as a thin wrapper that returns a builder                          | Accepted           |
-| 0022 | `removeParser` takes any target; `addParser` adds a parser from anywhere                  | Accepted           |
-| 0023 | `IParserEx` carries its filter options; plugins and builders have `getParser(name)`       | Accepted           |
-| 0024 | Migrate one package at a time, with the bundle last                                       | Accepted           |
-
-## Open questions
+| #    | Title                                                                                     | Status   |
+| ---- | ----------------------------------------------------------------------------------------- | -------- |
+| 0001 | Design from the plugin user's perspective, within cspell's rules                          | Accepted |
+| 0002 | Breaking externally is allowed; the repo is never broken internally                       | Accepted |
+| 0003 | A plugin is an ordered list of named parsers; file types only generate `languageSettings` | Accepted |
+| 0004 | Packages export an immutable `IPluginEx`; users customize an `IPluginBuilder`             | Accepted |
+| 0005 | Builder operations: explicit targets, predictable order, loud errors                      | Accepted |
+| 0006 | Tag filters replace, never chain; defaults come only from `tags`                          | Accepted |
+| 0007 | `IParserEx` is read-only data that carries its unfiltered parse and filter                | Accepted |
+| 0008 | `customizePlugin` stays as a thin wrapper that returns a builder                          | Accepted |
 
 ## Deliverables
 
-- [Plugin author guide](../../guides/plugin-author-guide.md), covering [0005](./0005-user-perspective.md)'s
-  user model and cspell's rules. Referenced from `CONTRIBUTING.md`.
+- [Plugin author guide](../../guides/plugin-author-guide.md), linked from `CONTRIBUTING.md`.
