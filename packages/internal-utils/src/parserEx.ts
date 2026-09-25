@@ -16,6 +16,9 @@ export function createPluginParserWithFilterTags(options: CreatePluginParserWith
   return new ParserDef(options.name, options.parse, options.supportedFileTypes, options.tags, undefined).parser;
 }
 
+/** Lets `ParserDef.from` return the same parser object, e.g. so a plugin's `parsers` include the exported `parser`. */
+const defsByParser = new WeakMap<IParserEx, ParserDef>();
+
 export interface ParserDefChanges {
   name?: string;
   fileTypes?: readonly string[];
@@ -48,9 +51,12 @@ export class ParserDef {
     this.filterTags = normalizeFilterTags(filterTags);
   }
 
-  /** Reads any package's `IParserEx` through its public data. */
+  /** Reads any package's `IParserEx` through its public data; one this module created maps back to its own definition. */
   static from(parser: IParserEx): ParserDef {
-    return new ParserDef(parser.name, parser._parse, parser.supportedFileTypes, parser.tags, parser.filterTags);
+    return (
+      defsByParser.get(parser) ??
+      new ParserDef(parser.name, parser._parse, parser.supportedFileTypes, parser.tags, parser.filterTags)
+    );
   }
 
   with(changes: ParserDefChanges): ParserDef {
@@ -70,6 +76,12 @@ export class ParserDef {
   }
 
   #createParser(): IParserEx {
+    const parser = this.#buildParser();
+    defsByParser.set(parser, this);
+    return parser;
+  }
+
+  #buildParser(): IParserEx {
     const tags = this.#tags;
     const filterTags = this.filterTags;
     const keepsEverything = !filterTags && Object.values(tags).every(Boolean);

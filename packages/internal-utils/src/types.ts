@@ -52,7 +52,7 @@ export interface RecommendedLanguageSetting {
 export type RecommendedLanguageSettings = RecommendedLanguageSetting[];
 
 export interface RecommendedSettings {
-  plugins: IPlugin[];
+  plugins: CSpellPlugin[];
   languageSettings: RecommendedLanguageSettings;
 }
 
@@ -184,4 +184,14 @@ export interface IPluginBuilder extends IPluginExBase {
   filterTags(target: ParserTarget, options: TagFilterOptions): this;
   /** An immutable snapshot that later builder calls don't affect. */
   build(): IPluginEx;
+}
+
+/**
+ * Options for a migrated package's `customizePlugin`. Renaming a parser goes through `renameParser`, or the deprecated
+ * `CustomizeParserOptions` overload. See docs/ADRs/plugin-customization/0008-customize-plugin-wrapper.md.
+ */
+export interface CustomizePluginExOptions {
+  name?: undefined;
+  /** Which tagged segments to keep, applied to every parser. */
+  tags: TagFilterOptions;
 }

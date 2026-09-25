@@ -2,7 +2,7 @@ import type { AdvancedCSpellSettings, ParsedText } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
 import { createPluginParserWithFilterTags } from './parserEx.ts';
-import { createPluginEx } from './pluginEx.ts';
+import { createPluginEx, customizeParserEx, customizePluginEx } from './pluginEx.ts';
 import type { IParserEx, IPluginEx } from './types.ts';
 
 const segments: ParsedText[] = [
@@ -281,6 +281,39 @@ describe('filterTags', () => {
 
     b.filterTags('php-comments', { code: true });
     expect(texts(b.getParser('php-comments'))).toEqual(['comment', 'string', 'code']);
+  });
+});
+
+describe('customizePluginEx', () => {
+  it('applies tags to every parser and returns a builder', () => {
+    const b = customizePluginEx(mkPlugin(), { tags: { '*': false, comment: true } });
+    expect(texts(b.getParser('typescript'))).toEqual(['comment']);
+    expect(texts(b.getParser('php'))).toEqual(['comment']);
+    expect(customizePluginEx(mkPlugin()).parserNames()).toEqual(['typescript', 'php']);
+  });
+
+  it('renames the only parser with the deprecated name, and throws when there are several', () => {
+    const single = createPluginEx({ name: 'one', parsers: [mkParser('a', ['x'])] });
+    expect(customizePluginEx(single, { name: 'b', tags: {} }).parserNames()).toEqual(['b']);
+    expect(() => customizePluginEx(mkPlugin(), { name: 'b' })).toThrow('use renameParser instead');
+  });
+});
+
+describe('customizeParserEx', () => {
+  it('returns a renamed, re-filtered copy and leaves the original alone', () => {
+    const original = mkParser('p', ['x']);
+    const copy = customizeParserEx(original, { name: 'q', tags: { code: true } });
+    expect(copy.name).toBe('q');
+    expect(texts(copy)).toEqual(['comment', 'string', 'code']);
+    expect(texts(original)).toEqual(['comment', 'string']);
+    expect(customizeParserEx(original)).toBe(original);
+  });
+});
+
+describe('ParserDef.from', () => {
+  it('keeps the same parser object when a plugin is built from it', () => {
+    const parser = mkParser('p', ['x']);
+    expect(createPluginEx({ name: 'x', parsers: [parser] }).parsers[0]).toBe(parser);
   });
 });
 

@@ -1,6 +1,8 @@
 import type { ParserDefChanges } from './parserEx.ts';
 import { ParserDef } from './parserEx.ts';
 import type {
+  CustomizeParserOptions,
+  CustomizePluginExOptions,
   FileTypeTarget,
   IParserEx,
   IPluginBuilder,
@@ -209,6 +211,37 @@ class PluginBuilder extends PluginExQueries implements IPluginBuilder {
     this.#defs = this.#defs.map((def) => (names.has(def.name) ? def.with(change(def)) : def));
     return this;
   }
+}
+
+/**
+ * Implements a package's `customizePlugin`: `tags` apply to every parser, and the deprecated `name` renames the
+ * plugin's only parser. See docs/ADRs/plugin-customization/0008-customize-plugin-wrapper.md.
+ */
+export function customizePluginEx(
+  plugin: IPluginEx,
+  options?: CustomizePluginExOptions | CustomizeParserOptions,
+): IPluginBuilder {
+  const builder = plugin.customize();
+  if (options?.name) {
+    const names = builder.parserNames();
+    if (names.length !== 1) {
+      throw new Error(
+        `"name" only works for a plugin with one parser; use renameParser instead (plugin "${plugin.name}").`,
+      );
+    }
+    builder.renameParser(names[0] ?? '', options.name);
+  }
+  if (options?.tags) builder.filterTags('*', options.tags);
+  return builder;
+}
+
+/** Implements a package's deprecated `createParser`: a renamed and/or re-filtered copy of `parser`. */
+export function customizeParserEx(parser: IParserEx, options: CustomizeParserOptions = {}): IParserEx {
+  const builder = createPluginEx({ name: parser.name, parsers: [parser] }).customize();
+  if (options.tags) builder.filterTags(parser.name, options.tags);
+  const name = options.name ?? parser.name;
+  if (name !== parser.name) builder.renameParser(parser.name, name);
+  return builder.getParser(name);
 }
 
 function assertNameIsFree(pluginName: string, defs: readonly ParserDef[], name: string): void {
