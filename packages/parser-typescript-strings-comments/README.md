@@ -290,8 +290,7 @@ interface TagFilterOptions {
 
 This scanner isn't a full grammar, so in rare cases it can misjudge whether a `/` starts a regex literal or
 is division - most commonly for a regex shaped like `/['"]/`, or one appearing right after an unusual keyword
-or a `}` - which can affect whether that spot gets spell checked as prose or skipped as code. See
-`CONTRIBUTING.md` for the heuristic this is resolved with.
+or a `}` - which can affect whether that spot gets spell checked as prose or skipped as code.
 
 ## Requirements
 
