@@ -83,9 +83,6 @@ away, or keep adjusting it first. For example, to give the parser a different na
 customizePlugin({ tags: { '*': false, comment: true } }).renameParser('php-strings-comments', 'php-comments-only');
 ```
 
-Earlier versions of `customizePlugin` took a `name` option to rename the parser. It still works, but it's
-deprecated and will be removed in a future release. Use `renameParser` instead.
-
 ## Checking HTML and code
 
 The HTML outside `<?php ... ?>` (`html`) and everything else (`code`) are off by default. To check the HTML
