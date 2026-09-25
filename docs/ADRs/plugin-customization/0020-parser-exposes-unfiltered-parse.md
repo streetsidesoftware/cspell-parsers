@@ -24,4 +24,5 @@ applied. `parse` stays the filtered function that cspell calls.
   off by default can always be turned on.
 - The leading underscore marks `_parse` as plumbing for builders, not something a user calls. It is still
   part of `IParser`'s public type.
-- Still to decide: whether `parseDocument` needs a matching unfiltered member.
+- `parseDocument` isn't supported yet ([0017](./0017-parser-is-read-only.md)), so it has no unfiltered
+  counterpart.

@@ -13,8 +13,7 @@ The options were: make `IParser` read-only data, give it its own builder, or lea
 
 ## Decision
 
-`IParser` is read-only data: `name`, `parse` (and `parseDocument` where supported), `supportedFileTypes`,
-`tags`, and the unfiltered `_parse` ([0020](./0020-parser-exposes-unfiltered-parse.md)). It has no
+`IParser` is read-only data: `name`, `parse`, `supportedFileTypes`, `tags`, and the unfiltered `_parse` ([0020](./0020-parser-exposes-unfiltered-parse.md)). It has no
 customization methods. The plugin builder keeps each parser's filter and file types and creates the
 resulting parsers itself. Plugin authors create parsers with a factory function.
 
@@ -25,3 +24,5 @@ resulting parsers itself. Plugin authors create parsers with a factory function.
 - `customizeParser`, `customizeParserPlugin`, and the `customize*` methods on today's `IParser` go away once
   every package has migrated ([0001](./0001-compatibility-policy.md)).
 - There is one customization API, the plugin builder, not one per level.
+- `parseDocument` isn't supported. It is a future cspell feature, and no parser here implements it.
+  `IParser` doesn't expose it, and the builder doesn't pass it through.
