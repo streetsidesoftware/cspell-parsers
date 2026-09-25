@@ -32,11 +32,17 @@ describe('customizePlugin', () => {
     expect([...(result?.parsedTexts ?? [])].some((p) => p.text === 'hello')).toBe(false);
   });
 
-  it('wires name customization, including recommendedLanguageSettings, into the php-strings-comments parser', () => {
+  it('renames the parser with the deprecated name option, and languageSettings follow', () => {
     const customized = customizePlugin({ name: 'custom-example', tags: {} });
-    const [customizedParser] = (customized.parsers ?? []) as CSpellParser[];
 
-    expect(customizedParser?.name).toBe('custom-example');
-    expect(customized).toMatchObject({ recommendedLanguageSettings: [{ parser: 'custom-example' }] });
+    expect(customized.parserNames()).toEqual(['custom-example']);
+    expect(customized.languageSettings()).toEqual([{ languageId: 'php', parser: 'custom-example' }]);
+  });
+
+  it('returns a copy that can be customized further, leaving plugin unchanged', () => {
+    const customized = customizePlugin().renameParser('php-strings-comments', 'php-comments');
+
+    expect(customized.parserNames()).toEqual(['php-comments']);
+    expect(plugin.parserNames()).toEqual(['php-strings-comments']);
   });
 });

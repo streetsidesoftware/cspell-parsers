@@ -95,6 +95,18 @@ describe('php-strings-comments parser', () => {
     });
   });
 
+  // README "Special cases": interpolated variables are spell checked as part of their string.
+  describe('interpolated variables stay in the string text', () => {
+    it.each([
+      ['a simple $name', '<?php $s = "Hello, $name!";', 'Hello, $name!', 'string.doubleQuote'],
+      ['a {$...} expression', '<?php $s = "Owner: {$user->name}";', 'Owner: {$user->name}', 'string.doubleQuote'],
+      ['a heredoc $name', '<?php $s = <<<EOT\nHello, $name!\nEOT;\n', 'Hello, $name!', 'string.heredoc'],
+    ])('keeps %s', (_label, content, expected, tag) => {
+      const str = [...parser.parse(content, 'file.php').parsedTexts].find((p) => p.tags?.[tag]);
+      expect(str?.text).toContain(expected);
+    });
+  });
+
   describe('heredoc-nowdoc.php', () => {
     const parsedTexts = parseFixture('heredoc-nowdoc.php');
 
