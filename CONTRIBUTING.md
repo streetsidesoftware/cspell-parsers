@@ -52,6 +52,9 @@ lint-ci`/`pnpm test` pass, since it auto-fixes what it can rather than just repo
 
 ## Adding a new parser package
 
+Read the [plugin author guide](docs/guides/plugin-author-guide.md) first. It covers cspell's rules for
+plugins and parsers, what users do with a plugin, and what that means for how you write one.
+
 1. Copy `packages/parser-typescript` to `packages/<your-parser-name>` for the full shape below, or
    `packages/parser-example` if you just want a minimal single-file starting point (bring it in line with
    the full shape before publishing it as a real plugin).

@@ -41,4 +41,5 @@ implementation.
 
 ## Deliverables
 
-- A guide for plugin authors, covering [0005](./0005-user-perspective.md)'s user model and cspell's rules.
+- [Plugin author guide](../../guides/plugin-author-guide.md), covering [0005](./0005-user-perspective.md)'s
+  user model and cspell's rules. Referenced from `CONTRIBUTING.md`.
