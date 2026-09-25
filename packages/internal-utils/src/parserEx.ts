@@ -5,12 +5,12 @@ import type { IParserEx, ParseFunction, ParserTags, TagFilterOptions } from './t
 export interface CreatePluginParserWithFilterTagsOptions {
   name: string;
   /**
-   * The unfiltered parse.
-   * The default filter comes from `tags`.
+   * Parses a file without any tag filtering.
+   * The parser's default filter comes from `tags`.
    */
   parse: ParseFunction;
   supportedFileTypes: readonly string[];
-  /** Every tag the parser can emit, `true` if it's checked by default. */
+  /** Maps every tag the parser can emit to whether it's spell checked by default. */
   tags: Readonly<ParserTags>;
 }
 
@@ -80,7 +80,7 @@ export class ParserDef {
     );
   }
 
-  /** The read-only parser cspell sees. */
+  /** Returns the read-only parser that cspell uses, creating it on first use. */
   get parser(): IParserEx {
     this.#parser ??= this.#createParser();
     return this.#parser;

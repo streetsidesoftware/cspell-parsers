@@ -15,7 +15,7 @@ import type {
 
 export interface CreatePluginExOptions {
   name: string;
-  /** Parser names must be unique. */
+  /** The plugin's parsers, in order, each with a unique name. */
   parsers: readonly IParserEx[];
 }
 
@@ -29,7 +29,7 @@ export function createPluginEx(options: CreatePluginExOptions): IPluginEx {
   return new PluginEx(options.name, defs);
 }
 
-/** The read-only queries, over an ordered list of parser definitions. */
+/** Implements the read-only plugin members over an ordered list of parser definitions. */
 abstract class PluginExQueries implements IPluginExBase {
   abstract get name(): string;
   protected abstract get defs(): readonly ParserDef[];
@@ -97,7 +97,10 @@ abstract class PluginExQueries implements IPluginExBase {
       .map(({ def, types }) => ({ languageId: types.join(','), parser: def.name }));
   }
 
-  /** Validates every name before anything changes. */
+  /**
+   * Resolves a target to the set of parser names it selects.
+   * Throws on an unknown name before anything is changed.
+   */
   protected resolveTarget(target: ParserTarget): Set<string> {
     if (target === '*') return new Set(this.defs.map((def) => def.name));
     const names = typeof target === 'string' ? [target] : target;
@@ -136,8 +139,8 @@ class PluginEx extends PluginExQueries implements IPluginEx {
 class PluginBuilder extends PluginExQueries implements IPluginBuilder {
   #name: string;
   /**
-   * An array, not a Map.
-   * Order picks the recommended parser, and a rename must keep its position.
+   * Kept as an array, not a Map, because order decides the recommended parser.
+   * A rename must also keep the parser in place, which a Map can't do.
    */
   #defs: ParserDef[];
 
@@ -218,8 +221,8 @@ class PluginBuilder extends PluginExQueries implements IPluginBuilder {
 
 /**
  * Implements a package's `customizePlugin`.
- * `tags` apply to every parser.
- * The deprecated `name` renames the plugin's only parser.
+ * It applies `tags` to every parser.
+ * Given the deprecated `name`, it renames the plugin's only parser.
  * See docs/ADRs/plugin-customization/0008-customize-plugin-wrapper.md.
  */
 export function customizePluginEx(
