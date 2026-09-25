@@ -1,9 +1,9 @@
 import type { ParseResult } from '@cspell/cspell-types';
-import type { CustomizeParserOptions, IParser } from '@internal/utils';
-import { createPluginParser, customizeParser } from '@internal/utils';
+import type { CustomizeParserOptions, IParserEx } from '@internal/utils';
+import { createPluginParserWithFilterTags, customizeParserEx } from '@internal/utils';
 
 import { Scanner } from './scanner.ts';
-import { TAGS, tags } from './tags.ts';
+import { tags } from './tags.ts';
 
 export type { CustomizeParserOptions } from '@internal/utils';
 
@@ -24,17 +24,17 @@ export const supportedFileTypes: Readonly<string[]> = Object.freeze([
   'typescript',
 ]);
 
-export const parser: IParser = createPluginParser(
-  {
-    name: 'c-style-comments',
-    parse,
-    supportedFileTypes,
-    tags,
-  },
-  (p) => p.tags !== TAGS.CODE,
-);
+/** `code` is off by default through `tags`. */
+export const parser: IParserEx = createPluginParserWithFilterTags({
+  name: 'c-style-comments',
+  parse,
+  supportedFileTypes,
+  tags,
+});
 
 /**
+ * @deprecated Use `plugin.customize()` from `@cspell/parser-example/plugin` instead.
+ *
  * Create a parser for C, C++, C#, Java, JavaScript, and TypeScript files. You can set the name of the
  * parser and filter on the tags if desired.
  *
@@ -56,6 +56,6 @@ export const parser: IParser = createPluginParser(
  * };
  * ```
  */
-export function createParser(options: CustomizeParserOptions = {}): IParser {
-  return customizeParser(parser, options);
+export function createParser(options: CustomizeParserOptions = {}): IParserEx {
+  return customizeParserEx(parser, options);
 }

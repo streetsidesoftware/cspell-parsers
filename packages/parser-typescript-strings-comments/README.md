@@ -175,6 +175,7 @@ A few kinds of code are handled in a specific way:
 
   A comment inside a `RegExp(...)` call is still checked. To check regular expressions too, turn on the
   [`code` tag](#the-code-tag).
+  <!--- Tested by src/parser.test.ts: "regex-literals.ts" --->
 
 - **Module specifiers are spell checked by default, but can be filtered out.** The path or package name in
   each of these is tagged `module`, `module.specifier`, and `module.specifier.literal`, as well as with its
@@ -191,6 +192,8 @@ A few kinds of code are handled in a specific way:
   customizePlugin({ tags: { 'module.specifier': false } });
   ```
 
+  <!--- Tested by src/parser.test.ts: "module-specifiers.ts" --->
+
 ## Customization options
 
 Use `customizePlugin(options)` to control which parts of a file get spell checked, based on the [tags](#tags)
@@ -199,7 +202,7 @@ the parser gives each part. The filter applies to every parser in the plugin.
 You can keep adjusting the plugin it returns. For example, to give the parser a different name:
 
 ```js
-customizePlugin({ tags: { '*': false, comment: true } }).renameParser('typescript-strings-comments', 'my-parser');
+customizePlugin().renameParser('typescript-strings-comments', 'my-parser');
 ```
 
 ### `CustomizePluginOptions`
@@ -212,9 +215,6 @@ interface CustomizePluginOptions {
   tags: TagFilterOptions;
 }
 ```
-
-Earlier versions of `customizePlugin` took a `name` option to rename the parser. It still works, but it's
-deprecated and will be removed in a future release. Use `renameParser` instead, as shown above.
 
 ### Examples
 

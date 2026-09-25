@@ -1,41 +1,32 @@
-import type { CSpellPlugin } from '@cspell/cspell-types';
-import type { CustomizePluginOptions, IPlugin } from '@internal/utils';
-import { customizeParserPlugin } from '@internal/utils';
+import type { CustomizeParserOptions, CustomizePluginExOptions, IPluginBuilder, IPluginEx } from '@internal/utils';
+import { createPluginEx, customizePluginEx } from '@internal/utils';
 
-import { parser, supportedFileTypes } from './parser.ts';
+import { parser } from './parser.ts';
 
 export { supportedFileTypes } from './parser.ts';
-export type { CustomizePluginOptions } from '@internal/utils';
+export type { CustomizePluginExOptions as CustomizePluginOptions } from '@internal/utils';
 
-export const recommendedLanguageSettings = [
-  {
-    languageId: supportedFileTypes.join(','),
-    parser: 'c-style-comments',
-  },
-];
+export const plugin: IPluginEx = createPluginEx({ name: 'example', parsers: [parser] });
 
-export const plugin: IPlugin = {
-  name: 'example',
-  parsers: [parser],
-  supportedFileTypes,
-  recommendedLanguageSettings,
-};
+export const recommendedLanguageSettings = plugin.languageSettings();
 
 /**
- * Create a customized copy of {@link plugin} - rename its parser and/or choose which tagged segments get
- * spell checked. Works with any cspell version.
+ * Creates a customized copy of {@link plugin}.
+ * `options.tags` chooses which tagged segments get spell checked.
+ * The copy can be added to `plugins` as it is, or adjusted further first.
  *
  * **`cspell.config.mjs`**
  *
  * ```js
  * import { customizePlugin } from '@cspell/parser-example/plugin';
  *
- * export default {
- *   plugins: [customizePlugin({ name: 'doc-comments-only', tags: { '*': false, 'comment.block.doc': true } })],
- *   languageSettings: [{ languageId: 'c,cpp', parser: 'doc-comments-only' }],
- * };
+ * // only check doc comments
+ * export default customizePlugin({ tags: { '*': false, 'comment.block.doc': true } }).defineConfig();
  * ```
  */
-export function customizePlugin(options: CustomizePluginOptions): CSpellPlugin {
-  return customizeParserPlugin(plugin, options);
+export function customizePlugin(options?: CustomizePluginExOptions): IPluginBuilder;
+/** @deprecated Rename the parser with `customizePlugin().renameParser(...)` instead of `name`. */
+export function customizePlugin(options: CustomizeParserOptions): IPluginBuilder;
+export function customizePlugin(options?: CustomizePluginExOptions | CustomizeParserOptions): IPluginBuilder {
+  return customizePluginEx(plugin, options);
 }
