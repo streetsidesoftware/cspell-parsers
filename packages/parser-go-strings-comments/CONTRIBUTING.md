@@ -8,23 +8,24 @@ file only covers what's specific to this package's parsing logic.
 ## Shape of the parser
 
 This parser is a single hand-written scanner (`Scanner`, a small stateful class holding a mutable cursor `i`
-over `content`). There's no AST and no tokenizer for the language as a whole - `Scanner.run` walks `content`
-character by character, recognizing only the handful of constructs that matter (comments and strings).
-Everything between them (identifiers, keywords, punctuation, numbers) is emitted as a `code` segment. `code`
-is `false` in `tags`, so the default filter built by `createPluginParserWithFilterTags` drops it, and a user
-can turn it back on with `customizePlugin`.
+over `content`). There's no AST and no tokenizer for the language as a whole - `Scanner.scanTagged` walks
+`content` character by character, recognizing only the handful of constructs that matter (comments and
+strings). The `run` method wraps it with `createCodeTagsEmitter`, which emits everything between them
+(identifiers, keywords, punctuation, numbers) as a `code` segment. `code` is `false` in `tags`, so the default
+filter built by `createPluginParserWithFilterTags` drops it, and a user can turn it back on with
+`customizePlugin`.
 
-### `run`'s single loop
+### `scanTagged`'s single loop
 
 Unlike the JS/TS-family scanner (which recurses into `${...}` interpolation holes) or the combined package's
 `scanCode` (which also has to stop at PHP's `?>`), Go has no interpolation and no code/markup mode switch, so
-`run` is a single flat loop with no recursion and no "stop early" exit condition at all - it just walks to the
+`scanTagged` is a single flat loop with no recursion and no "stop early" exit condition at all - it just walks to the
 end of `content` once.
 
 ### Emitting a segment
 
 Every scan method (`scanLineComment`, `scanBlockComment`, `scanQuotedString`, `scanGoRawString`) returns
-exactly one `ParsedText` built from a `[start, end)` range it already knows, and `run` `yield`s it directly -
+exactly one `ParsedText` built from a `[start, end)` range it already knows, and `scanTagged` `yield`s it directly -
 no construct in Go ever splits into multiple fragments (there's no template-literal-style interpolation), so
 there's no `emitFragment`-style helper and no need for any scan method itself to be a generator.
 
@@ -77,7 +78,7 @@ no module-specifier detection, and no template-literal interpolation:
   ordinary string), so there's no `/` ambiguity to resolve and no `isDivisionContext`/`canPrecedeString`/
   `sawSlash` machinery needed.
 - **No interpolation in any string form.** A rune literal, an interpreted string, and a raw string are each
-  scanned start-to-close in one pass with no recursive call back into `run` - unlike a JS/TS template literal
+  scanned start-to-close in one pass with no recursive call back into `scanTagged` - unlike a JS/TS template literal
   or a C# interpolated string, which both have to stop scanning at each `{`/`${` hole, recurse, and resume.
 - **The raw string's closing delimiter is unambiguous.** Go's grammar disallows a literal backtick inside a
   raw string entirely, so `scanGoRawString` can just find the next backtick with `indexOf` - no escape
@@ -107,4 +108,4 @@ To start a new parser package, copy `src/parser.ts`, `src/plugin.ts`, `src/index
 into a new package under `packages/` and replace the parsing logic with your own. See the repo root
 `CONTRIBUTING.md` for the full steps.
 
-<!-- cspell:ignore godoc gofmt Trakcs -->
+<!-- cspell:ignore godoc gofmt -->
