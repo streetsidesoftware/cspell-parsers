@@ -21,8 +21,8 @@ API. Generated names are names the user has to work out and type, which is the s
   used for, since cspell selects parsers only by name.
 - A plugin's file types aren't stored. They are the set of its parsers' file types.
 - Several parsers may list the same file type. The **recommended parser** for a file type is the last one in
-  `parsers` order that lists it, matching cspell's last-one-wins rule. `recommended` and `languageSettings()`
-  are generated from that, never stored.
+  `parsers` order that lists it, matching cspell's last-one-wins rule. Both `recommended` and
+  `languageSettings()` are generated from that, never stored.
 - A parser with no file types stays in the plugin, still usable by name. Only `removeParser` removes one.
 
 ## Consequences

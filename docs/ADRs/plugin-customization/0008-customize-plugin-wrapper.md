@@ -9,8 +9,8 @@ per-language packages take `customizePlugin({ name?, tags? })`. The `parser-stri
 `customizePlugin(fileType, options)`, keeping only the parsers for `fileType`, and also has
 `getParser(fileType?)`/`getParserName(fileType?)`, which look parsers up by file type.
 
-The options were to remove `customizePlugin`, keep it as a wrapper, or deprecate it until the fold. `name`
-doesn't fit a plugin with several parsers, since they can't share one name
+The options were to remove `customizePlugin`, keep it as a wrapper, or deprecate it until the fold. The `name`
+option doesn't fit a plugin with several parsers, since they can't share one name
 ([0005](./0005-builder-operations.md)).
 
 ## Decision
@@ -34,7 +34,7 @@ export function customizePlugin(options: CustomizeParserOptions): IPluginBuilder
   applies `tags`. With several, it throws and points to `renameParser`.
 - The bundle has the same signature. Its old `(fileType, options)` form is a further `@deprecated` overload
   that reproduces today's result: it removes the parsers that don't list `fileType`, narrows the rest to
-  `fileType`, and applies `tags`. `'*'` keeps every parser and ignores `name`.
+  `fileType`, and applies `tags`. Passing `'*'` keeps every parser and ignores `name`.
 - Each package's `createParser(options)` (the `./parser` subpath) stays as a `@deprecated` wrapper that
   returns an `IParserEx`, built through the plugin's builder. It points to `plugin.customize()` and is
   removed at the fold.

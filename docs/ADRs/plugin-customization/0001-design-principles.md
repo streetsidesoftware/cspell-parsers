@@ -4,7 +4,7 @@ Status: Accepted
 
 ## Context
 
-This repo exists so cspell users can control what gets spell checked. `IPlugin` and `IParser` in
+This repo exists so cspell users can control what gets spell checked. The `IPlugin` and `IParser` types in
 `@internal/utils` grew ad hoc as packages were added, and hit scaling and consistency problems. Redesigning
 them could start from the types, or from what a user writes in their config.
 

@@ -1,9 +1,9 @@
 # Plugin customization
 
-`IPlugin`/`IParser` in `@internal/utils` grew ad hoc as parser packages were added. This feature replaces
-them with a deliberate model: each package exports an immutable `IPluginEx`, and users customize it through
-an `IPluginBuilder` to rename, duplicate, add, or remove parsers, change their file types, and filter their
-tags. The new types live alongside the old ones during the migration, then get folded back into
+The `IPlugin`/`IParser` types in `@internal/utils` grew ad hoc as parser packages were added. This feature
+replaces them with a deliberate model: each package exports an immutable `IPluginEx`, and users customize it
+through an `IPluginBuilder` to rename, duplicate, add, or remove parsers, change their file types, and filter
+their tags. The new types live alongside the old ones during the migration, then get folded back into
 `IPlugin`/`IParser`.
 
 ## Decisions

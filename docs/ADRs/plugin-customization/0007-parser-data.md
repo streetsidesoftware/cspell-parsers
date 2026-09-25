@@ -15,7 +15,7 @@ packages' parsers. A hidden `Symbol.for` key was considered and rejected in favo
 
 ## Decision
 
-`IParserEx` is read-only data with no customization methods:
+An `IParserEx` is read-only data with no customization methods:
 
 - `name`, `supportedFileTypes`, and `tags` (the author's defaults);
 - `parse`, the filtered function cspell calls;
@@ -27,8 +27,8 @@ Private fields keep the original `_parse` and `tags`, alongside the current name
 produces the `IParserEx` that cspell sees, compiling the filter against the originals. A parser from any
 package is read into this class through its public data.
 
-`parseDocument` isn't supported. It's a future cspell feature, no parser here implements it, and the builder
-doesn't pass it through.
+The `parseDocument` method isn't supported. It's a future cspell feature, no parser here implements it, and
+the builder doesn't pass it through.
 
 ## Consequences
 

@@ -40,7 +40,7 @@ b.filterTags(b.parserNamesFor('php'), { '*': false, comment: true });
 
 **Errors.** A duplicate, rename, or add that reuses a name already in the builder throws. An unknown name in
 any target, or in `getParser` or `languageSettingsFor`, throws with the list of existing names, before any
-change is made. `'*'` on a plugin with no parsers does nothing.
+change is made. A `'*'` target on a plugin with no parsers does nothing.
 
 ## Consequences
 
@@ -54,4 +54,4 @@ change is made. `'*'` on a plugin with no parsers does nothing.
   JS config reached through a YAML `import`, so no extra `console.error` is needed.
 - `'*'` can't be a parser name, and neither can `''`.
   A parser with an empty name can't be selected, so an empty rename would silently switch it off.
-  `removeParser` is the explicit way to do that.
+  Use `removeParser` to do that explicitly.

@@ -32,11 +32,11 @@ Each package exports an immutable **`IPluginEx`**. Nothing on it looks like a ch
 | `languageSettingsForFileType(fileType)` | Entries for only the given file types, each to the last parser that lists it        |
 | `customize(name?)`                      | A new `IPluginBuilder` seeded from this plugin, optionally with a new plugin name   |
 
-`languageSettingsFor(target)` takes the same target as the builder methods
+The `languageSettingsFor(target)` form takes the same target as the builder methods
 ([0005](./0005-builder-operations.md)) and emits entries in parser order, with no file type mapped twice.
 Explicit file types go with a single name only, and may include types the parser doesn't list, e.g. `astro`,
-since the user is being explicit. `languageSettingsForFileType` takes a file type, a list, or `'*'`, and never
-maps a file type it wasn't asked for.
+since the user is being explicit. The `languageSettingsForFileType` method takes a file type, a list, or
+`'*'`, and never maps a file type it wasn't asked for.
 
 Input the plugin doesn't know throws: an unknown parser name, or a file type no parser lists. Valid input
 that maps to nothing (an empty target, a parser with no file types) returns `[]`, so callers never need to
@@ -44,10 +44,10 @@ check before spreading the result into `languageSettings`.
 
 **`IPluginBuilder`** has the same read-only members, plus the customization methods
 ([0005](./0005-builder-operations.md), [0006](./0006-tag-filtering.md)). Each method changes the builder and
-returns it, so calls chain or stand as separate statements. A builder works directly as a plugin.
-`build()` returns an immutable `IPluginEx` snapshot that later calls don't affect, and `customize()` forks
-the builder, e.g. for a renamed, filtered copy used under `overrides` for legacy files. The plugin's own name
-is set with `customize(name)` or `setName(name)`.
+returns it, so calls chain or stand as separate statements. A builder works directly as a plugin. Calling
+`build()` returns an immutable `IPluginEx` snapshot that later calls don't affect, and `customize()` forks the
+builder, e.g. for a renamed, filtered copy used under `overrides` for legacy files. The plugin's own name is
+set with `customize(name)` or `setName(name)`.
 
 ```js
 import { plugin } from '@cspell/parser-typescript/plugin';
