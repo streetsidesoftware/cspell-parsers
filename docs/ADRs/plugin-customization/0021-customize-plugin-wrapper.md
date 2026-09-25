@@ -32,7 +32,9 @@ export function customizePlugin(options: CustomizeParserOptions): IPluginBuilder
 - `customizePlugin()` is the same as `plugin.customize()`.
 - `customizePlugin({ tags })` is the same as `plugin.customize().filterTags('*', tags)`.
 - Passing `name` selects the deprecated overload (the old `CustomizeParserOptions`, with `name?: string`),
-  so editors flag it as deprecated.
+  so editors flag it as deprecated. On a plugin with exactly one parser, it renames that parser
+  (`renameParser`) and then applies `tags`. On a plugin with several parsers, it throws, and the error
+  points to `renameParser`.
 
 ## Consequences
 
@@ -40,5 +42,6 @@ export function customizePlugin(options: CustomizeParserOptions): IPluginBuilder
   further in the same chain.
 - `name` is on its way out. Renaming goes through `renameParser`.
 - The return type changes from `CSpellPlugin` to `IPluginBuilder`, which is still usable as a plugin.
-- Still to decide: what the deprecated overload does with `name` on a plugin with several parsers, and how
-  the `parser-strings-comments` bundle's `customizePlugin(fileType, options)` fits.
+- Every existing per-language config that renames keeps working, since each of those plugins has one
+  parser.
+- Still to decide: how the `parser-strings-comments` bundle's `customizePlugin(fileType, options)` fits.
