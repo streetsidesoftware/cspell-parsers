@@ -66,12 +66,7 @@ what gets checked. For example, to check only doc comments:
 import { customizePlugin } from '@cspell/parser-example/plugin';
 
 // Check only doc comments.
-const customPlugin = customizePlugin({ tags: { '*': false, 'comment.block.doc': true } });
-
-export default {
-  plugins: [customPlugin],
-  languageSettings: customPlugin.languageSettings(),
-};
+export default customizePlugin({ tags: { '*': false, 'comment.block.doc': true } }).defineConfig();
 ```
 
 <!--- @@inject-end: samples/customize/cspell.config.mts#lang=ts --->
@@ -82,8 +77,8 @@ export default {
 > also matches the more specific `comment.block.doc`, unless a more specific key overrides it. A key can also
 > use `*` as a wildcard, such as `comment.*`, or a bare `*` for everything not otherwise matched.
 
-Calling `customizePlugin` gives you a customized copy of the plugin. You can add it to `plugins` straight
-away, or keep adjusting it first. For example, to give the parser a different name:
+Calling `customizePlugin` gives you a customized copy of the plugin. Call `defineConfig()` on it to get a
+complete cspell config, or keep adjusting it first. For example, to give the parser a different name:
 
 ```js
 customizePlugin().renameParser('c-style-comments', 'my-c-parser');
