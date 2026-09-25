@@ -22,6 +22,7 @@ renaming, duplicating, tag-filtering, and adjusting the file types of its parser
 | 0011 | A parser's file types only feed `languageSettings` generation; a parser with none is kept | Accepted |
 | 0012 | `filterTags` replaces a parser's filter; filters are never chained                        | Accepted |
 | 0013 | `duplicateParser` copies the original's current state                                     | Accepted |
+| 0014 | A renamed parser keeps its position                                                       | Accepted |
 
 ## Open questions
 
