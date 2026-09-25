@@ -49,7 +49,7 @@ Each parser package exports a plugin, and the plugin comes with recommended sett
 | `languageSettingsFor(target)`           | Entries for the targeted parsers (last targeted parser wins)                                       |
 | `languageSettingsFor(name, fileTypes?)` | Entries mapping `fileTypes` (default: the parser's own) to the named parser                        |
 | `languageSettingsForFileType(fileType)` | Entries for only the given file types (throws if no parser lists one)                              |
-| `customize()`                           | A new `IPluginBuilder`                                                                             |
+| `customize(name?)`                      | A new `IPluginBuilder`, optionally with a new plugin name                                          |
 
 ## What users do with a plugin
 
