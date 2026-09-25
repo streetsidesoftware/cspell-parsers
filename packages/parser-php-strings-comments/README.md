@@ -80,7 +80,7 @@ Calling `customizePlugin` gives you a customized copy of the plugin. You can add
 away, or keep adjusting it first. For example, to give the parser a different name:
 
 ```js
-customizePlugin({ tags: { '*': false, comment: true } }).renameParser('php-strings-comments', 'php-comments-only');
+customizePlugin().renameParser('php-strings-comments', 'my-php-parser');
 ```
 
 ## Checking HTML and code
