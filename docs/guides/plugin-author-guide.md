@@ -62,20 +62,14 @@ snapshot. Calling `defineConfig()` on it gives a complete config.
 **`cspell.config.mjs`**
 
 ```js
-import { defineConfig } from '@cspell/cspell-types';
 import { plugin } from '@cspell/parser-typescript/plugin';
 
-const custom = plugin
-  .customize()
-  .duplicateParser('typescript', 'js-comments')
-  .setFileTypes('js-comments', ['javascript', 'javascriptreact'])
-  .filterTags('js-comments', { '*': false, comment: true });
+// JavaScript files: check only comments. Astro files: use the typescript parser too.
+const custom = plugin.customize().filterTagsForFileType('javascript', { '*': false, comment: true }, 'js-comments');
 
-export default defineConfig(
-  custom.defineConfig({
-    languageSettings: custom.languageSettingsFor('typescript', ['astro']),
-  }),
-);
+export default custom.defineConfig({
+  languageSettings: custom.languageSettingsFor('typescript', ['astro']),
+});
 ```
 
 What users can rely on:
