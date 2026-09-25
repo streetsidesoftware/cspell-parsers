@@ -98,17 +98,22 @@ describe('languageSettings', () => {
     expect(() => plugin.languageSettingsFor('go', ['go'])).toThrow('Unknown parser "go"');
   });
 
-  it('languageSettingsFor accepts a list of names or "*", in parser order', () => {
-    const plugin = mkPlugin();
-    expect(plugin.languageSettingsFor('*')).toEqual([
+  it('languageSettingsFor accepts a list of names or "*", each file type going to the last targeted parser', () => {
+    const b = mkPlugin().customize().duplicateParser('typescript', 'ts2').setFileTypes('ts2', ['typescript']);
+    expect(b.languageSettingsFor('*')).toEqual(b.languageSettings());
+    expect(b.languageSettingsFor(['ts2', 'typescript'])).toEqual([
+      { languageId: 'javascript', parser: 'typescript' },
+      { languageId: 'typescript', parser: 'ts2' },
+    ]);
+    expect(b.languageSettingsFor('typescript')).toEqual([
       { languageId: 'javascript,typescript', parser: 'typescript' },
-      { languageId: 'php', parser: 'php' },
     ]);
-    expect(plugin.languageSettingsFor(['php', 'typescript'], ['astro'])).toEqual([
-      { languageId: 'astro', parser: 'typescript' },
-      { languageId: 'astro', parser: 'php' },
-    ]);
-    expect(plugin.languageSettingsFor([])).toEqual([]);
+    expect(b.languageSettingsFor([])).toEqual([]);
+  });
+
+  it('languageSettingsFor only takes explicit fileTypes with a single name', () => {
+    const plugin = mkPlugin();
+    expect(() => plugin.languageSettingsFor('*', ['astro'])).toThrow('Explicit fileTypes need a single parser name.');
   });
 
   it('parserNamesFor lists every parser for a file type, in order', () => {

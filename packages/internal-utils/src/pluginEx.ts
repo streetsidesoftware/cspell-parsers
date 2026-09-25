@@ -65,21 +65,26 @@ abstract class PluginExQueries implements IPluginExBase {
   }
 
   languageSettings(): RecommendedLanguageSettings {
-    const lastParserFor = new Map<string, string>();
-    for (const def of this.defs) {
-      for (const fileType of def.fileTypes) lastParserFor.set(fileType, def.name);
-    }
-    return this.defs
-      .map((def) => ({ def, fileTypes: def.fileTypes.filter((fileType) => lastParserFor.get(fileType) === def.name) }))
-      .filter(({ fileTypes }) => fileTypes.length)
-      .map(({ def, fileTypes }) => ({ languageId: fileTypes.join(','), parser: def.name }));
+    return this.languageSettingsFor('*');
   }
 
+  languageSettingsFor(target: ParserTarget): RecommendedLanguageSettings;
+  languageSettingsFor(name: string, fileTypes?: readonly string[]): RecommendedLanguageSettings;
   languageSettingsFor(target: ParserTarget, fileTypes?: readonly string[]): RecommendedLanguageSettings {
+    if (fileTypes) {
+      if (typeof target !== 'string' || target === '*')
+        throw new Error('Explicit fileTypes need a single parser name.');
+      this.findDef(target);
+      return fileTypes.length ? [{ languageId: fileTypes.join(','), parser: target }] : [];
+    }
     const names = this.resolveTarget(target);
-    return this.defs
-      .filter((def) => names.has(def.name))
-      .map((def) => ({ def, types: fileTypes ?? def.fileTypes }))
+    const defs = this.defs.filter((def) => names.has(def.name));
+    const lastParserFor = new Map<string, string>();
+    for (const def of defs) {
+      for (const fileType of def.fileTypes) lastParserFor.set(fileType, def.name);
+    }
+    return defs
+      .map((def) => ({ def, types: def.fileTypes.filter((fileType) => lastParserFor.get(fileType) === def.name) }))
       .filter(({ types }) => types.length)
       .map(({ def, types }) => ({ languageId: types.join(','), parser: def.name }));
   }
