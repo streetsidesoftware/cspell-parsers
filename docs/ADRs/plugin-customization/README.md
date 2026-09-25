@@ -20,6 +20,7 @@ renaming, duplicating, tag-filtering, and adjusting the file types of its parser
 | 0009 | A duplicate or rename that reuses an existing parser name throws                          | Accepted |
 | 0010 | An unknown parser name throws                                                             | Accepted |
 | 0011 | A parser's file types only feed `languageSettings` generation; a parser with none is kept | Accepted |
+| 0012 | `filterTags` replaces a parser's filter; filters are never chained                        | Accepted |
 
 ## Open questions
 
