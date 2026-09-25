@@ -37,7 +37,8 @@ plugin in yourself and choose the language IDs to use it for:
 
 ## Supported file types
 
-The plugin provides these parsers. Where Recommended is `yes`, `recommended` enables the named parser for files with that Language ID:
+The plugin provides these parsers. Where Recommended is `yes`, `recommended` enables the named parser for
+files with that Language ID:
 
 <!--- @@inject: docs/language-id-n-parser-name.csv --->
 
@@ -50,7 +51,7 @@ The plugin provides these parsers. Where Recommended is `yes`, `recommended` ena
 
 <!--- @@inject-end: docs/language-id-n-parser-name.csv --->
 
-### Filtering by tag and file type
+## Filtering by tag and file type
 
 By default, every comment and string is spell checked. Use `customizePlugin` to change what gets checked.
 See also: [Customization options](#customization-options)
@@ -79,7 +80,8 @@ export default {
 
 **NOTE:**
 
-> Keys in `tags` are used to filter the text sent to the spell checker. They are matched hierarchically against the [tags](#tags) below.
+> Keys in `tags` are used to filter the text sent to the spell checker. They are matched hierarchically
+> against the [tags](#tags) below.
 
 Both `customizePlugin` and `plugin.customize()` give you a customized copy of the plugin. You can add it to
 `plugins` straight away, or keep adjusting it first. For example, the next config checks TypeScript files as
@@ -112,8 +114,8 @@ export default {
 **NOTE:**
 
 > The `tags` key `comment` also matches the more specific `comment.line`, `comment.block`, and
-> `comment.block.doc`, unless a more specific key overrides it. See: [`CustomizePluginOptions`](#customizepluginoptions)
-> and [`TagFilterOptions`](#tagfilteroptions) below.
+> `comment.block.doc`, unless a more specific key overrides it. See:
+> [`CustomizePluginOptions`](#customizepluginoptions) and [`TagFilterOptions`](#tagfilteroptions) below.
 
 **What is `js-comments-only`?**
 
@@ -143,7 +145,7 @@ needs.
 | `string.doubleQuote`        | A `"..."` string literal                                                                                                    |
 | `string.singleQuote.module` | A `'...'` string literal that is also a module specifier                                                                    |
 | `string.doubleQuote.module` | A `"..."` string literal that is also a module specifier                                                                    |
-| `string.templateLiteral`    | A literal text fragment of a template string (`` `...` ``), excluding `${...}` holes                                        |
+| `string.templateLiteral`    | A literal text fragment of a template string (`` `...` ``), excluding `${...}` expressions                                  |
 | `module`                    | Any module specifier string                                                                                                 |
 | `module.specifier`          | Any module specifier string (same as `module`, for a more specific filter)                                                  |
 | `module.specifier.literal`  | The module specifier string of an `import`/`export ... from` statement, a dynamic `import('...')`, or a `require(...)` call |
