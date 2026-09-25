@@ -7,14 +7,12 @@ file only covers what's specific to this package's parsing logic.
 
 ## Shape of the parser
 
-Like `@cspell/parser-go-strings-comments` and `@cspell/parser-csharp-strings-comments`, this parser is a
-single hand-written scanner (`Scanner`, a small stateful class holding a mutable cursor `i` over `content`).
-There's no AST and no tokenizer for the language as a whole - `Scanner.run` walks `content` character by
-character, recognizing only the handful of constructs that matter (comments and strings) and silently
-advancing `i` past everything else. Since cspell only ever checks what's inside `parsedTexts`, this is how
-the parser excludes syntax noise: by never emitting it, not by filtering it out afterwards - the same
-approach `@cspell/parser-example` uses. Char literals and lifetimes get no special handling at all - see
-"Char literals and lifetimes" below.
+This parser is a single hand-written scanner (`Scanner`, a small stateful class holding a mutable cursor `i`
+over `content`). There's no AST and no tokenizer for the language as a whole - `Scanner.run` walks `content`
+character by character, recognizing only the handful of constructs that matter (comments and strings).
+Everything between them is emitted as a `code` segment. `code` is `false` in `tags`, so the default filter
+built by `createPluginParserWithFilterTags` drops it, and a user can turn it back on with `customizePlugin`.
+Char literals and lifetimes get no special handling at all - see "Char literals and lifetimes" below.
 
 Rust has no template-literal-style interpolation, so unlike the JS/TS-family scanner in this repo, `run()`
 doesn't need a recursive `scanCode(end, stopAtUnmatchedBrace)` helper - it's a single flat loop, and every
@@ -195,10 +193,10 @@ for the actual filtering logic.
   non-matching `#`-run that must not close a longer-delimited raw string early, plus a `cr#"..."#` C raw
   string.
 - `samples/` is a real end-to-end check: actual cspell configs plus real source files, run by
-  `pnpm run test:cspell`. `samples/customize` proves the `customizePlugin` tag filter does something real
-  (a genuine misspelling in a segment the filter excludes) - sanity-checked by temporarily swapping in the
-  plain `plugin` and confirming `cspell .` fails without the filter, the way
-  `packages/parser-typescript/samples/customize` does.
+  `pnpm run test:cspell`. `samples/customize` proves the `customizePlugin` tag filter does something real (a
+  genuine misspelling in a segment the filter excludes). Check it both ways: run cspell with the sample's config
+  and with `plugin.defineConfig()`, each with `--no-config-search`, so the sample's own config doesn't apply to
+  both runs.
 
 If you change the block-comment nesting logic or the char-literal special case, verify your test actually
 catches a regression: temporarily break it, confirm the relevant test fails, then restore the fix.
