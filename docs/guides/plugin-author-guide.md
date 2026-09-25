@@ -64,7 +64,8 @@ snapshot. Calling `defineConfig()` on it gives a complete config.
 ```js
 import { plugin } from '@cspell/parser-typescript/plugin';
 
-// JavaScript files: check only comments. Astro files: use the typescript parser too.
+// JavaScript files: check only comments.
+// Astro files: use the typescript parser too.
 const custom = plugin.customize().filterTagsForFileType('javascript', { '*': false, comment: true }, 'js-comments');
 
 export default custom.defineConfig({
