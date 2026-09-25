@@ -1,7 +1,8 @@
 # @cspell/parser-go-strings-comments
 
-A cspell plugin that spell checks only the comments and string literals in Go files, leaving identifiers,
-keywords, and the rest of the code alone.
+A lightweight Go parser for [cspell](https://cspell.org) that spell checks the prose in your code: comments and
+strings. It has no dependencies, and it gives you control over what gets checked, from comments to rune and raw
+string literals.
 
 ## Usage
 
@@ -20,8 +21,8 @@ selects it for every supported file type:
 
 <!--- @@inject-end: samples/recommended/cspell.config.jsonc#lang=jsonc --->
 
-For more control - for example, to apply it alongside other settings - wire the plugin in yourself and
-choose the language IDs to use it for:
+For more control - for example, to apply it alongside other settings - wire the plugin in yourself and choose
+the language IDs to use it for:
 
 **`cspell.config.jsonc`**
 
@@ -43,7 +44,8 @@ choose the language IDs to use it for:
 
 ## Supported file types
 
-The plugin provides these parsers. Where Recommended is `yes`, `recommended` enables the named parser for files with that Language ID:
+The plugin provides these parsers. Where Recommended is `yes`, `recommended` enables the named parser for
+files with that Language ID:
 
 <!--- @@inject: docs/language-id-n-parser-name.csv --->
 
@@ -53,48 +55,41 @@ The plugin provides these parsers. Where Recommended is `yes`, `recommended` ena
 
 <!--- @@inject-end: docs/language-id-n-parser-name.csv --->
 
-### Filtering by tag and file type
+## Filtering by tag
 
-By default every comment/string the parser emits gets spell checked. Use `customizePlugin` to change what is sent on to the spell checker.
-See also: [Customization options](#customization-options)
+By default, every comment and string is spell checked, and the rest of the code isn't. Use `customizePlugin`
+to change what gets checked. For example, to check only string and rune literals, and skip comments:
 
 **`cspell.config.ts`** or **`cspell.config.mjs`**
 
-```js
+<!--- @@inject: samples/customize/cspell.config.mts#lang=ts --->
+
+```ts
 import { customizePlugin } from '@cspell/parser-go-strings-comments/plugin';
 
-const customPlugin = customizePlugin({
-  // set the parser name to be used in languageSettings
-  name: 'go-strings-only',
-  tags: { '*': false, string: true }, // only check string/rune literals
-});
-
-export default {
-  plugins: [customPlugin],
-  languageSettings: [
-    {
-      // select the customized parser by name, for go files only
-      languageId: 'go',
-      parser: 'go-strings-only',
-    },
-  ],
-};
+// Check only string and rune literals, not comments.
+export default customizePlugin({ tags: { '*': false, string: true } }).defineConfig();
 ```
 
-**NOTE:**
-
-> `name` overrides the parser's registered name (`go-strings-comments` by default). This matters when
-> registering more than one customized copy of this parser, since cspell selects a parser by name and two
-> parsers can't share one.
+<!--- @@inject-end: samples/customize/cspell.config.mts#lang=ts --->
 
 **NOTE:**
 
-> `tags` keys are matched hierarchically against the [tags](#tags) below.
->
-> The key `string` also matches the more specific
-> `string.singleQuote` unless a more specific key overrides it. See: [`CustomizePluginOptions`](#customizepluginoptions) and [`TagFilterOptions`](#tagfilteroptions) below.
+> Keys in `tags` are matched hierarchically against the [tags](#tags) below. For example, the key `string`
+> also matches the more specific `string.raw`, unless a more specific key overrides it. A key can also use
+> `*` as a wildcard, such as `comment.*`, or a bare `*` for everything not otherwise matched.
+
+Calling `customizePlugin` gives you a customized copy of the plugin. Call `defineConfig()` on it to get a
+complete cspell config, or keep adjusting it first. For example, to give the parser a different name:
+
+```js
+customizePlugin().renameParser('go-strings-comments', 'my-go-parser');
+```
 
 ## Tags
+
+Each part of a file gets its most specific tag plus the more general ones above it. For example, a raw string
+is tagged `string.raw` and `string`, so a filter can use whichever level it needs.
 
 <!--- @@inject: docs/tags-table.csv#markdown --->
 
@@ -114,44 +109,34 @@ export default {
 
 ### The `code` tag
 
-By default, text tagged `code` is not spell checked. To check it too, use `customizePlugin`:
+By default, keywords, identifiers, and everything else tagged `code` aren't spell checked. To check them too:
 
 **`cspell.config.ts`** or **`cspell.config.mjs`**
 
-```js
+<!--- @@inject: samples/check-code/cspell.config.mts#lang=ts --->
+
+```ts
 import { customizePlugin } from '@cspell/parser-go-strings-comments/plugin';
 
-export default {
-  plugins: [customizePlugin({ tags: { code: true } })],
-  languageSettings: [
-    {
-      languageId: 'go',
-      parser: 'go-strings-comments',
-    },
-  ],
-};
+// Also check code, such as identifiers and keywords.
+export default customizePlugin({ tags: { code: true } }).defineConfig();
 ```
+
+<!--- @@inject-end: samples/check-code/cspell.config.mts#lang=ts --->
 
 ## Customization options
 
-The customization options have two purposes:
-
-- Change the name of the registered parser (not the plugin's own name)
-- Set up a `tags` filter to specify what is passed to the spell checker based upon
-  the attributed tags.
+Use `customizePlugin(options)` to control which parts of a file get spell checked, based on the [tags](#tags)
+the parser gives each part.
 
 ### `CustomizePluginOptions`
 
 ```ts
 interface CustomizePluginOptions {
   /**
-   * Set the name of the parser. Does not change the plugin's own name.
+   * Define which tagged segments to keep.
    */
-  name?: string;
-  /**
-   * Define which tagged segments to keep. Omit to keep the parser's own defaults (`code` excluded).
-   */
-  tags?: TagFilterOptions;
+  tags: TagFilterOptions;
 }
 ```
 
@@ -171,21 +156,19 @@ const option = { tags: { '*': true, code: false } };
 
 **Only comments**
 
-Change the parser `name` to `only-comments` and allow only comments.
-
 ```ts
-const option = { name: 'only-comments', tags: { '*': false, comment: true } };
+const option = { tags: { '*': false, comment: true } };
 ```
 
-**Turn off `comment.block.doc`**
+**Turn off raw strings**
 
 ```ts
-const option = { tags: { 'comment.block.doc': false } };
+const option = { tags: { 'string.raw': false } };
 ```
 
 ### `TagFilterOptions`
 
-`TagFilterOptions` are used to set the filter criteria for the text sent to the spell checker.
+Use `TagFilterOptions` to set the filter criteria for the text sent to the spell checker.
 
 The values are inherited hierarchically
 
@@ -215,11 +198,6 @@ interface TagFilterOptions {
   [tag: TagPattern]: boolean | undefined;
 }
 ```
-
-## Known limitations
-
-This parser is a small hand-written scanner, not a real grammar. It doesn't build an AST, so it can't tell
-you anything about what a string or comment is being used for - only where it is and how it was delimited.
 
 ## Requirements
 
