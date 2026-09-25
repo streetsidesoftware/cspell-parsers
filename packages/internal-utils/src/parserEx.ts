@@ -45,7 +45,7 @@ export class ParserDef {
     this.#parse = parse;
     this.fileTypes = Object.freeze([...new Set(fileTypes)]);
     this.#tags = Object.isFrozen(tags) ? tags : Object.freeze({ ...tags });
-    this.filterTags = filterTags && Object.keys(filterTags).length ? Object.freeze({ ...filterTags }) : undefined;
+    this.filterTags = normalizeFilterTags(filterTags);
   }
 
   /** Reads any package's `IParserEx` through its public data. */
@@ -83,4 +83,13 @@ export class ParserDef {
       ...(filterTags ? { filterTags } : {}),
     });
   }
+}
+
+/** Drops `undefined` entries, which the matcher ignores; `undefined` when nothing is left, meaning the defaults apply. */
+function normalizeFilterTags(
+  filterTags: Readonly<TagFilterOptions> | undefined,
+): Readonly<TagFilterOptions> | undefined {
+  if (!filterTags) return undefined;
+  const entries = Object.entries(filterTags).filter(([, value]) => value !== undefined);
+  return entries.length ? Object.freeze(Object.fromEntries(entries)) : undefined;
 }

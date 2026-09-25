@@ -137,7 +137,7 @@ export interface IPluginExBase {
   /** The parsers, in order. A new array on every read. */
   readonly parsers: IParserEx[];
   /** The set of the parsers' file types, in parser order. */
-  readonly supportedFileTypes: string[];
+  readonly supportedFileTypes: readonly string[];
   /** The parser names, in order. */
   parserNames(): string[];
   /** Throws if there's no parser with that name. */

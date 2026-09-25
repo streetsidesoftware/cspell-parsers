@@ -44,7 +44,7 @@ abstract class PluginExQueries implements IPluginExBase {
     return new PluginBuilder(name ?? this.name, this.defs);
   }
 
-  get supportedFileTypes(): string[] {
+  get supportedFileTypes(): readonly string[] {
     return [...new Set(this.defs.flatMap((def) => def.fileTypes))];
   }
 

@@ -258,6 +258,13 @@ describe('filterTags', () => {
     expect(texts(b.getParser('php'))).toEqual(['comment']);
   });
 
+  it('ignores undefined entries, so options that change nothing leave filterTags absent', () => {
+    const b = mkPlugin().customize().filterTags('php', { comment: undefined, '*': undefined });
+    expect(b.getParser('php').filterTags).toBeUndefined();
+    b.filterTags('php', { comment: undefined, string: false });
+    expect(b.getParser('php').filterTags).toEqual({ string: false });
+  });
+
   it('{} resets to the defaults from tags', () => {
     const b = mkPlugin().customize().filterTags('php', { '*': false }).filterTags('php', {});
     expect(texts(b.getParser('php'))).toEqual(['comment', 'string']);
