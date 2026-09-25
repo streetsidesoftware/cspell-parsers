@@ -21,8 +21,9 @@ parser objects, under the same names.
 - A config that sends `javascriptreact` to `javascript` still works, since the JavaScript grammar handles JSX
   ([0003](./0003-grammars.md)).
 - The package stays a thin wrapper. Its tags and filters come from `parser-typescript`.
-- It builds its plugin with the wrapped plugin's own builder, rather than with `@internal/utils` directly. It
-  keeps `javascript` and `javascriptreact` and removes every other parser, so a parser added to
-  `parser-typescript` later doesn't appear here. Each package bundles its own copy of `@internal/utils`, so a second copy would
-  wrap the parsers in new objects and add about 15 KB of JavaScript. `parser-typescript` builds its plugin from
-  the WASM backend's the same way.
+- It builds its plugin with the wrapped plugin's own builder, rather than with `@internal/utils` directly.
+  Each package bundles its own copy of `@internal/utils`, so a second copy would wrap the parsers in new
+  objects and add about 15 KB of JavaScript. `parser-typescript` builds its plugin from the WASM backend's the
+  same way.
+- It keeps `javascript` and `javascriptreact` and removes every other parser, so a parser added to
+  `parser-typescript` later doesn't appear here.
