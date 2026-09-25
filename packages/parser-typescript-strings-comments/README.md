@@ -83,7 +83,8 @@ check TypeScript files one way and JavaScript files another, give the second par
 ```ts
 import { plugin } from '@cspell/parser-typescript-strings-comments/plugin';
 
-// Check only comments in JavaScript files; TypeScript files keep the defaults.
+// JavaScript files: check only comments.
+// TypeScript files: keep the defaults.
 const customPlugin = plugin
   .customize()
   .duplicateParser('typescript-strings-comments', 'js-comments-only')

@@ -4,7 +4,8 @@ import type { IParser, IParserEx, IPlugin, IPluginExBase } from './types.ts';
 
 /**
  * Adapts a migrated plugin for code still on the old `IPlugin` API (the `parser-strings-comments` bundle).
- * Removed once every package has migrated; see docs/ADRs/plugin-customization/0002-compatibility-and-migration.md.
+ * Removed once every package has migrated.
+ * See docs/ADRs/plugin-customization/0002-compatibility-and-migration.md.
  */
 export function toLegacyPlugin(plugin: IPluginExBase): IPlugin {
   return {

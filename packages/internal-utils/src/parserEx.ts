@@ -4,7 +4,10 @@ import type { IParserEx, ParseFunction, ParserTags, TagFilterOptions } from './t
 
 export interface CreatePluginParserWithFilterTagsOptions {
   name: string;
-  /** The unfiltered parse; the default filter comes from `tags`. */
+  /**
+   * The unfiltered parse.
+   * The default filter comes from `tags`.
+   */
   parse: ParseFunction;
   supportedFileTypes: readonly string[];
   /** Every tag the parser can emit, `true` if it's checked by default. */
@@ -23,11 +26,16 @@ export interface ParserDefChanges {
 }
 
 /**
- * An immutable parser definition: the original `_parse` and `tags` held privately, plus the current name, file
- * types, and filter. Changes return a new definition; `parser` compiles the filter against the originals.
+ * An immutable parser definition.
+ * It keeps the original `_parse` and `tags` private, alongside the current name, file types, and filter.
+ * Changes return a new definition.
+ * `parser` compiles the current filter against the originals.
  */
 export class ParserDef {
-  /** Lets `ParserDef.from` return the same parser object, e.g. so a plugin's `parsers` include the exported `parser`. */
+  /**
+   * Maps each parser this module created back to its definition.
+   * `from` uses it to return the same parser object, so a plugin's `parsers` include the exported `parser`.
+   */
   static readonly #defsByParser = new WeakMap<IParserEx, ParserDef>();
 
   readonly #parse: ParseFunction;
@@ -51,7 +59,10 @@ export class ParserDef {
     this.filterTags = normalizeFilterTags(filterTags);
   }
 
-  /** Reads any package's `IParserEx` through its public data; one this module created maps back to its own definition. */
+  /**
+   * Reads any package's `IParserEx` through its public data.
+   * A parser this module created maps back to its own definition.
+   */
   static from(parser: IParserEx): ParserDef {
     return (
       ParserDef.#defsByParser.get(parser) ??
@@ -97,7 +108,10 @@ export class ParserDef {
   }
 }
 
-/** Drops `undefined` entries, which the matcher ignores; `undefined` when nothing is left, meaning the defaults apply. */
+/**
+ * Drops `undefined` entries, which the matcher ignores.
+ * Returns `undefined` when nothing is left, meaning the defaults apply.
+ */
 function normalizeFilterTags(
   filterTags: Readonly<TagFilterOptions> | undefined,
 ): Readonly<TagFilterOptions> | undefined {

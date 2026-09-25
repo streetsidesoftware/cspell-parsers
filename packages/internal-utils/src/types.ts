@@ -115,13 +115,22 @@ export interface IParserEx {
   readonly name: string;
   /** What cspell calls: `_parse` with the current tag filter applied. */
   readonly parse: ParseFunction;
-  /** The unfiltered parse. Plumbing for plugin builders. */
+  /**
+   * The unfiltered parse.
+   * Plumbing for plugin builders.
+   */
   readonly _parse: ParseFunction;
-  /** File types used to generate `languageSettings`; they don't restrict what the parser can be used for. */
+  /**
+   * File types used to generate `languageSettings`.
+   * They don't restrict what the parser can be used for.
+   */
   readonly supportedFileTypes: readonly string[];
   /** Every tag the parser can emit, `true` if it's checked by default. */
   readonly tags: Readonly<ParserTags>;
-  /** The tag filter compiled into `parse`; absent when the defaults from `tags` apply. */
+  /**
+   * The tag filter compiled into `parse`.
+   * Absent when the defaults from `tags` apply.
+   */
   readonly filterTags?: Readonly<TagFilterOptions>;
 }
 
@@ -134,7 +143,10 @@ export type FileTypeTarget = string | readonly string[];
 /** Read-only members shared by {@link IPluginEx} and {@link IPluginBuilder}. */
 export interface IPluginExBase {
   readonly name: string;
-  /** The parsers, in order. A new array on every read. */
+  /**
+   * The parsers, in order.
+   * A new array on every read.
+   */
   readonly parsers: IParserEx[];
   /** The set of the parsers' file types, in parser order. */
   readonly supportedFileTypes: readonly string[];
@@ -147,7 +159,10 @@ export interface IPluginExBase {
   parserNamesFor(fileType: string): string[];
   /** Same as `languageSettingsFor('*')`. */
   languageSettings(): RecommendedLanguageSettings;
-  /** `languageSettings` for the targeted parsers; each file type goes to the last targeted parser that lists it. */
+  /**
+   * `languageSettings` for the targeted parsers.
+   * Each file type goes to the last targeted parser that lists it.
+   */
   languageSettingsFor(target: ParserTarget): RecommendedLanguageSettings;
   /** `languageSettings` mapping `fileTypes` (default: the parser's own) to the named parser. */
   languageSettingsFor(name: string, fileTypes?: readonly string[]): RecommendedLanguageSettings;
@@ -156,11 +171,17 @@ export interface IPluginExBase {
    * Throws if no parser lists one of them.
    */
   languageSettingsForFileType(fileType: FileTypeTarget): RecommendedLanguageSettings;
-  /** A new builder, seeded from the current parsers, named `name` or this plugin's name. */
+  /**
+   * A new builder, seeded from the current parsers.
+   * It's named `name`, or this plugin's name by default.
+   */
   customize(name?: string): IPluginBuilder;
 }
 
-/** The immutable plugin a package exports. See docs/ADRs/plugin-customization/0004-immutable-plugin-and-builder.md. */
+/**
+ * The immutable plugin a package exports.
+ * See docs/ADRs/plugin-customization/0004-immutable-plugin-and-builder.md.
+ */
 export type IPluginEx = IPluginExBase;
 
 /**
