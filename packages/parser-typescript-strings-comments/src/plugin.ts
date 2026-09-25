@@ -11,8 +11,9 @@ export const plugin: IPluginEx = createPluginEx({ name: 'typescript-strings-comm
 export const recommendedLanguageSettings = plugin.languageSettings();
 
 /**
- * Customize {@link plugin}: choose which tagged segments get spell checked. Returns a builder, which works as a
- * plugin and can be customized further.
+ * Creates a customized copy of {@link plugin}.
+ * `options.tags` chooses which tagged segments get spell checked.
+ * The copy can be added to `plugins` as it is, or adjusted further first.
  *
  * **`cspell.config.mjs`**
  *

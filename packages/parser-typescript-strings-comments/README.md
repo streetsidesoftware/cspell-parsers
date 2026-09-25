@@ -75,9 +75,9 @@ export default {
 
 <!--- @@inject-end: samples/customize/cspell.config.mts#lang=ts --->
 
-`customizePlugin` and `plugin.customize()` return a builder. You can pass it to `plugins` as it is, or call
-more methods on it first. For example, this config checks TypeScript files as usual, but checks only the
-comments in JavaScript files:
+`customizePlugin` and `plugin.customize()` give you a customized copy of the plugin. You can add it to
+`plugins` straight away, or keep adjusting it first. For example, this config checks TypeScript files as
+usual, but checks only the comments in JavaScript files:
 
 <!--- @@inject: samples/customize-by-file-type/cspell.config.mts#lang=ts --->
 
@@ -184,8 +184,7 @@ export default {
 `customizePlugin(options)` controls which parts of a file get spell checked, based on the [tags](#tags) the
 parser gives each part. The filter applies to every parser in the plugin.
 
-It returns a builder, so you can keep customizing the result. For example, to give the parser a different
-name:
+You can keep adjusting the plugin it returns. For example, to give the parser a different name:
 
 ```js
 customizePlugin({ tags: { '*': false, comment: true } }).renameParser('typescript-strings-comments', 'my-parser');
