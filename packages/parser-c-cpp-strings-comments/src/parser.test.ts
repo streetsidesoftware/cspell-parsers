@@ -151,6 +151,35 @@ describe('c-cpp-strings-comments parser', () => {
     });
   });
 
+  describe('digit separators vs. char literals (inline)', () => {
+    const stringsIn = (content: string) =>
+      [...parse(content, 'file.cpp').parsedTexts].filter((p) => p.tags?.string).map((p) => p.rawText);
+
+    it.each(["1'000'000", "0xFF'FF", ".5'5", "1.5e+1'0", "0x1.8p1'0", "1'000_km"])('reads %s as a number', (num) => {
+      expect(stringsIn(`x = ${num};\n`)).toEqual([]);
+    });
+
+    it.each([
+      ["x1'a'", ["'a'"]],
+      ["obj.a1'b'", ["'b'"]],
+      ["u8'x'", ["'x'"]],
+      ["L'y'", ["'y'"]],
+      ["U'z'", ["'z'"]],
+      ["'1''a'", ["'1'", "'a'"]],
+      ["1' '", ["' '"]],
+    ])('still opens a char literal in %s', (code, expected) => {
+      expect(stringsIn(`x = ${code};\n`)).toEqual(expected);
+    });
+
+    it('scans a long run of digit separators in linear time', () => {
+      const content = `x = ${"1'".repeat(100_000)}1; // the end\n`;
+      const start = performance.now();
+      const parsedTexts = [...parse(content, 'file.cpp').parsedTexts];
+      expect(performance.now() - start).toBeLessThan(1000);
+      expect(parsedTexts.some((p) => p.text === 'the end')).toBe(true);
+    });
+  });
+
   describe('header.hpp', () => {
     // A header file has no special handling of its own (this parser doesn't dialect-detect by extension at
     // all), but it's a realistic file to run the full scanner over end-to-end: a line comment, a block doc

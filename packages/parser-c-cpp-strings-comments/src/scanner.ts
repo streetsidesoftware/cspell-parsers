@@ -47,21 +47,11 @@ function isIdentChar(ch: string | undefined): boolean {
   return !!ch && /[A-Za-z0-9_]/.test(ch);
 }
 
-/**
- * Reports whether the `'` at `i` is a digit separator (C++14, C23), as in `1'000'000` or `0xFF'FF`.
- * It is when it continues a number: the token before it starts with a digit, or `.` and a digit.
- */
-function isDigitSeparator(content: string, i: number): boolean {
-  if (!isIdentChar(content[i + 1])) return false;
-  let start = i;
-  while (start > 0 && /[A-Za-z0-9_'.]/.test(content[start - 1])) start--;
-  const first = content[start];
-  return /[0-9]/.test(first) || (first === '.' && /[0-9]/.test(content[start + 1] ?? ''));
-}
-
 /** Scans C/C++ source for comments and string/char literals, tagging everything else as `code`. */
 export class Scanner {
   private i = 0;
+  /** The position of the last `'` read as a digit separator, so a run of them is checked in linear time. */
+  private lastDigitSeparator = -1;
 
   constructor(private readonly content: string) {}
 
@@ -94,13 +84,34 @@ export class Scanner {
         yield this.scanQuotedString('"');
         continue;
       }
-      if (c === "'" && !isDigitSeparator(content, this.i)) {
+      if (c === "'" && !this.isDigitSeparator()) {
         yield this.scanQuotedString("'");
         continue;
       }
 
       this.i++;
     }
+  }
+
+  /**
+   * Reports whether the `'` at `i` is a digit separator (C++14, C23), as in `1'000'000` or `0xFF'FF`.
+   * It is when it continues a number: the token before it starts with a digit, or `.` and a digit.
+   * The walk back stops at the nearest `'`: if that one was a separator, this is the same number.
+   */
+  private isDigitSeparator(): boolean {
+    const { content, i } = this;
+    if (!isIdentChar(content[i + 1])) return false;
+    let start = i;
+    while (start > 0 && /[A-Za-z0-9_.]/.test(content[start - 1] ?? '')) start--;
+    let result: boolean;
+    if (start > 0 && content[start - 1] === "'" && start - 1 === this.lastDigitSeparator) {
+      result = true;
+    } else {
+      const first = content[start];
+      result = /[0-9]/.test(first ?? '') || (first === '.' && /[0-9]/.test(content[start + 1] ?? ''));
+    }
+    if (result) this.lastDigitSeparator = i;
+    return result;
   }
 
   /**
