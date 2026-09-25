@@ -26,11 +26,12 @@ reimplementing its own copy. Established in
 ## `IParserEx`
 
 The read-only parser type: `name`, `parse` (filtered, what cspell calls), `_parse` (unfiltered),
-`supportedFileTypes`, and `tags`. It has no customization methods. It lives alongside today's `IParser`
+`supportedFileTypes`, `tags`, and its current tag filter options. It has no customization methods. It lives alongside today's `IParser`
 while packages migrate. Established in
 [plugin-customization/0017](./ADRs/plugin-customization/0017-parser-is-read-only.md),
-[0020](./ADRs/plugin-customization/0020-parser-exposes-unfiltered-parse.md), and
-[0022](./ADRs/plugin-customization/0022-remove-and-add-parser.md).
+[0020](./ADRs/plugin-customization/0020-parser-exposes-unfiltered-parse.md),
+[0022](./ADRs/plugin-customization/0022-remove-and-add-parser.md), and
+[0023](./ADRs/plugin-customization/0023-parser-carries-filter-and-get-parser.md).
 
 ## `IPluginBuilder`
 
