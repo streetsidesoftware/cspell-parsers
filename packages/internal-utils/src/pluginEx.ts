@@ -72,8 +72,9 @@ abstract class PluginExQueries implements IPluginExBase {
   languageSettingsFor(name: string, fileTypes?: readonly string[]): RecommendedLanguageSettings;
   languageSettingsFor(target: ParserTarget, fileTypes?: readonly string[]): RecommendedLanguageSettings {
     if (fileTypes) {
-      if (typeof target !== 'string' || target === '*')
+      if (typeof target !== 'string' || target === '*') {
         throw new Error('Explicit fileTypes need a single parser name.');
+      }
       this.findDef(target);
       return fileTypes.length ? [{ languageId: fileTypes.join(','), parser: target }] : [];
     }

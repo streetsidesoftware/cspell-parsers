@@ -40,6 +40,8 @@ export default defineConfig(
     rules: {
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
+      // A brace-less body is fine on the same line as its `if`, but not once it wraps onto its own line.
+      curly: ['error', 'multi-line'],
     },
   },
   {
