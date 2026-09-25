@@ -21,12 +21,7 @@ export const recommendedLanguageSettings = plugin.languageSettings();
  * import { customizePlugin } from '@cspell/parser-typescript-strings-comments/plugin';
  *
  * // only check doc comments
- * const custom = customizePlugin({ tags: { '*': false, 'comment.block.doc': true } });
- *
- * export default {
- *   plugins: [custom],
- *   languageSettings: custom.languageSettings(),
- * };
+ * export default customizePlugin({ tags: { '*': false, 'comment.block.doc': true } }).defineConfig();
  * ```
  */
 export function customizePlugin(options?: CustomizePluginExOptions): IPluginBuilder;

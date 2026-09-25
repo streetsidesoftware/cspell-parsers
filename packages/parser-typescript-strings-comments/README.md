@@ -56,7 +56,7 @@ files with that Language ID:
 By default, every comment and string is spell checked. Use `customizePlugin` to change what gets checked.
 See also: [Customization options](#customization-options)
 
-For example, to check only doc comments in TypeScript files:
+For example, to check only doc comments in TypeScript files, and keep the defaults for other files:
 
 **`cspell.config.ts`** or **`cspell.config.mjs`**
 
@@ -65,48 +65,41 @@ For example, to check only doc comments in TypeScript files:
 ```ts
 import { customizePlugin } from '@cspell/parser-typescript-strings-comments/plugin';
 
-export default {
-  plugins: [customizePlugin({ tags: { '*': false, 'comment.block.doc': true } })],
-  languageSettings: [
-    {
-      languageId: 'typescript',
-      parser: 'typescript-strings-comments',
-    },
-  ],
-};
+// TypeScript files: check only doc comments.
+// Other files: keep the defaults.
+export default customizePlugin()
+  .filterTagsForFileType('typescript', { '*': false, 'comment.block.doc': true }, 'ts-doc-comments')
+  .defineConfig();
 ```
 
 <!--- @@inject-end: samples/customize/cspell.config.mts#lang=ts --->
+
+Calling `filterTagsForFileType` gives TypeScript files their own copy of the parser, named `ts-doc-comments`,
+with its own filter.
 
 **NOTE:**
 
 > Keys in `tags` are used to filter the text sent to the spell checker. They are matched hierarchically
 > against the [tags](#tags) below.
 
-Both `customizePlugin` and `plugin.customize()` give you a customized copy of the plugin. You can add it to
-`plugins` straight away, or keep adjusting it first. For example, the next config checks TypeScript files as
-usual, but checks only the comments in JavaScript files. It duplicates the `typescript-strings-comments`
-parser under the name `js-comments-only`, then fine-tunes the copy's settings for JavaScript files:
+Both `customizePlugin` and `plugin.customize()` give you a customized copy of the plugin. Call
+[`defineConfig()`](#defineconfig) on it to get a complete cspell config, or keep adjusting it first. For
+example, the next config checks TypeScript files as usual, but checks only the comments in JavaScript and JSX
+files. Each file type gets its own copy of the parser, with its own name and filter:
 
 **`cspell.config.ts`** or **`cspell.config.mjs`**
 
 <!--- @@inject: samples/customize-by-file-type/cspell.config.mts#lang=ts --->
 
 ```ts
-import { plugin } from '@cspell/parser-typescript-strings-comments/plugin';
+import { customizePlugin } from '@cspell/parser-typescript-strings-comments/plugin';
 
-// JavaScript files: check only comments.
+// JavaScript and JSX files: check only comments.
 // TypeScript files: keep the defaults.
-const customPlugin = plugin
-  .customize()
-  .duplicateParser('typescript-strings-comments', 'js-comments-only')
-  .setFileTypes('js-comments-only', ['javascript', 'javascriptreact'])
-  .filterTags('js-comments-only', { '*': false, comment: true });
-
-export default {
-  plugins: [customPlugin],
-  languageSettings: customPlugin.languageSettings(),
-};
+export default customizePlugin()
+  .filterTagsForFileType('javascript', { '*': false, comment: true }, 'js-comments-only')
+  .filterTagsForFileType('javascriptreact', { '*': false, comment: true }, 'jsx-comments-only')
+  .defineConfig();
 ```
 
 <!--- @@inject-end: samples/customize-by-file-type/cspell.config.mts#lang=ts --->
@@ -117,14 +110,15 @@ export default {
 > `comment.block.doc`, unless a more specific key overrides it. See:
 > [`CustomizePluginOptions`](#customizepluginoptions) and [`TagFilterOptions`](#tagfilteroptions) below.
 
-**What is `js-comments-only`?**
+**What are `js-comments-only` and `jsx-comments-only`?**
 
-> It's the name of the copy. In a cspell config, `languageSettings` picks a parser for each file type by its
-> name. Because the copy has its own name, JavaScript files can use it while TypeScript files keep the
-> original. Calling `customPlugin.languageSettings()` writes those entries for you.
+> They're the names of the copies. In a cspell config, `languageSettings` picks a parser for each file type by
+> its name. Because each copy has its own name, JavaScript and JSX files can use them while TypeScript files
+> keep the original. Calling `defineConfig()` writes those entries for you.
 >
-> Every parser in a plugin needs its own name, so `duplicateParser` and `renameParser` always ask you for the
-> new one. Using a name that's already taken is an error, reported when cspell loads your config.
+> Every parser in a plugin needs its own name, so `filterTagsForFileType`, `duplicateParser`, and
+> `renameParser` always ask you for the new one. Using a name that's already taken is an error, reported when
+> cspell loads your config.
 
 ## Tags
 
@@ -165,12 +159,7 @@ By default, text tagged `code` is not spell checked. To check it too, use `custo
 import { customizePlugin } from '@cspell/parser-typescript-strings-comments/plugin';
 
 // Also check code, such as identifiers and keywords.
-const customPlugin = customizePlugin({ tags: { code: true } });
-
-export default {
-  plugins: [customPlugin],
-  languageSettings: customPlugin.languageSettings(),
-};
+export default customizePlugin({ tags: { code: true } }).defineConfig();
 ```
 
 <!--- @@inject-end: samples/check-code/cspell.config.mts#lang=ts --->
@@ -252,6 +241,28 @@ const option = { tags: { '*': false, comment: true } };
 ```ts
 const option = { tags: { 'module.specifier': false } };
 ```
+
+### `defineConfig`
+
+Calling `defineConfig(settings)` on the plugin, or on a customized copy, returns your cspell settings with the
+plugin added to `plugins` and its parsers added to `languageSettings`. Your own `plugins` and
+`languageSettings` entries come after the plugin's, so they win. For example, to also check Astro files with
+this parser:
+
+**`cspell.config.ts`** or **`cspell.config.mjs`**
+
+<!--- @@inject: samples/define-config/cspell.config.mts#lang=ts --->
+
+```ts
+import { plugin } from '@cspell/parser-typescript-strings-comments/plugin';
+
+// Also check Astro files with this parser.
+export default plugin.defineConfig({
+  languageSettings: [{ languageId: 'astro', parser: 'typescript-strings-comments' }],
+});
+```
+
+<!--- @@inject-end: samples/define-config/cspell.config.mts#lang=ts --->
 
 ### `TagFilterOptions`
 
