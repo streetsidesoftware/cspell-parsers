@@ -31,5 +31,9 @@ const b = pluginB.customize().addParser(commentsOnly.getParser('typescript'), 'a
   re-filtered from the original output ([0012](./0012-filter-tags-replaces.md)) or left as it is.
 - `IParserEx` is plain data that fully describes a parser's current behavior.
 - The exact field name is provisional.
-- Still to decide: the `parser-strings-comments` bundle already has a `getParser(fileType?)` that takes a
-  file type, not a name.
+- The `parser-strings-comments` bundle's existing `getParser(fileType?)` and `getParserName(fileType?)`,
+  which look parsers up by file type, are replaced rather than deprecated. Both take one string, so an
+  overload can't tell a file type from a name. The same lookup is `parserNamesFor(fileType)`
+  ([0016](./0016-target-accepts-name-list.md)). The bundle's `samples/plugin/cspell.config.mts` calls
+  `plugin.getParser('php')?.name`, and under this decision that call throws (the PHP parser is named
+  `php-strings-comments`), so the sample must move to `languageSettingsFor` or `parserNamesFor`.
