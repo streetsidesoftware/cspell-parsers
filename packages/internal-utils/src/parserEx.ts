@@ -4,10 +4,13 @@ import type { IParserEx, ParseFunction, ParserTags, TagFilterOptions } from './t
 
 export interface CreatePluginParserWithFilterTagsOptions {
   name: string;
-  /** The unfiltered parse; the default filter comes from `tags`. */
+  /**
+   * Parses a file without any tag filtering.
+   * The parser's default filter comes from `tags`.
+   */
   parse: ParseFunction;
   supportedFileTypes: readonly string[];
-  /** Every tag the parser can emit, `true` if it's checked by default. */
+  /** Maps every tag the parser can emit to whether it's spell checked by default. */
   tags: Readonly<ParserTags>;
 }
 
@@ -23,10 +26,18 @@ export interface ParserDefChanges {
 }
 
 /**
- * An immutable parser definition: the original `_parse` and `tags` held privately, plus the current name, file
- * types, and filter. Changes return a new definition; `parser` compiles the filter against the originals.
+ * An immutable parser definition.
+ * It keeps the original `_parse` and `tags` private, alongside the current name, file types, and filter.
+ * Changes return a new definition.
+ * `parser` compiles the current filter against the originals.
  */
 export class ParserDef {
+  /**
+   * Maps each parser this module created back to its definition.
+   * `from` uses it to return the same parser object, so a plugin's `parsers` include the exported `parser`.
+   */
+  static readonly #defsByParser = new WeakMap<IParserEx, ParserDef>();
+
   readonly #parse: ParseFunction;
   readonly #tags: Readonly<ParserTags>;
   readonly name: string;
@@ -48,9 +59,15 @@ export class ParserDef {
     this.filterTags = normalizeFilterTags(filterTags);
   }
 
-  /** Reads any package's `IParserEx` through its public data. */
+  /**
+   * Reads any package's `IParserEx` through its public data.
+   * A parser this module created maps back to its own definition.
+   */
   static from(parser: IParserEx): ParserDef {
-    return new ParserDef(parser.name, parser._parse, parser.supportedFileTypes, parser.tags, parser.filterTags);
+    return (
+      ParserDef.#defsByParser.get(parser) ??
+      new ParserDef(parser.name, parser._parse, parser.supportedFileTypes, parser.tags, parser.filterTags)
+    );
   }
 
   with(changes: ParserDefChanges): ParserDef {
@@ -63,13 +80,19 @@ export class ParserDef {
     );
   }
 
-  /** The read-only parser cspell sees. */
+  /** Returns the read-only parser that cspell uses, creating it on first use. */
   get parser(): IParserEx {
     this.#parser ??= this.#createParser();
     return this.#parser;
   }
 
   #createParser(): IParserEx {
+    const parser = this.#buildParser();
+    ParserDef.#defsByParser.set(parser, this);
+    return parser;
+  }
+
+  #buildParser(): IParserEx {
     const tags = this.#tags;
     const filterTags = this.filterTags;
     const keepsEverything = !filterTags && Object.values(tags).every(Boolean);
@@ -85,7 +108,10 @@ export class ParserDef {
   }
 }
 
-/** Drops `undefined` entries, which the matcher ignores; `undefined` when nothing is left, meaning the defaults apply. */
+/**
+ * Drops `undefined` entries, which the matcher ignores.
+ * Returns `undefined` when nothing is left, meaning the defaults apply.
+ */
 function normalizeFilterTags(
   filterTags: Readonly<TagFilterOptions> | undefined,
 ): Readonly<TagFilterOptions> | undefined {

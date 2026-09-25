@@ -1,42 +1,37 @@
-import type { CSpellPlugin } from '@cspell/cspell-types';
-import type { CustomizePluginOptions, IPlugin } from '@internal/utils';
-import { customizeParserPlugin } from '@internal/utils';
+import type { CustomizeParserOptions, CustomizePluginExOptions, IPluginBuilder, IPluginEx } from '@internal/utils';
+import { createPluginEx, customizePluginEx } from '@internal/utils';
 
-import { parser, supportedFileTypes } from './parser.ts';
+import { parser } from './parser.ts';
 
 export { supportedFileTypes } from './parser.ts';
-export type { CustomizePluginOptions } from '@internal/utils';
+export type { CustomizePluginExOptions as CustomizePluginOptions } from '@internal/utils';
 
-export const recommendedLanguageSettings = [
-  {
-    languageId: supportedFileTypes.join(','),
-    parser: 'typescript-strings-comments',
-  },
-];
+export const plugin: IPluginEx = createPluginEx({ name: 'typescript-strings-comments', parsers: [parser] });
 
-export const plugin: IPlugin = {
-  name: 'typescript-strings-comments',
-  parsers: [parser],
-  supportedFileTypes,
-  recommendedLanguageSettings,
-};
+export const recommendedLanguageSettings = plugin.languageSettings();
 
 /**
- * Create a customized copy of {@link plugin} - rename its parser and/or choose which tagged segments get
- * spell checked. Works with any cspell version.
+ * Creates a customized copy of {@link plugin}.
+ * `options.tags` chooses which tagged segments get spell checked.
+ * The copy can be added to `plugins` as it is, or adjusted further first.
  *
  * **`cspell.config.mjs`**
  *
  * ```js
  * import { customizePlugin } from '@cspell/parser-typescript-strings-comments/plugin';
  *
+ * // only check doc comments
+ * const custom = customizePlugin({ tags: { '*': false, 'comment.block.doc': true } });
+ *
  * export default {
- *   // only check doc comments
- *   plugins: [customizePlugin({ name: 'typescript-only-docs', tags: { '*': false, 'comment.block.doc': true } })],
- *   languageSettings: [{ languageId: 'typescript', parser: 'typescript-only-docs' }],
+ *   plugins: [custom],
+ *   languageSettings: custom.languageSettings(),
  * };
  * ```
  */
-export function customizePlugin(options: CustomizePluginOptions): CSpellPlugin {
-  return customizeParserPlugin(plugin, options);
+export function customizePlugin(options?: CustomizePluginExOptions): IPluginBuilder;
+/** @deprecated Rename the parser with `customizePlugin().renameParser(...)` instead of `name`. */
+export function customizePlugin(options: CustomizeParserOptions): IPluginBuilder;
+export function customizePlugin(options?: CustomizePluginExOptions | CustomizeParserOptions): IPluginBuilder {
+  return customizePluginEx(plugin, options);
 }

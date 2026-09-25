@@ -14,7 +14,8 @@ export const tagsAndMeaning = {
   'string.doubleQuote': 'A `"..."` string literal',
   'string.singleQuote.module': "A `'...'` string literal that is also a module specifier",
   'string.doubleQuote.module': 'A `"..."` string literal that is also a module specifier',
-  'string.templateLiteral': 'A literal text fragment of a template string (`` `...` ``), excluding `${...}` holes',
+  'string.templateLiteral':
+    'A literal text fragment of a template string (`` `...` ``), excluding `${...}` expressions',
   module: 'Any module specifier string',
   'module.specifier': 'Any module specifier string (same as `module`, for a more specific filter)',
   'module.specifier.literal':

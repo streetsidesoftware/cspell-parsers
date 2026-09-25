@@ -34,11 +34,19 @@ describe('customizePlugin', () => {
     expect(parsedTexts.some((p) => p.tags?.code)).toBe(true);
   });
 
-  it('wires name customization, including recommendedLanguageSettings, into the typescript-strings-comments parser', () => {
+  it('renames the parser with the deprecated name option, and languageSettings follow', () => {
     const customized = customizePlugin({ name: 'custom-example', tags: {} });
-    const [customizedParser] = (customized.parsers ?? []) as CSpellParser[];
 
-    expect(customizedParser?.name).toBe('custom-example');
-    expect(customized).toMatchObject({ recommendedLanguageSettings: [{ parser: 'custom-example' }] });
+    expect(customized.parserNames()).toEqual(['custom-example']);
+    expect(customized.languageSettings()).toEqual([
+      { languageId: supportedFileTypes.join(','), parser: 'custom-example' },
+    ]);
+  });
+
+  it('returns a builder that can be customized further, leaving plugin unchanged', () => {
+    const customized = customizePlugin().renameParser('typescript-strings-comments', 'ts-comments');
+
+    expect(customized.parserNames()).toEqual(['ts-comments']);
+    expect(plugin.parserNames()).toEqual(['typescript-strings-comments']);
   });
 });

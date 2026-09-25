@@ -1,8 +1,7 @@
 # @cspell/parser-typescript-strings-comments
 
 A cspell plugin for spell checking only the comments and string-like literals in JavaScript, JSX,
-TypeScript, and TSX files, leaving identifiers, keywords, and the rest of the code alone - these four share
-identical comment/string/template-literal syntax, so one small parser handles all of them. If you also want
+TypeScript, and TSX files, leaving identifiers, keywords, and the rest of the code alone. If you also want
 identifiers checked (so a misspelled variable or function name gets flagged too), use
 [`@cspell/parser-typescript`](https://www.npmjs.com/package/@cspell/parser-typescript) instead.
 
@@ -11,8 +10,9 @@ identifiers checked (so a misspelled variable or function name gets flagged too)
 The quickest way to get started is to import the recommended settings, which registers the plugin and
 selects it for every supported file type:
 
+**`cspell.config.jsonc`**
+
 ```jsonc
-// cspell.config.jsonc (or cspell.config.yaml/.mjs/...)
 {
   "import": ["@cspell/parser-typescript-strings-comments/recommended"],
 }
@@ -20,6 +20,8 @@ selects it for every supported file type:
 
 For more control - for example, to apply it to only some file types, or alongside other settings - wire the
 plugin in yourself and choose the language IDs to use it for:
+
+**`cspell.config.jsonc`**
 
 ```jsonc
 {
@@ -35,7 +37,8 @@ plugin in yourself and choose the language IDs to use it for:
 
 ## Supported file types
 
-The plugin provides these parsers. Where Recommended is `yes`, `recommended` enables the named parser for files with that Language ID:
+The plugin provides these parsers. Where Recommended is `yes`, `recommended` enables the named parser for
+files with that Language ID:
 
 <!--- @@inject: docs/language-id-n-parser-name.csv --->
 
@@ -48,52 +51,86 @@ The plugin provides these parsers. Where Recommended is `yes`, `recommended` ena
 
 <!--- @@inject-end: docs/language-id-n-parser-name.csv --->
 
-### Filtering by tag and file type
+## Filtering by tag and file type
 
-By default every comment/string the parser emits gets spell checked. Use `customizePlugin` to change what is sent on to the spell checker.
+By default, every comment and string is spell checked. Use `customizePlugin` to change what gets checked.
 See also: [Customization options](#customization-options)
+
+For example, to check only doc comments in TypeScript files:
 
 **`cspell.config.ts`** or **`cspell.config.mjs`**
 
-```js
+<!--- @@inject: samples/customize/cspell.config.mts#lang=ts --->
+
+```ts
 import { customizePlugin } from '@cspell/parser-typescript-strings-comments/plugin';
 
-const customPlugin = customizePlugin({
-  // set the parser name to be used in languageSettings
-  name: 'typescript-no-modules',
-  tags: { 'module.specifier': false }, // exclude module specifiers - often not worth spell checking
-});
-
 export default {
-  plugins: [customPlugin],
+  plugins: [customizePlugin({ tags: { '*': false, 'comment.block.doc': true } })],
   languageSettings: [
     {
-      // select the customized parser by name, for typescript files only
       languageId: 'typescript',
-      parser: 'typescript-no-modules',
+      parser: 'typescript-strings-comments',
     },
   ],
 };
 ```
 
-**NOTE:**
-
-> `name` overrides the parser's registered name (`typescript-strings-comments` by default). This matters when
-> registering more than one customized copy of this parser, since cspell selects a parser by name and two
-> parsers can't share one.
+<!--- @@inject-end: samples/customize/cspell.config.mts#lang=ts --->
 
 **NOTE:**
 
-> `tags` keys are matched hierarchically against the [tags](#tags) below.
+> Keys in `tags` are used to filter the text sent to the spell checker. They are matched hierarchically
+> against the [tags](#tags) below.
+
+Both `customizePlugin` and `plugin.customize()` give you a customized copy of the plugin. You can add it to
+`plugins` straight away, or keep adjusting it first. For example, the next config checks TypeScript files as
+usual, but checks only the comments in JavaScript files. It duplicates the `typescript-strings-comments`
+parser under the name `js-comments-only`, then fine-tunes the copy's settings for JavaScript files:
+
+**`cspell.config.ts`** or **`cspell.config.mjs`**
+
+<!--- @@inject: samples/customize-by-file-type/cspell.config.mts#lang=ts --->
+
+```ts
+import { plugin } from '@cspell/parser-typescript-strings-comments/plugin';
+
+// JavaScript files: check only comments.
+// TypeScript files: keep the defaults.
+const customPlugin = plugin
+  .customize()
+  .duplicateParser('typescript-strings-comments', 'js-comments-only')
+  .setFileTypes('js-comments-only', ['javascript', 'javascriptreact'])
+  .filterTags('js-comments-only', { '*': false, comment: true });
+
+export default {
+  plugins: [customPlugin],
+  languageSettings: customPlugin.languageSettings(),
+};
+```
+
+<!--- @@inject-end: samples/customize-by-file-type/cspell.config.mts#lang=ts --->
+
+**NOTE:**
+
+> The `tags` key `comment` also matches the more specific `comment.line`, `comment.block`, and
+> `comment.block.doc`, unless a more specific key overrides it. See:
+> [`CustomizePluginOptions`](#customizepluginoptions) and [`TagFilterOptions`](#tagfilteroptions) below.
+
+**What is `js-comments-only`?**
+
+> It's the name of the copy. In a cspell config, `languageSettings` picks a parser for each file type by its
+> name. Because the copy has its own name, JavaScript files can use it while TypeScript files keep the
+> original. Calling `customPlugin.languageSettings()` writes those entries for you.
 >
-> The key `string` also matches the more specific
-> `string.templateLiteral` unless a more specific key overrides it. See: [`CustomizePluginOptions`](#customizepluginoptions) and [`TagFilterOptions`](#tagfilteroptions) below.
+> Every parser in a plugin needs its own name, so `duplicateParser` and `renameParser` always ask you for the
+> new one. Using a name that's already taken is an error, reported when cspell loads your config.
 
 ## Tags
 
-Every segment carries its own tag plus every ancestor implied by it - a doc comment carries
-`comment.block.doc` together with `comment.block` and `comment` - so the `tags` filter above can match at
-whatever level of specificity it needs.
+Each part of a file gets its most specific tag plus the more general ones above it. For example, a doc
+comment is tagged `comment.block.doc`, `comment.block`, and `comment`, so a filter can use whichever level it
+needs.
 
 <!--- @@inject: docs/tags-table.csv#markdown --->
 
@@ -108,7 +145,7 @@ whatever level of specificity it needs.
 | `string.doubleQuote`        | A `"..."` string literal                                                                                                    |
 | `string.singleQuote.module` | A `'...'` string literal that is also a module specifier                                                                    |
 | `string.doubleQuote.module` | A `"..."` string literal that is also a module specifier                                                                    |
-| `string.templateLiteral`    | A literal text fragment of a template string (`` `...` ``), excluding `${...}` holes                                        |
+| `string.templateLiteral`    | A literal text fragment of a template string (`` `...` ``), excluding `${...}` expressions                                  |
 | `module`                    | Any module specifier string                                                                                                 |
 | `module.specifier`          | Any module specifier string (same as `module`, for a more specific filter)                                                  |
 | `module.specifier.literal`  | The module specifier string of an `import`/`export ... from` statement, a dynamic `import('...')`, or a `require(...)` call |
@@ -122,57 +159,73 @@ By default, text tagged `code` is not spell checked. To check it too, use `custo
 
 **`cspell.config.ts`** or **`cspell.config.mjs`**
 
-```js
+<!--- @@inject: samples/check-code/cspell.config.mts#lang=ts --->
+
+```ts
 import { customizePlugin } from '@cspell/parser-typescript-strings-comments/plugin';
 
+// Also check code, such as identifiers and keywords.
+const customPlugin = customizePlugin({ tags: { code: true } });
+
 export default {
-  plugins: [customizePlugin({ tags: { code: true } })],
-  languageSettings: [
-    {
-      languageId: 'typescript',
-      parser: 'typescript-strings-comments',
-    },
-  ],
+  plugins: [customPlugin],
+  languageSettings: customPlugin.languageSettings(),
 };
 ```
 
-## What gets checked
+<!--- @@inject-end: samples/check-code/cspell.config.mts#lang=ts --->
 
-- **Regex literals (`/pattern/flags`) and `RegExp(...)`/`new RegExp(...)` calls are tagged `code`, so they're
-  not spell checked by default.** A regex pattern isn't prose, so both forms are skipped entirely, including
-  any quotes inside - the same as any other unrecognized code (see [The `code` tag](#the-code-tag)). A
-  comment inside a `RegExp(...)` call's argument list is still recognized normally; only the pattern/flags
-  string arguments are tagged `code`.
-- **A module specifier string is still spell checked by default, but tagged so it can be filtered out.**
-  `import x from './mod.js'`, `import './side-effect.js'`, `export { x } from './mod.js'`, a dynamic
-  `import('./mod.js')`, and `require('./mod.js')` all get the `module`/`module.specifier`/
-  `module.specifier.literal` tags in addition to their usual string tags (matching `@cspell/parser-typescript`'s
-  convention). Use `customizePlugin` to exclude them if a relative path or package name isn't worth checking.
-- A string or comment nested inside a template literal's `${...}` interpolation (e.g. a ternary's string
-  branches) is still recognized and tagged normally.
+## Special cases
+
+A few kinds of code are handled in a specific way:
+
+- **Regular expressions aren't spell checked by default.** A regex pattern isn't prose, so these are tagged
+  `code`, like the rest of the code:
+  - regex literals, such as `/pattern/flags`
+  - the pattern and flags passed to `RegExp(...)` or `new RegExp(...)`
+
+  A comment inside a `RegExp(...)` call is still checked. To check regular expressions too, turn on the
+  [`code` tag](#the-code-tag).
+
+- **Module specifiers are spell checked by default, but can be filtered out.** The path or package name in
+  each of these is tagged `module`, `module.specifier`, and `module.specifier.literal`, as well as with its
+  usual string tags:
+  - `import x from './mod.js'`
+  - `import './side-effect.js'`
+  - `export { x } from './mod.js'`
+  - `import('./mod.js')`
+  - `require('./mod.js')`
+
+  To skip them, for example when relative paths and package names aren't worth checking:
+
+  ```js
+  customizePlugin({ tags: { 'module.specifier': false } });
+  ```
 
 ## Customization options
 
-The customization options have two purposes:
+Use `customizePlugin(options)` to control which parts of a file get spell checked, based on the [tags](#tags)
+the parser gives each part. The filter applies to every parser in the plugin.
 
-- Change the name of the registered parser (not the plugin's own name)
-- Set up a `tags` filter to specify what is passed to the spell checker based upon
-  the attributed tags.
+You can keep adjusting the plugin it returns. For example, to give the parser a different name:
+
+```js
+customizePlugin({ tags: { '*': false, comment: true } }).renameParser('typescript-strings-comments', 'my-parser');
+```
 
 ### `CustomizePluginOptions`
 
 ```ts
 interface CustomizePluginOptions {
   /**
-   * Set the name of the parser. Does not change the plugin's own name.
+   * Define which tagged segments to keep.
    */
-  name?: string;
-  /**
-   * Define which tagged segments to keep. Omit to keep the parser's own defaults (`code` excluded).
-   */
-  tags?: TagFilterOptions;
+  tags: TagFilterOptions;
 }
 ```
+
+Earlier versions of `customizePlugin` took a `name` option to rename the parser. It still works, but it's
+deprecated and will be removed in a future release. Use `renameParser` instead, as shown above.
 
 ### Examples
 
@@ -190,10 +243,8 @@ const option = { tags: { '*': true, code: false } };
 
 **Only comments**
 
-Change the parser `name` to `only-comments` and allow only comments.
-
 ```ts
-const option = { name: 'only-comments', tags: { '*': false, comment: true } };
+const option = { tags: { '*': false, comment: true } };
 ```
 
 **Turn off `module.specifier`**
@@ -204,13 +255,13 @@ const option = { tags: { 'module.specifier': false } };
 
 ### `TagFilterOptions`
 
-`TagFilterOptions` are used to set the filter criteria for the text sent to the spell checker.
+Use `TagFilterOptions` to set the filter criteria for the text sent to the spell checker.
 
-The values are inherited hierarchically
+The values are inherited hierarchically:
 
-- `comment: false` also implies `comment.line` is `false` unless overwritten by `'comment.line': true`
+- `comment: false` also implies `comment.line` is `false` unless overridden by `'comment.line': true`
 
-Wildcards
+Wildcards:
 
 - `*` wildcards are weak matches. A more specific match will win.
 
@@ -239,8 +290,7 @@ interface TagFilterOptions {
 
 This scanner isn't a full grammar, so in rare cases it can misjudge whether a `/` starts a regex literal or
 is division - most commonly for a regex shaped like `/['"]/`, or one appearing right after an unusual keyword
-or a `}` - which can affect whether that spot gets spell checked as prose or skipped as code. See
-`CONTRIBUTING.md` for the heuristic this is resolved with.
+or a `}` - which can affect whether that spot gets spell checked as prose or skipped as code.
 
 ## Requirements
 

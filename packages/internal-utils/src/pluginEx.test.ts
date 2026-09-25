@@ -2,7 +2,7 @@ import type { AdvancedCSpellSettings, ParsedText } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
 import { createPluginParserWithFilterTags } from './parserEx.ts';
-import { createPluginEx } from './pluginEx.ts';
+import { createPluginEx, customizeParserEx, customizePluginEx } from './pluginEx.ts';
 import type { IParserEx, IPluginEx } from './types.ts';
 
 const segments: ParsedText[] = [
@@ -172,6 +172,17 @@ describe('IPluginBuilder', () => {
     expect(() => b.filterTags('typscript', {})).toThrow('Unknown parser "typscript"');
   });
 
+  it('rejects an empty parser name everywhere a name is set', () => {
+    const b = mkPlugin().customize();
+    const invalid = 'Invalid parser name ""';
+    expect(() => b.renameParser('php', '')).toThrow(invalid);
+    expect(() => b.duplicateParser('php', '')).toThrow(invalid);
+    expect(() => b.addParser(mkParser('p', []), '')).toThrow(invalid);
+    expect(() => b.addParser(mkParser('', []))).toThrow(invalid);
+    expect(() => createPluginEx({ name: 'test', parsers: [mkParser('', [])] })).toThrow(invalid);
+    expect(() => customizeParserEx(mkParser('p', []), { name: '' })).toThrow(invalid);
+  });
+
   it('names every unknown parser in the error', () => {
     const b = mkPlugin().customize();
     expect(() => b.removeParser(['go', 'rust'])).toThrow('Unknown parsers "go", "rust" in plugin "test".');
@@ -281,6 +292,40 @@ describe('filterTags', () => {
 
     b.filterTags('php-comments', { code: true });
     expect(texts(b.getParser('php-comments'))).toEqual(['comment', 'string', 'code']);
+  });
+});
+
+describe('customizePluginEx', () => {
+  it('applies tags to every parser and returns a builder', () => {
+    const b = customizePluginEx(mkPlugin(), { tags: { '*': false, comment: true } });
+    expect(texts(b.getParser('typescript'))).toEqual(['comment']);
+    expect(texts(b.getParser('php'))).toEqual(['comment']);
+    expect(customizePluginEx(mkPlugin()).parserNames()).toEqual(['typescript', 'php']);
+  });
+
+  it('renames the only parser with the deprecated name, and throws when there are several', () => {
+    const single = createPluginEx({ name: 'one', parsers: [mkParser('a', ['x'])] });
+    expect(customizePluginEx(single, { name: 'b', tags: {} }).parserNames()).toEqual(['b']);
+    expect(() => customizePluginEx(mkPlugin(), { name: 'b' })).toThrow('use renameParser instead');
+    expect(() => customizePluginEx(single, { name: '' })).toThrow('Invalid parser name ""');
+  });
+});
+
+describe('customizeParserEx', () => {
+  it('returns a renamed, re-filtered copy and leaves the original alone', () => {
+    const original = mkParser('p', ['x']);
+    const copy = customizeParserEx(original, { name: 'q', tags: { code: true } });
+    expect(copy.name).toBe('q');
+    expect(texts(copy)).toEqual(['comment', 'string', 'code']);
+    expect(texts(original)).toEqual(['comment', 'string']);
+    expect(customizeParserEx(original)).toBe(original);
+  });
+});
+
+describe('ParserDef.from', () => {
+  it('keeps the same parser object when a plugin is built from it', () => {
+    const parser = mkParser('p', ['x']);
+    expect(createPluginEx({ name: 'x', parsers: [parser] }).parsers[0]).toBe(parser);
   });
 });
 

@@ -1,13 +1,16 @@
 # Contributing to @cspell/parser-typescript-strings-comments
 
-Contributor-facing notes on `src/parser.ts`. See the repo root `CONTRIBUTING.md` for the general package
-shape (`parser.ts`/`plugin.ts`/`index.ts`/`recommended.ts`, `fixtures/`, `samples/`).
+Contributor-facing notes on the scanner in `src/scanner.ts`, which `src/parser.ts` wraps. See the repo root
+`CONTRIBUTING.md` for the general package shape (`parser.ts`/`plugin.ts`/`index.ts`/`recommended.ts`,
+`fixtures/`, `samples/`).
 
 ## Using this package as a template
 
-To add a new parser for another language, copy `src/parser.ts`, `src/plugin.ts`, `src/index.ts`, and
-`src/recommended.ts` into a new package under `packages/` and replace the parsing logic with your own. See
-the repo root `CONTRIBUTING.md` for the full steps.
+To add a new parser for another language, copy `src/parser.ts`, `src/plugin.ts`, `src/index.ts`,
+`src/recommended.ts`, and `src/tags.ts` into a new package under `packages/`. Then replace `src/scanner.ts`
+with your own parsing logic, and `src/tags.ts` with the tags it emits. A parser's default filter comes only
+from `tags`, so set a tag to `false` there to leave it unchecked by default. See the repo root
+`CONTRIBUTING.md` for the full steps.
 
 ## Shape
 
@@ -15,12 +18,8 @@ the repo root `CONTRIBUTING.md` for the full steps.
 character-by-character, recognizing only comments and strings and silently skipping everything else, the
 same approach `@cspell/parser-example` uses.
 
-This package was split out of `@cspell/parser-strings-comments`, which also covered C, C++, C#, Go, Java,
-and PHP behind `Dialect` branching. Removing that branching (this package only ever handles one syntax
-family) is most of why `scanCode` is about half the size.
-
 `scanCode(end, stopAtUnmatchedBrace)` is also called recursively for a template literal's `${...}`
-interpolation hole, which has no known end index up front - only "the matching `}`". This is why a
+expression, which has no known end index up front - only "the matching `}`". This is why a
 string/comment nested inside an interpolation gets scanned and tagged exactly like top-level code.
 
 ## Regex vs. division, and module specifiers
@@ -36,7 +35,7 @@ of being skipped as an opaque unit (see `README.md`'s "Known limitations" for th
 
 The full reasoning for the heuristic (`isDivisionContext`, `tryScanRegexLiteral`, `canPrecedeString`/
 `sawSlash`) and for module-specifier detection (`isModuleSpecifierContext`) is documented in-line in
-`parser.ts` rather than repeated here - start at those functions' doc comments.
+`scanner.ts` rather than repeated here - start at those functions' doc comments.
 
 Worth knowing before touching any of it: `parser.test.ts` has regression tests for the trickiest cases (a
 same-line `}` that must resolve as division, `sawSlash`'s stickiness, a quote surviving inside an
@@ -46,13 +45,17 @@ the code it's guarding - read those before changing the heuristics.
 ## Escape handling
 
 `skipEscape` clamps a backslash-escape skip to `content.length`, so a trailing lone backslash at EOF doesn't
-push a `range`/`map` past the end of `content`. This was a real bug, caught by Copilot's review of
-`@cspell/parser-strings-comments` PR #60 before this package was split out - see `parser.test.ts`'s
-"unterminated literals ending in a trailing lone backslash".
+push a `range`/`map` past the end of `content`. See `parser.test.ts`'s "unterminated literals ending in a
+trailing lone backslash".
 
 ## Testing
 
 - `parser.test.ts` reads fixtures from `fixtures/` rather than inlining source strings. `fixtures/` is
   excluded from tsc/ESLint/Prettier - a fixture's exact bytes are often what's being asserted on.
-- `samples/` is a real end-to-end check, run via `pnpm run test:cspell`. `samples/customize` proves the
-  `customizePlugin` tag filter actually excludes a misspelling, not just that it type-checks.
+- `samples/` is a real end-to-end check, run via `pnpm run test:cspell`. The README's customization
+  examples are injected from these samples, so they're always tested:
+  - `samples/customize` proves the `customizePlugin` tag filter actually excludes a misspelling, not just
+    that it type-checks.
+  - `samples/customize-by-file-type` does the same for a duplicated parser that checks only comments in
+    JavaScript files.
+  - `samples/check-code` turns on the `code` tag.

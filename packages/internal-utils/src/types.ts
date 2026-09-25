@@ -52,7 +52,7 @@ export interface RecommendedLanguageSetting {
 export type RecommendedLanguageSettings = RecommendedLanguageSetting[];
 
 export interface RecommendedSettings {
-  plugins: IPlugin[];
+  plugins: CSpellPlugin[];
   languageSettings: RecommendedLanguageSettings;
 }
 
@@ -108,80 +108,139 @@ export interface CustomizeParserOptions {
 export type CustomizePluginOptions = CustomizeParserOptions;
 
 /**
- * A read-only parser. Plain data, so a builder in any package can re-filter it from `_parse`.
+ * A parser as read-only data, with no customization methods.
+ * A builder in any package can re-filter it, because `_parse` gives it the unfiltered output.
  * See docs/ADRs/plugin-customization/0007-parser-data.md.
  */
 export interface IParserEx {
+  /** The name cspell uses to select this parser in `languageSettings`. */
   readonly name: string;
-  /** What cspell calls: `_parse` with the current tag filter applied. */
+  /** Parses a file for cspell, keeping only the segments the current tag filter allows. */
   readonly parse: ParseFunction;
-  /** The unfiltered parse. Plumbing for plugin builders. */
+  /**
+   * Parses a file without any tag filter applied.
+   * Plugin builders use it to compile a new filter from the original output.
+   */
   readonly _parse: ParseFunction;
-  /** File types used to generate `languageSettings`; they don't restrict what the parser can be used for. */
+  /**
+   * The file types this parser is designed for.
+   * They're used to generate `languageSettings`, and don't restrict which files the parser can be used for.
+   */
   readonly supportedFileTypes: readonly string[];
-  /** Every tag the parser can emit, `true` if it's checked by default. */
+  /** Maps every tag this parser can emit to whether it's spell checked by default. */
   readonly tags: Readonly<ParserTags>;
-  /** The tag filter compiled into `parse`; absent when the defaults from `tags` apply. */
+  /**
+   * The tag filter options currently compiled into `parse`.
+   * It's absent when `parse` uses the defaults from `tags`.
+   */
   readonly filterTags?: Readonly<TagFilterOptions>;
 }
 
-/** A parser name, a list of parser names, or `'*'` for every parser. */
+/** Selects parsers by a single name, a list of names, or `'*'` for every parser. */
 export type ParserTarget = string | readonly string[];
 
-/** A file type, a list of file types, or `'*'` for every file type the parsers list. */
+/** Selects file types by a single file type, a list of them, or `'*'` for every file type the parsers list. */
 export type FileTypeTarget = string | readonly string[];
 
-/** Read-only members shared by {@link IPluginEx} and {@link IPluginBuilder}. */
+/** The read-only members shared by {@link IPluginEx} and {@link IPluginBuilder}. */
 export interface IPluginExBase {
+  /** The plugin's name. */
   readonly name: string;
-  /** The parsers, in order. A new array on every read. */
+  /**
+   * Returns the plugin's parsers, in order.
+   * Each read returns a new array, so changing it doesn't change the plugin.
+   */
   readonly parsers: IParserEx[];
-  /** The set of the parsers' file types, in parser order. */
+  /** Returns every file type the parsers list, without duplicates, in parser order. */
   readonly supportedFileTypes: readonly string[];
-  /** The parser names, in order. */
+  /** Returns the parser names, in order, ready to use as a {@link ParserTarget}. */
   parserNames(): string[];
-  /** Throws if there's no parser with that name. */
+  /**
+   * Returns the parser with the given name.
+   * Throws if the plugin has no parser with that name.
+   */
   getParser(name: string): IParserEx;
+  /** Reports whether the plugin has a parser with the given name. */
   hasParser(name: string): boolean;
-  /** Names of the parsers that list `fileType`, in parser order. */
+  /** Returns the names of the parsers that list `fileType`, in parser order. */
   parserNamesFor(fileType: string): string[];
-  /** Same as `languageSettingsFor('*')`. */
+  /**
+   * Generates the `languageSettings` for every parser.
+   * It's the same as `languageSettingsFor('*')`.
+   */
   languageSettings(): RecommendedLanguageSettings;
-  /** `languageSettings` for the targeted parsers; each file type goes to the last targeted parser that lists it. */
+  /**
+   * Generates the `languageSettings` for the named parsers.
+   * When several of them list the same file type, the last one gets it.
+   */
   languageSettingsFor(target: ParserTarget): RecommendedLanguageSettings;
-  /** `languageSettings` mapping `fileTypes` (default: the parser's own) to the named parser. */
+  /**
+   * Generates `languageSettings` that map `fileTypes` to the named parser.
+   * Without `fileTypes`, it uses the parser's own file types.
+   */
   languageSettingsFor(name: string, fileTypes?: readonly string[]): RecommendedLanguageSettings;
   /**
-   * `languageSettings` for only the given file types, each going to the last parser that lists it.
+   * Generates the `languageSettings` for only the given file types.
+   * Each file type goes to the last parser that lists it.
    * Throws if no parser lists one of them.
    */
   languageSettingsForFileType(fileType: FileTypeTarget): RecommendedLanguageSettings;
-  /** A new builder, seeded from the current parsers, named `name` or this plugin's name. */
+  /**
+   * Creates a new builder, starting from the current parsers.
+   * The builder is named `name`, or keeps this plugin's name when `name` is omitted.
+   */
   customize(name?: string): IPluginBuilder;
 }
 
-/** The immutable plugin a package exports. See docs/ADRs/plugin-customization/0004-immutable-plugin-and-builder.md. */
+/**
+ * The immutable plugin each parser package exports.
+ * See docs/ADRs/plugin-customization/0004-immutable-plugin-and-builder.md.
+ */
 export type IPluginEx = IPluginExBase;
 
 /**
- * Customizes a plugin in place; each method returns the builder. Usable directly as a cspell plugin.
- * Unknown or clashing parser names throw. See docs/ADRs/plugin-customization/0005-builder-operations.md.
+ * Customizes a plugin in place, with each method returning the builder so calls can be chained.
+ * It can be passed to cspell directly as a plugin.
+ * A parser name that's unknown, or already taken, throws.
+ * See docs/ADRs/plugin-customization/0005-builder-operations.md.
  */
 export interface IPluginBuilder extends IPluginExBase {
   /** Sets the plugin's name. */
   setName(name: string): this;
-  /** Appends a copy of the parser's current state under `newName`. */
+  /** Appends a copy of the named parser, with its current file types and filter, under `newName`. */
   duplicateParser(name: string, newName: string): this;
-  /** Appends `parser`, keeping its file types and filter, under `asName` or its own name. */
+  /**
+   * Appends `parser`, keeping its file types and filter.
+   * It's added under `asName`, or under its own name when `asName` is omitted.
+   */
   addParser(parser: IParserEx, asName?: string): this;
-  /** Changes only the name; the parser keeps its position. */
+  /** Renames a parser without changing its position, file types, or filter. */
   renameParser(name: string, newName: string): this;
+  /** Removes the targeted parsers. */
   removeParser(target: ParserTarget): this;
+  /** Replaces the file types of the targeted parsers. */
   setFileTypes(target: ParserTarget, fileTypes: readonly string[]): this;
+  /** Adds file types to the targeted parsers. */
   addFileTypes(target: ParserTarget, fileTypes: readonly string[]): this;
+  /** Removes file types from the targeted parsers, keeping the parsers even if none are left. */
   removeFileTypes(target: ParserTarget, fileTypes: readonly string[]): this;
-  /** Replaces the targeted parsers' filter; `{}` resets to the defaults from `tags`. Filters never chain. */
+  /**
+   * Replaces the tag filter of the targeted parsers.
+   * The new filter is compiled from the original output, so filters never chain.
+   * Passing `{}` resets a parser to the defaults from its `tags`.
+   */
   filterTags(target: ParserTarget, options: TagFilterOptions): this;
-  /** An immutable snapshot that later builder calls don't affect. */
+  /** Creates an immutable snapshot of the builder, which later builder calls don't affect. */
   build(): IPluginEx;
+}
+
+/**
+ * The options a migrated package's `customizePlugin` accepts.
+ * To rename a parser, use `renameParser` on the result, or the deprecated `CustomizeParserOptions` overload.
+ * See docs/ADRs/plugin-customization/0008-customize-plugin-wrapper.md.
+ */
+export interface CustomizePluginExOptions {
+  name?: undefined;
+  /** Chooses which tagged segments every parser keeps. */
+  tags: TagFilterOptions;
 }

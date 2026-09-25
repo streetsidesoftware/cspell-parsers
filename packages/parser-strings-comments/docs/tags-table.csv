@@ -49,7 +49,7 @@ Tag,Meaning,Languages
 `string.singleQuote`,A `'...'` string literal,"`javascript`, `javascriptreact`<br>`python`, `ruby`, `typescript`<br>`typescriptreact`"
 `string.singleQuote`,A `'...'` string literal (no interpolation),`php`
 `string.singleQuote.module`,A `'...'` string literal that is also a module specifier,"`javascript`, `javascriptreact`<br>`typescript`, `typescriptreact`"
-`string.templateLiteral`,"A literal text fragment of a template string (`` `...` ``), excluding `${...}` holes","`javascript`, `javascriptreact`<br>`typescript`, `typescriptreact`"
+`string.templateLiteral`,"A literal text fragment of a template string (`` `...` ``), excluding `${...}` expressions","`javascript`, `javascriptreact`<br>`typescript`, `typescriptreact`"
 `string.textBlock`,"A `""""""...""""""` text block (Java 15+)",`java`
 `string.tripleQuote`,"A `'''...'''` or `""""""...""""""` string literal",`python`
 `string.verbatim`,"A `@""...""` verbatim string literal",`csharp`
