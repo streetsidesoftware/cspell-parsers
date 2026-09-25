@@ -75,8 +75,9 @@ export default {
 
 <!--- @@inject-end: samples/customize/cspell.config.mts#lang=ts --->
 
-`customizePlugin` returns a builder that works as a plugin and can be customized further. For example, to
-check TypeScript files one way and JavaScript files another, give the second parser its own name:
+`customizePlugin` and `plugin.customize()` return a builder. You can pass it to `plugins` as it is, or call
+more methods on it first. For example, this config checks TypeScript files as usual, but checks only the
+comments in JavaScript files:
 
 <!--- @@inject: samples/customize-by-file-type/cspell.config.mts#lang=ts --->
 
@@ -99,10 +100,15 @@ export default {
 
 <!--- @@inject-end: samples/customize-by-file-type/cspell.config.mts#lang=ts --->
 
-**NOTE:**
+**Why the new name?**
 
-> cspell selects a parser by name, so two parsers can't share one. `duplicateParser` and `renameParser` take
-> the new name explicitly.
+> In a cspell config, `languageSettings` chooses a parser for each file type by the parser's name. The example
+> keeps the original `typescript-strings-comments` parser for TypeScript files, and adds a copy named
+> `js-comments-only` for JavaScript files. Because the two parsers have different names, each file type can be
+> sent to the right one. `customPlugin.languageSettings()` writes those entries for you.
+>
+> Every parser in a plugin needs its own name, so `duplicateParser` and `renameParser` always ask you for the
+> new one. Using a name that's already taken is an error, reported when cspell loads your config.
 
 **NOTE:**
 
@@ -175,8 +181,15 @@ export default {
 
 ## Customization options
 
-`customizePlugin(options)` sets up a `tags` filter, applied to every parser, to specify what is passed to
-the spell checker based upon the attributed tags. To rename a parser, use `renameParser` on the result.
+`customizePlugin(options)` controls which parts of a file get spell checked, based on the [tags](#tags) the
+parser gives each part. The filter applies to every parser in the plugin.
+
+It returns a builder, so you can keep customizing the result. For example, to give the parser a different
+name:
+
+```js
+customizePlugin({ tags: { '*': false, comment: true } }).renameParser('typescript-strings-comments', 'my-parser');
+```
 
 ### `CustomizePluginOptions`
 
@@ -189,7 +202,8 @@ interface CustomizePluginOptions {
 }
 ```
 
-Passing `name` still works for now, but is deprecated.
+`customizePlugin` used to take a `name` option to rename the parser. It still works, but it's deprecated and
+will be removed in a future release. Use `renameParser` instead, as shown above.
 
 ### Examples
 
