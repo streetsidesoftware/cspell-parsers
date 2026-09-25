@@ -4,9 +4,8 @@ A full-fledged JavaScript and JSX parser for [cspell](https://cspell.org). It gi
 parts of your code get spell checked, from comments and strings to function and variable names. It also lets
 you skip module imports and other code that isn't under your control.
 
-It has the same JavaScript and JSX parsers as
-[`@cspell/parser-typescript`](https://www.npmjs.com/package/@cspell/parser-typescript). Use this package when a
-project has only JavaScript and JSX files.
+This plugin leverages the JavaScript parsers exported from
+[`@cspell/parser-typescript`](https://www.npmjs.com/package/@cspell/parser-typescript).
 
 ## Install
 

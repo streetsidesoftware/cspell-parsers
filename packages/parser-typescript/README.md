@@ -4,7 +4,8 @@ A full-fledged JavaScript, JSX, TypeScript, and TSX parser for [cspell](https://
 control over which parts of your code get spell checked, from comments and strings to function and variable
 names. It also lets you skip module imports and other code that isn't under your control.
 
-It uses [`@cspell/parser-typescript-tree-sitter-wasm`](https://www.npmjs.com/package/@cspell/parser-typescript-tree-sitter-wasm),
+This plugin leverages the parsers exported from
+[`@cspell/parser-typescript-tree-sitter-wasm`](https://www.npmjs.com/package/@cspell/parser-typescript-tree-sitter-wasm),
 which runs on WebAssembly, so it installs without a native build step.
 
 ## Install
