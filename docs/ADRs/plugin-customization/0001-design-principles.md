@@ -29,6 +29,11 @@ A customization produces only what cspell can express: plugins holding uniquely 
 file types through `languageSettings`. Nothing depends on a parser knowing its file type. Two file types that
 need different behavior go to two parsers with different names.
 
+An operation changes only what the user targets or names. It has no hidden side effects, even to avoid
+repetition or to keep the data normalized. When a shortcut would need to change something else, it relies on
+order instead (the last parser wins), or leaves that step to the user
+([0010](./0010-filter-tags-for-file-type.md)).
+
 These principles are written up for plugin authors in the
 [plugin author guide](../../guides/plugin-author-guide.md).
 
@@ -36,3 +41,4 @@ These principles are written up for plugin authors in the
 
 - Every other decision here answers "what does the user write, and what happens?".
 - Parser names are the user's handle on everything, so any rule about names is public API.
+- A config can be read call by call: each call's effect is limited to what it names.
