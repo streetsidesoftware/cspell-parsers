@@ -36,7 +36,7 @@ Each parser package exports a plugin, and the plugin comes with recommended sett
 - The exported plugin is an **immutable `IPluginEx`**. Users can always get back the original plugin and
   its parsers.
 
-`IPluginEx` has read-only helpers only:
+Each exported `IPluginEx` has read-only helpers only:
 
 | Member                                  | Returns                                                                                            |
 | --------------------------------------- | -------------------------------------------------------------------------------------------------- |
