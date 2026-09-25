@@ -62,6 +62,8 @@ export default defineConfig(
         },
       ],
       '@typescript-eslint/no-import-type-side-effects': 'error',
+      // Handle a possibly missing value explicitly instead of asserting it away with `!`.
+      '@typescript-eslint/no-non-null-assertion': 'error',
       '@typescript-eslint/consistent-type-imports': [
         'error',
         { prefer: 'type-imports', fixStyle: 'separate-type-imports', disallowTypeAnnotations: true },
