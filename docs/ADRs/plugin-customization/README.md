@@ -33,6 +33,7 @@ implementation.
 | 0019 | A parser's default filter comes only from its `tags`                                      | Accepted           |
 | 0020 | `IParser` exposes its unfiltered parse as `_parse`                                        | Accepted           |
 | 0021 | `customizePlugin` stays as a thin wrapper that returns a builder                          | Accepted           |
+| 0022 | `removeParser` takes any target; `addParser` adds a parser from anywhere                  | Accepted           |
 
 ## Open questions
 
