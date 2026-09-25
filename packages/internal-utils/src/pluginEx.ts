@@ -40,6 +40,14 @@ abstract class PluginExQueries implements IPluginExBase {
     return this.defs.map((def) => def.parser);
   }
 
+  parserNames(): string[] {
+    return this.defs.map((def) => def.name);
+  }
+
+  customize(): IPluginBuilder {
+    return new PluginBuilder(this.name, this.defs);
+  }
+
   get supportedFileTypes(): string[] {
     return [...new Set(this.defs.flatMap((def) => def.fileTypes))];
   }
@@ -91,10 +99,6 @@ class PluginEx extends PluginExQueries implements IPluginEx {
 
   protected get defs(): readonly ParserDef[] {
     return this.#defs;
-  }
-
-  customize(): IPluginBuilder {
-    return new PluginBuilder(this.name, this.#defs);
   }
 }
 
@@ -185,5 +189,6 @@ function assertNameIsFree(pluginName: string, defs: readonly ParserDef[], name: 
 function unknownParsersError(pluginName: string, defs: readonly ParserDef[], names: readonly string[]): Error {
   const list = names.map((name) => `"${name}"`).join(', ');
   const available = defs.map((def) => `"${def.name}"`).join(', ') || '(none)';
-  return new Error(`Unknown parser ${list} in plugin "${pluginName}". Available parsers: ${available}.`);
+  const noun = names.length === 1 ? 'parser' : 'parsers';
+  return new Error(`Unknown ${noun} ${list} in plugin "${pluginName}". Available parsers: ${available}.`);
 }

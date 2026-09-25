@@ -136,6 +136,30 @@ describe('IPluginBuilder', () => {
     expect(() => b.filterTags('typscript', {})).toThrow('Unknown parser "typscript"');
   });
 
+  it('names every unknown parser in the error', () => {
+    const b = mkPlugin().customize();
+    expect(() => b.removeParser(['go', 'rust'])).toThrow('Unknown parsers "go", "rust" in plugin "test".');
+  });
+
+  it('parserNames lists the names in order, ready to use as a target', () => {
+    const b = mkPlugin().customize().duplicateParser('php', 'php2');
+    expect(b.parserNames()).toEqual(['typescript', 'php', 'php2']);
+    b.filterTags(b.parserNames(), { '*': false, comment: true });
+    expect(texts(b.getParser('php2'))).toEqual(['comment']);
+  });
+
+  it('customize() forks a builder, leaving the original unchanged', () => {
+    const a = mkPlugin().customize().addFileTypes('typescript', ['astro']);
+    const b = a.customize().filterTags('*', { '*': false, comment: true });
+    for (const name of b.parserNames()) b.renameParser(name, 'legacy.' + name);
+
+    expect(a.parserNames()).toEqual(['typescript', 'php']);
+    expect(texts(a.getParser('php'))).toEqual(['comment', 'string']);
+    expect(b.parserNames()).toEqual(['legacy.typescript', 'legacy.php']);
+    expect(b.getParser('legacy.typescript').supportedFileTypes).toEqual(['javascript', 'typescript', 'astro']);
+    expect(texts(b.getParser('legacy.php'))).toEqual(['comment']);
+  });
+
   it('checks every name in a target list before changing anything', () => {
     const b = mkPlugin().customize();
     expect(() => b.removeParser(['php', 'go'])).toThrow('Unknown parser "go"');

@@ -135,6 +135,8 @@ export interface IPluginExBase {
   readonly parsers: IParserEx[];
   /** The set of the parsers' file types, in parser order. */
   readonly supportedFileTypes: string[];
+  /** The parser names, in order. */
+  parserNames(): string[];
   /** Throws if there's no parser with that name. */
   getParser(name: string): IParserEx;
   hasParser(name: string): boolean;
@@ -144,13 +146,12 @@ export interface IPluginExBase {
   languageSettings(): RecommendedLanguageSettings;
   /** `languageSettings` mapping `fileTypes` (default: the parser's own) to the named parser. */
   languageSettingsFor(name: string, fileTypes?: readonly string[]): RecommendedLanguageSettings;
+  /** A new builder, seeded from the current parsers. */
+  customize(): IPluginBuilder;
 }
 
 /** The immutable plugin a package exports. See docs/ADRs/plugin-customization/0004-immutable-plugin-and-builder.md. */
-export interface IPluginEx extends IPluginExBase {
-  /** A new builder, seeded from this plugin. */
-  customize(): IPluginBuilder;
-}
+export type IPluginEx = IPluginExBase;
 
 /**
  * Customizes a plugin in place; each method returns the builder. Usable directly as a cspell plugin.
