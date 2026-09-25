@@ -73,8 +73,8 @@ feature (including you, in six months) doesn't have to reverse-engineer why a ta
      session.
    - Format: title, status, context, decision, consequences — see `references/adr-template.md`. Status is
      `Proposed` while still under discussion in this session and `Accepted` once the user confirms it; use
-     `Superseded by NNNN-...` if a later ADR in the same directory overturns an earlier one (leave the old
-     file in place, don't delete it).
+     `Superseded by NNNN-...` if a later ADR in the same directory overturns an earlier one. While the design
+     is in progress, leave the old file in place. Step 8 removes it once the design is final.
    - After writing the file, append a one-line entry (number, title, status) to
      `docs/ADRs/<feature-slug>/README.md`.
    - Commit in the worktree right after writing or editing an ADR: one commit per ADR change, together
@@ -101,6 +101,21 @@ feature (including you, in six months) doesn't have to reverse-engineer why a ta
    Tell the user where the work lives: the `claude-adr-<feature-slug>` branch in
    `.claude/worktrees/claude-adr-<feature-slug>`. Once its PR is merged, remove the worktree and delete the
    branch.
+
+8. **Finalize: squash the ADRs into a tight set.** Treat the design like a pull request. The many small
+   commits and the ADRs that got revised or superseded along the way are working history, not the
+   deliverable. Only once the user says the design is final, rewrite `docs/ADRs/<feature-slug>/` into the
+   smallest set of ADRs that states the final design:
+   - Remove superseded ADRs, and any whose content has been fully absorbed by a later one.
+   - Merge ADRs that only refine each other (e.g. a target argument, then a later "also accept a list")
+     into one ADR stating the end result.
+   - Write each remaining ADR as the current decision. No "this supersedes …", no "earlier we …", no
+     revision history. Alternatives that were weighed and rejected stay, briefly, in Context: they are the
+     reason for the decision, not dead code.
+   - Renumber from `0001` in a sensible reading order, mark everything `Accepted`, and update the index
+     `README.md`, cross-links between ADRs, and `docs/glossary.md` links to match.
+   - Commit the consolidation on the same branch. The intermediate history stays in the branch and PR
+     (which gets squash-merged), not in the ADR files.
 
 ## Notes
 
