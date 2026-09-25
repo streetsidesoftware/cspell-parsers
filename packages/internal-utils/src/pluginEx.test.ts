@@ -1,9 +1,10 @@
 import type { AdvancedCSpellSettings, ParsedText } from '@cspell/cspell-types';
+import { defineConfig } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
 import { createPluginParserWithFilterTags } from './parserEx.ts';
 import { createPluginEx, customizeParserEx, customizePluginEx } from './pluginEx.ts';
-import type { IParserEx, IPluginEx } from './types.ts';
+import type { IParserEx, IPluginEx, RecommendedSettings } from './types.ts';
 
 const segments: ParsedText[] = [
   { text: 'comment', range: [0, 7], tags: { comment: true } },
@@ -256,6 +257,55 @@ describe('IPluginBuilder', () => {
     const b = mkPlugin().customize();
     const settings: AdvancedCSpellSettings = { plugins: [b], languageSettings: b.languageSettings() };
     expect(settings.plugins).toHaveLength(1);
+  });
+});
+
+describe('defineConfig', () => {
+  it('registers the plugin with its languageSettings', () => {
+    const plugin = mkPlugin();
+    expect(plugin.defineConfig()).toEqual({ plugins: [plugin], languageSettings: plugin.languageSettings() });
+  });
+
+  it("puts the plugin's entries first, so the user's win, and keeps other keys", () => {
+    const plugin = mkPlugin();
+    const other = createPluginEx({ name: 'other', parsers: [mkParser('other', ['astro'])] });
+    const userSetting = { languageId: 'javascript', parser: 'other', words: ['x'] };
+    const config = plugin.defineConfig({ words: ['y'], plugins: [other], languageSettings: [userSetting] });
+
+    expect(config).toEqual({
+      words: ['y'],
+      plugins: [plugin, other],
+      languageSettings: [...plugin.languageSettings(), userSetting],
+    });
+  });
+
+  it('leaves the settings unchanged', () => {
+    const settings = { plugins: [], languageSettings: [] };
+    mkPlugin().defineConfig(settings);
+    expect(settings).toEqual({ plugins: [], languageSettings: [] });
+  });
+
+  it('registers a snapshot of a builder, so later changes do not reach the config', () => {
+    const b = mkPlugin().customize();
+    const config = b.defineConfig();
+    b.renameParser('php', 'php2');
+
+    const [registered] = config.plugins as IPluginEx[];
+    expect(registered).not.toBe(b);
+    expect(registered?.parserNames()).toEqual(['typescript', 'php']);
+    expect(config.languageSettings).toEqual(registered?.languageSettings());
+  });
+
+  it("is accepted by cspell's own defineConfig and AdvancedCSpellSettings", () => {
+    const config = mkPlugin().defineConfig({
+      words: ['y'],
+      languageSettings: [{ languageId: 'astro', parser: 'typescript', ignoreWords: ['z'] }],
+    });
+    const settings: AdvancedCSpellSettings = config;
+    const recommended: RecommendedSettings = mkPlugin().defineConfig();
+    expect(defineConfig(config)).toBe(config);
+    expect(settings.words).toEqual(['y']);
+    expect(recommended.plugins).toHaveLength(1);
   });
 });
 

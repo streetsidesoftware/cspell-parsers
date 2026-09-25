@@ -17,6 +17,8 @@ export type {
   CustomizeParserOptions,
   CustomizePluginExOptions,
   CustomizePluginOptions,
+  DefineConfigSettings,
+  DefinedConfig,
   FileTypeTarget,
   IParser,
   IParserEx,

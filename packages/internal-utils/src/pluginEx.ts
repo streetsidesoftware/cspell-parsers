@@ -3,6 +3,8 @@ import { ParserDef } from './parserEx.ts';
 import type {
   CustomizeParserOptions,
   CustomizePluginExOptions,
+  DefineConfigSettings,
+  DefinedConfig,
   FileTypeTarget,
   IParserEx,
   IPluginBuilder,
@@ -33,6 +35,8 @@ export function createPluginEx(options: CreatePluginExOptions): IPluginEx {
 abstract class PluginExQueries implements IPluginExBase {
   abstract get name(): string;
   protected abstract get defs(): readonly ParserDef[];
+  /** Returns the immutable plugin that `defineConfig` registers. */
+  protected abstract snapshot(): IPluginEx;
 
   get parsers(): IParserEx[] {
     return this.defs.map((def) => def.parser);
@@ -48,6 +52,15 @@ abstract class PluginExQueries implements IPluginExBase {
 
   get supportedFileTypes(): readonly string[] {
     return [...new Set(this.defs.flatMap((def) => def.fileTypes))];
+  }
+
+  defineConfig<T extends DefineConfigSettings = Record<never, never>>(settings?: T): DefinedConfig<T> {
+    const plugin = this.snapshot();
+    return {
+      ...settings,
+      plugins: [plugin, ...(settings?.plugins ?? [])],
+      languageSettings: [...plugin.languageSettings(), ...(settings?.languageSettings ?? [])],
+    } as DefinedConfig<T>;
   }
 
   getParser(name: string): IParserEx {
@@ -134,6 +147,10 @@ class PluginEx extends PluginExQueries implements IPluginEx {
   protected get defs(): readonly ParserDef[] {
     return this.#defs;
   }
+
+  protected snapshot(): IPluginEx {
+    return this;
+  }
 }
 
 class PluginBuilder extends PluginExQueries implements IPluginBuilder {
@@ -210,6 +227,10 @@ class PluginBuilder extends PluginExQueries implements IPluginBuilder {
 
   build(): IPluginEx {
     return new PluginEx(this.name, this.#defs);
+  }
+
+  protected snapshot(): IPluginEx {
+    return this.build();
   }
 
   #update(target: ParserTarget, change: (def: ParserDef) => ParserDefChanges): this {

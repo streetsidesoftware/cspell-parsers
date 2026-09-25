@@ -190,7 +190,30 @@ export interface IPluginExBase {
    * The builder is named `name`, or keeps this plugin's name when `name` is omitted.
    */
   customize(name?: string): IPluginBuilder;
+  /**
+   * Returns `settings` with this plugin added to `plugins` and its `languageSettings()` added to `languageSettings`.
+   * The plugin's entries go first, so the user's own entries win.
+   * A builder is added as a `build()` snapshot.
+   * See docs/ADRs/plugin-customization/0009-define-config.md.
+   */
+  defineConfig<T extends DefineConfigSettings = Record<never, never>>(settings?: T): DefinedConfig<T>;
 }
+
+/** The settings keys `defineConfig` merges; every other key is copied as it is. */
+export interface DefineConfigSettings {
+  plugins?: readonly CSpellPlugin[] | undefined;
+  languageSettings?: readonly object[] | undefined;
+  [key: string]: unknown;
+}
+
+/** The type of the user's own `languageSettings` entries, or `never` when there are none. */
+type LanguageSettingOf<T> = T extends { languageSettings: readonly (infer E)[] } ? E : never;
+
+/** The result of `defineConfig`: the user's settings with the plugin merged in. */
+export type DefinedConfig<T extends DefineConfigSettings> = Omit<T, 'plugins' | 'languageSettings'> & {
+  plugins: CSpellPlugin[];
+  languageSettings: (RecommendedLanguageSetting | LanguageSettingOf<T>)[];
+};
 
 /**
  * The immutable plugin each parser package exports.
