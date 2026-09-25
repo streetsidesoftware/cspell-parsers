@@ -80,8 +80,8 @@ export default {
 
 Both `customizePlugin` and `plugin.customize()` give you a customized copy of the plugin. You can add it to
 `plugins` straight away, or keep adjusting it first. For example, the next config checks TypeScript files as
-usual, but checks only the comments in JavaScript files. It does that by adding a second parser, named
-`js-comments-only`, for JavaScript files:
+usual, but checks only the comments in JavaScript files. It duplicates the `typescript-strings-comments`
+parser under the name `js-comments-only`, then fine-tunes the copy's settings for JavaScript files:
 
 <!--- @@inject: samples/customize-by-file-type/cspell.config.mts#lang=ts --->
 
@@ -112,9 +112,9 @@ export default {
 
 **What is `js-comments-only`?**
 
-> It's a copy of the plugin's `typescript-strings-comments` parser, set up to check only comments. In a cspell
-> config, `languageSettings` picks a parser for each file type by its name. Because the copy has its own name,
-> JavaScript files can use it while TypeScript files keep the original. Calling
+> It's the name of the copy. In a cspell config, `languageSettings` picks a parser for each file type by its
+> name. Because the copy has its own name, JavaScript files can use it while TypeScript files keep the
+> original. Calling
 > `customPlugin.languageSettings()` writes those entries for you.
 >
 > Every parser in a plugin needs its own name, so `duplicateParser` and `renameParser` always ask you for the
