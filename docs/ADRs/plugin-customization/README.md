@@ -30,6 +30,7 @@ implementation.
 | 0016 | A builder method's target can also be a list of parser names                              | Accepted           |
 | 0017 | `IParser` is read-only data with no customization methods                                 | Accepted           |
 | 0018 | The builder holds each parser in a class that privately keeps its originals               | Accepted           |
+| 0019 | A parser's default filter comes only from its `tags`                                      | Accepted           |
 
 ## Open questions
 
