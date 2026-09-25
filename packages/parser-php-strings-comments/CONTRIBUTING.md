@@ -178,9 +178,8 @@ plugin-customization ADRs (`docs/ADRs/plugin-customization/0006-tag-filtering.md
   test coverage stays in `parser.test.ts` - it's still the same parsing behavior being tested, just reached
   through `parse`/`parser.parse` rather than the `Scanner` class directly.
 - `parseFixture(name, parse = parser.parse)` defaults to the default-filtered view (`code` and `html` excluded), which
-  is what almost every test wants. The `mixed.php` block passes `createParse(parse, () => true)` instead,
-  since several of its tests specifically assert on `code`/`html` segments that the default filter would
-  otherwise hide.
+  is what almost every test wants. The `mixed.php` block passes the unfiltered `parse` instead, since several
+  of its tests specifically assert on `code`/`html` segments that the default filter would otherwise hide.
 - Each non-obvious piece of scanning logic has its own dedicated fixture: `attributes.php` (`#[...]` vs. `#`
   comments), `close-tag.php` (`?>` ending PHP mode, including mid-line-comment), `short-echo.php` (`<?=`),
   `heredoc-nowdoc.php`, and `interpolation.php` (the nested-quote-inside-`{$...}` case) - in addition to

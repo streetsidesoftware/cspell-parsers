@@ -229,7 +229,7 @@ export interface IPluginBuilder extends IPluginExBase {
 }
 
 /**
- * The options a migrated package's `customizePlugin` accepts.
+ * The options a package's `customizePlugin` accepts.
  * To rename a parser, use `renameParser` on the result, or the deprecated `CustomizeParserOptions` overload.
  * See docs/ADRs/plugin-customization/0008-customize-plugin-wrapper.md.
  */
