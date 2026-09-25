@@ -3,7 +3,10 @@ import type { CustomizePluginExOptions, IPluginBuilder, IPluginEx } from '@inter
 
 export type { CustomizePluginExOptions as CustomizePluginOptions } from '@internal/utils';
 
-/** The parsers this plugin keeps; any other parser `@cspell/parser-typescript` has, now or later, is left out. */
+/**
+ * Names the parsers this plugin keeps.
+ * Any other parser `@cspell/parser-typescript` has, now or later, is left out.
+ */
 const javascriptParserNames: readonly string[] = ['javascript', 'javascriptreact'];
 
 /**
