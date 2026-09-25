@@ -44,11 +44,12 @@ export default customizePlugin()
   parser that currently handles them, the last one that lists them, so the user doesn't need parser names.
   This is an exception to 0005's parser targets.
 - **The user names the copy.** `newName` is required, and a taken name throws, as in 0005.
-- **The file types move.** The copy lists only the given file types, and they're removed from the source
-  parser. So `parserNamesFor` stays unambiguous and later parsers can't silently take them back.
+- **The file types move.** The copy lists only the given file types, and they're removed from every other
+  parser that lists them. So `parserNamesFor` stays unambiguous, and the result doesn't depend on order.
 - **The filter replaces, never chains.** `options` replaces the copied filter, as in
   [0006](./0006-tag-filtering.md).
 - **The copy is appended.** Like `duplicateParser`, it goes to the end of the list.
+- **An empty list does nothing**, as with 0005's targets.
 - **Mistakes throw before anything changes.** Throws happen for a file type no parser lists, for file types
   that different parsers handle (one name can't cover two copies), and for `'*'`, which
   `filterTags('*', ...)` already covers.
@@ -57,5 +58,5 @@ export default customizePlugin()
 
 - "A different filter for these file types" is one call, and the examples keep their intent.
 - The source is resolved when the method is called. Later reordering or `addParser` doesn't change it.
-- The source keeps its other file types. A source left with no file types stays in the plugin, as in 0003.
+- The other parsers keep their other file types. A parser left with no file types stays in the plugin, as in 0003.
 - The file types can't be spread across parsers in one call. Call the method once per source parser.
