@@ -88,6 +88,14 @@ This applies unconditionally to `.c` files too, not just `.cpp` - real C code ca
 syntax (C has no raw string literals), so always attempting the match is harmless there and avoids needing
 any extension-based dialect detection at all.
 
+## Digit separators (`isDigitSeparator`)
+
+C++14 and C23 allow `'` inside a number, as in `1'000'000` or `0xFF'FF`. Read as a char literal, that `'`
+would swallow the code after it up to the next `'`. A `'` is a digit separator when the next character
+continues the number and the token before it starts with a digit (or `.` and a digit). A char literal's
+encoding prefix (`u8'a'`, `L'a'`) starts with a letter, so it's still read as a char literal.
+`fixtures/digit-separators.cpp` covers both.
+
 ## Testing
 
 - `parser.test.ts` reads fixtures out of `fixtures/` (via `readFixture`/`parseFixture` helpers) rather than

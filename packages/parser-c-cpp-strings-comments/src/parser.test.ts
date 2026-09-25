@@ -138,6 +138,19 @@ describe('c-cpp-strings-comments parser', () => {
     expect(str?.range).toEqual([content.indexOf('R"'), content.length]);
   });
 
+  describe('digit-separators.cpp', () => {
+    const parsedTexts = parseFixture('digit-separators.cpp');
+    const strings = parsedTexts.filter((p) => p.tags?.string).map((p) => p.text);
+
+    it("does not read a digit separator (1'000'000, 0xFF'FF, 3.141'592) as a char literal", () => {
+      expect(strings).toEqual(["\\'", 'w', 'a real string after the numbers']);
+    });
+
+    it("still reads a prefixed char literal (u'w') as a char literal", () => {
+      expect(byText(parsedTexts, 'w')?.tags).toEqual({ string: true, 'string.singleQuote': true });
+    });
+  });
+
   describe('header.hpp', () => {
     // A header file has no special handling of its own (this parser doesn't dialect-detect by extension at
     // all), but it's a realistic file to run the full scanner over end-to-end: a line comment, a block doc
