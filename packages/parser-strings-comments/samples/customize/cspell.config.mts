@@ -1,13 +1,7 @@
 import { customizePlugin } from '@cspell/parser-strings-comments/plugin';
 
-const plugin = customizePlugin('csharp', { name: 'csharp-strings-comments', tags: { '*': false, 'comment.block.doc': true, 'comment.line.doc': true } });
-
-export default {
-  plugins: [plugin],
-  languageSettings: [
-    {
-      languageId: 'csharp',
-      parser: 'csharp-strings-comments',
-    },
-  ],
-};
+// C# files: check only doc comments.
+// Other languages: keep the defaults.
+export default customizePlugin()
+  .filterTagsForFileType('csharp', { '*': false, 'comment.block.doc': true, 'comment.line.doc': true }, 'csharp-doc-comments')
+  .defineConfig();

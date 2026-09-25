@@ -1,30 +1,18 @@
-import type { Parser as CSpellParser } from '@cspell/cspell-types';
-import { plugin as pluginCEx } from '@cspell/parser-c-cpp-strings-comments/plugin';
-import { plugin as pluginCsharpEx } from '@cspell/parser-csharp-strings-comments/plugin';
-import { plugin as pluginGoEx } from '@cspell/parser-go-strings-comments/plugin';
-import { plugin as pluginJavaEx } from '@cspell/parser-java-strings-comments/plugin';
-import { plugin as pluginPhpEx } from '@cspell/parser-php-strings-comments/plugin';
-import { plugin as pluginPythonEx } from '@cspell/parser-python-strings-comments/plugin';
-import { plugin as pluginRubyEx } from '@cspell/parser-ruby-strings-comments/plugin';
-import { plugin as pluginRustEx } from '@cspell/parser-rust-strings-comments/plugin';
-import { plugin as pluginTypescriptEx } from '@cspell/parser-typescript-strings-comments/plugin';
-import type { CustomizePluginOptions, IPlugin, RecommendedLanguageSettings } from '@internal/utils';
-import { customizeParser, toLegacyPlugin } from '@internal/utils';
+import { plugin as pluginC } from '@cspell/parser-c-cpp-strings-comments/plugin';
+import { plugin as pluginCsharp } from '@cspell/parser-csharp-strings-comments/plugin';
+import { plugin as pluginGo } from '@cspell/parser-go-strings-comments/plugin';
+import { plugin as pluginJava } from '@cspell/parser-java-strings-comments/plugin';
+import { plugin as pluginPhp } from '@cspell/parser-php-strings-comments/plugin';
+import { plugin as pluginPython } from '@cspell/parser-python-strings-comments/plugin';
+import { plugin as pluginRuby } from '@cspell/parser-ruby-strings-comments/plugin';
+import { plugin as pluginRust } from '@cspell/parser-rust-strings-comments/plugin';
+import { plugin as pluginTypescript } from '@cspell/parser-typescript-strings-comments/plugin';
+import type { CustomizeParserOptions, CustomizePluginExOptions, IPluginBuilder, IPluginEx } from '@internal/utils';
+import { createPluginEx, customizePluginEx } from '@internal/utils';
 
-export type { CustomizePluginOptions } from '@internal/utils';
+export type { CustomizePluginExOptions as CustomizePluginOptions } from '@internal/utils';
 
-// Migrated packages go through the adapter until this bundle moves to the new API.
-const pluginC = toLegacyPlugin(pluginCEx);
-const pluginCsharp = toLegacyPlugin(pluginCsharpEx);
-const pluginGo = toLegacyPlugin(pluginGoEx);
-const pluginJava = toLegacyPlugin(pluginJavaEx);
-const pluginPhp = toLegacyPlugin(pluginPhpEx);
-const pluginPython = toLegacyPlugin(pluginPythonEx);
-const pluginRuby = toLegacyPlugin(pluginRubyEx);
-const pluginRust = toLegacyPlugin(pluginRustEx);
-const pluginTypescript = toLegacyPlugin(pluginTypescriptEx);
-
-const allPlugins = [
+const bundledPlugins: readonly IPluginEx[] = [
   pluginC,
   pluginCsharp,
   pluginGo,
@@ -36,118 +24,59 @@ const allPlugins = [
   pluginTypescript,
 ];
 
-const allParsers = allPlugins.flatMap((p) => p.parsers);
-
-export const supportedFileTypes: Readonly<string[]> = Object.freeze([
-  ...new Set(allPlugins.flatMap((p) => p.supportedFileTypes)),
-]);
-
-export const recommendedLanguageSettings: RecommendedLanguageSettings = allPlugins.flatMap(
-  (p) => p.recommendedLanguageSettings,
-);
-
-export interface ParserPluginEx extends IPlugin {
-  getParserName(fileType?: string): string | undefined;
-  getParser(fileType?: string): CSpellParser | undefined;
-}
-
-export const plugin: ParserPluginEx = {
+export const plugin: IPluginEx = createPluginEx({
   name: 'strings-comments',
-  parsers: allParsers,
-  supportedFileTypes,
-  recommendedLanguageSettings,
-  getParserName(fileType?: string): string | undefined {
-    return this.getParser(fileType)?.name;
-  },
-  getParser(fileType?: string) {
-    const p = !fileType ? this.parsers : getParsersByFileType(fileType);
-    return p.slice(-1)[0] || undefined;
-  },
-};
+  parsers: bundledPlugins.flatMap((p) => p.parsers),
+});
 
-const parsersByFileType = groupParsersByFileType(allPlugins);
+export const supportedFileTypes: readonly string[] = plugin.supportedFileTypes;
 
-export function getParsersByFileType(fileType?: string): IPlugin['parsers'] {
-  return !fileType ? allParsers : parsersByFileType.get(fileType) || [];
-}
-
-function groupParsersByFileType(plugins: IPlugin[]): Map<string, IPlugin['parsers']> {
-  const parsersByFileType: Map<string, IPlugin['parsers']> = new Map();
-  for (const plugin of plugins) {
-    for (const fileType of plugin.supportedFileTypes) {
-      const parsers = parsersByFileType.get(fileType) || [];
-      parsers.push(...plugin.parsers);
-      parsersByFileType.set(fileType, parsers);
-    }
-  }
-  return parsersByFileType;
-}
+export const recommendedLanguageSettings = plugin.languageSettings();
 
 /**
- * Create a customized copy of {@link plugin} for one language, or for every bundled language with `'*'`.
- *
- * @param fileType - the language ID to customize (e.g. `'php'`), or `'*'` for every bundled language.
- * @param options - the tags to keep, and an optional name; `name` isn't applied to the parsers for `'*'`, since they can't share one.
- * @returns a plugin with only the selected languages' parsers, and `recommendedLanguageSettings` that select them.
+ * Creates a customized copy of {@link plugin}.
+ * `options.tags` chooses which tagged segments get spell checked, in every bundled language.
+ * The copy can be added to `plugins` as it is, or adjusted further first.
  *
  * **`cspell.config.mjs`**
  *
  * ```js
  * import { customizePlugin } from '@cspell/parser-strings-comments/plugin';
  *
- * const plugin = customizePlugin('*', { tags: { html: true } }); // also check the HTML in PHP files
- *
- * export default {
- *   plugins: [plugin],
- *   languageSettings: plugin.recommendedLanguageSettings,
- * };
+ * // only check comments
+ * export default customizePlugin({ tags: { '*': false, comment: true } }).defineConfig();
  * ```
  */
-export function customizePlugin(fileType: string, options: CustomizePluginOptions): ParserPluginEx {
-  const opts: CustomizePluginOptions = {};
-  if (options.tags) {
-    opts.tags = options.tags;
-  }
-  if (options.name && fileType !== '*') {
-    opts.name = options.name;
-  }
-  const plugins = customizeImportedPlugins(
-    allPlugins.filter((p) => p.parsers.length && (p.supportedFileTypes.includes(fileType) || fileType === '*')),
-    opts,
-  );
-  const parsersByFileType = groupParsersByFileType(plugins.map((p) => p));
-  const parsers = [...new Set([...parsersByFileType.values()].flat())];
-  const supportedFileTypes = Object.freeze([...parsersByFileType.keys()]);
-  const recommendedLanguageSettings = plugins.map((p) => ({
-    languageId: filterFileTypes(fileType, p.supportedFileTypes).join(','),
-    parser: p.parsers[p.parsers.length - 1].name,
-  }));
-  return {
-    name: options.name || plugin.name,
-    parsers,
-    supportedFileTypes,
-    recommendedLanguageSettings,
-    getParserName(fileType?: string): string | undefined {
-      return this.getParser(fileType)?.name;
-    },
-    getParser(fileType?: string) {
-      const p = !fileType ? this.parsers : parsersByFileType.get(fileType) || [];
-      return p.slice(-1)[0] || undefined;
-    },
-  };
+export function customizePlugin(options?: CustomizePluginExOptions): IPluginBuilder;
+/** @deprecated Rename a parser with `customizePlugin().renameParser(...)` instead of `name`. */
+export function customizePlugin(options: CustomizeParserOptions): IPluginBuilder;
+/**
+ * @deprecated Use `customizePlugin().filterTagsForFileType(fileType, tags, newName)`, or
+ * `customizePlugin({ tags })` for every language.
+ *
+ * Keeps only the parsers that list `fileType`, narrowed to `fileType`, and applies `options.tags`.
+ * With `'*'`, it keeps every parser and doesn't rename them.
+ */
+export function customizePlugin(fileType: string, options: CustomizeParserOptions): IPluginBuilder;
+export function customizePlugin(
+  fileTypeOrOptions?: string | CustomizePluginExOptions | CustomizeParserOptions,
+  options: CustomizeParserOptions = {},
+): IPluginBuilder {
+  if (typeof fileTypeOrOptions !== 'string') return customizePluginEx(plugin, fileTypeOrOptions);
+  return customizeForFileType(fileTypeOrOptions, options);
 }
 
-function customizeImportedPlugins(plugins: IPlugin[], options: CustomizePluginOptions): IPlugin[] {
-  return plugins.map((plugin) => customizeImportedPlugin(plugin, options));
-}
-
-function customizeImportedPlugin(plugin: IPlugin, options: CustomizePluginOptions): IPlugin {
-  return { ...plugin, parsers: plugin.parsers.map((parser) => customizeParser(parser, options)) };
-}
-
-function filterFileTypes(fileType: string, supportedFileTypes: Readonly<string[]>): Readonly<string[]> {
-  if (fileType === '*') {
-    return supportedFileTypes;
+/** Implements the deprecated `customizePlugin(fileType, options)`, reproducing the result of the old bundle. */
+function customizeForFileType(fileType: string, options: CustomizeParserOptions): IPluginBuilder {
+  const builder = plugin.customize(options.name);
+  if (fileType !== '*') {
+    const keep = builder.parserNamesFor(fileType);
+    builder.removeParser(builder.parserNames().filter((name) => !keep.includes(name)));
+    builder.setFileTypes(keep, [fileType]);
+    if (options.name !== undefined) {
+      for (const name of keep) builder.renameParser(name, options.name);
+    }
   }
-  return supportedFileTypes.filter((ft) => ft === fileType);
+  if (options.tags) builder.filterTags('*', options.tags);
+  return builder;
 }
