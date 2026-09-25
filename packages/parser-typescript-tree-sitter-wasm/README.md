@@ -121,7 +121,7 @@ export default customizePlugin().filterTags('javascript', { '*': false, comment:
 
 Each part of a file gets its most specific tag plus the more general ones above it. For example, a doc
 comment is tagged `comment.block.doc`, `comment.block`, and `comment`, so a filter can use whichever level it
-needs. JSX text is checked, but has no tag.
+needs.
 
 <!--- @@inject: docs/tags-table.csv#markdown --->
 
@@ -150,6 +150,8 @@ needs. JSX text is checked, but has no tag.
 | `identifier.label`             | A statement label                                                                                        |
 | `identifier.importBinding`     | A renamed import alias, default import name, or namespace import name                                    |
 | `identifier.exportBinding`     | A renamed export alias (`export { x as y }`)                                                             |
+| `jsx`                          | Any JSX content                                                                                          |
+| `jsx.text`                     | The text between JSX tags, such as the `Hello` in `<p>Hello</p>`                                         |
 | `code`                         | Everything else (off by default)                                                                         |
 
 <!--- @@inject-end: docs/tags-table.csv#markdown --->

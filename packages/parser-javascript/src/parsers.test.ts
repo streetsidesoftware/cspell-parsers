@@ -87,16 +87,16 @@ describe('javascript parser', () => {
     });
   });
 
-  it('parses jsx files with the javascriptreact parser and includes untagged jsx text', () => {
+  it('parses jsx files with the javascriptreact parser and tags jsx text as jsx.text', () => {
     const parsedTexts = parseFixture('jsx.jsx', 'javascriptreact');
 
-    expect(find(parsedTexts, 'hello world').tags).toBeUndefined();
+    expect(find(parsedTexts, 'hello world').tags).toEqual({ jsx: true, 'jsx.text': true });
     expect(find(parsedTexts, 'Greeting').tags).toEqual({ identifier: true, 'identifier.variable': true });
   });
 
   it('parses JSX in a .js file with the javascript parser', () => {
     const parsedTexts = parseFixture('jsx.jsx');
-    expect(find(parsedTexts, 'hello world').tags).toBeUndefined();
+    expect(find(parsedTexts, 'hello world').tags).toEqual({ jsx: true, 'jsx.text': true });
   });
 
   it('only declares javascript file types as supported, not typescript', () => {

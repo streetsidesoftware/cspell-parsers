@@ -405,7 +405,7 @@ function* walk(
       return;
     }
     case 'jsx_text':
-      if (node.text.trim()) yield makeText(node, undefined);
+      if (node.text.trim()) yield makeText(node, TAGS.JSX_TEXT);
       return;
     case 'statement_block': {
       const innerBindingScope = pushShadow(bindingScope, blockDeclarationNames(node), imports);

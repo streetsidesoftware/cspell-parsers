@@ -303,10 +303,10 @@ describe('typescript parser', () => {
     });
   });
 
-  it('parses tsx files and includes untagged jsx text', () => {
+  it('parses tsx files and tags jsx text as jsx.text', () => {
     const parsedTexts = parseFixture('jsx.tsx');
 
-    expect(find(parsedTexts, 'hello world').tags).toBeUndefined();
+    expect(find(parsedTexts, 'hello world').tags).toEqual({ jsx: true, 'jsx.text': true });
     expect(find(parsedTexts, 'Greeting').tags).toEqual({ identifier: true, 'identifier.variable': true });
   });
 
@@ -408,19 +408,22 @@ describe('one parser per file type', () => {
   it('parses JSX in a .js file with the javascript parser', () => {
     const parsedTexts = parseFixture('jsx-in.js');
 
-    expect(find(parsedTexts, 'hello world').tags).toBeUndefined();
+    expect(find(parsedTexts, 'hello world').tags).toEqual({ jsx: true, 'jsx.text': true });
     expect(find(parsedTexts, 'Greeting').tags).toEqual({ identifier: true, 'identifier.variable': true });
   });
 
   it('parses JSX with the javascriptreact parser', () => {
     const parsedTexts = parseWith('javascriptreact', readFixture('jsx-in.js'), 'file.jsx');
-    expect(find(parsedTexts, 'hello world').tags).toBeUndefined();
+    expect(find(parsedTexts, 'hello world').tags).toEqual({ jsx: true, 'jsx.text': true });
   });
 
   it('picks the grammar from the parser, not the filename', () => {
     const content = readFixture('jsx.tsx');
     // The typescriptreact parser reads JSX even when the file is named .ts.
-    expect(find(parseWith('typescriptreact', content, 'file.ts'), 'hello world').tags).toBeUndefined();
+    expect(find(parseWith('typescriptreact', content, 'file.ts'), 'hello world').tags).toEqual({
+      jsx: true,
+      'jsx.text': true,
+    });
     // The typescript parser has no JSX, even when the file is named .tsx.
     expect(parseWith('typescript', content, 'file.tsx').some((p) => p.text === 'hello world')).toBe(false);
   });
