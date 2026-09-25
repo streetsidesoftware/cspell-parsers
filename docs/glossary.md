@@ -30,6 +30,13 @@ The designed successor to `@internal/utils`'s ad hoc `IPlugin`: an immutable plu
 alongside `IPlugin` while packages migrate, then gets folded back into `IPlugin`. Established in
 [plugin-customization/0001](./ADRs/plugin-customization/0001-compatibility-policy.md).
 
+## Parser file types
+
+A parser's `supportedFileTypes`: the file types used to generate `languageSettings` for it (`recommended`,
+`languageSettings()`, `languageSettingsFor`). They don't restrict what the parser can be used for. cspell
+selects a parser only by name. Established in
+[plugin-customization/0011](./ADRs/plugin-customization/0011-parsers-without-file-types.md).
+
 ## Recommended parser
 
 For a given file type, the parser a plugin's `recommended` settings select: the last parser in the
