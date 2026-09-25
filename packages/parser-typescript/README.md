@@ -1,10 +1,9 @@
 # @cspell/parser-typescript
 
-A [cspell](https://cspell.org) parser plugin for TypeScript (`.ts`, `.mts`, `.cts`) and TSX/JSX (`.tsx`,
-`.jsx`) source files. It understands the language well enough to skip things that were never meant to be
-read as words — keywords, punctuation, numeric literals — and to leave import specifiers, external package
-names, and property access on imported values alone, so it produces fewer false positives than plain
-text-based checking.
+A [cspell](https://cspell.org) parser plugin for JavaScript, JSX, TypeScript, and TSX files. It understands
+the language well enough to skip things that were never meant to be read as words, such as keywords,
+punctuation, and numbers. It also leaves package names and names that come from imported packages alone, so
+it flags fewer words you didn't write.
 
 ## Install
 
@@ -15,7 +14,7 @@ npm install --save-dev @cspell/parser-typescript
 ## Usage
 
 The quickest way to get started is to import the recommended settings, which registers the plugin and
-selects it for TypeScript, JavaScript, TSX, and JSX files:
+selects its parsers for every supported file type:
 
 **`cspell.config.jsonc`**
 
@@ -29,7 +28,7 @@ selects it for TypeScript, JavaScript, TSX, and JSX files:
 
 <!--- @@inject-end: samples/recommended/cspell.config.jsonc#lang=jsonc --->
 
-For more control — for example, to apply it to only some file types, or alongside other settings — wire the
+For more control - for example, to apply it to only some file types, or alongside other settings - wire the
 plugin in yourself and choose the language IDs to use it for:
 
 **`cspell.config.jsonc`**
@@ -40,10 +39,8 @@ plugin in yourself and choose the language IDs to use it for:
 {
   "import": ["@cspell/parser-typescript"],
   "languageSettings": [
-    {
-      "languageId": "typescript,typescriptreact",
-      "parser": "typescript",
-    },
+    { "languageId": "typescript", "parser": "typescript" },
+    { "languageId": "typescriptreact", "parser": "typescriptreact" },
   ],
 }
 ```
@@ -52,83 +49,77 @@ plugin in yourself and choose the language IDs to use it for:
 
 ## Supported file types
 
-The plugin provides these parsers. Where Recommended is `yes`, `recommended` enables the named parser for files with that Language ID:
+The plugin has one parser per file type, named after it. Where Recommended is `yes`, `recommended` enables
+the named parser for files with that Language ID:
 
 <!--- @@inject: docs/language-id-n-parser-name.csv --->
 
-| Language ID     | Parser Name | Recommended |
-| --------------- | ----------- | ----------- |
-| javascript      | typescript  | yes         |
-| javascriptreact | typescript  | yes         |
-| typescript      | typescript  | yes         |
-| typescriptreact | typescript  | yes         |
+| Language ID     | Parser Name     | Recommended |
+| --------------- | --------------- | ----------- |
+| javascript      | javascript      | yes         |
+| javascriptreact | javascriptreact | yes         |
+| typescript      | typescript      | yes         |
+| typescriptreact | typescriptreact | yes         |
 
 <!--- @@inject-end: docs/language-id-n-parser-name.csv --->
 
-### Filtering by tag and file type
+Each parser reads its file type's own syntax, whatever the file is called. A file you map to
+`typescriptreact` is read as TSX, even if it's named `.ts`.
 
-By default every segment the parser emits gets spell checked, except `code`. Use `customizePlugin` to change what is sent on to the spell checker.
-See also: [Customization options](#customization-options)
+## Filtering by tag
+
+By default, identifiers, strings, comments, and JSX text are spell checked, and the rest of the code isn't.
+Use `customizePlugin` to change what gets checked. For example, to check only line comments and doc
+comments:
 
 **`cspell.config.ts`** or **`cspell.config.mjs`**
 
-```js
+<!--- @@inject: samples/customize/cspell.config.mts#lang=ts --->
+
+```ts
 import { customizePlugin } from '@cspell/parser-typescript/plugin';
 
-const customPlugin = customizePlugin({
-  // set the parser name to be used in languageSettings
-  name: 'typescript-comments-only',
-  tags: { '*': false, comment: true }, // only check comments
-});
-
-export default {
-  plugins: [customPlugin],
-  languageSettings: [
-    {
-      // select the customized parser by name, for typescript and tsx files only
-      languageId: 'typescript,typescriptreact',
-      parser: 'typescript-comments-only',
-    },
-  ],
-};
+// Check only line comments and doc comments.
+export default customizePlugin({
+  tags: { '*': false, comment: true, 'comment.block': false, 'comment.block.doc': true },
+}).defineConfig();
 ```
 
-**NOTE:**
-
-> `name` overrides the parser's registered name (`typescript` by default). This matters when registering more
-> than one customized copy of this parser — e.g. under different `languageSettings` — since cspell selects a
-> parser by name and two parsers can't share one:
->
-> ```js
-> plugins: [
->   customizePlugin({ name: 'typescript-comments-only', tags: { '*': false, comment: true } }),
->   customizePlugin({ name: 'typescript-strings-only', tags: { '*': false, string: true } }),
-> ],
-> ```
+<!--- @@inject-end: samples/customize/cspell.config.mts#lang=ts --->
 
 **NOTE:**
 
-> `tags` keys are matched hierarchically against the [tags](#tags) below.
->
-> The key `comment` also matches the more specific
-> `comment.block.doc` unless a more specific key overrides it. See: [`CustomizePluginOptions`](#customizepluginoptions) and [`TagFilterOptions`](#tagfilteroptions) below.
+> Keys in `tags` are matched hierarchically against the [tags](#tags) below. For example, the key `comment`
+> also matches the more specific `comment.block.doc`, unless a more specific key overrides it. A key can also
+> use `*` as a wildcard, such as `comment.*`, or a bare `*` for everything not otherwise matched.
 
-## What it does differently
+Calling `customizePlugin` gives you a customized copy of the plugin. Call `defineConfig()` on it to get a
+complete cspell config, or keep adjusting it first.
 
-- Checks identifiers, string/template contents, comments, and JSX text by default; keywords, punctuation,
-  and numbers are tagged `code` and off by default - see [The `code` tag](#the-code-tag).
-- Doesn't flag a package name in an `import`/`export ... from` (`'lodash'`, `'@scope/pkg'`, `'node:fs'`) —
-  that's not spelling you authored.
-- Doesn't flag a named import's original export name, or properties accessed on an imported value —
-  those come from the package being imported, not from your code. A renamed import's local alias, since you
-  chose that name, _is_ checked.
-- Still checks a local variable or parameter that happens to reuse an import's name, for the scope where it
-  shadows that import.
-- Tags each checked segment with a dot-separated tag, plus every ancestor of it (`comment.block.doc` also
-  carries `comment` and `comment.block`) - `customizePlugin` can filter which segments get spell checked
-  using these tags, at any level of specificity. JSX text is checked but carries no tag.
+## Filtering by file type
+
+Every file type has its own parser, so each one can have its own filter. For example, to check only the
+comments in JavaScript files, and keep the defaults for the others:
+
+**`cspell.config.ts`** or **`cspell.config.mjs`**
+
+<!--- @@inject: samples/filter-by-file-type/cspell.config.mts#lang=ts --->
+
+```ts
+import { customizePlugin } from '@cspell/parser-typescript/plugin';
+
+// JavaScript files: check only comments.
+// Other files: keep the defaults.
+export default customizePlugin().filterTags('javascript', { '*': false, comment: true }).defineConfig();
+```
+
+<!--- @@inject-end: samples/filter-by-file-type/cspell.config.mts#lang=ts --->
 
 ## Tags
+
+Each part of a file gets its most specific tag plus the more general ones above it. For example, a doc
+comment is tagged `comment.block.doc`, `comment.block`, and `comment`, so a filter can use whichever level it
+needs. JSX text is checked, but has no tag.
 
 <!--- @@inject: docs/tags-table.csv#markdown --->
 
@@ -163,44 +154,46 @@ export default {
 
 ### The `code` tag
 
-By default, text tagged `code` is not spell checked. To check it too, use `customizePlugin`:
-
-**`cspell.config.ts`** or **`cspell.config.mjs`**
+By default, keywords, punctuation, numbers, and everything else tagged `code` aren't spell checked. To check
+them too:
 
 ```js
-import { customizePlugin } from '@cspell/parser-typescript/plugin';
-
-export default {
-  plugins: [customizePlugin({ tags: { code: true } })],
-  languageSettings: [
-    {
-      languageId: 'typescript,typescriptreact',
-      parser: 'typescript',
-    },
-  ],
-};
+customizePlugin({ tags: { code: true } }).defineConfig();
 ```
+
+## Special cases
+
+- **JSX in a `.js` file is read as JSX.** VS Code gives `.js` files the `javascript` file type even when they
+  contain JSX, and the `javascript` parser handles it.
+  <!--- Tested by packages/parser-typescript-tree-sitter-wasm/src/parsers.test.ts: "parses JSX in a .js file with the javascript parser" --->
+
+- **Package names aren't spell checked.** The package name in an `import`, `export ... from`, `import(...)`,
+  or `require(...)`, such as `'lodash'`, `'@scope/pkg'`, or `'node:fs'`, isn't spelling you wrote. A relative
+  path such as `'./utils.js'` is still checked.
+  <!--- Tested by packages/parser-typescript-tree-sitter-wasm/src/parsers.test.ts: "imports.ts" and "imports-and-local-variables.mts" --->
+
+- **Names that come from an imported package aren't spell checked.** That includes a named import's original
+  name and properties read from an imported value. A name you chose, such as a renamed import's alias or a
+  default import's name, is checked.
+  <!--- Tested by packages/parser-typescript-tree-sitter-wasm/src/parsers.test.ts: "imports.ts" and "module-bindings.ts" --->
+
+- **A local name that reuses an import's name is checked.** A variable or parameter that shadows an import is
+  your own name, so it's checked where it's in scope.
+  <!--- Tested by packages/parser-typescript-tree-sitter-wasm/src/parsers.test.ts: "imports-and-local-variables.mts" and "lets a JavaScript parameter shadow an import of the same name" --->
 
 ## Customization options
 
-The customization options have two purposes:
-
-- Change the name of the registered parser (not the plugin's own name)
-- Set up a `tags` filter to specify what is passed to the spell checker based upon
-  the attributed tags.
+Use `customizePlugin(options)` to control which parts of a file get spell checked, based on the [tags](#tags)
+the parsers give each part. The filter applies to every parser in the plugin.
 
 ### `CustomizePluginOptions`
 
 ```ts
 interface CustomizePluginOptions {
   /**
-   * Set the name of the parser. Does not change the plugin's own name.
+   * Define which tagged segments to keep.
    */
-  name?: string;
-  /**
-   * Define which tagged segments to keep. Omit to keep the parser's own defaults (`code` excluded).
-   */
-  tags?: TagFilterOptions;
+  tags: TagFilterOptions;
 }
 ```
 
@@ -220,10 +213,8 @@ const option = { tags: { '*': true, code: false } };
 
 **Only comments**
 
-Change the parser `name` to `only-comments` and allow only comments.
-
 ```ts
-const option = { name: 'only-comments', tags: { '*': false, comment: true } };
+const option = { tags: { '*': false, comment: true } };
 ```
 
 **Turn off `identifier.type`**
@@ -267,8 +258,8 @@ interface TagFilterOptions {
 
 ## Notes
 
-- Uses WebAssembly (via `@vscode/tree-sitter-wasm`), so it does not require a native compiler toolchain to
-  install it.
+- Uses [`@cspell/parser-typescript-tree-sitter-wasm`](https://www.npmjs.com/package/@cspell/parser-typescript-tree-sitter-wasm),
+  which runs on WebAssembly, so it doesn't need a native compiler toolchain to install.
 
 ## Requirements
 

@@ -1,9 +1,7 @@
 {
   "import": ["@cspell/parser-javascript"],
   "languageSettings": [
-    {
-      "languageId": "javascript,javascriptreact",
-      "parser": "javascript",
-    },
+    { "languageId": "javascript", "parser": "javascript" },
+    { "languageId": "javascriptreact", "parser": "javascriptreact" },
   ],
 }

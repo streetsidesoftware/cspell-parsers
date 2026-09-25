@@ -1,26 +1,29 @@
 # Contributing to @cspell/parser-typescript-tree-sitter-wasm
 
-This is a contributor-facing walkthrough of how `src/parser.ts` actually works. `README.md` is written for
-someone using the plugin; this file is for someone changing it. See the repo root `CONTRIBUTING.md` for the
-general package shape (`parser.ts`/`plugin.ts`/`index.ts`/`recommended.ts`, `fixtures/`, `samples/`) — this
-file only covers what's specific to this package's parsing logic.
+This is a contributor-facing walkthrough of how the parsers in `src/parsers.ts` and `src/walk.ts` work.
+`README.md` is written for someone using the plugin; this file is for someone changing it. See the repo root
+`CONTRIBUTING.md` for the general package shape (`plugin.ts`/`index.ts`/`recommended.ts`, `fixtures/`,
+`samples/`). This package has no `./parser` subpath: the plugin is its only entry point
+(`docs/ADRs/typescript-parser-split/0005-plugin-only-entry-point.md`).
 
 ## WASM initialization
 
 `@vscode/tree-sitter-wasm`'s `Parser.init()`/`Language.load()` are async, but cspell's `Parser` contract
 requires `parse()` to stay synchronous - so this module does its one-time init via top-level await; a
-consumer only ever reaches it through a (necessarily async) dynamic `import()`, so both languages are ready
-by the time that resolves. `resolveWasmFile()` uses `createRequire` to locate the bundled `.wasm` files,
+consumer only ever reaches it through a (necessarily async) dynamic `import()`, so every grammar is ready by
+the time that resolves. `resolveWasmFile()` uses `createRequire` to locate the bundled `.wasm` files,
 since they're not resolvable through a static import. Also unlike the native binding: every `SyntaxNode`
 accessor here mints a fresh wrapper object, so node-identity comparisons throughout this file use `.equals()`
 rather than `===`.
 
 ## Shape of the parser
 
-`parse(content, filename)` parses `content` with [tree-sitter](https://tree-sitter.github.io/tree-sitter/)
-(`.tsx`/`.jsx` files use the `tsx` grammar, everything else the plain `typescript` grammar - see `isTsx`),
-then makes a single pass over the whole AST (`walk`), emitting one `ParsedText` per spell-checkable leaf. A
-"leaf" is:
+The plugin has one parser per file type, each named after it (`src/parsers.ts`). Each parser always uses the
+same [tree-sitter](https://tree-sitter.github.io/tree-sitter/) grammar, whatever the filename: JavaScript for
+`javascript` and `javascriptreact`, TypeScript for `typescript`, and TSX for `typescriptreact`
+(`docs/ADRs/typescript-parser-split/0003-grammars.md`). `collectParsedTexts(grammar, content, filename)` parses
+`content` with that grammar, then makes a single pass over the whole AST (`walk`), emitting one `ParsedText`
+per spell-checkable leaf. A "leaf" is:
 
 - an identifier of some kind (variable/property/type/label/...),
 - a string or template literal fragment,
@@ -49,6 +52,10 @@ as a possible grammar field, but for a plain identifier parameter the identifier
 This is used by `parameterNames()` for shadowing detection (see below) - it silently found nothing for _any_
 function until this fallback was added, because it was reading a field that was always empty. If a lookup
 for a node's name ever seems to silently fail, suspect this field first.
+
+The JavaScript grammar has no `required_parameter`: a parameter is a bare `identifier`, or an
+`assignment_pattern` (its `left` field) when it has a default. `parameterNameNode()` handles both before
+falling back to `declarationNameNode()`.
 
 ## Tags
 
@@ -146,8 +153,9 @@ they just won't shadow an import of the same name).
 
 ## Testing
 
-- `parser.test.ts` reads fixtures out of `fixtures/` (via `readFixture`/`parseFixture` helpers) rather than
-  embedding source strings inline - a fixture is real, syntactically valid (TypeScript-shaped) content, which
+- `parsers.test.ts` reads fixtures out of `fixtures/` (via `readFixture`/`parseFixture` helpers) rather than
+  embedding source strings inline. `parseFixture` picks the parser by the fixture's extension, the way
+  `recommended` would. A fixture is real, syntactically valid JavaScript or TypeScript content, which
   makes intent easier to read than an escaped string literal, and lets one fixture back several assertions.
   `fixtures/` is excluded from `tsc`/ESLint/Prettier (see root `CLAUDE.md`) because a fixture's exact bytes -
   quote style, spacing - are frequently what's being asserted on; don't let a formatter "fix" one.
