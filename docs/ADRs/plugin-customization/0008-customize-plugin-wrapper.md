@@ -35,6 +35,9 @@ export function customizePlugin(options: CustomizeParserOptions): IPluginBuilder
 - The bundle has the same signature. Its old `(fileType, options)` form is a further `@deprecated` overload
   that reproduces today's result: it removes the parsers that don't list `fileType`, narrows the rest to
   `fileType`, and applies `tags`. `'*'` keeps every parser and ignores `name`.
+- Each package's `createParser(options)` (the `./parser` subpath) stays as a `@deprecated` wrapper that
+  returns an `IParserEx`, built through the plugin's builder. It points to `plugin.customize()` and is
+  removed at the fold.
 - The bundle's file-type `getParser` and `getParserName` are replaced by `getParser(name)`
   ([0004](./0004-immutable-plugin-and-builder.md)). Both take one string, so an overload can't tell a file
   type from a name. The file-type lookup is `parserNamesFor(fileType)`.
