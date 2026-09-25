@@ -1,41 +1,32 @@
-import type { CSpellPlugin } from '@cspell/cspell-types';
-import type { CustomizePluginOptions, IPlugin } from '@internal/utils';
-import { customizeParserPlugin } from '@internal/utils';
+import { plugin as wasmPlugin } from '@cspell/parser-typescript-tree-sitter-wasm/plugin';
+import type { CustomizePluginExOptions, IPluginBuilder, IPluginEx } from '@internal/utils';
 
-import { parser, supportedFileTypes } from './parser.ts';
-
-export { supportedFileTypes } from './parser.ts';
-export type { CustomizePluginOptions } from '@internal/utils';
-
-export const recommendedLanguageSettings = [
-  {
-    languageId: supportedFileTypes.join(','),
-    parser: 'typescript',
-  },
-];
-
-export const plugin: IPlugin = {
-  name: 'typescript',
-  parsers: [parser],
-  supportedFileTypes,
-  recommendedLanguageSettings,
-};
+export type { CustomizePluginExOptions as CustomizePluginOptions } from '@internal/utils';
 
 /**
- * Create a customized copy of {@link plugin} - rename its parser and/or choose which tagged segments get
- * spell checked. Works with any cspell version.
+ * Has one parser per file type: `javascript`, `javascriptreact`, `typescript`, and `typescriptreact`.
+ * The parsers are `@cspell/parser-typescript-tree-sitter-wasm`'s.
+ * Built with that package's own builder, so this package doesn't bundle a second copy of `@internal/utils`.
+ */
+export const plugin: IPluginEx = wasmPlugin.customize('typescript').build();
+
+export const recommendedLanguageSettings = plugin.languageSettings();
+
+/**
+ * Creates a customized copy of {@link plugin}.
+ * `options.tags` chooses which tagged segments every parser keeps.
+ * The copy can be adjusted further, or turned into a complete config with `defineConfig()`.
  *
  * **`cspell.config.mjs`**
  *
  * ```js
  * import { customizePlugin } from '@cspell/parser-typescript/plugin';
  *
- * export default {
- *   plugins: [customizePlugin({ name: 'typescript-comments-only', tags: { '*': false, comment: true } })],
- *   languageSettings: [{ languageId: 'typescript,typescriptreact', parser: 'typescript-comments-only' }],
- * };
+ * // only check comments
+ * export default customizePlugin({ tags: { '*': false, comment: true } }).defineConfig();
  * ```
  */
-export function customizePlugin(options: CustomizePluginOptions): CSpellPlugin {
-  return customizeParserPlugin(plugin, options);
+export function customizePlugin(options?: CustomizePluginExOptions): IPluginBuilder {
+  const builder = plugin.customize();
+  return options?.tags ? builder.filterTags('*', options.tags) : builder;
 }

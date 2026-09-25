@@ -1,7 +1,7 @@
 import type { AdvancedCSpellSettings } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
-import { plugin, supportedFileTypes } from './plugin.ts';
+import { plugin } from './plugin.ts';
 import recommended from './recommended.ts';
 
 describe('recommended (cspell settings entry point)', () => {
@@ -9,17 +9,11 @@ describe('recommended (cspell settings entry point)', () => {
     expect(recommended.plugins).toEqual([plugin]);
   });
 
-  it('selects the javascript parser for every supported file type', () => {
+  it('selects each javascript file type its own parser, and no typescript ones', () => {
     expect(recommended.languageSettings).toEqual([
-      {
-        languageId: supportedFileTypes.join(','),
-        parser: 'javascript',
-      },
+      { languageId: 'javascript', parser: 'javascript' },
+      { languageId: 'javascriptreact', parser: 'javascriptreact' },
     ]);
-  });
-
-  it('only covers javascript file types, not typescript', () => {
-    expect(supportedFileTypes).toEqual(['javascript', 'javascriptreact']);
   });
 
   it('is assignable to AdvancedCSpellSettings', () => {

@@ -1,43 +1,32 @@
-import type { Parser as CSpellParser } from '@cspell/cspell-types';
+import { plugin as wasmPlugin } from '@cspell/parser-typescript-tree-sitter-wasm/plugin';
 import { describe, expect, it } from 'vitest';
 
-import { parser, supportedFileTypes as parserSupportedFileTypes } from './parser.ts';
-import { customizePlugin, plugin, supportedFileTypes } from './plugin.ts';
+import { customizePlugin, plugin } from './plugin.ts';
 
 describe('plugin', () => {
-  it('exposes the typescript parser', () => {
-    expect(plugin.parsers).toEqual([parser]);
+  it("uses the wasm backend's parsers, one per file type", () => {
+    expect(plugin.parsers).toEqual(wasmPlugin.parsers);
+    for (const [i, parser] of plugin.parsers.entries()) expect(parser).toBe(wasmPlugin.parsers[i]);
+    expect(plugin.parserNames()).toEqual(['javascript', 'javascriptreact', 'typescript', 'typescriptreact']);
   });
 
-  it('re-exports supportedFileTypes from the parser', () => {
-    expect(supportedFileTypes).toBe(parserSupportedFileTypes);
-  });
-
-  it('is usable to parse TypeScript content', () => {
-    const [pluginParser] = (plugin.parsers ?? []) as CSpellParser[];
-    const result = pluginParser?.parse("const greeting = 'hello';\n", 'example.ts');
-
-    expect([...(result?.parsedTexts ?? [])].some((p) => p.text === 'greeting')).toBe(true);
+  it('is usable to parse content', () => {
+    const parsedTexts = [
+      ...plugin.getParser('typescript').parse("const greeting = 'hello';\n", 'example.ts').parsedTexts,
+    ];
+    expect(parsedTexts.some((p) => p.text === 'greeting')).toBe(true);
   });
 });
 
 describe('customizePlugin', () => {
-  it('wires tag filtering into the typescript parser', () => {
+  it('applies the tag filter to every parser', () => {
     const customized = customizePlugin({ tags: { '*': false, comment: true } });
-    const [customizedParser] = (customized.parsers ?? []) as CSpellParser[];
-    const result = customizedParser?.parse("// a comment\nconst greeting = 'hello';\n", 'example.ts');
-    const parsedTexts = [...(result?.parsedTexts ?? [])];
 
-    expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(true);
-    expect(parsedTexts.some((p) => p.rawText === '// a comment')).toBe(true);
-    expect(parsedTexts.some((p) => p.text === 'greeting')).toBe(false);
-  });
-
-  it('wires name customization, including recommendedLanguageSettings, into the typescript parser', () => {
-    const customized = customizePlugin({ name: 'custom-typescript', tags: {} });
-    const [customizedParser] = (customized.parsers ?? []) as CSpellParser[];
-
-    expect(customizedParser?.name).toBe('custom-typescript');
-    expect(customized).toMatchObject({ recommendedLanguageSettings: [{ parser: 'custom-typescript' }] });
+    for (const name of customized.parserNames()) {
+      const parsedTexts = [
+        ...customized.getParser(name).parse("// a comment\nconst greeting = 'hello';\n", 'x').parsedTexts,
+      ];
+      expect(parsedTexts.map((p) => p.text)).toEqual(['a comment']);
+    }
   });
 });
