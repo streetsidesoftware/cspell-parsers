@@ -1,10 +1,8 @@
 # @cspell/parser-javascript
 
-A [cspell](https://cspell.org) parser plugin that spell checks JavaScript and JSX the way you write it: the
-names you choose for variables, functions, and properties, along with comments, strings, and JSX text. Names
-that come from outside your code, such as package names and what you import from them, aren't checked, so
-cspell doesn't flag spelling you can't change. You can also choose what gets checked, for example only
-comments.
+A full-fledged JavaScript and JSX parser for [cspell](https://cspell.org). It gives you control over which
+parts of your code get spell checked, from comments and strings to function and variable names. It also lets
+you skip module imports and other code that isn't under your control.
 
 It has the same JavaScript and JSX parsers as
 [`@cspell/parser-typescript`](https://www.npmjs.com/package/@cspell/parser-typescript). Use this package when a
