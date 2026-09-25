@@ -1,8 +1,7 @@
 # @cspell/parser-typescript-strings-comments
 
 A cspell plugin for spell checking only the comments and string-like literals in JavaScript, JSX,
-TypeScript, and TSX files, leaving identifiers, keywords, and the rest of the code alone - these four share
-identical comment/string/template-literal syntax, so one small parser handles all of them. If you also want
+TypeScript, and TSX files, leaving identifiers, keywords, and the rest of the code alone. If you also want
 identifiers checked (so a misspelled variable or function name gets flagged too), use
 [`@cspell/parser-typescript`](https://www.npmjs.com/package/@cspell/parser-typescript) instead.
 
@@ -174,8 +173,7 @@ export default {
 - **A module specifier string is still spell checked by default, but tagged so it can be filtered out.**
   `import x from './mod.js'`, `import './side-effect.js'`, `export { x } from './mod.js'`, a dynamic
   `import('./mod.js')`, and `require('./mod.js')` all get the `module`/`module.specifier`/
-  `module.specifier.literal` tags in addition to their usual string tags (matching `@cspell/parser-typescript`'s
-  convention). Use `customizePlugin` to exclude them if a relative path or package name isn't worth checking.
+  `module.specifier.literal` tags in addition to their usual string tags. Use `customizePlugin` to exclude them if a relative path or package name isn't worth checking.
 - A string or comment nested inside a template literal's `${...}` interpolation (e.g. a ternary's string
   branches) is still recognized and tagged normally.
 
