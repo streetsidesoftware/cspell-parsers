@@ -38,16 +38,17 @@ Each parser package exports a plugin, and the plugin comes with recommended sett
 
 `IPluginEx` has read-only helpers only:
 
-| Member                                    | Returns                                                                          |
-| ----------------------------------------- | -------------------------------------------------------------------------------- |
-| `parsers`                                 | The plugin's parsers, in order                                                   |
-| `getParser(name)`                         | The named parser (throws on an unknown name)                                     |
-| `hasParser(name)`                         | Whether a parser with that name exists                                           |
-| `parserNames()`                           | The parser names, in order                                                       |
-| `parserNamesFor(fileType)`                | Names of the parsers that list `fileType`, in plugin order                       |
-| `languageSettings()`                      | `languageSettings` entries for every parser (last parser wins)                   |
-| `languageSettingsFor(target, fileTypes?)` | Entries mapping `fileTypes` (default: each parser's own) to each targeted parser |
-| `customize()`                             | A new `IPluginBuilder`                                                           |
+| Member                                  | Returns                                                                                            |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `parsers`                               | The plugin's parsers, in order                                                                     |
+| `getParser(name)`                       | The named parser (throws on an unknown name)                                                       |
+| `hasParser(name)`                       | Whether a parser with that name exists                                                             |
+| `parserNames()`                         | The parser names, in order                                                                         |
+| `parserNamesFor(fileType)`              | Names of the parsers that list `fileType`, in plugin order                                         |
+| `languageSettings()`                    | `languageSettings` entries for every parser (last parser wins); same as `languageSettingsFor('*')` |
+| `languageSettingsFor(target)`           | Entries for the targeted parsers (last targeted parser wins)                                       |
+| `languageSettingsFor(name, fileTypes?)` | Entries mapping `fileTypes` (default: the parser's own) to the named parser                        |
+| `customize()`                           | A new `IPluginBuilder`                                                                             |
 
 ## What users do with a plugin
 
