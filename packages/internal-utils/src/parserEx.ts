@@ -1,6 +1,5 @@
 import { createParsedTextFilter } from './customize.ts';
-import { createParse } from './parser.ts';
-import type { IParserEx, ParseFunction, ParserTags, TagFilterOptions } from './types.ts';
+import type { IParserEx, ParsedTextFilter, ParseFunction, ParserTags, TagFilterOptions } from './types.ts';
 
 export interface CreatePluginParserWithFilterTagsOptions {
   name: string;
@@ -118,4 +117,20 @@ function normalizeFilterTags(
   if (!filterTags) return undefined;
   const entries = Object.entries(filterTags).filter(([, value]) => value !== undefined);
   return entries.length ? Object.freeze(Object.fromEntries(entries)) : undefined;
+}
+
+export function createParse(parse: ParseFunction, filter?: ParsedTextFilter): ParseFunction {
+  if (!filter) return parse;
+  return (content: string, filename: string) => {
+    const result = parse(content, filename);
+    return { ...result, parsedTexts: filterIterable(result.parsedTexts, filter) };
+  };
+}
+
+function* filterIterable<T>(iterable: Iterable<T>, filter: (item: T) => boolean): Iterable<T> {
+  for (const item of iterable) {
+    if (filter(item)) {
+      yield item;
+    }
+  }
 }

@@ -1,4 +1,4 @@
-import type { CSpellPlugin, ParsedTags, ParsedText, Parser as CSpellParser, ParseResult } from '@cspell/cspell-types';
+import type { CSpellPlugin, ParsedTags, ParsedText, ParseResult } from '@cspell/cspell-types';
 
 export interface ParserTags {
   /**
@@ -7,42 +7,8 @@ export interface ParserTags {
   [tag: string]: boolean;
 }
 
-export interface IParser extends CSpellParser {
-  /**
-   * The known list of file types that this parser is capable of handling.
-   */
-  supportedFileTypes: Readonly<string[]>;
-  /**
-   * The set of tags that this parser can emit.
-   * Each key represents a tag name, and the corresponding boolean value
-   * indicates whether the parser will emit that tag by default.
-   */
-  tags: Readonly<ParserTags>;
-
-  /**
-   * Customize this parser.
-   *
-   * This allows you to change the name and filter the text segments emitted by the parser
-   * based on the specified tag filter options.
-   *
-   * @param options - The customization options to apply to the parser.
-   * @returns A new parser with the specified customizations applied.
-   */
-  customize(options: CustomizeParserOptions): IParser;
-
-  customizeFilter(filter: ParsedTextFilter): IParser;
-  customizeSupportedFileTypes(supportedFileTypes: Readonly<string[]>): IParser;
-}
-
 export type ParseFunction = (content: string, filename: string) => ParseResult;
 export type ParsedTextFilter = (parsedText: ParsedText) => boolean;
-
-export interface IPlugin extends CSpellPlugin {
-  name: string;
-  parsers: IParser[];
-  supportedFileTypes: Readonly<string[]>;
-  recommendedLanguageSettings: RecommendedLanguageSettings;
-}
 
 export interface RecommendedLanguageSetting {
   languageId: string;
@@ -62,11 +28,11 @@ export interface RecommendedSettings {
 export type TagPattern = string;
 
 /**
- * Options for {@link customizeParser}: which tagged segments to keep.
+ * Which tagged segments to keep.
  *
  * Deliberately declared here rather than imported from `@cspell/cspell-types`'s `ValidationTags` - the
- * two happen to share a shape today, but that's incidental. `customizeParser`'s options are a property of
- * its own filtering behavior and should be free to diverge from it.
+ * two happen to share a shape today, but that's incidental. These options are a property of this repo's
+ * own filtering behavior and should be free to diverge from it.
  */
 export interface TagFilterOptions {
   /**
@@ -89,8 +55,8 @@ export interface TagFilterOptions {
 export type TagsFilter = (tags: ParsedTags | undefined) => boolean;
 
 /**
- * Options for {@link IParser.customize}, as a struct rather than a bare `TagFilterOptions` so it can grow
- * more options later without a breaking signature change.
+ * Options for the deprecated `name` form of `customizePlugin`, and for `createParser`.
+ * See docs/ADRs/plugin-customization/0008-customize-plugin-wrapper.md.
  */
 export interface CustomizeParserOptions {
   /**
@@ -103,9 +69,6 @@ export interface CustomizeParserOptions {
    */
   tags?: TagFilterOptions;
 }
-
-/** Options for a plugin's `customizePlugin`; the same as {@link CustomizeParserOptions}, applied to each of its parsers. */
-export type CustomizePluginOptions = CustomizeParserOptions;
 
 /**
  * A parser as read-only data, with no customization methods.

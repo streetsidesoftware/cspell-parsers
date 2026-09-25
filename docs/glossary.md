@@ -26,8 +26,8 @@ reimplementing its own copy. Established in
 ## `IParserEx`
 
 The read-only parser type: `name`, `parse` (filtered, what cspell calls), `_parse` (unfiltered),
-`supportedFileTypes`, `tags`, and its current tag filter options. It has no customization methods. It lives
-alongside today's `IParser` while packages migrate. Established in
+`supportedFileTypes`, `tags`, and its current tag filter options. It has no customization methods. It
+replaced the old `IParser`, which is removed. Established in
 [plugin-customization/0007](./ADRs/plugin-customization/0007-parser-data.md).
 
 ## `IPluginBuilder`
@@ -40,10 +40,10 @@ provisional.
 
 ## `IPluginEx`
 
-The designed successor to `@internal/utils`'s ad hoc `IPlugin`: the immutable plugin each parser package
-exports. It has read-only helpers (`getParser()`, `hasParser()`, `parserNamesFor()`, `languageSettings()`,
-`languageSettingsFor()`, `defineConfig()`) and `customize()`, which returns an `IPluginBuilder`. It lives
-alongside `IPlugin` while packages migrate, then gets folded back into `IPlugin`. Established in
+The immutable plugin each parser package exports. It replaced `@internal/utils`'s ad hoc `IPlugin`, which is
+removed. It has read-only helpers (`getParser()`, `hasParser()`, `parserNamesFor()`, `languageSettings()`,
+`languageSettingsFor()`, `defineConfig()`) and `customize()`, which returns an `IPluginBuilder`. The `Ex`
+suffix goes once the provisional names are settled. Established in
 [plugin-customization/0002](./ADRs/plugin-customization/0002-compatibility-and-migration.md) and
 [0004](./ADRs/plugin-customization/0004-immutable-plugin-and-builder.md), with `defineConfig()` added in
 [0009](./ADRs/plugin-customization/0009-define-config.md).

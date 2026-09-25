@@ -3,7 +3,6 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import type { ParsedText } from '@cspell/cspell-types';
-import { createParse } from '@internal/utils';
 import { describe, expect, it } from 'vitest';
 
 import { createParser, parse, parser } from './parser.ts';
@@ -217,10 +216,7 @@ describe('php-strings-comments parser', () => {
   });
 
   describe('mixed.php', () => {
-    const parsedTexts = parseFixture(
-      'mixed.php',
-      createParse(parse, () => true),
-    );
+    const parsedTexts = parseFixture('mixed.php', parse);
 
     it('passes through HTML outside <?php ?> tags tagged html', () => {
       const html = parsedTexts.find((p) => p.tags?.html);
@@ -341,7 +337,7 @@ describe('php-strings-comments parser', () => {
 
   describe('tags', () => {
     it('declares every tag the Scanner actually emits, across every fixture', () => {
-      // Regression coverage for a tag silently becoming impossible to filter: `IParser.customize` only
+      // Regression coverage for a tag silently becoming impossible to filter: a tag filter only
       // knows about tags listed in `parser.tags`, so a tag the Scanner emits but `tags` doesn't declare
       // would never be reachable via `createParser`/`customizePlugin`'s `tags` option, with no error to
       // catch the mistake.

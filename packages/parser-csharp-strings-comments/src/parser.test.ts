@@ -286,7 +286,7 @@ describe('csharp-strings-comments parser', () => {
 
   describe('tags', () => {
     it('declares every tag the Scanner actually emits, across every fixture', () => {
-      // Regression coverage for a tag silently becoming impossible to filter: `IParser.customize` only
+      // Regression coverage for a tag silently becoming impossible to filter: a tag filter only
       // knows about tags listed in `parser.tags`, so a tag the Scanner emits but `tags` doesn't declare
       // would never be reachable via `createParser`/`customizePlugin`'s `tags` option, with no error to
       // catch the mistake.

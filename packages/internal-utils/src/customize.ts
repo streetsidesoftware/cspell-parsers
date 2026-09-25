@@ -1,41 +1,6 @@
-import type { ParsedTags, ParsedText, Parser as CSpellParser } from '@cspell/cspell-types';
+import type { ParsedTags, ParsedText } from '@cspell/cspell-types';
 
-import type { IParser, TagFilterOptions, TagsFilter } from './types.ts';
-
-export function customizeParserWithFilter(
-  parser: IParser,
-  isIncluded: TagsFilter,
-  name: string | undefined,
-): CSpellParser {
-  const newParser: CSpellParser = {
-    name: name ?? parser.name,
-    parse(content, filename) {
-      const result = parser.parse(content, filename);
-      return {
-        ...result,
-        parsedTexts: filterParsedTexts(result.parsedTexts, isIncluded),
-      };
-    },
-  };
-
-  if (parser.parseDocument) {
-    newParser.parseDocument = (doc) => {
-      if (!parser.parseDocument) {
-        throw new Error('parseDocument is not implemented on the original parser.');
-      }
-      const result = parser.parseDocument(doc);
-      return { ...result, parsedTexts: filterParsedTexts(result.parsedTexts, isIncluded) };
-    };
-  }
-
-  return newParser;
-}
-
-function* filterParsedTexts(parsedTexts: Iterable<ParsedText>, isIncluded: TagsFilter): Iterable<ParsedText> {
-  for (const parsedText of parsedTexts) {
-    if (isIncluded(parsedText.tags)) yield parsedText;
-  }
-}
+import type { TagFilterOptions, TagsFilter } from './types.ts';
 
 interface Best {
   specificity: number;
