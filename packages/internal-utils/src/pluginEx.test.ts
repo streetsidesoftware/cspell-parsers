@@ -116,6 +116,24 @@ describe('languageSettings', () => {
     expect(() => plugin.languageSettingsFor('*', ['astro'])).toThrow('Explicit fileTypes need a single parser name.');
   });
 
+  it('languageSettingsForFileType maps only the requested file types, each to the last parser that lists it', () => {
+    const b = mkPlugin().customize().duplicateParser('typescript', 'ts2').setFileTypes('ts2', ['typescript']);
+    expect(b.languageSettingsForFileType('javascript')).toEqual([{ languageId: 'javascript', parser: 'typescript' }]);
+    expect(b.languageSettingsForFileType(['typescript', 'php', 'javascript'])).toEqual([
+      { languageId: 'javascript', parser: 'typescript' },
+      { languageId: 'php', parser: 'php' },
+      { languageId: 'typescript', parser: 'ts2' },
+    ]);
+    expect(b.languageSettingsForFileType('*')).toEqual(b.languageSettings());
+    expect(b.languageSettingsForFileType([])).toEqual([]);
+  });
+
+  it('languageSettingsForFileType throws on a file type no parser lists', () => {
+    expect(() => mkPlugin().languageSettingsForFileType(['astro', 'php'])).toThrow(
+      'No parser in plugin "test" lists file type "astro". Supported file types: javascript, typescript, php.',
+    );
+  });
+
   it('parserNamesFor lists every parser for a file type, in order', () => {
     const b = mkPlugin().customize().duplicateParser('typescript', 'ts2');
     expect(b.parserNamesFor('typescript')).toEqual(['typescript', 'ts2']);

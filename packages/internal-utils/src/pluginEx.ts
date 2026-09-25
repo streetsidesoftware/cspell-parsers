@@ -1,6 +1,7 @@
 import type { ParserDefChanges } from './parserEx.ts';
 import { ParserDef } from './parserEx.ts';
 import type {
+  FileTypeTarget,
   IParserEx,
   IPluginBuilder,
   IPluginEx,
@@ -80,12 +81,21 @@ abstract class PluginExQueries implements IPluginExBase {
     }
     const names = this.resolveTarget(target);
     const defs = this.defs.filter((def) => names.has(def.name));
-    const lastParserFor = new Map<string, string>();
-    for (const def of defs) {
-      for (const fileType of def.fileTypes) lastParserFor.set(fileType, def.name);
-    }
+    const lastParserFor = lastParserByFileType(defs);
     return defs
       .map((def) => ({ def, types: def.fileTypes.filter((fileType) => lastParserFor.get(fileType) === def.name) }))
+      .filter(({ types }) => types.length)
+      .map(({ def, types }) => ({ languageId: types.join(','), parser: def.name }));
+  }
+
+  languageSettingsForFileType(fileType: FileTypeTarget): RecommendedLanguageSettings {
+    if (fileType === '*') return this.languageSettings();
+    const fileTypes = [...new Set(typeof fileType === 'string' ? [fileType] : fileType)];
+    const lastParserFor = lastParserByFileType(this.defs);
+    const unknown = fileTypes.filter((type) => !lastParserFor.has(type));
+    if (unknown.length) throw unknownFileTypesError(this.name, [...lastParserFor.keys()], unknown);
+    return this.defs
+      .map((def) => ({ def, types: fileTypes.filter((type) => lastParserFor.get(type) === def.name) }))
       .filter(({ types }) => types.length)
       .map(({ def, types }) => ({ languageId: types.join(','), parser: def.name }));
   }
@@ -193,6 +203,24 @@ function assertNameIsFree(pluginName: string, defs: readonly ParserDef[], name: 
   if (defs.some((def) => def.name === name)) {
     throw new Error(`Parser name "${name}" is already used in plugin "${pluginName}".`);
   }
+}
+
+/** Maps each file type to the last parser in `defs` that lists it. */
+function lastParserByFileType(defs: readonly ParserDef[]): Map<string, string> {
+  const lastParserFor = new Map<string, string>();
+  for (const def of defs) {
+    for (const fileType of def.fileTypes) lastParserFor.set(fileType, def.name);
+  }
+  return lastParserFor;
+}
+
+function unknownFileTypesError(pluginName: string, supported: readonly string[], fileTypes: readonly string[]): Error {
+  const list = fileTypes.map((type) => `"${type}"`).join(', ');
+  const noun = fileTypes.length === 1 ? 'file type' : 'file types';
+  return new Error(
+    `No parser in plugin "${pluginName}" lists ${noun} ${list}. Supported file types: ${supported.join(', ') || '(none)'}. ` +
+      'Use languageSettingsFor(name, fileTypes) to map one anyway.',
+  );
 }
 
 function unknownParsersError(pluginName: string, defs: readonly ParserDef[], names: readonly string[]): Error {

@@ -128,6 +128,9 @@ export interface IParserEx {
 /** A parser name, a list of parser names, or `'*'` for every parser. */
 export type ParserTarget = string | readonly string[];
 
+/** A file type, a list of file types, or `'*'` for every file type the parsers list. */
+export type FileTypeTarget = string | readonly string[];
+
 /** Read-only members shared by {@link IPluginEx} and {@link IPluginBuilder}. */
 export interface IPluginExBase {
   readonly name: string;
@@ -148,6 +151,11 @@ export interface IPluginExBase {
   languageSettingsFor(target: ParserTarget): RecommendedLanguageSettings;
   /** `languageSettings` mapping `fileTypes` (default: the parser's own) to the named parser. */
   languageSettingsFor(name: string, fileTypes?: readonly string[]): RecommendedLanguageSettings;
+  /**
+   * `languageSettings` for only the given file types, each going to the last parser that lists it.
+   * Throws if no parser lists one of them.
+   */
+  languageSettingsForFileType(fileType: FileTypeTarget): RecommendedLanguageSettings;
   /** A new builder, seeded from the current parsers. */
   customize(): IPluginBuilder;
 }

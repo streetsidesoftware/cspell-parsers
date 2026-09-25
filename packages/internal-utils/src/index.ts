@@ -15,6 +15,7 @@ export { codeTagMeaning } from './tags.ts';
 export type {
   CustomizeParserOptions,
   CustomizePluginOptions,
+  FileTypeTarget,
   IParser,
   IParserEx,
   IPlugin,
