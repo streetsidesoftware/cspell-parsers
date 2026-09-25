@@ -1,41 +1,29 @@
-import type { CSpellPlugin } from '@cspell/cspell-types';
-import type { CustomizePluginOptions, IPlugin } from '@internal/utils';
-import { customizeParserPlugin } from '@internal/utils';
+import type { CustomizePluginExOptions, IPluginBuilder, IPluginEx } from '@internal/utils';
+import { createPluginEx, customizePluginEx } from '@internal/utils';
 
-import { parser, supportedFileTypes } from './parser.ts';
+import { parsers } from './parsers.ts';
 
-export { supportedFileTypes } from './parser.ts';
-export type { CustomizePluginOptions } from '@internal/utils';
+export type { CustomizePluginExOptions as CustomizePluginOptions } from '@internal/utils';
 
-export const recommendedLanguageSettings = [
-  {
-    languageId: supportedFileTypes.join(','),
-    parser: 'typescript',
-  },
-];
+/** Has one parser per file type: `javascript`, `javascriptreact`, `typescript`, and `typescriptreact`. */
+export const plugin: IPluginEx = createPluginEx({ name: 'typescript-tree-sitter-wasm', parsers });
 
-export const plugin: IPlugin = {
-  name: 'typescript-tree-sitter-wasm',
-  parsers: [parser],
-  supportedFileTypes,
-  recommendedLanguageSettings,
-};
+export const recommendedLanguageSettings = plugin.languageSettings();
 
 /**
- * Create a customized copy of {@link plugin} - rename its parser and/or choose which tagged segments get
- * spell checked. Works with any cspell version.
+ * Creates a customized copy of {@link plugin}.
+ * `options.tags` chooses which tagged segments every parser keeps.
+ * The copy can be adjusted further, or turned into a complete config with `defineConfig()`.
  *
  * **`cspell.config.mjs`**
  *
  * ```js
  * import { customizePlugin } from '@cspell/parser-typescript-tree-sitter-wasm/plugin';
  *
- * export default {
- *   plugins: [customizePlugin({ name: 'typescript-comments-only', tags: { '*': false, comment: true } })],
- *   languageSettings: [{ languageId: 'typescript,typescriptreact', parser: 'typescript-comments-only' }],
- * };
+ * // only check comments
+ * export default customizePlugin({ tags: { '*': false, comment: true } }).defineConfig();
  * ```
  */
-export function customizePlugin(options: CustomizePluginOptions): CSpellPlugin {
-  return customizeParserPlugin(plugin, options);
+export function customizePlugin(options?: CustomizePluginExOptions): IPluginBuilder {
+  return customizePluginEx(plugin, options);
 }

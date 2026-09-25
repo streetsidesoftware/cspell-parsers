@@ -1,7 +1,7 @@
 import type { AdvancedCSpellSettings } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
-import { plugin, supportedFileTypes } from './plugin.ts';
+import { plugin } from './plugin.ts';
 import recommended from './recommended.ts';
 
 describe('recommended (cspell settings entry point)', () => {
@@ -9,12 +9,12 @@ describe('recommended (cspell settings entry point)', () => {
     expect(recommended.plugins).toEqual([plugin]);
   });
 
-  it('selects the typescript parser for every supported file type', () => {
+  it('selects a separate parser for each file type', () => {
     expect(recommended.languageSettings).toEqual([
-      {
-        languageId: supportedFileTypes.join(','),
-        parser: 'typescript',
-      },
+      { languageId: 'javascript', parser: 'javascript' },
+      { languageId: 'javascriptreact', parser: 'javascriptreact' },
+      { languageId: 'typescript', parser: 'typescript' },
+      { languageId: 'typescriptreact', parser: 'typescriptreact' },
     ]);
   });
 

@@ -1,9 +1,7 @@
 {
   "import": ["@cspell/parser-typescript"],
   "languageSettings": [
-    {
-      "languageId": "typescript,typescriptreact",
-      "parser": "typescript",
-    },
+    { "languageId": "typescript", "parser": "typescript" },
+    { "languageId": "typescriptreact", "parser": "typescriptreact" },
   ],
 }

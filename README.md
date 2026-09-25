@@ -35,8 +35,8 @@ table of tags it can produce, for filtering with `customizePlugin`.
 
 - **Check identifiers too** — [`@cspell/parser-typescript`](packages/parser-typescript) checks identifiers,
   comments, and strings in JavaScript, JSX, TypeScript, and TSX, and skips keywords and import specifiers.
-  [`@cspell/parser-javascript`](packages/parser-javascript) is the same parser, registered for JavaScript and
-  JSX only.
+  Each file type has its own parser. [`@cspell/parser-javascript`](packages/parser-javascript) has just the
+  JavaScript and JSX parsers.
 - **Comments and strings only** — the `*-strings-comments` packages leave code alone and check only comments
   and string literals. Pick the one for your language, or
   [`@cspell/parser-strings-comments`](packages/parser-strings-comments) to cover all of them at once.

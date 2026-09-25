@@ -27,13 +27,13 @@ function resolveWasmFile(file: string): string {
 // The wasm runtime only initializes asynchronously, but this package's `parse()` must stay synchronous
 // to satisfy cspell's `Parser` contract - so initialization happens once, up front, via top-level await.
 // A consumer always reaches this module through a (necessarily async) dynamic `import()`, so by the time
-// that import resolves, both languages below are already loaded and ready to parse synchronously.
+// that import resolves, every grammar below is already loaded and ready to parse synchronously.
 await WasmParser.init({ locateFile: (file) => resolveWasmFile(file) });
 
-const [typescriptLanguage, tsxLanguage] = await Promise.all([
-  WasmLanguage.load(resolveWasmFile('tree-sitter-typescript.wasm')),
-  WasmLanguage.load(resolveWasmFile('tree-sitter-tsx.wasm')),
-]);
+/** The tree-sitter grammar a parser uses. */
+export type Grammar = 'javascript' | 'typescript' | 'tsx';
+
+const grammars: readonly Grammar[] = ['javascript', 'typescript', 'tsx'];
 
 function makeParser(language: InstanceType<typeof WasmLanguage>): InstanceType<typeof WasmParser> {
   const parser = new WasmParser();
@@ -41,8 +41,14 @@ function makeParser(language: InstanceType<typeof WasmLanguage>): InstanceType<t
   return parser;
 }
 
-const tsParserInstance = makeParser(typescriptLanguage);
-const tsxParserInstance = makeParser(tsxLanguage);
+const parserByGrammar = new Map(
+  await Promise.all(
+    grammars.map(
+      async (grammar) =>
+        [grammar, makeParser(await WasmLanguage.load(resolveWasmFile(`tree-sitter-${grammar}.wasm`)))] as const,
+    ),
+  ),
+);
 
 /** Filters the possibly-sparse `Node | null` arrays `namedChildren`/`children` return into plain `SyntaxNode[]`. */
 function nonNullNodes(nodes: readonly (SyntaxNode | null)[]): SyntaxNode[] {
@@ -70,18 +76,6 @@ const identifierKindByNodeType: Record<string, keyof typeof TAGS.IDENTIFIER_BY_K
 
 /** Node types whose text is a reference to a name, as opposed to a struct/property key. */
 const referenceNodeTypes = new Set(['identifier', 'type_identifier']);
-
-function getTsParser(): InstanceType<typeof WasmParser> {
-  return tsParserInstance;
-}
-
-function getTsxParser(): InstanceType<typeof WasmParser> {
-  return tsxParserInstance;
-}
-
-function isTsx(filename: string): boolean {
-  return /\.[cm]?tsx$/i.test(filename) || /\.jsx$/i.test(filename);
-}
 
 function quoteTag(text: string, isModuleSpecifier: boolean): Tags {
   switch (text[0]) {
@@ -303,6 +297,16 @@ function declarationNameNode(node: SyntaxNode): SyntaxNode | null {
   return node.childForFieldName('name') ?? node.childForFieldName('pattern');
 }
 
+/**
+ * Returns the identifier a parameter declares, if it's a plain name.
+ * The JavaScript grammar lists a parameter as a bare `identifier`, or an `assignment_pattern` when it has a default.
+ */
+function parameterNameNode(param: SyntaxNode): SyntaxNode | null {
+  if (param.type === 'identifier') return param;
+  if (param.type === 'assignment_pattern') return param.childForFieldName('left');
+  return declarationNameNode(param);
+}
+
 /** Plain parameter names declared directly on a function-like node (destructured patterns are skipped). */
 function parameterNames(node: SyntaxNode): string[] {
   const names: string[] = [];
@@ -311,7 +315,7 @@ function parameterNames(node: SyntaxNode): string[] {
   const params = node.childForFieldName('parameters');
   if (params) {
     for (const child of namedChildrenOf(params)) {
-      const nameNode = declarationNameNode(child);
+      const nameNode = parameterNameNode(child);
       if (nameNode?.type === 'identifier') names.push(nameNode.text);
     }
   }
@@ -515,10 +519,9 @@ function* walk(
  * the gaps `walk` leaves between them (punctuation, keywords, and anything else it doesn't visit) with a
  * `code`-tagged segment.
  */
-export function collectParsedTexts(content: string, filename: string): ParsedText[] {
-  const tsxMode = isTsx(filename);
-  const tree = (tsxMode ? getTsxParser() : getTsParser()).parse(content);
-  if (!tree) throw new Error(`Failed to parse ${filename}`);
+export function collectParsedTexts(grammar: Grammar, content: string, filename: string): ParsedText[] {
+  const tree = parserByGrammar.get(grammar)?.parse(content);
+  if (!tree) throw new Error(`Failed to parse ${filename} with the ${grammar} grammar`);
   const imports = collectImportBindings(tree.rootNode);
   const codeInjector = createCodeTagsEmitter(TAGS.CODE, content);
 

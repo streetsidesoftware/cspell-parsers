@@ -1,9 +1,12 @@
 # @cspell/parser-typescript-tree-sitter
 
-A [cspell](https://cspell.org) parser plugin for JavaScript, JSX, TypeScript, and TSX files. It understands
-the language well enough to skip things that were never meant to be read as words, such as keywords,
-punctuation, and numbers. It also leaves package names and names that come from imported packages alone, so
-it flags fewer words you didn't write.
+A full-fledged JavaScript, JSX, TypeScript, and TSX parser for [cspell](https://cspell.org). It gives you
+control over which parts of your code get spell checked, from comments and strings to function and variable
+names. It also lets you skip module imports and other code that isn't under your control.
+
+It uses tree-sitter's native Node.js bindings. To avoid a native addon, use
+[`@cspell/parser-typescript`](https://www.npmjs.com/package/@cspell/parser-typescript), which runs on
+WebAssembly.
 
 ## Install
 

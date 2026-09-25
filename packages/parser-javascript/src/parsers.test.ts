@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import type { ParsedText } from '@cspell/cspell-types/Parser';
 import { describe, expect, it } from 'vitest';
 
-import { createParser, parse, parser, supportedFileTypes } from './parser.ts';
+import { plugin } from './plugin.ts';
 
 const fixturesDir = join(import.meta.dirname, '../fixtures');
 
@@ -12,9 +12,12 @@ function readFixture(name: string): string {
   return readFileSync(join(fixturesDir, name), 'utf8');
 }
 
-function parseFixture(name: string): ParsedText[] {
+const parser = plugin.getParser('javascript');
+const parse = parser._parse;
+
+function parseFixture(name: string, fileType = 'javascript'): ParsedText[] {
   const content = readFixture(name);
-  return [...parser.parse(content, `fixtures/${name}`).parsedTexts];
+  return [...plugin.getParser(fileType).parse(content, `fixtures/${name}`).parsedTexts];
 }
 
 function find(parsedTexts: ParsedText[], text: string): ParsedText {
@@ -30,11 +33,11 @@ function findByRawText(parsedTexts: ParsedText[], rawText: string): ParsedText {
 }
 
 describe('javascript parser', () => {
-  it('is named "javascript", not "typescript" - even though it reuses the typescript implementation', () => {
+  it('is named "javascript", not "typescript"', () => {
     expect(parser.name).toBe('javascript');
   });
 
-  it('parser.parse wraps parse from @cspell/parser-typescript, filtering out code by default', () => {
+  it('parser.parse filters out code by default', () => {
     const content = 'const x = 1;\n';
 
     const raw = [...parse(content, 'file.js').parsedTexts];
@@ -84,53 +87,19 @@ describe('javascript parser', () => {
     });
   });
 
-  it('parses jsx files and includes untagged jsx text', () => {
-    const parsedTexts = parseFixture('jsx.jsx');
+  it('parses jsx files with the javascriptreact parser and includes untagged jsx text', () => {
+    const parsedTexts = parseFixture('jsx.jsx', 'javascriptreact');
 
     expect(find(parsedTexts, 'hello world').tags).toBeUndefined();
     expect(find(parsedTexts, 'Greeting').tags).toEqual({ identifier: true, 'identifier.variable': true });
   });
 
+  it('parses JSX in a .js file with the javascript parser', () => {
+    const parsedTexts = parseFixture('jsx.jsx');
+    expect(find(parsedTexts, 'hello world').tags).toBeUndefined();
+  });
+
   it('only declares javascript file types as supported, not typescript', () => {
-    expect(supportedFileTypes).toEqual(['javascript', 'javascriptreact']);
-  });
-});
-
-describe('createParser', () => {
-  const content = "// a comment\nconst greeting = 'hello';\n";
-
-  it('defaults to the "javascript" name and keeps everything when called with no options', () => {
-    const customized = createParser();
-    expect(customized.name).toBe('javascript');
-
-    const parsedTexts = [...customized.parse(content, 'file.js').parsedTexts];
-    expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(true);
-    expect(parsedTexts.some((p) => p.text === 'greeting')).toBe(true);
-  });
-
-  it('overrides the name without filtering when tags is omitted', () => {
-    const customized = createParser({ name: 'custom-javascript' });
-    expect(customized.name).toBe('custom-javascript');
-
-    const parsedTexts = [...customized.parse(content, 'file.js').parsedTexts];
-    expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(true);
-    expect(parsedTexts.some((p) => p.text === 'greeting')).toBe(true);
-  });
-
-  it('filters segments by tag when tags is given', () => {
-    const customized = createParser({ tags: { '*': false, comment: true } });
-    const parsedTexts = [...customized.parse(content, 'file.js').parsedTexts];
-
-    expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(true);
-    expect(parsedTexts.some((p) => p.text === 'greeting')).toBe(false);
-  });
-
-  it('combines a name override with tag filtering', () => {
-    const customized = createParser({ name: 'custom-javascript', tags: { '*': false, comment: true } });
-    expect(customized.name).toBe('custom-javascript');
-
-    const parsedTexts = [...customized.parse(content, 'file.js').parsedTexts];
-    expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(true);
-    expect(parsedTexts.some((p) => p.text === 'greeting')).toBe(false);
+    expect(plugin.supportedFileTypes).toEqual(['javascript', 'javascriptreact']);
   });
 });

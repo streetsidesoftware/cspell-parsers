@@ -1,8 +1,5 @@
 import type { RecommendedSettings } from '@internal/utils';
 
-import { plugin as typeScriptPlugin, recommendedLanguageSettings } from './plugin.ts';
+import { plugin } from './plugin.ts';
 
-export default {
-  plugins: [typeScriptPlugin],
-  languageSettings: recommendedLanguageSettings,
-} satisfies RecommendedSettings;
+export default plugin.defineConfig() satisfies RecommendedSettings;

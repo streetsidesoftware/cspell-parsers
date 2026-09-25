@@ -131,6 +131,11 @@ Every package publishes **four** things, each its own file under `src/` and its 
   `languageSettings`, so a consumer only has to `"import": ["@cspell/parser-x/recommended"]` and nothing
   else.
 
+Exception: a package with one parser per file type (the tree-sitter TypeScript backends, `parser-typescript`,
+and `parser-javascript`) has no `src/parser.ts` or `./parser` subpath. Its parsers live in an internal module,
+and `plugin` is the only entry point (`plugin.getParser(name)`). See
+`docs/ADRs/typescript-parser-split/0005-plugin-only-entry-point.md`.
+
 Every top-level `src/*.ts` file needs a matching entry in **both** `tsdown.config.ts`'s `entry` array and
 `package.json`'s `exports` map — these two lists are independent and tsdown does not infer one from the
 other. A file missing from `entry` builds no error, just a `dist/` quietly missing that file, which only
