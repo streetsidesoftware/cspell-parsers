@@ -9,14 +9,10 @@ describe('recommended (cspell settings entry point)', () => {
     expect(recommended.plugins).toEqual([plugin]);
   });
 
-  it('selects the language-specific strings-comments parsers for supported file types', () => {
+  it("selects each file type's language parser", () => {
+    expect(recommended.languageSettings).toEqual(plugin.languageSettings());
     expect(recommended.languageSettings).toEqual(
-      expect.arrayContaining([
-        {
-          languageId: 'csharp',
-          parser: 'csharp-strings-comments',
-        },
-      ]),
+      expect.arrayContaining([{ languageId: 'csharp', parser: 'csharp-strings-comments' }]),
     );
   });
 

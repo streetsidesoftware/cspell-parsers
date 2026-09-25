@@ -1,9 +1,8 @@
 # @cspell/parser-strings-comments
 
-A cspell plugin that spell checks only the comments and string literals in C, C++, C#, Go, Java, JavaScript,
-JSX, TypeScript, TSX, PHP, Python, Ruby, and Rust files, leaving identifiers, keywords, and the rest of the
-code alone. It bundles this repo's per-language strings-and-comments parsers into one plugin, so a single
-import covers every language they support.
+One lightweight [cspell](https://cspell.org) plugin that spell checks the prose in your code: comments and strings,
+in C, C++, C#, Go, Java, JavaScript, TypeScript, PHP, Python, Ruby, and Rust. A single import covers every language,
+and you control what gets checked in each one, from doc comments to heredocs.
 
 ## Usage
 
@@ -84,50 +83,57 @@ Each parser is also published on its own, and its README documents its known lim
 
 ## Filtering by tag
 
-Every parser tags each segment it emits (`comment.line`, `string.doubleQuote`, ...). Use `customizePlugin`
-to choose which tagged segments get spell checked. It takes the language ID to customize (or `'*'` for all of
-them) and a `CustomizePluginOptions` object, and returns a `Plugin` with the customized parsers.
+By default, every comment and string is spell checked, and the rest of the code isn't. Use `customizePlugin`
+to change what gets checked. For example, to check only comments, in every language:
 
-`customizePlugin` returns a live `Plugin` object, not a module-specifier string, so it only works from a JS/TS
-cspell config (`cspell.config.mjs`/`.mts`/`.ts`/`.cjs`) - not `.json`/`.jsonc`/`.yaml`, where `plugins` can
-only be a list of strings.
+**`cspell.config.ts`** or **`cspell.config.mjs`**
 
-**Only comments, in every language**
+<!--- @@inject: samples/comments/cspell.config.mts#lang=ts --->
 
-```js
-// cspell.config.mjs
+```ts
 import { customizePlugin } from '@cspell/parser-strings-comments/plugin';
 
-const plugin = customizePlugin('*', { tags: { '*': false, comment: true } });
-
-export default {
-  plugins: [plugin],
-  // select each language's (customized) parser, the same as `recommended` does
-  languageSettings: plugin.recommendedLanguageSettings,
-};
+// Check only comments, in every language.
+export default customizePlugin({ tags: { '*': false, comment: true } }).defineConfig();
 ```
 
-**Only doc comments, in C# only**
+<!--- @@inject-end: samples/comments/cspell.config.mts#lang=ts --->
 
-```js
-// cspell.config.mjs
+To change one language only, give it its own parser with `filterTagsForFileType`. For example, to check only
+doc comments in C# files, and keep the defaults for the other languages:
+
+**`cspell.config.ts`** or **`cspell.config.mjs`**
+
+<!--- @@inject: samples/customize/cspell.config.mts#lang=ts --->
+
+```ts
 import { customizePlugin } from '@cspell/parser-strings-comments/plugin';
 
-export default {
-  plugins: [
-    customizePlugin('csharp', {
-      // the parser name to use in languageSettings
-      name: 'csharp-only-docs',
-      tags: { '*': false, 'comment.block.doc': true, 'comment.line.doc': true },
-    }),
-  ],
-  languageSettings: [
-    {
-      languageId: 'csharp',
-      parser: 'csharp-only-docs',
-    },
-  ],
-};
+// C# files: check only doc comments.
+// Other languages: keep the defaults.
+export default customizePlugin()
+  .filterTagsForFileType(
+    'csharp',
+    { '*': false, 'comment.block.doc': true, 'comment.line.doc': true },
+    'csharp-doc-comments',
+  )
+  .defineConfig();
+```
+
+<!--- @@inject-end: samples/customize/cspell.config.mts#lang=ts --->
+
+**NOTE:**
+
+> Keys in `tags` are matched hierarchically against the [tags](#tags) below. For example, the key `comment`
+> also matches the more specific `comment.block.doc`, unless a more specific key overrides it. A key can also
+> use `*` as a wildcard, such as `comment.*.doc`, or a bare `*` for everything not otherwise matched.
+
+Calling `customizePlugin` gives you a customized copy of the plugin. Call `defineConfig()` on it to get a
+complete cspell config, or keep adjusting it first. Each language has its own parser, named in the
+[Supported file types](#supported-file-types) table. For example, to give the PHP parser a different name:
+
+```js
+customizePlugin().renameParser('php-strings-comments', 'my-php-parser');
 ```
 
 ### `CustomizePluginOptions`
@@ -135,20 +141,11 @@ export default {
 ```ts
 interface CustomizePluginOptions {
   /**
-   * Name for the customized plugin and parser. Ignored for the parsers when customizing `'*'`,
-   * since two parsers can't share one name.
+   * Define which tagged segments to keep, in every language.
    */
-  name?: string;
-  /**
-   * Tagged segments to keep. Omit to keep each parser's own defaults.
-   */
-  tags?: TagFilterOptions;
+  tags: TagFilterOptions;
 }
 ```
-
-`tags` keys are matched hierarchically - `comment: false` also turns off `comment.line` unless
-`'comment.line': true` overrides it - and may use `*` as a wildcard (`string.*`, or a bare `*` for
-"everything not otherwise matched"). A more specific key always wins over a wildcard.
 
 ## Tags
 
@@ -217,20 +214,21 @@ Every tag the bundled parsers can emit. A tag whose meaning differs between lang
 
 ### The `code` tag
 
-By default, text tagged `code` (identifiers, keywords, punctuation, ...) is not spell checked in any language,
+By default, text tagged `code` (identifiers, keywords, punctuation, ...) isn't spell checked in any language,
 and neither is PHP's `html` (markup outside `<?php ... ?>`). To check `code` in every language:
 
-```js
-// cspell.config.mjs
+**`cspell.config.ts`** or **`cspell.config.mjs`**
+
+<!--- @@inject: samples/check-code/cspell.config.mts#lang=ts --->
+
+```ts
 import { customizePlugin } from '@cspell/parser-strings-comments/plugin';
 
-const plugin = customizePlugin('*', { tags: { code: true } });
-
-export default {
-  plugins: [plugin],
-  languageSettings: plugin.recommendedLanguageSettings,
-};
+// Also check code, such as identifiers and keywords, in every language.
+export default customizePlugin({ tags: { code: true } }).defineConfig();
 ```
+
+<!--- @@inject-end: samples/check-code/cspell.config.mts#lang=ts --->
 
 ## Requirements
 

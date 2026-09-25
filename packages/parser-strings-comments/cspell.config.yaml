@@ -1,11 +1,11 @@
 ignorePaths:
   - CHANGELOG.md
   - node_modules
-  - fixtures
   - dist
 
 words:
   - dedenting
   - dedents
   - godoc
+  - heredocs
   - nowdoc
