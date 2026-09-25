@@ -19,19 +19,20 @@ methods return a new builder each time would silently lose calls that aren't rea
 
 Each package exports an immutable **`IPluginEx`**. Nothing on it looks like a change. It has:
 
-| Member                                  | Returns                                                       |
-| --------------------------------------- | ------------------------------------------------------------- |
-| `parsers`                               | The parsers, in order                                         |
-| `getParser(name)`                       | The named parser as an `IParserEx`; an unknown name throws    |
-| `hasParser(name)`                       | Whether a parser with that name exists                        |
-| `parserNames()`                         | The parser names, in order, usable as a target                |
-| `parserNamesFor(fileType)`              | Names of the parsers that list `fileType`, in plugin order    |
-| `languageSettings()`                    | `languageSettings` entries for every parser, last parser wins |
-| `languageSettingsFor(name, fileTypes?)` | Entries mapping `fileTypes` (default: the parser's own) to it |
-| `customize()`                           | A new `IPluginBuilder` seeded from this plugin                |
+| Member                                    | Returns                                                                          |
+| ----------------------------------------- | -------------------------------------------------------------------------------- |
+| `parsers`                                 | The parsers, in order                                                            |
+| `getParser(name)`                         | The named parser as an `IParserEx`; an unknown name throws                       |
+| `hasParser(name)`                         | Whether a parser with that name exists                                           |
+| `parserNames()`                           | The parser names, in order, usable as a target                                   |
+| `parserNamesFor(fileType)`                | Names of the parsers that list `fileType`, in plugin order                       |
+| `languageSettings()`                      | `languageSettings` entries for every parser, last parser wins                    |
+| `languageSettingsFor(target, fileTypes?)` | Entries mapping `fileTypes` (default: each parser's own) to each targeted parser |
+| `customize()`                             | A new `IPluginBuilder` seeded from this plugin                                   |
 
-`languageSettingsFor` accepts file types the parser doesn't list, e.g. `astro`, since the user is being
-explicit.
+`languageSettingsFor` takes the same target as the builder methods ([0005](./0005-builder-operations.md)) and
+emits entries in parser order. It accepts file types a parser doesn't list, e.g. `astro`, since the user is
+being explicit. Given several parsers and explicit file types, cspell uses the last one.
 
 **`IPluginBuilder`** has the same read-only members, plus the customization methods
 ([0005](./0005-builder-operations.md), [0006](./0006-tag-filtering.md)). Each method changes the builder and
