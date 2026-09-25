@@ -1,8 +1,8 @@
 # @cspell/parser-php-strings-comments
 
-A cspell plugin that spell checks only the comments and string literals in PHP files. The HTML around a
-`<?php ... ?>` block (`html`) and everything else (`code`) are skipped by default. Use `customizePlugin` to
-[check them too](#checking-html-and-code).
+A lightweight PHP parser for [cspell](https://cspell.org) that spell checks the prose in your code: comments
+and strings. It knows where PHP ends and HTML begins, and it gives you control over what gets checked, from
+doc comments to the HTML around your PHP. It has no dependencies.
 
 ## Usage
 

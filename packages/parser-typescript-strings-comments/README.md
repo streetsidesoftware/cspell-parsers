@@ -1,9 +1,9 @@
 # @cspell/parser-typescript-strings-comments
 
-A cspell plugin for spell checking only the comments and string-like literals in JavaScript, JSX,
-TypeScript, and TSX files, leaving identifiers, keywords, and the rest of the code alone. If you also want
-identifiers checked (so a misspelled variable or function name gets flagged too), use
-[`@cspell/parser-typescript`](https://www.npmjs.com/package/@cspell/parser-typescript) instead.
+A lightweight JavaScript, JSX, TypeScript, and TSX parser for [cspell](https://cspell.org) that spell checks
+the prose in your code: comments and strings. It has no dependencies, and it gives you control over which
+comments and strings get checked, from doc comments to module paths. To check function and variable names too,
+use [`@cspell/parser-typescript`](https://www.npmjs.com/package/@cspell/parser-typescript).
 
 ## Usage
 
