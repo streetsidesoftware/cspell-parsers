@@ -27,6 +27,7 @@ implementation.
 | 0013 | `duplicateParser` copies the original's current state                                     | Accepted           |
 | 0014 | A renamed parser keeps its position                                                       | Accepted           |
 | 0015 | Packages export an immutable `IPluginEx`; customization happens on an `IPluginBuilder`    | Accepted           |
+| 0016 | A builder method's target can also be a list of parser names                              | Accepted           |
 
 ## Open questions
 
