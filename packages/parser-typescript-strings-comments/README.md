@@ -147,21 +147,21 @@ whatever level of specificity it needs.
 
 By default, text tagged `code` is not spell checked. To check it too, use `customizePlugin`:
 
-**`cspell.config.ts`** or **`cspell.config.mjs`**
+<!--- @@inject: samples/check-code/cspell.config.mts#lang=ts --->
 
-```js
+```ts
 import { customizePlugin } from '@cspell/parser-typescript-strings-comments/plugin';
 
+// Also check code, such as identifiers and keywords.
+const customPlugin = customizePlugin({ tags: { code: true } });
+
 export default {
-  plugins: [customizePlugin({ tags: { code: true } })],
-  languageSettings: [
-    {
-      languageId: 'typescript',
-      parser: 'typescript-strings-comments',
-    },
-  ],
+  plugins: [customPlugin],
+  languageSettings: customPlugin.languageSettings(),
 };
 ```
+
+<!--- @@inject-end: samples/check-code/cspell.config.mts#lang=ts --->
 
 ## What gets checked
 
