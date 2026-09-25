@@ -8,20 +8,21 @@ file only covers what's specific to this package's parsing logic.
 ## Shape of the parser
 
 This parser is a single hand-written scanner (`Scanner`, a small stateful class holding a mutable cursor `i`
-over `content`). There's no AST and no tokenizer for the language as a whole - `Scanner.run` walks `content`
-character by character, recognizing only the handful of constructs that matter (comments and strings).
-Everything between them is emitted as a `code` segment. `code` is `false` in `tags`, so the default filter
-built by `createPluginParserWithFilterTags` drops it, and a user can turn it back on with `customizePlugin`.
-Char literals and lifetimes get no special handling at all - see "Char literals and lifetimes" below.
+over `content`). There's no AST and no tokenizer for the language as a whole - `Scanner.scanTagged` walks
+`content` character by character, recognizing only the handful of constructs that matter (comments and
+strings). The `run` method wraps it with `createCodeTagsEmitter`, which emits everything between them as a
+`code` segment. `code` is `false` in `tags`, so the default filter built by `createPluginParserWithFilterTags`
+drops it, and a user can turn it back on with `customizePlugin`. Char literals and lifetimes get no special
+handling at all - see "Char literals and lifetimes" below.
 
-Rust has no template-literal-style interpolation, so unlike the JS/TS-family scanner in this repo, `run()`
+Rust has no template-literal-style interpolation, so unlike the JS/TS-family scanner in this repo, `scanTagged()`
 doesn't need a recursive `scanCode(end, stopAtUnmatchedBrace)` helper - it's a single flat loop, and every
 scan method emits exactly one `ParsedText`.
 
 ### Generators, not an array
 
-Every emitting method returns a single `ParsedText` that `run()`'s generator `yield`s, following
-`@cspell/parser-typescript-strings-comments`'s pattern: `run()` is a generator, `parse()` returns
+Every emitting method returns a single `ParsedText` that `scanTagged()`'s generator `yield`s, following
+`@cspell/parser-typescript-strings-comments`'s pattern: `scanTagged()` is a generator, `parse()` returns
 `new Scanner(content).run()` directly, never collecting into an array first - there's nothing here holding a
 tree or other resource a consumer could leak by not fully draining the result.
 
@@ -76,7 +77,7 @@ since char literals are never spell checked, there's nothing to gain from parsin
 per Rust's grammar, just non-idiomatic).** Left unrecognized, that embedded `"` looks exactly like the start
 of a real string to `scanQuotedString`, which then scans past the literal's actual closing `'` looking for
 another `"` - potentially swallowing real code, including a genuine string, in between. Both shapes are
-unambiguous with one or two characters of lookahead (a lifetime never continues with `"` or `\`), so `run()`
+unambiguous with one or two characters of lookahead (a lifetime never continues with `"` or `\`), so `scanTagged()`
 special-cases them: it consumes `'"'` as 3 characters and `'\"'` as 4, without reintroducing a general
 char-literal parser. `fixtures/lifetimes-vs-chars.rs`'s `quote_char_then_real_string` and
 `escaped_quote_char_then_real_string` functions, and their tests in `parser.test.ts`, prove a real string
@@ -144,7 +145,7 @@ This is what makes `fixtures/raw-strings.rs`'s `double_hashed` case work: the bo
 `tryScanRawString` requires a non-identifier character (or start of file) immediately before the `b`/`c`/`r`
 prefix (mirroring `@cspell/parser-typescript-strings-comments`'s `tryScanRegExpCallArgs`), so an identifier
 ending in "r"/"b"/"c" right before an unrelated quote (`author"data"`) isn't misread as a raw-string prefix.
-`run()` applies the same guard inline for the plain `b"..."`/`c"..."` forms.
+`scanTagged()` applies the same guard inline for the plain `b"..."`/`c"..."` forms.
 
 ## Escape handling
 
