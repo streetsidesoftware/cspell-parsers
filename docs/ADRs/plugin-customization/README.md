@@ -21,9 +21,6 @@ renaming, duplicating, tag-filtering, and adjusting the file types of its parser
 
 ## Open questions
 
-- **Name collisions** were settled by [0009](./0009-name-collision-throws.md).
-- **Parser selection** was settled by [0008](./0008-parser-selector-argument.md).
-
 - **Errors in the VS Code extension.** Does a config that throws show the error to the user, or should the
   plugin also `console.error`? See [0009](./0009-name-collision-throws.md).
 
