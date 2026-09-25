@@ -224,7 +224,7 @@ const option = { tags: { 'identifier.property': false } };
 
 ### `TagFilterOptions`
 
-`TagFilterOptions` are used to set the filter criteria for the text sent to the spell checker.
+Use `TagFilterOptions` to set the filter criteria for the text sent to the spell checker.
 
 The values are inherited hierarchically
 
