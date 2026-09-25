@@ -13,6 +13,7 @@ renaming, duplicating, tag-filtering, and adjusting the file types of its parser
 | 0002 | Parsers own file types; plugin file types and recommendations derived | Accepted |
 | 0003 | A duplicated parser is appended to the end of the plugin's parsers    | Accepted |
 | 0004 | Users customize a plugin through chained, immutable methods           | Accepted |
+| 0005 | Design from the plugin user's perspective, within cspell's rules      | Accepted |
 
 ## Open questions
 
@@ -28,3 +29,7 @@ renaming, duplicating, tag-filtering, and adjusting the file types of its parser
   public API.
 - **Parser selection.** A scoping `select()` step was rejected because it isn't obvious that it works on a
   subset. Choosing between name-only methods and a selector argument waits on the plugin model.
+
+## Deliverables
+
+- A guide for plugin authors, covering [0005](./0005-user-perspective.md)'s user model and cspell's rules.
