@@ -43,6 +43,7 @@ Each parser package exports a plugin, and the plugin comes with recommended sett
 | `parsers`                               | The plugin's parsers, in order                                              |
 | `getParser(name)`                       | The named parser (throws on an unknown name)                                |
 | `hasParser(name)`                       | Whether a parser with that name exists                                      |
+| `parserNames()`                         | The parser names, in order                                                  |
 | `parserNamesFor(fileType)`              | Names of the parsers that list `fileType`, in plugin order                  |
 | `languageSettings()`                    | `languageSettings` entries for every parser (last parser wins)              |
 | `languageSettingsFor(name, fileTypes?)` | Entries mapping `fileTypes` (default: the parser's own) to the named parser |
