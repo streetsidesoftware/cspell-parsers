@@ -95,7 +95,8 @@ would swallow the code after it up to the next `'`. A `'` is a digit separator w
 continues the number and the token before it starts with a digit (or `.` and a digit). A char literal's
 encoding prefix (`u8'a'`, `L'a'`) starts with a letter, so it's still read as a char literal.
 The walk back to the start of the token stops at the nearest `'`, and reuses the decision made there, so a long
-run of separators is checked in linear time. `fixtures/digit-separators.cpp` and the inline tests next to it
+run of separators is checked in linear time. When that `'` closes a char literal, the token starts after it, so
+in `'a'1'2` the `1'2` is a number. `fixtures/digit-separators.cpp` and the inline tests next to it
 cover these cases.
 
 ## Testing

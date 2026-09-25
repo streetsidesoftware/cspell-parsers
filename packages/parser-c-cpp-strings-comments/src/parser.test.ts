@@ -171,6 +171,10 @@ describe('c-cpp-strings-comments parser', () => {
       expect(stringsIn(`x = ${code};\n`)).toEqual(expected);
     });
 
+    it("starts a new token after a char literal, so 1'2 in 'a'1'2 is a number", () => {
+      expect(stringsIn("x = 'a'1'2;\n")).toEqual(["'a'"]);
+    });
+
     it('scans a long run of digit separators in linear time', () => {
       const content = `x = ${"1'".repeat(100_000)}1; // the end\n`;
       const start = performance.now();
