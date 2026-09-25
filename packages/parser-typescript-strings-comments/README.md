@@ -55,24 +55,35 @@ See also: [Customization options](#customization-options)
 
 **`cspell.config.ts`** or **`cspell.config.mjs`**
 
-```js
+For example, to check only doc comments in TypeScript files:
+
+<!--- @@inject: samples/customize/cspell.config.mts#lang=ts --->
+
+```ts
 import { customizePlugin } from '@cspell/parser-typescript-strings-comments/plugin';
 
-// exclude module specifiers - often not worth spell checking
-const customPlugin = customizePlugin({ tags: { 'module.specifier': false } });
-
 export default {
-  plugins: [customPlugin],
-  languageSettings: customPlugin.languageSettings(),
+  plugins: [customizePlugin({ tags: { '*': false, 'comment.block.doc': true } })],
+  languageSettings: [
+    {
+      languageId: 'typescript',
+      parser: 'typescript-strings-comments',
+    },
+  ],
 };
 ```
+
+<!--- @@inject-end: samples/customize/cspell.config.mts#lang=ts --->
 
 `customizePlugin` returns a builder that works as a plugin and can be customized further. For example, to
 check TypeScript files one way and JavaScript files another, give the second parser its own name:
 
-```js
+<!--- @@inject: samples/customize-by-file-type/cspell.config.mts#lang=ts --->
+
+```ts
 import { plugin } from '@cspell/parser-typescript-strings-comments/plugin';
 
+// Check only comments in JavaScript files; TypeScript files keep the defaults.
 const customPlugin = plugin
   .customize()
   .duplicateParser('typescript-strings-comments', 'js-comments-only')
@@ -84,6 +95,8 @@ export default {
   languageSettings: customPlugin.languageSettings(),
 };
 ```
+
+<!--- @@inject-end: samples/customize-by-file-type/cspell.config.mts#lang=ts --->
 
 **NOTE:**
 
