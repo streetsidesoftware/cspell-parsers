@@ -35,6 +35,7 @@ implementation.
 | 0021 | `customizePlugin` stays as a thin wrapper that returns a builder                          | Accepted           |
 | 0022 | `removeParser` takes any target; `addParser` adds a parser from anywhere                  | Accepted           |
 | 0023 | `IParserEx` carries its filter options; plugins and builders have `getParser(name)`       | Accepted           |
+| 0024 | Migrate one package at a time, with the bundle last                                       | Accepted           |
 
 ## Open questions
 
