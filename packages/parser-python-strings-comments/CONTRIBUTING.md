@@ -77,12 +77,13 @@ each tag means to a consumer.
 
 ## Why `customizePlugin`/`createParser` work with any cspell version
 
-Both are thin wrappers around `@internal/utils`'s `customizeParser`, which filters `parsedTexts` by tag
-inside the parser itself, before `ParseResult` is ever handed back to cspell. Filtering happens on this
-package's side of the `Parser` contract, not cspell's, so it works regardless of whether the installed
-cspell version has (or ever adds) its own notion of tag-based filtering - there's no version dependency to
-track. See `@internal/utils`'s `compileTagFilter`/`customizeParser` (`packages/internal-utils/src/customize.ts`)
-for the filtering engine itself.
+`customizePlugin` and `createParser` are thin wrappers around `@internal/utils`'s `customizePluginEx` and
+`customizeParserEx` (`packages/internal-utils/src/pluginEx.ts`). `createPluginParserWithFilterTags`
+(`parserEx.ts`) builds the default filter from `tags`. Every filter, a consumer's included, is compiled
+against the parser's unfiltered output and its `tags`, never on top of an earlier filter. The filtering
+happens inside the parser before cspell sees the result, so it works with any cspell version, including one
+too old to filter `ParsedText.tags` itself. See the plugin-customization ADRs
+(`docs/ADRs/plugin-customization/0006-tag-filtering.md`) for the design.
 
 ## Known limitation: no docstring detection
 
