@@ -296,6 +296,7 @@ describe('customizePluginEx', () => {
     const single = createPluginEx({ name: 'one', parsers: [mkParser('a', ['x'])] });
     expect(customizePluginEx(single, { name: 'b', tags: {} }).parserNames()).toEqual(['b']);
     expect(() => customizePluginEx(mkPlugin(), { name: 'b' })).toThrow('use renameParser instead');
+    expect(() => customizePluginEx(single, { name: '' })).toThrow('Invalid parser name ""');
   });
 });
 
