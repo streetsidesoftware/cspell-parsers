@@ -52,4 +52,6 @@ change is made. `'*'` on a plugin with no parsers does nothing.
 - Mistakes surface when the config loads. cspell CLI 10.3.3 prints
   `Configuration Error: Failed to read config file: "<path>"` with the message and exits 1, including for a
   JS config reached through a YAML `import`, so no extra `console.error` is needed.
-- `'*'` can't be a parser name.
+- `'*'` can't be a parser name, and neither can `''`.
+  A parser with an empty name can't be selected, so an empty rename would silently switch it off.
+  `removeParser` is the explicit way to do that.
