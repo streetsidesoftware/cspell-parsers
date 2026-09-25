@@ -56,8 +56,8 @@ The plugin provides these parsers. Where Recommended is `yes`, `recommended` ena
 | csharp          | csharp-strings-comments     | yes         |
 | go              | go-strings-comments         | yes         |
 | java            | java-strings-comments       | yes         |
-| javascript      | typescript-strings-comments | yes         |
-| javascriptreact | typescript-strings-comments | yes         |
+| javascript      | javascript-strings-comments | yes         |
+| javascriptreact | javascript-strings-comments | yes         |
 | php             | php-strings-comments        | yes         |
 | python          | python-strings-comments     | yes         |
 | ruby            | ruby-strings-comments       | yes         |

@@ -88,7 +88,9 @@ is a standalone npm package implementing cspell's `Parser`/`Plugin` contract (ty
 (`typescript`, `tsdown`, `vitest`, `@cspell/cspell-types`). New packages should reference these via
 `"catalog:"` rather than pinning their own versions, so every package stays in lockstep.
 
-**Package shape** — `packages/parser-typescript-strings-comments` is the canonical, fully-fledged template; `packages/parser-example`
+**Package shape** — `packages/parser-typescript-strings-comments` is the canonical, fully-fledged template. It has
+two parsers, so it keeps them in `src/parsers.ts` (see the exception below); a package with one parser uses
+`src/parser.ts`, as `packages/parser-csharp-strings-comments` does. `packages/parser-example`
 predates this convention and is kept as a minimal single-file reference (fine to start from for a trivial
 parser, but bring it in line with the shape below if it needs `tags`/`scope`/a `recommended` entry point).
 
@@ -103,7 +105,7 @@ Every package publishes **four** things, each its own file under `src/` and its 
   hand-written scanner with no memory-retention concern (nothing held onto across the scan needs to be freed
   by a consumer draining the result, unlike a tree-sitter backend's parse tree), emit it lazily via a
   generator (`function*`/`yield`) rather than collecting into an array first; see
-  `packages/parser-typescript-strings-comments/src/parser.ts`'s `Scanner` for the pattern (`run()` and its
+  `packages/parser-typescript-strings-comments/src/scanner.ts`'s `Scanner` for the pattern (`run()` and its
   per-construct helpers are generators that `yield`/`yield*` directly, rather than pushing onto an array
   field). Published as `./parser` → `dist/parser.js`. Also exports
   `supportedFileTypes: string[]` — the cspell/vscode language IDs (e.g. `'typescript'`, `'javascriptreact'`)
@@ -130,9 +132,9 @@ Every package publishes **four** things, each its own file under `src/` and its 
   `languageSettings`, so a consumer only has to `"import": ["@cspell/parser-x/recommended"]` and nothing
   else.
 
-Exception: a package with one parser per file type (the tree-sitter TypeScript backends, `parser-typescript`,
-and `parser-javascript`) has no `src/parser.ts` or `./parser` subpath. Its parsers live in an internal module,
-and `plugin` is the only entry point (`plugin.getParser(name)`). See
+Exception: a package with more than one parser (the tree-sitter TypeScript backends, `parser-typescript`,
+`parser-javascript`, and `parser-typescript-strings-comments`) has no `src/parser.ts` or `./parser` subpath.
+Its parsers live in an internal module, and `plugin` is the only entry point (`plugin.getParser(name)`). See
 `docs/ADRs/typescript-parser-split/0005-plugin-only-entry-point.md`.
 
 Every top-level `src/*.ts` file needs a matching entry in **both** `tsdown.config.ts`'s `entry` array and

@@ -82,7 +82,7 @@ per segment. See `README.md`'s [Tags](README.md#tags) table for what each one me
   fixture's exact bytes - quote style, spacing, an unterminated literal's missing closing delimiter - are
   frequently what's being asserted on; don't let a formatter "fix" one. Smaller, boundary-specific cases (the
   `"""` dispatch, Javadoc detection, unterminated literals at EOF) use short inline content instead, the same
-  way `@cspell/parser-typescript-strings-comments/src/parser.test.ts` does for its own regex/division and
+  way `@cspell/parser-typescript-strings-comments/src/parsers.test.ts` does for its own regex/division and
   trailing-backslash regression coverage.
 - `samples/` is a real, separate end-to-end check: actual cspell configs plus real source files, run for real
   by `pnpm run test:cspell` (`cspell .` from the package root). `samples/customize` in particular proves the

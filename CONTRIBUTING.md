@@ -12,7 +12,8 @@ parsers, and how to write one here.
 - **No hidden side effects:** an operation changes only what its caller targets or names, even if that means
   some repetition.
 - **Set up:** `pnpm install`, then `pnpm run build` and `pnpm test`.
-- **Add a parser:** copy `packages/parser-typescript-strings-comments` (the full template) and follow the guide.
+- **Add a parser:** copy `packages/parser-typescript-strings-comments` (the full template; it has two parsers, see
+  below) and follow the guide.
 - **Before a PR:** `pnpm run build`, `pnpm run typecheck`, `pnpm run lint` (auto-fixes), `pnpm test`. CI runs
   `build`, `typecheck`, and `test`, plus `pnpm run lint-ci` (a read-only lint) in a separate workflow.
 - **Commits:** [Conventional Commits](https://www.conventionalcommits.org/). Use `feat:`/`fix:` only for
@@ -32,7 +33,8 @@ is a standalone npm package implementing cspell's `Parser`/`Plugin` contract (ty
 `@cspell/cspell-types`) so it can be loaded via a cspell configuration's `plugins` list.
 
 - `packages/parser-typescript-strings-comments` is the canonical, fully-fledged package — use it as the template for a new
-  parser.
+  parser. It has two parsers, which share a scanner, so it keeps them in `src/parsers.ts` and has no `./parser`
+  subpath. For one parser, use `src/parser.ts` instead, as `packages/parser-csharp-strings-comments` does.
 - `packages/parser-example` is a minimal single-file starter that predates that convention; fine to start
   from for a trivial parser, but bring it in line with the full shape (see "Adding a new parser package"
   below) before publishing it as a real plugin.

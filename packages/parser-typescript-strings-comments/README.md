@@ -52,8 +52,8 @@ files with that Language ID:
 
 | Language ID     | Parser Name                 | Recommended |
 | --------------- | --------------------------- | ----------- |
-| javascript      | typescript-strings-comments | yes         |
-| javascriptreact | typescript-strings-comments | yes         |
+| javascript      | javascript-strings-comments | yes         |
+| javascriptreact | javascript-strings-comments | yes         |
 | typescript      | typescript-strings-comments | yes         |
 | typescriptreact | typescript-strings-comments | yes         |
 
@@ -83,7 +83,17 @@ export default customizePlugin()
 <!--- @@inject-end: samples/customize/cspell.config.mts#lang=ts --->
 
 Calling `filterTagsForFileType` gives TypeScript files their own copy of the parser, named `ts-doc-comments`,
-with its own filter.
+with its own filter. TSX files keep the original.
+
+**Why does the copy need a name?**
+
+> In a cspell config, `languageSettings` picks a parser for each file type by its name. Because the copy has its
+> own name, TypeScript files can use it while TSX files keep the original. Calling `defineConfig()` writes those
+> entries for you.
+>
+> Every parser in a plugin needs its own name, so `filterTagsForFileType`, `duplicateParser`, and
+> `renameParser` always ask you for the new one. Using a name that's already taken is an error, reported when
+> cspell loads your config.
 
 **NOTE:**
 
@@ -93,7 +103,8 @@ with its own filter.
 Both `customizePlugin` and `plugin.customize()` give you a customized copy of the plugin. Call
 [`defineConfig()`](#defineconfig) on it to get a complete cspell config, or keep adjusting it first. For
 example, the next config checks TypeScript files as usual, but checks only the comments in JavaScript and JSX
-files. Each file type gets its own copy of the parser, with its own name and filter:
+files. JavaScript and JSX files have their own parser, `javascript-strings-comments`, so `filterTags` can
+target it by name:
 
 **`cspell.config.ts`** or **`cspell.config.mjs`**
 
@@ -105,8 +116,7 @@ import { customizePlugin } from '@cspell/parser-typescript-strings-comments/plug
 // JavaScript and JSX files: check only comments.
 // TypeScript files: keep the defaults.
 export default customizePlugin()
-  .filterTagsForFileType('javascript', { '*': false, comment: true }, 'js-comments-only')
-  .filterTagsForFileType('javascriptreact', { '*': false, comment: true }, 'jsx-comments-only')
+  .filterTags('javascript-strings-comments', { '*': false, comment: true })
   .defineConfig();
 ```
 
@@ -117,16 +127,6 @@ export default customizePlugin()
 > The `tags` key `comment` also matches the more specific `comment.line`, `comment.block`, and
 > `comment.block.doc`, unless a more specific key overrides it. See:
 > [`CustomizePluginOptions`](#customizepluginoptions) and [`TagFilterOptions`](#tagfilteroptions) below.
-
-**What are `js-comments-only` and `jsx-comments-only`?**
-
-> They're the names of the copies. In a cspell config, `languageSettings` picks a parser for each file type by
-> its name. Because each copy has its own name, JavaScript and JSX files can use them while TypeScript files
-> keep the original. Calling `defineConfig()` writes those entries for you.
->
-> Every parser in a plugin needs its own name, so `filterTagsForFileType`, `duplicateParser`, and
-> `renameParser` always ask you for the new one. Using a name that's already taken is an error, reported when
-> cspell loads your config.
 
 ## Tags
 
@@ -183,7 +183,7 @@ A few kinds of code are handled in a specific way:
 
   A comment inside a `RegExp(...)` call is still checked. To check regular expressions too, turn on the
   [`code` tag](#the-code-tag).
-  <!--- Tested by src/parser.test.ts: "regex-literals.ts" --->
+  <!--- Tested by src/parsers.test.ts: "regex-literals.ts" --->
 
 - **Module specifiers are spell checked by default, but can be filtered out.** The path or package name in
   each of these is tagged `module`, `module.specifier`, and `module.specifier.literal`, as well as with its
@@ -200,14 +200,16 @@ A few kinds of code are handled in a specific way:
   customizePlugin({ tags: { 'module.specifier': false } });
   ```
 
-  <!--- Tested by src/parser.test.ts: "module-specifiers.ts" --->
+  <!--- Tested by src/parsers.test.ts: "module-specifiers.ts" --->
 
 ## Customization options
 
 Use `customizePlugin(options)` to control which parts of a file get spell checked, based on the [tags](#tags)
-the parser gives each part. The filter applies to every parser in the plugin.
+the parser gives each part. The filter applies to both parsers.
 
-You can keep adjusting the plugin it returns. For example, to give the parser a different name:
+You can keep adjusting the plugin it returns. A builder call that names a parser changes only that parser.
+For example, this renames the TypeScript and TSX parser, and JavaScript and JSX files keep
+`javascript-strings-comments`:
 
 ```js
 customizePlugin().renameParser('typescript-strings-comments', 'my-parser');

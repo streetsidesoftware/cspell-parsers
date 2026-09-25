@@ -3,12 +3,21 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import type { ParsedText } from '@cspell/cspell-types';
+import type { IParserEx } from '@internal/utils';
 import { describe, expect, it } from 'vitest';
 
-import { parse, parser } from './parser.ts';
+import { parse, parsers } from './parsers.ts';
 import { tags } from './tags.ts';
 
 const fixturesDir = join(import.meta.dirname, '../fixtures');
+
+function getParser(name: string): IParserEx {
+  const found = parsers.find((p) => p.name === name);
+  if (!found) throw new Error(`No parser named ${name}`);
+  return found;
+}
+
+const parser = getParser('typescript-strings-comments');
 
 function readFixture(name: string): string {
   return readFileSync(join(fixturesDir, name), 'utf8');
@@ -22,6 +31,21 @@ function parseFixture(name: string): ParsedText[] {
 function byText(parsedTexts: ParsedText[], text: string): ParsedText | undefined {
   return parsedTexts.find((p) => p.text === text);
 }
+
+describe('parsers', () => {
+  it('has one parser for JavaScript and JSX, and one for TypeScript and TSX', () => {
+    expect(parsers.map((p) => [p.name, p.supportedFileTypes])).toEqual([
+      ['javascript-strings-comments', ['javascript', 'javascriptreact']],
+      ['typescript-strings-comments', ['typescript', 'typescriptreact']],
+    ]);
+  });
+
+  it('gives the same result from both parsers, since they share the scanner', () => {
+    const content = readFixture('comments-and-strings.ts');
+    const javascript = [...getParser('javascript-strings-comments').parse(content, 'file.js').parsedTexts];
+    expect(javascript).toEqual([...parser.parse(content, 'file.js').parsedTexts]);
+  });
+});
 
 describe('typescript-strings-comments parser', () => {
   it('preserves the filename and full content on the result', () => {
