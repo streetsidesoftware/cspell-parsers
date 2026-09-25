@@ -2,6 +2,7 @@ import type { ParsedText } from '@cspell/cspell-types/Parser';
 import type { StringPart } from '@internal/utils';
 import { createCodeTagsEmitter, decodeStringParts, stripCommentMarkers } from '@internal/utils';
 import TreeSitterParser from 'tree-sitter';
+import JavaScriptLanguage from 'tree-sitter-javascript';
 import TypeScriptLanguages from 'tree-sitter-typescript';
 
 import type { Tags } from './tags.ts';
@@ -23,7 +24,17 @@ const identifierKindByNodeType: Record<string, keyof typeof TAGS.IDENTIFIER_BY_K
 /** Node types whose text is a reference to a name, as opposed to a struct/property key. */
 const referenceNodeTypes = new Set(['identifier', 'type_identifier']);
 
+/** The tree-sitter grammar a parser uses. */
+export type Grammar = 'javascript' | 'typescript' | 'tsx';
+
 type TSLanguage = typeof TypeScriptLanguages.typescript;
+
+const languageByGrammar: Record<Grammar, TSLanguage> = {
+  javascript: JavaScriptLanguage,
+  typescript: TypeScriptLanguages.typescript,
+  tsx: TypeScriptLanguages.tsx,
+};
+
 // Cached per language and reused across parse() calls - constructing a TreeSitterParser and loading its
 // native grammar isn't free, and one instance is safe to parse with repeatedly.
 const tsParsers: Map<TSLanguage, TreeSitterParser> = new Map();
@@ -35,18 +46,6 @@ function getTreeSitter(lang: TSLanguage): TreeSitterParser {
   tsParser.setLanguage(lang);
   tsParsers.set(lang, tsParser);
   return tsParser;
-}
-
-function getTsParser(): TreeSitterParser {
-  return getTreeSitter(TypeScriptLanguages.typescript);
-}
-
-function getTsxParser(): TreeSitterParser {
-  return getTreeSitter(TypeScriptLanguages.tsx);
-}
-
-function isTsx(filename: string): boolean {
-  return /\.[cm]?tsx$/i.test(filename) || /\.jsx$/i.test(filename);
 }
 
 function quoteTag(text: string, isModuleSpecifier: boolean): Tags {
@@ -267,6 +266,16 @@ function declarationNameNode(node: SyntaxNode): SyntaxNode | null {
   return node.childForFieldName('name') ?? node.childForFieldName('pattern');
 }
 
+/**
+ * Returns the identifier a parameter declares, if it's a plain name.
+ * The JavaScript grammar lists a parameter as a bare `identifier`, or an `assignment_pattern` when it has a default.
+ */
+function parameterNameNode(param: SyntaxNode): SyntaxNode | null {
+  if (param.type === 'identifier') return param;
+  if (param.type === 'assignment_pattern') return param.childForFieldName('left');
+  return declarationNameNode(param);
+}
+
 /** Plain parameter names declared directly on a function-like node (destructured patterns are skipped). */
 function parameterNames(node: SyntaxNode): string[] {
   const names: string[] = [];
@@ -275,7 +284,7 @@ function parameterNames(node: SyntaxNode): string[] {
   const params = node.childForFieldName('parameters');
   if (params) {
     for (const child of params.namedChildren) {
-      const nameNode = declarationNameNode(child);
+      const nameNode = parameterNameNode(child);
       if (nameNode?.type === 'identifier') names.push(nameNode.text);
     }
   }
@@ -477,9 +486,8 @@ function* walk(
  * the gaps `walk` leaves between them (punctuation, keywords, and anything else it doesn't visit) with a
  * `code`-tagged segment.
  */
-export function collectParsedTexts(content: string, filename: string): ParsedText[] {
-  const tsxMode = isTsx(filename);
-  const tree = (tsxMode ? getTsxParser() : getTsParser()).parse(content);
+export function collectParsedTexts(grammar: Grammar, content: string): ParsedText[] {
+  const tree = getTreeSitter(languageByGrammar[grammar]).parse(content);
   const imports = collectImportBindings(tree.rootNode);
   const codeInjector = createCodeTagsEmitter(TAGS.CODE, content);
 

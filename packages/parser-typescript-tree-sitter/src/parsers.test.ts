@@ -2,12 +2,30 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import type { ParsedText } from '@cspell/cspell-types/Parser';
+import type { IParserEx } from '@internal/utils';
 import { describe, expect, it } from 'vitest';
 
-import { createParser, parse, parser } from './parser.ts';
+import { plugin } from './plugin.ts';
 import { tags } from './tags.ts';
 
 const fixturesDir = join(import.meta.dirname, '../fixtures');
+
+const parser = plugin.getParser('typescript');
+const parse = parser._parse;
+
+const fileTypeByExtension: Record<string, string> = {
+  '.js': 'javascript',
+  '.jsx': 'javascriptreact',
+  '.ts': 'typescript',
+  '.mts': 'typescript',
+  '.tsx': 'typescriptreact',
+};
+
+/** Returns the parser `recommended` selects for `name`, by its extension. */
+function parserFor(name: string): IParserEx {
+  const extension = name.slice(name.lastIndexOf('.'));
+  return plugin.getParser(fileTypeByExtension[extension] ?? 'typescript');
+}
 
 function readFixture(name: string): string {
   return readFileSync(join(fixturesDir, name), 'utf8');
@@ -15,7 +33,11 @@ function readFixture(name: string): string {
 
 function parseFixture(name: string): ParsedText[] {
   const content = readFixture(name);
-  return [...parser.parse(content, `fixtures/${name}`).parsedTexts];
+  return [...parserFor(name).parse(content, `fixtures/${name}`).parsedTexts];
+}
+
+function parseWith(fileType: string, content: string, filename: string): ParsedText[] {
+  return [...plugin.getParser(fileType).parse(content, filename).parsedTexts];
 }
 
 function find(parsedTexts: ParsedText[], text: string): ParsedText {
@@ -375,39 +397,52 @@ describe('typescript parser', () => {
   });
 });
 
-describe('createParser', () => {
-  it('defaults to the "typescript" name and keeps everything when called with no options', () => {
-    const customized = createParser();
-    expect(customized.name).toBe('typescript');
-
-    const parsedTexts = [...customized.parse('// a comment\nconst greeting = 1;\n', 'file.ts').parsedTexts];
-    expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(true);
-    expect(parsedTexts.some((p) => p.text === 'greeting')).toBe(true);
+describe('one parser per file type', () => {
+  it('has a parser for each file type, named after it', () => {
+    expect(plugin.parserNames()).toEqual(['javascript', 'javascriptreact', 'typescript', 'typescriptreact']);
+    for (const name of plugin.parserNames()) {
+      expect(plugin.getParser(name).supportedFileTypes).toEqual([name]);
+    }
   });
 
-  it('overrides the name without filtering when tags is omitted', () => {
-    const customized = createParser({ name: 'custom-typescript' });
-    expect(customized.name).toBe('custom-typescript');
+  it('parses JSX in a .js file with the javascript parser', () => {
+    const parsedTexts = parseFixture('jsx-in.js');
 
-    const parsedTexts = [...customized.parse('// a comment\nconst greeting = 1;\n', 'file.ts').parsedTexts];
-    expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(true);
-    expect(parsedTexts.some((p) => p.text === 'greeting')).toBe(true);
+    expect(find(parsedTexts, 'hello world').tags).toBeUndefined();
+    expect(find(parsedTexts, 'Greeting').tags).toEqual({ identifier: true, 'identifier.variable': true });
   });
 
-  it('filters segments by tag when tags is given', () => {
-    const customized = createParser({ tags: { '*': false, comment: true } });
-    const parsedTexts = [...customized.parse('// a comment\nconst greeting = 1;\n', 'file.ts').parsedTexts];
-
-    expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(true);
-    expect(parsedTexts.some((p) => p.text === 'greeting')).toBe(false);
+  it('parses JSX with the javascriptreact parser', () => {
+    const parsedTexts = parseWith('javascriptreact', readFixture('jsx-in.js'), 'file.jsx');
+    expect(find(parsedTexts, 'hello world').tags).toBeUndefined();
   });
 
-  it('combines a name override with tag filtering', () => {
-    const customized = createParser({ name: 'custom-typescript', tags: { '*': false, comment: true } });
-    expect(customized.name).toBe('custom-typescript');
+  it('picks the grammar from the parser, not the filename', () => {
+    const content = readFixture('jsx.tsx');
+    // The typescriptreact parser reads JSX even when the file is named .ts.
+    expect(find(parseWith('typescriptreact', content, 'file.ts'), 'hello world').tags).toBeUndefined();
+    // The typescript parser has no JSX, even when the file is named .tsx.
+    expect(parseWith('typescript', content, 'file.tsx').some((p) => p.text === 'hello world')).toBe(false);
+  });
 
-    const parsedTexts = [...customized.parse('// a comment\nconst greeting = 1;\n', 'file.ts').parsedTexts];
-    expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(true);
-    expect(parsedTexts.some((p) => p.text === 'greeting')).toBe(false);
+  it('reads `a < b > (c)` as comparisons with the javascript grammar', () => {
+    const parsedTexts = parseWith('javascript', 'const r = a < b > (c);\n', 'file.js');
+    expect(find(parsedTexts, 'b').tags).toEqual({ identifier: true, 'identifier.variable': true });
+  });
+
+  it('lets a JavaScript parameter shadow an import of the same name', () => {
+    const content = [
+      "import { expl } from './example.js';",
+      'function f(expl) { return expl.toUpperCase(); }',
+      'function g(expl = 1) { return expl.toFixed(); }',
+      'expl.check();',
+      '',
+    ].join('\n');
+    const identifiers = parseWith('javascript', content, 'file.js').filter((p) => identifierKind(p) !== undefined);
+
+    expect(findAll(identifiers, 'expl')).toHaveLength(4);
+    expect(identifiers.some((p) => p.text === 'toUpperCase')).toBe(true);
+    expect(identifiers.some((p) => p.text === 'toFixed')).toBe(true);
+    expect(identifiers.some((p) => p.text === 'check')).toBe(false);
   });
 });

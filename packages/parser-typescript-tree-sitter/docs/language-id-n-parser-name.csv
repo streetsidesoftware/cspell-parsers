@@ -1,5 +1,5 @@
 Language ID,Parser Name,Recommended
-javascript,typescript,yes
-javascriptreact,typescript,yes
+javascript,javascript,yes
+javascriptreact,javascriptreact,yes
 typescript,typescript,yes
-typescriptreact,typescript,yes
+typescriptreact,typescriptreact,yes
