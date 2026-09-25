@@ -60,12 +60,7 @@ By default, every comment and string is spell checked, and the HTML and the rest
 import { customizePlugin } from '@cspell/parser-php-strings-comments/plugin';
 
 // Check only PHPDoc comments.
-const customPlugin = customizePlugin({ tags: { '*': false, 'comment.block.doc': true } });
-
-export default {
-  plugins: [customPlugin],
-  languageSettings: customPlugin.languageSettings(),
-};
+export default customizePlugin({ tags: { '*': false, 'comment.block.doc': true } }).defineConfig();
 ```
 
 <!--- @@inject-end: samples/doc-comments-only/cspell.config.mts#lang=ts --->
@@ -76,8 +71,8 @@ export default {
 > also matches the more specific `string.heredoc`, unless a more specific key overrides it. A key can also use
 > `*` as a wildcard, such as `string.*`, or a bare `*` for everything not otherwise matched.
 
-Calling `customizePlugin` gives you a customized copy of the plugin. You can add it to `plugins` straight
-away, or keep adjusting it first. For example, to give the parser a different name:
+Calling `customizePlugin` gives you a customized copy of the plugin. Call `defineConfig()` on it to get a
+complete cspell config, or keep adjusting it first. For example, to give the parser a different name:
 
 ```js
 customizePlugin().renameParser('php-strings-comments', 'my-php-parser');
@@ -96,12 +91,7 @@ too:
 import { customizePlugin } from '@cspell/parser-php-strings-comments/plugin';
 
 // Also check the HTML outside <?php ... ?> blocks.
-const customPlugin = customizePlugin({ tags: { html: true } });
-
-export default {
-  plugins: [customPlugin],
-  languageSettings: customPlugin.languageSettings(),
-};
+export default customizePlugin({ tags: { html: true } }).defineConfig();
 ```
 
 <!--- @@inject-end: samples/customize/cspell.config.mts#lang=ts --->

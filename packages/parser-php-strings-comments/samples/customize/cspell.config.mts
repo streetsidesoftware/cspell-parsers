@@ -1,9 +1,4 @@
 import { customizePlugin } from '@cspell/parser-php-strings-comments/plugin';
 
 // Also check the HTML outside <?php ... ?> blocks.
-const customPlugin = customizePlugin({ tags: { html: true } });
-
-export default {
-  plugins: [customPlugin],
-  languageSettings: customPlugin.languageSettings(),
-};
+export default customizePlugin({ tags: { html: true } }).defineConfig();

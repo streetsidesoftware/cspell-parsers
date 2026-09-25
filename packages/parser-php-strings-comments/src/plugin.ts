@@ -21,12 +21,7 @@ export const recommendedLanguageSettings = plugin.languageSettings();
  * import { customizePlugin } from '@cspell/parser-php-strings-comments/plugin';
  *
  * // also check the HTML outside <?php ?>
- * const custom = customizePlugin({ tags: { html: true } });
- *
- * export default {
- *   plugins: [custom],
- *   languageSettings: custom.languageSettings(),
- * };
+ * export default customizePlugin({ tags: { html: true } }).defineConfig();
  * ```
  */
 export function customizePlugin(options?: CustomizePluginExOptions): IPluginBuilder;
