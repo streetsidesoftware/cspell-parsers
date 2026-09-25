@@ -172,6 +172,17 @@ describe('IPluginBuilder', () => {
     expect(() => b.filterTags('typscript', {})).toThrow('Unknown parser "typscript"');
   });
 
+  it('rejects an empty parser name everywhere a name is set', () => {
+    const b = mkPlugin().customize();
+    const invalid = 'Invalid parser name ""';
+    expect(() => b.renameParser('php', '')).toThrow(invalid);
+    expect(() => b.duplicateParser('php', '')).toThrow(invalid);
+    expect(() => b.addParser(mkParser('p', []), '')).toThrow(invalid);
+    expect(() => b.addParser(mkParser('', []))).toThrow(invalid);
+    expect(() => createPluginEx({ name: 'test', parsers: [mkParser('', [])] })).toThrow(invalid);
+    expect(() => customizeParserEx(mkParser('p', []), { name: '' })).toThrow(invalid);
+  });
+
   it('names every unknown parser in the error', () => {
     const b = mkPlugin().customize();
     expect(() => b.removeParser(['go', 'rust'])).toThrow('Unknown parsers "go", "rust" in plugin "test".');
