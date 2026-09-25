@@ -229,18 +229,12 @@ class PluginBuilder extends PluginExQueries implements IPluginBuilder {
     if (fileType === '*') {
       throw new Error('filterTagsForFileType needs a file type, not "*"; use filterTags("*", ...).');
     }
-    assertNameIsFree(this.name, this.#defs, newName);
-    const lastParserFor = lastParserByFileType(this.#defs);
-    const source = lastParserFor.get(fileType);
-    if (source === undefined) throw unknownFileTypesError(this.name, [...lastParserFor.keys()], [fileType], '');
-    const copy = this.findDef(source).with({ name: newName, fileTypes: [fileType], filterTags: options });
-    this.#defs = this.#defs.map((def) =>
-      def.fileTypes.includes(fileType)
-        ? def.with({ fileTypes: def.fileTypes.filter((type) => type !== fileType) })
-        : def,
-    );
-    this.#defs.push(copy);
-    return this;
+    const source = this.parserNamesFor(fileType).at(-1);
+    if (source === undefined) throw unknownFileTypesError(this.name, this.supportedFileTypes, [fileType], '');
+    return this.duplicateParser(source, newName)
+      .setFileTypes(newName, [fileType])
+      .filterTags(newName, options)
+      .removeFileTypes(source, [fileType]);
   }
 
   build(): IPluginEx {

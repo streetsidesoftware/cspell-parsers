@@ -278,13 +278,15 @@ describe('filterTagsForFileType', () => {
     ]);
   });
 
-  it('removes the file types from every parser that lists them', () => {
+  it('copies the last parser that lists the file type, and removes it only from that parser', () => {
     const b = mkPlugin()
       .customize()
       .duplicateParser('typescript', 'copy')
       .filterTagsForFileType('typescript', { '*': false, string: true }, 'ts-strings');
 
-    expect(b.parserNamesFor('typescript')).toEqual(['ts-strings']);
+    expect(b.parserNamesFor('typescript')).toEqual(['typescript', 'ts-strings']);
+    expect(b.getParser('copy').supportedFileTypes).toEqual(['javascript']);
+    expect(b.languageSettingsForFileType('typescript')).toEqual([{ languageId: 'typescript', parser: 'ts-strings' }]);
     expect(texts(b.getParser('ts-strings'))).toEqual(['string']);
   });
 
