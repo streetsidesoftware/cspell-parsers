@@ -1,0 +1,3 @@
+{
+  "import": ["@cspell/parser-c-cpp-strings-comments/recommended"],
+}

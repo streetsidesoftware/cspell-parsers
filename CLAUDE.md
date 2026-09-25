@@ -257,6 +257,12 @@ Label every example that is a whole config file with its filename in bold, direc
 **`cspell.config.jsonc`** or **`cspell.config.ts`** or **`cspell.config.mjs`**. Don't name the file in a comment
 inside the code. Snippets that aren't a whole file (a single call, an options object) don't need a label.
 
+Every example that is a whole config file comes from a real sample under `samples/`, injected with
+`<!--- @@inject: samples/<name>/cspell.config.jsonc#lang=jsonc --->` / `<!--- @@inject-end: … --->` markers, so
+`test:cspell` checks it. Don't hand-write one. In a JSON or YAML config, cspell ignores a plugin named as a string
+in `plugins`: load it with `"import": ["@cspell/<package>"]` instead, since the package's main entry registers
+the plugin.
+
 If the parser emits `tags` on any segment, `README.md` must include a table listing every tag it can emit
 (including ancestor tags implied by `hierarchicalTags`, e.g. `comment` alongside `comment.block.doc`) with a
 one-line description of what each one means. This is reference material for using the plugin, not an

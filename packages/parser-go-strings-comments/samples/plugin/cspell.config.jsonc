@@ -1,0 +1,9 @@
+{
+  "import": ["@cspell/parser-go-strings-comments"],
+  "languageSettings": [
+    {
+      "languageId": "go",
+      "parser": "go-strings-comments",
+    },
+  ],
+}

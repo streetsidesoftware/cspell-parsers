@@ -1,0 +1,9 @@
+{
+  "import": ["@cspell/parser-typescript-tree-sitter-wasm"],
+  "languageSettings": [
+    {
+      "languageId": "typescript,typescriptreact",
+      "parser": "typescript",
+    },
+  ],
+}

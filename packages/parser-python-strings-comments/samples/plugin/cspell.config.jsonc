@@ -1,0 +1,9 @@
+{
+  "import": ["@cspell/parser-python-strings-comments"],
+  "languageSettings": [
+    {
+      "languageId": "python",
+      "parser": "python-strings-comments",
+    },
+  ],
+}

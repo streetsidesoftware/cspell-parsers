@@ -1,0 +1,9 @@
+{
+  "import": ["@cspell/parser-php-strings-comments"],
+  "languageSettings": [
+    {
+      "languageId": "php",
+      "parser": "php-strings-comments",
+    },
+  ],
+}

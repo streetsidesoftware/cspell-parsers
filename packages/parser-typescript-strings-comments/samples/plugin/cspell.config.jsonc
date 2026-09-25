@@ -1,0 +1,9 @@
+{
+  "import": ["@cspell/parser-typescript-strings-comments"],
+  "languageSettings": [
+    {
+      "languageId": "typescript",
+      "parser": "typescript-strings-comments",
+    },
+  ],
+}

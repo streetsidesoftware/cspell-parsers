@@ -1,0 +1,3 @@
+{
+  "import": ["@cspell/parser-java-strings-comments/recommended"],
+}

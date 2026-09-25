@@ -1,0 +1,9 @@
+{
+  "import": ["@cspell/parser-rust-strings-comments"],
+  "languageSettings": [
+    {
+      "languageId": "rust",
+      "parser": "rust-strings-comments",
+    },
+  ],
+}
