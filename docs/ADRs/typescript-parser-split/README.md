@@ -14,3 +14,4 @@ type, so the grammar follows the parser cspell selects.
 | 0003 | Each parser uses its own grammar; JavaScript uses the JavaScript grammar | Accepted |
 | 0004 | `parser-javascript` is the JavaScript subset of the split                | Accepted |
 | 0005 | The plugin is the only entry point; the `./parser` subpath is removed    | Accepted |
+| 0006 | Two PRs, each moving to `IPluginEx` and splitting at once                | Accepted |
