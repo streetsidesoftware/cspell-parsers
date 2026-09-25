@@ -166,7 +166,9 @@ export default {
 
 <!--- @@inject-end: samples/check-code/cspell.config.mts#lang=ts --->
 
-## What gets checked
+## Special cases
+
+A few kinds of code are handled in a specific way:
 
 - **Regex literals (`/pattern/flags`) and `RegExp(...)`/`new RegExp(...)` calls are tagged `code`, so they're
   not spell checked by default.** A regex pattern isn't prose, so both forms are skipped entirely, including
@@ -177,8 +179,6 @@ export default {
   `import x from './mod.js'`, `import './side-effect.js'`, `export { x } from './mod.js'`, a dynamic
   `import('./mod.js')`, and `require('./mod.js')` all get the `module`/`module.specifier`/
   `module.specifier.literal` tags in addition to their usual string tags. Use `customizePlugin` to exclude them if a relative path or package name isn't worth checking.
-- A string or comment nested inside a template literal's `${...}` interpolation (e.g. a ternary's string
-  branches) is still recognized and tagged normally.
 
 ## Customization options
 

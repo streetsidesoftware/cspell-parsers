@@ -107,6 +107,12 @@ describe('typescript-strings-comments parser', () => {
       expect(byText(parsedTexts, 'message')?.tags).toEqual({ string: true, 'string.singleQuote': true });
       expect(byText(parsedTexts, 'messages')?.tags).toEqual({ string: true, 'string.singleQuote': true });
     });
+
+    it('recognizes comments inside a ${...} hole', () => {
+      const texts = [...parse('const m = `A ${/* block note */ x} B ${y // line note\n} C`;\n', 'a.ts').parsedTexts];
+      expect(texts.find((t) => t.text === 'block note')?.tags).toEqual({ comment: true, 'comment.block': true });
+      expect(texts.find((t) => t.text === 'line note')?.tags).toEqual({ comment: true, 'comment.line': true });
+    });
   });
 
   describe('component.tsx', () => {
