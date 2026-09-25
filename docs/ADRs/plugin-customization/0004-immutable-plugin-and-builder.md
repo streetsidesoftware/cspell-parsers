@@ -24,6 +24,7 @@ Each package exports an immutable **`IPluginEx`**. Nothing on it looks like a ch
 | `parsers`                               | The parsers, in order                                         |
 | `getParser(name)`                       | The named parser as an `IParserEx`; an unknown name throws    |
 | `hasParser(name)`                       | Whether a parser with that name exists                        |
+| `parserNames()`                         | The parser names, in order, usable as a target                |
 | `parserNamesFor(fileType)`              | Names of the parsers that list `fileType`, in plugin order    |
 | `languageSettings()`                    | `languageSettings` entries for every parser, last parser wins |
 | `languageSettingsFor(name, fileTypes?)` | Entries mapping `fileTypes` (default: the parser's own) to it |
@@ -32,10 +33,11 @@ Each package exports an immutable **`IPluginEx`**. Nothing on it looks like a ch
 `languageSettingsFor` accepts file types the parser doesn't list, e.g. `astro`, since the user is being
 explicit.
 
-**`IPluginBuilder`** has the same read-only members plus the customization methods
+**`IPluginBuilder`** has the same read-only members, plus the customization methods
 ([0005](./0005-builder-operations.md), [0006](./0006-tag-filtering.md)). Each method changes the builder and
-returns it, so calls chain or stand as separate statements. A builder works directly as a plugin, and
-`build()` returns an immutable `IPluginEx` snapshot that later calls don't affect.
+returns it, so calls chain or stand as separate statements. A builder works directly as a plugin.
+`build()` returns an immutable `IPluginEx` snapshot that later calls don't affect, and `customize()` forks
+the builder, e.g. for a renamed, filtered copy used under `overrides` for legacy files.
 
 ```js
 import { plugin } from '@cspell/parser-typescript/plugin';
