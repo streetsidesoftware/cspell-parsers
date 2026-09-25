@@ -231,6 +231,11 @@ contributor reading the source. Lead with the couple of lines needed to add it t
 (how the AST walk works, why a given segment gets the tag it does, etc.) secondary or omitted entirely —
 someone installing this off npm needs "how do I turn this on," not "how does it work."
 
+A package's `README.md` is rendered on npmjs.com on its own, so every link and image in it must be an absolute
+`https://` URL. Relative links (`./docs/…`, `../../CONTRIBUTING.md`, `samples/…`) resolve on GitHub but break on
+npm. Links to anchors on the same page (`#tags`) are fine. Don't point users at repo files such as
+`CONTRIBUTING.md` from a package README at all.
+
 In `README.md` and any other user-facing text (guides, doc comments users see in their editor, the release-note
 part of a `feat:`/`fix:` PR body), don't start a sentence in a paragraph or note with a code span: it reads as if
 the start of the sentence is missing. Lead with a word instead, e.g. "Use `customizePlugin` to…", "Both `a` and
