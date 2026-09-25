@@ -13,7 +13,7 @@ blockExoticSubdeps: true
 
 catalog:
   '@cspell/cspell-types': ^10.3.3
-  cspell: ^10.3.3
+  cspell: ^10.3.4
 
 minimumReleaseAge: 2880
 
