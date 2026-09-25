@@ -26,6 +26,5 @@ with the current filter compiled against the originals.
 - Filtering again always starts from the originals, however many times a parser is renamed, duplicated,
   or filtered inside a builder.
 - The class is internal. Only `IParser` is public.
-- Still open: how the class gets the original unfiltered `parse` from an `IParser` created by another
-  package's bundled copy of `@internal/utils`, e.g. in `parser-strings-comments`, which bundles the other
-  packages' plugins.
+- The class gets the original unfiltered parse from any package's `IParser` through its public `_parse`
+  member ([0020](./0020-parser-exposes-unfiltered-parse.md)).
