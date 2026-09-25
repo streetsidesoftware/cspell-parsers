@@ -1,9 +1,13 @@
 # @cspell/parser-typescript-tree-sitter-wasm
 
-A [cspell](https://cspell.org) parser plugin for JavaScript, JSX, TypeScript, and TSX files. It understands
-the language well enough to skip things that were never meant to be read as words, such as keywords,
-punctuation, and numbers. It also leaves package names and names that come from imported packages alone, so
-it flags fewer words you didn't write.
+A [cspell](https://cspell.org) parser plugin that spell checks JavaScript, JSX, TypeScript, and TSX the way
+you write it: the names you choose for variables, functions, properties, and types, along with comments,
+strings, and JSX text. Names that come from outside your code, such as package names and what you import from
+them, aren't checked, so cspell doesn't flag spelling you can't change. You can also choose what gets checked,
+for example only comments.
+
+It runs on WebAssembly, so it installs without a native build step.
+[`@cspell/parser-typescript`](https://www.npmjs.com/package/@cspell/parser-typescript) uses this package.
 
 ## Install
 

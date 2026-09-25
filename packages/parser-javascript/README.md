@@ -1,12 +1,14 @@
 # @cspell/parser-javascript
 
-A [cspell](https://cspell.org) parser plugin for JavaScript and JSX files. It understands the language well
-enough to skip things that were never meant to be read as words, such as keywords, punctuation, and numbers.
-It also leaves package names and names that come from imported packages alone, so it flags fewer words you
-didn't write.
+A [cspell](https://cspell.org) parser plugin that spell checks JavaScript and JSX the way you write it: the
+names you choose for variables, functions, and properties, along with comments, strings, and JSX text. Names
+that come from outside your code, such as package names and what you import from them, aren't checked, so
+cspell doesn't flag spelling you can't change. You can also choose what gets checked, for example only
+comments.
 
-It uses the same parsers as [`@cspell/parser-typescript`](https://www.npmjs.com/package/@cspell/parser-typescript),
-for projects that only need JavaScript and JSX.
+It has the same JavaScript and JSX parsers as
+[`@cspell/parser-typescript`](https://www.npmjs.com/package/@cspell/parser-typescript). Use this package when a
+project has only JavaScript and JSX files.
 
 ## Install
 
