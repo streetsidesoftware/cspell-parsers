@@ -1,4 +1,4 @@
-# 0010. `filterTagsForFileType` gives file types their own filtered parser
+# 0010. `filterTagsForFileType` gives a file type its own filtered parser
 
 Status: Accepted
 
@@ -23,7 +23,7 @@ Once `defineConfig` ([0009](./0009-define-config.md)) covers every parser, a sim
 
 Three shapes were weighed:
 
-- file types, copying whichever parser handles them;
+- a file type, copying whichever parser handles it;
 - an explicit source parser plus file types, which saves the least typing and needs the parser's name;
 - a filter per file type hidden behind one parser name, with generated parsers underneath. It was rejected:
   it breaks the rule that users name every parser ([0003](./0003-plugin-model.md),
@@ -40,24 +40,26 @@ export default customizePlugin()
   .defineConfig();
 ```
 
-- **It targets file types, not parsers.** `fileType` is a file type or a list of them. The source is the
-  parser that currently handles them, the last one that lists them, so the user doesn't need parser names.
-  This is an exception to 0005's parser targets.
+- **It targets a file type, not a parser.** `fileType` is a single file type. The source is the parser that
+  currently handles it, the last one that lists it, so the user doesn't need parser names. This is an
+  exception to 0005's parser targets.
+- **One file type per call.** A list was rejected: file types handled by different parsers would need
+  several copies under one name, and the rule for that is harder to explain than a second call.
 - **The user names the copy.** `newName` is required, and a taken name throws, as in 0005.
-- **The file types move.** The copy lists only the given file types, and they're removed from every other
-  parser that lists them. So `parserNamesFor` stays unambiguous, and the result doesn't depend on order.
+- **The file type moves.** The copy lists only that file type, and it's removed from every other parser
+  that lists it. So `parserNamesFor` stays unambiguous, and the result doesn't depend on order.
 - **The filter replaces, never chains.** `options` replaces the copied filter, as in
   [0006](./0006-tag-filtering.md).
 - **The copy is appended.** Like `duplicateParser`, it goes to the end of the list.
-- **An empty list does nothing**, as with 0005's targets.
-- **Mistakes throw before anything changes.** Throws happen for a file type no parser lists, for file types
-  that different parsers handle (one name can't cover two copies), and for `'*'`, which
-  `filterTags('*', ...)` already covers.
+- **Mistakes throw before anything changes.** Throws happen for a file type no parser lists, and for `'*'`,
+  which `filterTags('*', ...)` already covers.
 
 ## Consequences
 
-- "A different filter for these file types" is one call, and the examples keep their intent.
+- "A different filter for this file type" is one call, and the examples keep their intent.
 - The source is resolved when the method is called. Later reordering or `addParser` doesn't change it.
 - The other parsers keep their other file types. A parser left with no file types stays in the plugin, as
   in 0003.
-- The file types can't be spread across parsers in one call. Call the method once per source parser.
+- Giving several file types one filter takes a call per file type, each with its own name, or one call
+  followed by `addFileTypes` on the copy. With `addFileTypes`, the added file types stay on the original
+  parser too, and the copy wins them only by coming later.
