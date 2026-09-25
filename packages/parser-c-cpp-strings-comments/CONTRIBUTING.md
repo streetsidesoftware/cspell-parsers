@@ -94,7 +94,10 @@ C++14 and C23 allow `'` inside a number, as in `1'000'000` or `0xFF'FF`. Read as
 would swallow the code after it up to the next `'`. A `'` is a digit separator when the next character
 continues the number and the token before it starts with a digit (or `.` and a digit). A char literal's
 encoding prefix (`u8'a'`, `L'a'`) starts with a letter, so it's still read as a char literal.
-`fixtures/digit-separators.cpp` covers both.
+The walk back to the start of the token stops at the nearest `'`, and reuses the decision made there, so a long
+run of separators is checked in linear time. When that `'` closes a char literal, the token starts after it, so
+in `'a'1'2` the `1'2` is a number. `fixtures/digit-separators.cpp` and the inline tests next to it
+cover these cases.
 
 ## Testing
 
