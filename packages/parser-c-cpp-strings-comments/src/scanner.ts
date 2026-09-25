@@ -47,6 +47,18 @@ function isIdentChar(ch: string | undefined): boolean {
   return !!ch && /[A-Za-z0-9_]/.test(ch);
 }
 
+/**
+ * Reports whether the `'` at `i` is a digit separator (C++14, C23), as in `1'000'000` or `0xFF'FF`.
+ * It is when it continues a number: the token before it starts with a digit, or `.` and a digit.
+ */
+function isDigitSeparator(content: string, i: number): boolean {
+  if (!isIdentChar(content[i + 1])) return false;
+  let start = i;
+  while (start > 0 && /[A-Za-z0-9_'.]/.test(content[start - 1])) start--;
+  const first = content[start];
+  return /[0-9]/.test(first) || (first === '.' && /[0-9]/.test(content[start + 1] ?? ''));
+}
+
 /** Scans C/C++ source for comments and string/char literals, tagging everything else as `code`. */
 export class Scanner {
   private i = 0;
@@ -82,7 +94,7 @@ export class Scanner {
         yield this.scanQuotedString('"');
         continue;
       }
-      if (c === "'") {
+      if (c === "'" && !isDigitSeparator(content, this.i)) {
         yield this.scanQuotedString("'");
         continue;
       }
