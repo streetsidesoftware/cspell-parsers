@@ -10,8 +10,9 @@ identifiers checked (so a misspelled variable or function name gets flagged too)
 The quickest way to get started is to import the recommended settings, which registers the plugin and
 selects it for every supported file type:
 
+**`cspell.config.jsonc`**
+
 ```jsonc
-// cspell.config.jsonc (or cspell.config.yaml/.mjs/...)
 {
   "import": ["@cspell/parser-typescript-strings-comments/recommended"],
 }
@@ -19,6 +20,8 @@ selects it for every supported file type:
 
 For more control - for example, to apply it to only some file types, or alongside other settings - wire the
 plugin in yourself and choose the language IDs to use it for:
+
+**`cspell.config.jsonc`**
 
 ```jsonc
 {
@@ -82,6 +85,8 @@ Both `customizePlugin` and `plugin.customize()` give you a customized copy of th
 `plugins` straight away, or keep adjusting it first. For example, the next config checks TypeScript files as
 usual, but checks only the comments in JavaScript files. It duplicates the `typescript-strings-comments`
 parser under the name `js-comments-only`, then fine-tunes the copy's settings for JavaScript files:
+
+**`cspell.config.ts`** or **`cspell.config.mjs`**
 
 <!--- @@inject: samples/customize-by-file-type/cspell.config.mts#lang=ts --->
 
@@ -149,6 +154,8 @@ needs.
 ### The `code` tag
 
 By default, text tagged `code` is not spell checked. To check it too, use `customizePlugin`:
+
+**`cspell.config.ts`** or **`cspell.config.mjs`**
 
 <!--- @@inject: samples/check-code/cspell.config.mts#lang=ts --->
 
