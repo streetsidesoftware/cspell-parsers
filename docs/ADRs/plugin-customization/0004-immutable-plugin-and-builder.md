@@ -29,12 +29,18 @@ Each package exports an immutable **`IPluginEx`**. Nothing on it looks like a ch
 | `languageSettings()`                    | Same as `languageSettingsFor('*')`                                                  |
 | `languageSettingsFor(target)`           | Entries for the targeted parsers; each file type goes to the last one that lists it |
 | `languageSettingsFor(name, fileTypes?)` | Entries mapping `fileTypes` (default: its own) to the named parser                  |
+| `languageSettingsForFileType(fileType)` | Entries for only the given file types, each to the last parser that lists it        |
 | `customize()`                           | A new `IPluginBuilder` seeded from this plugin                                      |
 
 `languageSettingsFor(target)` takes the same target as the builder methods
 ([0005](./0005-builder-operations.md)) and emits entries in parser order, with no file type mapped twice.
 Explicit file types go with a single name only, and may include types the parser doesn't list, e.g. `astro`,
-since the user is being explicit.
+since the user is being explicit. `languageSettingsForFileType` takes a file type, a list, or `'*'`, and never
+maps a file type it wasn't asked for.
+
+Input the plugin doesn't know throws: an unknown parser name, or a file type no parser lists. Valid input
+that maps to nothing (an empty target, a parser with no file types) returns `[]`, so callers never need to
+check before spreading the result into `languageSettings`.
 
 **`IPluginBuilder`** has the same read-only members, plus the customization methods
 ([0005](./0005-builder-operations.md), [0006](./0006-tag-filtering.md)). Each method changes the builder and
