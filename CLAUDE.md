@@ -109,15 +109,17 @@ Every package publishes **four** things, each its own file under `src/` and its 
   `supportedFileTypes: string[]` — the cspell/vscode language IDs (e.g. `'typescript'`, `'javascriptreact'`)
   the parser is meant to handle, kept alphabetically sorted — as the single source of truth `recommended.ts`
   builds its `languageSettings` from, so the list only needs updating in one place.
-- `src/plugin.ts` — thin wiring: `export const plugin: IPlugin = { parsers: [parser] }`, plus
+- `src/plugin.ts` — thin wiring: `export const plugin: IPluginEx = createPluginEx({ name, parsers: [parser] })`
+  (with `parser` created by `@internal/utils`'s `createPluginParserWithFilterTags`), plus
   `export { supportedFileTypes } from './parser.ts'` so it's reachable from the `./plugin` subpath too.
-  Published as `./plugin` → `dist/plugin.js`. If `parser.ts` emits `tags`, also re-export
-  `@internal/utils`'s shared `CustomizePluginOptions` (`export type { CustomizePluginOptions } from '@internal/utils'`
-  — every package uses the same options rather than declaring its own) and
-  `function customizePlugin(options: CustomizePluginOptions): CSpellPlugin` — a thin wrapper around
-  `@internal/utils`'s `customizeParserPlugin(plugin, options)` (see below) bound to this package's own
-  `plugin`, so a consumer can filter which tagged segments get spell checked without needing cspell itself
-  to support that filtering. See `packages/parser-typescript-strings-comments/src/plugin.ts` for the pattern.
+  Published as `./plugin` → `dist/plugin.js`. If `parser.ts` emits `tags`, also re-export `@internal/utils`'s
+  shared options (`export type { CustomizePluginExOptions as CustomizePluginOptions } from '@internal/utils'`)
+  and `function customizePlugin(options?: CustomizePluginOptions): IPluginBuilder`, a thin wrapper around
+  `customizePluginEx(plugin, options)`, so a consumer can filter which tagged segments get spell checked
+  without needing cspell itself to support that filtering. The result can be adjusted further and turned into
+  a complete config with `defineConfig()`. See `packages/parser-typescript-strings-comments/src/plugin.ts` for
+  the pattern. Packages not yet migrated still use `IPlugin` and `customizeParserPlugin`; see
+  `docs/guides/plugin-author-guide.md`.
 - `src/index.ts` — the package's main entry (`.` / `main`). Exports a default settings object with just
   `plugins: [plugin]` — the parser is registered but not yet selected for any file type, so a consumer still
   has to add their own `languageSettings`. Typed as a small local `SelectedCSpellSettings` interface
@@ -125,9 +127,9 @@ Every package publishes **four** things, each its own file under `src/` and its 
   small — see the dist-size bullet below. `index.test.ts` separately checks the object is still assignable
   to `AdvancedCSpellSettings`.
 - `src/recommended.ts` — a batteries-included alternative, published as `./recommended` →
-  `dist/recommended.js`. Exports a default `AdvancedCSpellSettings` with `plugins: [plugin]` **and**
-  `languageSettings` mapping `supportedFileTypes.join(',')` to the parser by name, so a consumer only has to
-  `"import": ["@cspell/parser-x/recommended"]` and nothing else.
+  `dist/recommended.js`. Exports `plugin.defineConfig()`: `plugins: [plugin]` **and** the plugin's
+  `languageSettings`, so a consumer only has to `"import": ["@cspell/parser-x/recommended"]` and nothing
+  else.
 
 Every top-level `src/*.ts` file needs a matching entry in **both** `tsdown.config.ts`'s `entry` array and
 `package.json`'s `exports` map — these two lists are independent and tsdown does not infer one from the

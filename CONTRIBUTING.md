@@ -94,25 +94,24 @@ plugins and parsers, what users do with a plugin, and what that means for how yo
    the shared `.config/tsdown.config.ts`.
 3. Implement the parser as four files under `src/`, each with a matching `package.json` `exports` subpath
    and `tsdown.config.ts` entry (see `CLAUDE.md`'s "Package shape" for why both matter):
-   - `parser.ts` — `parse(content, filename): ParseResult`, `export const parser: Parser`, and
+   - `parser.ts` — `parse(content, filename): ParseResult`, `export const parser: IParserEx` (created with
+     `@internal/utils`'s `createPluginParserWithFilterTags`, which applies the default filter from `tags`), and
      `export const supportedFileTypes: string[]` (the cspell/vscode language IDs the parser handles, e.g.
-     `'typescript'`, `'javascriptreact'`, kept alphabetically sorted) — the single source of truth
-     `recommended.ts` builds its `languageSettings` from. This is where all the real logic lives. If segments
-     carry `tags`, use dot-separated hierarchical tag names as the `ParsedTags` keys (e.g.
-     `comment.block.doc`), each with a `true` value, and include every ancestor alongside the most specific
-     tag (`comment.block.doc` implies also emitting `comment` and `comment.block`) so cspell's `validate`
-     setting can filter at any level of specificity — see `packages/parser-typescript/CONTRIBUTING.md`'s
-     "Tags" section for the full convention.
-   - `plugin.ts` — `export const plugin: IPlugin = { parsers: [parser] }` plus
+     `'typescript'`, `'javascriptreact'`, kept alphabetically sorted), which generate its `languageSettings`.
+     This is where all the real logic lives. If segments carry `tags`, use dot-separated hierarchical tag names
+     as the `ParsedTags` keys (e.g. `comment.block.doc`), each with a `true` value, and include every ancestor
+     alongside the most specific tag (`comment.block.doc` implies also emitting `comment` and `comment.block`)
+     so a `customizePlugin` filter can match at any level of specificity — see
+     `packages/parser-typescript/CONTRIBUTING.md`'s "Tags" section for the full convention.
+   - `plugin.ts` — `export const plugin: IPluginEx = createPluginEx({ name, parsers: [parser] })` plus
      `export { supportedFileTypes } from './parser.ts'`. If `parser.ts` emits `tags`, also export
-     `function customizePlugin(validate: ValidationTags): Plugin`, a thin wrapper around
-     `@internal/utils`'s `customizePlugin(plugin, validate)` bound to this package's own `plugin` — see
-     `packages/parser-typescript-strings-comments/src/plugin.ts` for the pattern to copy. This is what lets a consumer filter
-     which tagged segments get spell checked without needing a cspell version that already applies
-     `validate` itself.
+     `function customizePlugin(options?: CustomizePluginOptions): IPluginBuilder`, a thin wrapper around
+     `@internal/utils`'s `customizePluginEx(plugin, options)` — see
+     `packages/parser-typescript-strings-comments/src/plugin.ts` for the pattern to copy. This is what lets a
+     consumer filter which tagged segments get spell checked, then call `defineConfig()` for a complete config.
    - `index.ts` — default export: an `AdvancedCSpellSettings` with just `plugins: [plugin]`.
-   - `recommended.ts` — default export: an `AdvancedCSpellSettings` with `plugins: [plugin]` **and**
-     `languageSettings` mapping `supportedFileTypes.join(',')` to the parser by name, so it works standalone.
+   - `recommended.ts` — default export: `plugin.defineConfig()`, which has `plugins: [plugin]` **and** the
+     plugin's `languageSettings`, so it works standalone.
 4. Write tests: `parser.test.ts` for real parsing behavior — put realistic input in `fixtures/` (excluded
    from `tsc`/ESLint/Prettier, since a fixture's exact bytes are often what's being asserted on) rather than
    inline strings — plus thin `plugin.test.ts` / `index.test.ts` / `recommended.test.ts` that just check each
