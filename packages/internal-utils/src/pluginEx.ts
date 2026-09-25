@@ -75,10 +75,22 @@ abstract class PluginExQueries implements IPluginExBase {
       .map(({ def, fileTypes }) => ({ languageId: fileTypes.join(','), parser: def.name }));
   }
 
-  languageSettingsFor(name: string, fileTypes?: readonly string[]): RecommendedLanguageSettings {
-    const types = fileTypes ?? this.findDef(name).fileTypes;
-    if (fileTypes) this.findDef(name);
-    return types.length ? [{ languageId: types.join(','), parser: name }] : [];
+  languageSettingsFor(target: ParserTarget, fileTypes?: readonly string[]): RecommendedLanguageSettings {
+    const names = this.resolveTarget(target);
+    return this.defs
+      .filter((def) => names.has(def.name))
+      .map((def) => ({ def, types: fileTypes ?? def.fileTypes }))
+      .filter(({ types }) => types.length)
+      .map(({ def, types }) => ({ languageId: types.join(','), parser: def.name }));
+  }
+
+  /** Validates every name before anything changes. */
+  protected resolveTarget(target: ParserTarget): Set<string> {
+    if (target === '*') return new Set(this.defs.map((def) => def.name));
+    const names = typeof target === 'string' ? [target] : target;
+    const unknown = names.filter((name) => !this.hasParser(name));
+    if (unknown.length) throw unknownParsersError(this.name, this.defs, unknown);
+    return new Set(names);
   }
 
   protected findDef(name: string): ParserDef {
@@ -137,7 +149,7 @@ class PluginBuilder extends PluginExQueries implements IPluginBuilder {
   }
 
   removeParser(target: ParserTarget): this {
-    const names = this.#resolve(target);
+    const names = this.resolveTarget(target);
     this.#defs = this.#defs.filter((def) => !names.has(def.name));
     return this;
   }
@@ -164,18 +176,9 @@ class PluginBuilder extends PluginExQueries implements IPluginBuilder {
   }
 
   #update(target: ParserTarget, change: (def: ParserDef) => ParserDefChanges): this {
-    const names = this.#resolve(target);
+    const names = this.resolveTarget(target);
     this.#defs = this.#defs.map((def) => (names.has(def.name) ? def.with(change(def)) : def));
     return this;
-  }
-
-  /** Validates every name before anything changes. */
-  #resolve(target: ParserTarget): Set<string> {
-    if (target === '*') return new Set(this.#defs.map((def) => def.name));
-    const names = typeof target === 'string' ? [target] : target;
-    const unknown = names.filter((name) => !this.hasParser(name));
-    if (unknown.length) throw unknownParsersError(this.name, this.#defs, unknown);
-    return new Set(names);
   }
 }
 

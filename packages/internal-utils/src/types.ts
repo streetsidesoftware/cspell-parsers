@@ -144,8 +144,11 @@ export interface IPluginExBase {
   parserNamesFor(fileType: string): string[];
   /** `languageSettings` for every parser; each file type goes to the last parser that lists it. */
   languageSettings(): RecommendedLanguageSettings;
-  /** `languageSettings` mapping `fileTypes` (default: the parser's own) to the named parser. */
-  languageSettingsFor(name: string, fileTypes?: readonly string[]): RecommendedLanguageSettings;
+  /**
+   * `languageSettings` mapping `fileTypes` (default: each parser's own) to each targeted parser, in parser order.
+   * Given several parsers and explicit `fileTypes`, cspell uses the last one.
+   */
+  languageSettingsFor(target: ParserTarget, fileTypes?: readonly string[]): RecommendedLanguageSettings;
   /** A new builder, seeded from the current parsers. */
   customize(): IPluginBuilder;
 }

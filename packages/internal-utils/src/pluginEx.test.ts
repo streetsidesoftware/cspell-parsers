@@ -98,6 +98,19 @@ describe('languageSettings', () => {
     expect(() => plugin.languageSettingsFor('go', ['go'])).toThrow('Unknown parser "go"');
   });
 
+  it('languageSettingsFor accepts a list of names or "*", in parser order', () => {
+    const plugin = mkPlugin();
+    expect(plugin.languageSettingsFor('*')).toEqual([
+      { languageId: 'javascript,typescript', parser: 'typescript' },
+      { languageId: 'php', parser: 'php' },
+    ]);
+    expect(plugin.languageSettingsFor(['php', 'typescript'], ['astro'])).toEqual([
+      { languageId: 'astro', parser: 'typescript' },
+      { languageId: 'astro', parser: 'php' },
+    ]);
+    expect(plugin.languageSettingsFor([])).toEqual([]);
+  });
+
   it('parserNamesFor lists every parser for a file type, in order', () => {
     const b = mkPlugin().customize().duplicateParser('typescript', 'ts2');
     expect(b.parserNamesFor('typescript')).toEqual(['typescript', 'ts2']);
