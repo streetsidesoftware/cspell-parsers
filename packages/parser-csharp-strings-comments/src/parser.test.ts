@@ -122,6 +122,13 @@ describe('csharp-strings-comments parser', () => {
       const fragments = parsedTexts.filter((p) => p.text.includes('Hello,') || p.text.includes('waiting'));
       expect(fragments.length).toBeGreaterThan(0);
     });
+
+    it('keeps doubled {{ and }} as literal braces, not the start of a hole', () => {
+      expect(byText(parsedTexts, 'Use {{braces}} around ')?.tags).toEqual({
+        string: true,
+        'string.interpolated': true,
+      });
+    });
   });
 
   describe('raw-strings.cs', () => {
