@@ -87,7 +87,7 @@ those shared constants rather than allocating a fresh object per leaf, and `iden
 `tags` is the sole structured output for filtering - e.g. the import/export logic below is implemented in
 terms of _not emitting_ certain segments at all, but a consumer with different needs could instead filter on
 `tags.identifier` for "any kind of identifier", or on the more specific `tags['identifier.<kind>']` for one
-particular kind (see `parser.test.ts`'s `identifierKind` helper, which reads the specific kind back off that
+particular kind (see `parsers.test.ts`'s `identifierKind` helper, which reads the specific kind back off that
 key).
 
 ## Import/export handling
