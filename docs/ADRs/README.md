@@ -9,3 +9,4 @@ Produced by the `feature-adr` skill during feature design — see that skill for
 
 - code-tag-rollout — rolling out PHP's catch-all `code` tag to the other parser packages
 - plugin-customization — a designed, immutable `IPluginEx`/`IParser` customization model replacing the ad hoc one
+- typescript-parser-split — splitting the tree-sitter TypeScript backends into one parser per file type
