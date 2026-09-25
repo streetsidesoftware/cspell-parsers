@@ -7,10 +7,11 @@ file only covers what's specific to this package's parsing logic.
 
 ## Shape of the parser
 
-Like every other `-strings-comments` package in this repo, this is a single hand-written scanner (`Scanner`)
-with no AST or tokenizer - `Scanner.scanCode` walks `content` character by character, recognizing only
-comments and string literals. See `@cspell/parser-typescript-strings-comments` and
-`@cspell/parser-strings-comments` for the conventions this package follows.
+This parser is a single hand-written scanner (`Scanner`) with no AST or tokenizer - `Scanner.scanCode` walks
+`content` character by character, recognizing only comments and string literals. The `run` method wraps it
+with `createCodeTagsEmitter`, which emits everything between them (identifiers, keywords, punctuation,
+numbers) as a `code` segment. `code` is `false` in `tags`, so the default filter built by
+`createPluginParserWithFilterTags` drops it, and a user can turn it back on with `customizePlugin`.
 
 ### `scanCode`'s recursion for f-string holes
 
@@ -76,12 +77,13 @@ each tag means to a consumer.
 
 ## Why `customizePlugin`/`createParser` work with any cspell version
 
-Both are thin wrappers around `@internal/utils`'s `customizeParser`, which filters `parsedTexts` by tag
-inside the parser itself, before `ParseResult` is ever handed back to cspell. Filtering happens on this
-package's side of the `Parser` contract, not cspell's, so it works regardless of whether the installed
-cspell version has (or ever adds) its own notion of tag-based filtering - there's no version dependency to
-track. See `@internal/utils`'s `compileTagFilter`/`customizeParser` (`packages/internal-utils/src/customize.ts`)
-for the filtering engine itself.
+`customizePlugin` and `createParser` are thin wrappers around `@internal/utils`'s `customizePluginEx` and
+`customizeParserEx` (`packages/internal-utils/src/pluginEx.ts`). `createPluginParserWithFilterTags`
+(`parserEx.ts`) builds the default filter from `tags`. Every filter, a consumer's included, is compiled
+against the parser's unfiltered output and its `tags`, never on top of an earlier filter. The filtering
+happens inside the parser before cspell sees the result, so it works with any cspell version, including one
+too old to filter `ParsedText.tags` itself. See the plugin-customization ADRs
+(`docs/ADRs/plugin-customization/0006-tag-filtering.md`) for the design.
 
 ## Known limitation: no docstring detection
 
@@ -100,10 +102,9 @@ tag regardless of position - see `parser.test.ts`'s docstring test and `README.m
   single-quoted string, and a literal ending in a trailing lone backslash) use inline `content` strings
   instead, since a fixture file can only have one thing at the true end of the file.
 - `samples/` is a real end-to-end check via `pnpm run test:cspell` (`cspell .` from the package root).
-  `samples/customize` proves the `customizePlugin` tag filter does something real (a genuine misspelling,
-  `Wlecome`, inside an f-string fragment excluded by `{ '*': true, 'string.interpolated': false }`) -
-  sanity-checked by temporarily swapping in the plain `plugin` and confirming `cspell .` fails without the
-  filter, then restoring it.
+  `samples/customize` proves the `customizePlugin` tag filter does something real (a genuine misspelling in a
+  segment the filter excludes). Check it both ways: run cspell with the sample's config and with
+  `plugin.defineConfig()`, each with `--no-config-search`, so the sample's own config doesn't apply to both runs.
 
 ## Using this package as a template
 
@@ -112,4 +113,4 @@ This package is a reasonable starting point for a new `-strings-comments` parser
 the parsing logic with your own. See the repo root `CONTRIBUTING.md`'s "Adding a new parser package" section
 for the full steps, and `packages/parser-typescript` for the canonical, more fully-featured template.
 
-<!-- cspell:ignore numbr Wlecome -->
+<!-- cspell:ignore numbr -->
