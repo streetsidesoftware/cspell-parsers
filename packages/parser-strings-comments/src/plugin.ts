@@ -7,11 +7,14 @@ import { plugin as pluginPhp } from '@cspell/parser-php-strings-comments/plugin'
 import { plugin as pluginPython } from '@cspell/parser-python-strings-comments/plugin';
 import { plugin as pluginRuby } from '@cspell/parser-ruby-strings-comments/plugin';
 import { plugin as pluginRust } from '@cspell/parser-rust-strings-comments/plugin';
-import { plugin as pluginTypescript } from '@cspell/parser-typescript-strings-comments/plugin';
+import { plugin as pluginTypescriptEx } from '@cspell/parser-typescript-strings-comments/plugin';
 import type { CustomizePluginOptions, IPlugin, RecommendedLanguageSettings } from '@internal/utils';
-import { customizeParser } from '@internal/utils';
+import { customizeParser, toLegacyPlugin } from '@internal/utils';
 
 export type { CustomizePluginOptions } from '@internal/utils';
+
+// Migrated packages go through the adapter until this bundle moves to the new API.
+const pluginTypescript = toLegacyPlugin(pluginTypescriptEx);
 
 const allPlugins = [
   pluginC,

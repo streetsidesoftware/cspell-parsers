@@ -58,29 +58,37 @@ See also: [Customization options](#customization-options)
 ```js
 import { customizePlugin } from '@cspell/parser-typescript-strings-comments/plugin';
 
-const customPlugin = customizePlugin({
-  // set the parser name to be used in languageSettings
-  name: 'typescript-no-modules',
-  tags: { 'module.specifier': false }, // exclude module specifiers - often not worth spell checking
-});
+// exclude module specifiers - often not worth spell checking
+const customPlugin = customizePlugin({ tags: { 'module.specifier': false } });
 
 export default {
   plugins: [customPlugin],
-  languageSettings: [
-    {
-      // select the customized parser by name, for typescript files only
-      languageId: 'typescript',
-      parser: 'typescript-no-modules',
-    },
-  ],
+  languageSettings: customPlugin.languageSettings(),
+};
+```
+
+`customizePlugin` returns a builder that works as a plugin and can be customized further. For example, to
+check TypeScript files one way and JavaScript files another, give the second parser its own name:
+
+```js
+import { plugin } from '@cspell/parser-typescript-strings-comments/plugin';
+
+const customPlugin = plugin
+  .customize()
+  .duplicateParser('typescript-strings-comments', 'js-comments-only')
+  .setFileTypes('js-comments-only', ['javascript', 'javascriptreact'])
+  .filterTags('js-comments-only', { '*': false, comment: true });
+
+export default {
+  plugins: [customPlugin],
+  languageSettings: customPlugin.languageSettings(),
 };
 ```
 
 **NOTE:**
 
-> `name` overrides the parser's registered name (`typescript-strings-comments` by default). This matters when
-> registering more than one customized copy of this parser, since cspell selects a parser by name and two
-> parsers can't share one.
+> cspell selects a parser by name, so two parsers can't share one. `duplicateParser` and `renameParser` take
+> the new name explicitly.
 
 **NOTE:**
 
@@ -153,26 +161,21 @@ export default {
 
 ## Customization options
 
-The customization options have two purposes:
-
-- Change the name of the registered parser (not the plugin's own name)
-- Set up a `tags` filter to specify what is passed to the spell checker based upon
-  the attributed tags.
+`customizePlugin(options)` sets up a `tags` filter, applied to every parser, to specify what is passed to
+the spell checker based upon the attributed tags. To rename a parser, use `renameParser` on the result.
 
 ### `CustomizePluginOptions`
 
 ```ts
 interface CustomizePluginOptions {
   /**
-   * Set the name of the parser. Does not change the plugin's own name.
+   * Define which tagged segments to keep.
    */
-  name?: string;
-  /**
-   * Define which tagged segments to keep. Omit to keep the parser's own defaults (`code` excluded).
-   */
-  tags?: TagFilterOptions;
+  tags: TagFilterOptions;
 }
 ```
+
+Passing `name` still works for now, but is deprecated.
 
 ### Examples
 
@@ -190,10 +193,8 @@ const option = { tags: { '*': true, code: false } };
 
 **Only comments**
 
-Change the parser `name` to `only-comments` and allow only comments.
-
 ```ts
-const option = { name: 'only-comments', tags: { '*': false, comment: true } };
+const option = { tags: { '*': false, comment: true } };
 ```
 
 **Turn off `module.specifier`**
