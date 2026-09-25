@@ -226,8 +226,9 @@ class PluginBuilder extends PluginExQueries implements IPluginBuilder {
   }
 
   filterTagsForFileType(fileType: string, options: TagFilterOptions, newName: string): this {
-    if (fileType === '*')
+    if (fileType === '*') {
       throw new Error('filterTagsForFileType needs a file type, not "*"; use filterTags("*", ...).');
+    }
     assertNameIsFree(this.name, this.#defs, newName);
     const lastParserFor = lastParserByFileType(this.#defs);
     const source = lastParserFor.get(fileType);
