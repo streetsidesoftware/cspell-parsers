@@ -260,6 +260,58 @@ describe('IPluginBuilder', () => {
   });
 });
 
+describe('filterTagsForFileType', () => {
+  it('moves the file type to a filtered copy of the parser that handles it', () => {
+    const plugin = mkPlugin();
+    const b = plugin.customize().filterTagsForFileType('typescript', { '*': false, comment: true }, 'ts-comments');
+
+    expect(b.parserNames()).toEqual(['typescript', 'php', 'ts-comments']);
+    expect(b.getParser('typescript').supportedFileTypes).toEqual(['javascript']);
+    expect(b.getParser('ts-comments').supportedFileTypes).toEqual(['typescript']);
+    expect(texts(b.getParser('ts-comments'))).toEqual(['comment']);
+    expect(texts(b.getParser('typescript'))).toEqual(['comment', 'string']);
+    expect(b.getParser('php')).toBe(plugin.getParser('php'));
+    expect(b.languageSettings()).toEqual([
+      { languageId: 'javascript', parser: 'typescript' },
+      { languageId: 'php', parser: 'php' },
+      { languageId: 'typescript', parser: 'ts-comments' },
+    ]);
+  });
+
+  it('removes the file types from every parser that lists them', () => {
+    const b = mkPlugin()
+      .customize()
+      .duplicateParser('typescript', 'copy')
+      .filterTagsForFileType('typescript', { '*': false, string: true }, 'ts-strings');
+
+    expect(b.parserNamesFor('typescript')).toEqual(['ts-strings']);
+    expect(texts(b.getParser('ts-strings'))).toEqual(['string']);
+  });
+
+  it('accepts a list of file types handled by one parser', () => {
+    const b = mkPlugin().customize().filterTagsForFileType(['javascript', 'typescript'], {}, 'js-ts');
+
+    expect(b.getParser('js-ts').supportedFileTypes).toEqual(['javascript', 'typescript']);
+    expect(b.getParser('typescript').supportedFileTypes).toEqual([]);
+  });
+
+  it('throws, without changing anything, on bad input', () => {
+    const b = mkPlugin().customize();
+
+    expect(() => b.filterTagsForFileType('ruby', {}, 'x')).toThrow('No parser in plugin "test" lists file type "ruby"');
+    expect(() => b.filterTagsForFileType(['typescript', 'php'], {}, 'x')).toThrow('handled by different parsers');
+    expect(() => b.filterTagsForFileType('*', {}, 'x')).toThrow('not "*"');
+    expect(() => b.filterTagsForFileType('typescript', {}, 'php')).toThrow('already used');
+    expect(b.parserNames()).toEqual(['typescript', 'php']);
+    expect(b.getParser('typescript').supportedFileTypes).toEqual(['javascript', 'typescript']);
+  });
+
+  it('does nothing for an empty list', () => {
+    const b = mkPlugin().customize().filterTagsForFileType([], {}, 'x');
+    expect(b.parserNames()).toEqual(['typescript', 'php']);
+  });
+});
+
 describe('defineConfig', () => {
   it('registers the plugin with its languageSettings', () => {
     const plugin = mkPlugin();

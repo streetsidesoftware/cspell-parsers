@@ -253,6 +253,14 @@ export interface IPluginBuilder extends IPluginExBase {
    * Passing `{}` resets a parser to the defaults from its `tags`.
    */
   filterTags(target: ParserTarget, options: TagFilterOptions): this;
+  /**
+   * Gives `fileType` its own parser, named `newName` and filtered by `options`.
+   * The copy is made from the parser that currently handles `fileType`, and appended.
+   * The file types move to the copy, so no other parser lists them.
+   * Throws if no parser lists a file type, if different parsers handle them, or for `'*'`.
+   * See docs/ADRs/plugin-customization/0010-filter-tags-for-file-type.md.
+   */
+  filterTagsForFileType(fileType: string | readonly string[], options: TagFilterOptions, newName: string): this;
   /** Creates an immutable snapshot of the builder, which later builder calls don't affect. */
   build(): IPluginEx;
 }
