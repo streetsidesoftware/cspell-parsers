@@ -173,12 +173,11 @@ Two more directories, both at the package root (not under `src/`):
   build if some other, unintended dependency ends up inlined. A package that needs another type-only
   dependency bundled the same way overrides `deps.onlyBundle` in its own `mergeConfig` call.
 - **Keep `dist` size and the number of production dependencies low** — both are deliberately optimized for
-  in this repo. Verify `dist` size (especially `dist/index.d.ts`) before/after any change to how types or
-  dependencies are shared across packages: tsdown's `.d.ts` bundler inlines a workspace dependency's _entire_
-  compiled declaration file wherever even one type is imported from it, with no tree-shaking and no dedup
-  against a differently-rooted import of the same underlying types — so prefer duplicating a small type
-  locally per package over centralizing it in `@internal/utils`, and be conservative about adding any
-  new production `dependencies` entry.
+  in this repo. Verify `dist` size (especially `dist/*.d.ts`) before/after any change to how types or
+  dependencies are shared across packages, and be conservative about adding any new production
+  `dependencies` entry. tsdown's `.d.ts` bundler only inlines the `@internal/utils` declarations a package
+  actually references, so sharing a type through `@internal/utils` doesn't bloat packages that don't use it.
+  Adding a type to `@internal/utils` grows only its own `dist/index.d.ts` until a package imports it.
 - Build output is plain `dist/*.js` + `dist/*.d.ts` (ESM only, one pair per entry). This requires
   `fixedExtension: false` in the shared tsdown config — tsdown's default (`fixedExtension: true` on the default
   `platform: 'node'`) would otherwise emit `.mjs`/`.d.mts`, which doesn't match a package's
