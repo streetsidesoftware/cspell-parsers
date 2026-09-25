@@ -80,7 +80,7 @@ is a standalone npm package implementing cspell's `Parser`/`Plugin` contract (ty
 (`typescript`, `tsdown`, `vitest`, `@cspell/cspell-types`). New packages should reference these via
 `"catalog:"` rather than pinning their own versions, so every package stays in lockstep.
 
-**Package shape** — `packages/parser-typescript` is the canonical, fully-fledged template; `packages/parser-example`
+**Package shape** — `packages/parser-typescript-strings-comments` is the canonical, fully-fledged template; `packages/parser-example`
 predates this convention and is kept as a minimal single-file reference (fine to start from for a trivial
 parser, but bring it in line with the shape below if it needs `tags`/`scope`/a `recommended` entry point).
 
@@ -109,7 +109,7 @@ Every package publishes **four** things, each its own file under `src/` and its 
   `function customizePlugin(options: CustomizePluginOptions): CSpellPlugin` — a thin wrapper around
   `@internal/utils`'s `customizeParserPlugin(plugin, options)` (see below) bound to this package's own
   `plugin`, so a consumer can filter which tagged segments get spell checked without needing cspell itself
-  to support that filtering. See `packages/parser-typescript/src/plugin.ts` for the pattern.
+  to support that filtering. See `packages/parser-typescript-strings-comments/src/plugin.ts` for the pattern.
 - `src/index.ts` — the package's main entry (`.` / `main`). Exports a default settings object with just
   `plugins: [plugin]` — the parser is registered but not yet selected for any file type, so a consumer still
   has to add their own `languageSettings`. Typed as a small local `SelectedCSpellSettings` interface
@@ -251,8 +251,8 @@ section, after the plain `plugin`/`languageSettings` wiring example, with a runn
 `customizePlugin({ tags: { ... } })` and pointing at the tags table for what keys are available. Call out
 that `customizePlugin` returns a live `Plugin` object, not a module-specifier string, so it only works from a
 JS/TS cspell config (`cspell.config.mjs`/`.ts`/`.cjs`) — not `.json`/`.jsonc`/`.yaml`, where `plugins` can
-only be a list of strings cspell resolves itself. See `packages/parser-typescript/README.md`'s "Filtering by
-tag" section for the pattern to copy.
+only be a list of strings cspell resolves itself. See `packages/parser-typescript-strings-comments/README.md`'s "Filtering by
+tag and file type" section for the pattern to copy.
 
 When adding or editing a `.md` file that contains deliberate spelling errors (e.g. demonstrating what a
 parser flags or ignores), add a `<!-- cspell:ignore ... -->` comment at the end of the file listing those

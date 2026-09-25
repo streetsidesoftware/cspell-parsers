@@ -38,15 +38,15 @@ Each parser package exports a plugin, and the plugin comes with recommended sett
 
 `IPluginEx` has read-only helpers only:
 
-| Member                              | Returns                                                                 |
-| ----------------------------------- | ----------------------------------------------------------------------- |
-| `parsers`                           | The plugin's parsers, in order                                          |
-| `getParser(name)`                   | The named parser (throws on an unknown name)                            |
-| `hasParser(name)`                   | Whether a parser with that name exists                                  |
-| `parserNamesFor(fileType)`          | Names of the parsers that list `fileType`, in plugin order              |
-| `languageSettings()`                | `languageSettings` entries for every parser (last parser wins)          |
-| `languageSettingsFor(name, types?)` | Entries mapping `types` (default: the parser's own) to the named parser |
-| `customize()`                       | A new `IPluginBuilder`                                                  |
+| Member                                  | Returns                                                                     |
+| --------------------------------------- | --------------------------------------------------------------------------- |
+| `parsers`                               | The plugin's parsers, in order                                              |
+| `getParser(name)`                       | The named parser (throws on an unknown name)                                |
+| `hasParser(name)`                       | Whether a parser with that name exists                                      |
+| `parserNamesFor(fileType)`              | Names of the parsers that list `fileType`, in plugin order                  |
+| `languageSettings()`                    | `languageSettings` entries for every parser (last parser wins)              |
+| `languageSettingsFor(name, fileTypes?)` | Entries mapping `fileTypes` (default: the parser's own) to the named parser |
+| `customize()`                           | A new `IPluginBuilder`                                                      |
 
 ## What users do with a plugin
 
@@ -55,6 +55,7 @@ builder and returns it. The builder works directly as a plugin, and `build()` ta
 snapshot.
 
 ```js
+import { defineConfig } from '@cspell/cspell-types';
 import { plugin } from '@cspell/parser-typescript/plugin';
 
 const custom = plugin
@@ -93,7 +94,7 @@ What users can rely on:
   ancestor (`comment`, `comment.block`) on the same segment, so users can filter at any level. Treat tag
   names as public API: once a user filters on one, renaming it breaks their config.
 - **Never depend on the file type inside `parse`.** If two file types need different behavior, that's two
-  parsers with two names, or one parser that a user duplicates and filters.
+  parsers with two names.
 - **Keep `parse` free of filtering.** The factory applies the default filter. A parser exposes its
   unfiltered output as `_parse` so builders in any package can re-filter it.
 
