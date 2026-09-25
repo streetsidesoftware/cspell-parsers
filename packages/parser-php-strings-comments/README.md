@@ -141,6 +141,7 @@ needs.
 - **Variables inside a string are checked as part of that string.** In a double-quoted string or a heredoc,
   interpolated variables and expressions such as `$name` and `{$user->name}` are spell checked along with the
   rest of the string's text.
+  <!--- Tested by src/parser.test.ts: "interpolated variables stay in the string text" --->
 
 ## Requirements
 
