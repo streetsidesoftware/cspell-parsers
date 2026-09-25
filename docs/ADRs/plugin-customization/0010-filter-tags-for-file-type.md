@@ -46,8 +46,10 @@ export default customizePlugin()
 - **One file type per call.** A list was rejected: file types handled by different parsers would need
   several copies under one name, and the rule for that is harder to explain than a second call.
 - **The user names the copy.** `newName` is required, and a taken name throws, as in 0005.
-- **The file type moves.** The copy lists only that file type, and it's removed from every other parser
-  that lists it. So `parserNamesFor` stays unambiguous, and the result doesn't depend on order.
+- **The file type moves.** The copy lists only that file type, and it's removed from the source parser. It's
+  exactly what a user would write: `duplicateParser`, `setFileTypes` on the copy, `filterTags`, and
+  `removeFileTypes` on the source. An earlier parser that also lists the file type keeps it, and the copy
+  wins it by coming later.
 - **The filter replaces, never chains.** `options` replaces the copied filter, as in
   [0006](./0006-tag-filtering.md).
 - **The copy is appended.** Like `duplicateParser`, it goes to the end of the list.
@@ -58,8 +60,7 @@ export default customizePlugin()
 
 - "A different filter for this file type" is one call, and the examples keep their intent.
 - The source is resolved when the method is called. Later reordering or `addParser` doesn't change it.
-- The other parsers keep their other file types. A parser left with no file types stays in the plugin, as
-  in 0003.
+- The source keeps its other file types. A parser left with no file types stays in the plugin, as in 0003.
 - Giving several file types one filter takes a call per file type, each with its own name, or one call
   followed by `addFileTypes` on the copy. With `addFileTypes`, the added file types stay on the original
   parser too, and the copy wins them only by coming later.
