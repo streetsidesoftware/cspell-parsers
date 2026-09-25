@@ -10,7 +10,8 @@ export interface HtmlTextPart {
 
 /**
  * The named character references JSX supports (HTML 4), as `name:hexCodePoint` pairs.
- * Taken from TypeScript's JSX transform, so the parser decodes exactly what the compiler does.
+ * Taken from TypeScript's JSX transform. Names with digits, such as `frac12`, are listed but never reached,
+ * since tree-sitter only parses `&[A-Za-z]+;` as a named reference.
  */
 const namedEntityTable = [
   'quot:22 amp:26 apos:27 lt:3c gt:3e nbsp:a0 iexcl:a1 cent:a2 pound:a3 curren:a4 yen:a5 brvbar:a6',
@@ -53,10 +54,10 @@ const namedEntities: ReadonlyMap<string, number> = new Map(
 
 /**
  * Decodes one HTML character reference the way JSX does: `&eacute;` to `é`, `&#239;` to `ï`, `&#x2014;` to `—`.
- * An unknown or invalid reference, such as `&bogus;`, is returned unchanged.
+ * An unknown or invalid reference, such as `&bogus;` or `&#X41;` (JSX only accepts a lowercase `x`), is returned unchanged.
  */
 export function decodeHtmlCharacterReference(raw: string): string {
-  const match = /^&(?:#(\d+)|#[xX]([\da-fA-F]+)|(\w+));$/.exec(raw);
+  const match = /^&(?:#(\d+)|#x([\da-fA-F]+)|(\w+));$/.exec(raw);
   if (!match) return raw;
   const [, decimal, hex, name] = match;
   const codePoint =

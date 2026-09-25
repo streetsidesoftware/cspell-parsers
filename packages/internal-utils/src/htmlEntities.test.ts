@@ -6,16 +6,16 @@ describe('decodeHtmlCharacterReference', () => {
   it.each([
     ['&eacute;', 'é'],
     ['&amp;', '&'],
-    ['&nbsp;', ' '],
+    ['&nbsp;', '\u00a0'],
     ['&Omega;', 'Ω'],
     ['&#239;', 'ï'],
     ['&#x2014;', '—'],
-    ['&#X1F600;', '😀'],
+    ['&#x1F600;', '😀'],
   ])('decodes %s', (raw, expected) => {
     expect(decodeHtmlCharacterReference(raw)).toBe(expected);
   });
 
-  it.each(['&bogus;', '&#x110000;', '&amp', 'amp;'])('leaves %s unchanged', (raw) => {
+  it.each(['&bogus;', '&#X41;', '&#x110000;', '&amp', 'amp;'])('leaves %s unchanged', (raw) => {
     expect(decodeHtmlCharacterReference(raw)).toBe(raw);
   });
 });
