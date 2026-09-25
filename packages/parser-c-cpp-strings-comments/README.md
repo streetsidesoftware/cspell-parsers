@@ -1,8 +1,8 @@
 # @cspell/parser-c-cpp-strings-comments
 
-A cspell plugin that spell checks only the comments and string/char literals in C and C++ files, leaving
-identifiers, keywords, and the rest of the code alone. C and C++ share identical comment and string/char
-syntax, so one parser covers both.
+A lightweight C and C++ parser for [cspell](https://cspell.org) that spell checks the prose in your code:
+comments and strings. It has no dependencies, and it gives you control over what gets checked, from Doxygen
+doc comments to raw strings.
 
 ## Usage
 
@@ -44,7 +44,8 @@ plugin in yourself and choose the language IDs to use it for:
 
 ## Supported file types
 
-The plugin provides these parsers. Where Recommended is `yes`, `recommended` enables the named parser for files with that Language ID:
+The plugin provides these parsers. Where Recommended is `yes`, `recommended` enables the named parser for
+files with that Language ID:
 
 <!--- @@inject: docs/language-id-n-parser-name.csv --->
 
@@ -55,48 +56,46 @@ The plugin provides these parsers. Where Recommended is `yes`, `recommended` ena
 
 <!--- @@inject-end: docs/language-id-n-parser-name.csv --->
 
-### Filtering by tag and file type
+## Filtering by tag and file type
 
-By default every comment/string the parser emits gets spell checked. Use `customizePlugin` to change what is sent on to the spell checker.
-See also: [Customization options](#customization-options)
+By default, every comment and string is spell checked, and the rest of the code isn't. Use `customizePlugin`
+to change what gets checked. For example, to check only Doxygen doc comments in C++ files, and keep the
+defaults for C files:
 
 **`cspell.config.ts`** or **`cspell.config.mjs`**
 
-```js
+<!--- @@inject: samples/customize/cspell.config.mts#lang=ts --->
+
+```ts
 import { customizePlugin } from '@cspell/parser-c-cpp-strings-comments/plugin';
 
-const customPlugin = customizePlugin({
-  // set the parser name to be used in languageSettings
-  name: 'c-cpp-only-docs',
-  tags: { '*': false, 'comment.line.doc': true, 'comment.block.doc': true }, // only check Doxygen doc comments
-});
-
-export default {
-  plugins: [customPlugin],
-  languageSettings: [
-    {
-      // select the customized parser by name, for cpp files only
-      languageId: 'cpp',
-      parser: 'c-cpp-only-docs',
-    },
-  ],
-};
+// C++ files: check only Doxygen doc comments.
+// C files: keep the defaults.
+export default customizePlugin()
+  .filterTagsForFileType('cpp', { '*': false, 'comment.line.doc': true, 'comment.block.doc': true }, 'cpp-doc-comments')
+  .defineConfig();
 ```
 
-**NOTE:**
-
-> `name` overrides the parser's registered name (`c-cpp-strings-comments` by default). This matters when
-> registering more than one customized copy of this parser, since cspell selects a parser by name and two
-> parsers can't share one.
+<!--- @@inject-end: samples/customize/cspell.config.mts#lang=ts --->
 
 **NOTE:**
 
-> `tags` keys are matched hierarchically against the [tags](#tags) below.
->
-> The key `string` also matches the more specific
-> `string.raw` unless a more specific key overrides it. See: [`CustomizePluginOptions`](#customizepluginoptions) and [`TagFilterOptions`](#tagfilteroptions) below.
+> Keys in `tags` are matched hierarchically against the [tags](#tags) below. For example, the key `comment`
+> also matches the more specific `comment.block.doc`, unless a more specific key overrides it. A key can also
+> use `*` as a wildcard, such as `comment.*.doc`, or a bare `*` for everything not otherwise matched.
+
+Calling `customizePlugin` gives you a customized copy of the plugin. Call `defineConfig()` on it to get a
+complete cspell config, or keep adjusting it first. For example, to give the parser a different name:
+
+```js
+customizePlugin().renameParser('c-cpp-strings-comments', 'my-c-parser');
+```
 
 ## Tags
+
+Each part of a file gets its most specific tag plus the more general ones above it. For example, a Doxygen
+block comment is tagged `comment.block.doc`, `comment.block`, and `comment`, so a filter can use whichever
+level it needs.
 
 <!--- @@inject: docs/tags-table.csv#markdown --->
 
@@ -117,44 +116,34 @@ export default {
 
 ### The `code` tag
 
-By default, text tagged `code` is not spell checked. To check it too, use `customizePlugin`:
+By default, keywords, identifiers, and everything else tagged `code` aren't spell checked. To check them too:
 
 **`cspell.config.ts`** or **`cspell.config.mjs`**
 
-```js
+<!--- @@inject: samples/check-code/cspell.config.mts#lang=ts --->
+
+```ts
 import { customizePlugin } from '@cspell/parser-c-cpp-strings-comments/plugin';
 
-export default {
-  plugins: [customizePlugin({ tags: { code: true } })],
-  languageSettings: [
-    {
-      languageId: 'cpp',
-      parser: 'c-cpp-strings-comments',
-    },
-  ],
-};
+// Also check code, such as identifiers and keywords.
+export default customizePlugin({ tags: { code: true } }).defineConfig();
 ```
+
+<!--- @@inject-end: samples/check-code/cspell.config.mts#lang=ts --->
 
 ## Customization options
 
-The customization options have two purposes:
-
-- Change the name of the registered parser (not the plugin's own name)
-- Set up a `tags` filter to specify what is passed to the spell checker based upon
-  the attributed tags.
+Use `customizePlugin(options)` to control which parts of a file get spell checked, based on the [tags](#tags)
+the parser gives each part.
 
 ### `CustomizePluginOptions`
 
 ```ts
 interface CustomizePluginOptions {
   /**
-   * Set the name of the parser. Does not change the plugin's own name.
+   * Define which tagged segments to keep.
    */
-  name?: string;
-  /**
-   * Define which tagged segments to keep. Omit to keep the parser's own defaults (`code` excluded).
-   */
-  tags?: TagFilterOptions;
+  tags: TagFilterOptions;
 }
 ```
 
@@ -174,10 +163,8 @@ const option = { tags: { '*': true, code: false } };
 
 **Only comments**
 
-Change the parser `name` to `only-comments` and allow only comments.
-
 ```ts
-const option = { name: 'only-comments', tags: { '*': false, comment: true } };
+const option = { tags: { '*': false, comment: true } };
 ```
 
 **Turn off `comment.*.doc`**
@@ -188,7 +175,7 @@ const option = { tags: { 'comment.*.doc': false } };
 
 ### `TagFilterOptions`
 
-`TagFilterOptions` are used to set the filter criteria for the text sent to the spell checker.
+Use `TagFilterOptions` to set the filter criteria for the text sent to the spell checker.
 
 The values are inherited hierarchically
 
@@ -221,11 +208,10 @@ interface TagFilterOptions {
 
 ## Known limitations
 
-This parser is a small hand-written scanner, not a real grammar, which keeps it dependency-free. It doesn't
-track preprocessor directives (`#if 0` / conditional-compilation blocks are scanned like any other code), so
-a comment or string inside a disabled preprocessor branch is still spell checked as if it were live code. It also has no
-special handling of multi-line string continuations via a trailing `\` at end-of-line outside of a literal -
-only backslash escapes _inside_ a string/char literal are recognized.
+- **Preprocessor branches aren't tracked.** A comment or string inside `#if 0`, or another disabled branch,
+  is still spell checked.
+- **A trailing `\` outside a literal isn't treated as a line continuation.** Backslash escapes are only
+  recognized inside a string or char literal.
 
 ## Requirements
 
