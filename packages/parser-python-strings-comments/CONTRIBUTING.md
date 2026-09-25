@@ -7,10 +7,11 @@ file only covers what's specific to this package's parsing logic.
 
 ## Shape of the parser
 
-Like every other `-strings-comments` package in this repo, this is a single hand-written scanner (`Scanner`)
-with no AST or tokenizer - `Scanner.scanCode` walks `content` character by character, recognizing only
-comments and string literals. See `@cspell/parser-typescript-strings-comments` and
-`@cspell/parser-strings-comments` for the conventions this package follows.
+This parser is a single hand-written scanner (`Scanner`) with no AST or tokenizer - `Scanner.scanCode` walks
+`content` character by character, recognizing only comments and string literals. Everything between them
+(identifiers, keywords, punctuation, numbers) is emitted as a `code` segment. `code` is `false` in `tags`, so
+the default filter built by `createPluginParserWithFilterTags` drops it, and a user can turn it back on with
+`customizePlugin`.
 
 ### `scanCode`'s recursion for f-string holes
 
@@ -100,10 +101,9 @@ tag regardless of position - see `parser.test.ts`'s docstring test and `README.m
   single-quoted string, and a literal ending in a trailing lone backslash) use inline `content` strings
   instead, since a fixture file can only have one thing at the true end of the file.
 - `samples/` is a real end-to-end check via `pnpm run test:cspell` (`cspell .` from the package root).
-  `samples/customize` proves the `customizePlugin` tag filter does something real (a genuine misspelling,
-  `Wlecome`, inside an f-string fragment excluded by `{ '*': true, 'string.interpolated': false }`) -
-  sanity-checked by temporarily swapping in the plain `plugin` and confirming `cspell .` fails without the
-  filter, then restoring it.
+  `samples/customize` proves the `customizePlugin` tag filter does something real (a genuine misspelling in a
+  segment the filter excludes). Check it both ways: run cspell with the sample's config and with
+  `plugin.defineConfig()`, each with `--no-config-search`, so the sample's own config doesn't apply to both runs.
 
 ## Using this package as a template
 

@@ -1,7 +1,8 @@
 # @cspell/parser-python-strings-comments
 
-A cspell plugin that spell checks only the comments and string literals in Python files, leaving identifiers,
-keywords, and the rest of the code alone.
+A lightweight Python parser for [cspell](https://cspell.org) that spell checks the prose in your code: comments
+and strings. It has no dependencies, and it gives you control over what gets checked, from comments to f-strings
+and raw strings.
 
 ## Usage
 
@@ -20,8 +21,8 @@ selects it for every supported file type:
 
 <!--- @@inject-end: samples/recommended/cspell.config.jsonc#lang=jsonc --->
 
-For more control - for example, to apply it alongside other settings - wire the plugin in yourself and
-choose the language IDs to use it for:
+For more control - for example, to apply it alongside other settings - wire the plugin in yourself and choose
+the language IDs to use it for:
 
 **`cspell.config.jsonc`**
 
@@ -43,7 +44,8 @@ choose the language IDs to use it for:
 
 ## Supported file types
 
-The plugin provides these parsers. Where Recommended is `yes`, `recommended` enables the named parser for files with that Language ID:
+The plugin provides these parsers. Where Recommended is `yes`, `recommended` enables the named parser for
+files with that Language ID:
 
 <!--- @@inject: docs/language-id-n-parser-name.csv --->
 
@@ -53,53 +55,42 @@ The plugin provides these parsers. Where Recommended is `yes`, `recommended` ena
 
 <!--- @@inject-end: docs/language-id-n-parser-name.csv --->
 
-### Filtering by tag and file type
+## Filtering by tag
 
-By default every comment/string the parser emits gets spell checked. Use `customizePlugin` to change what is sent on to the spell checker.
-See also: [Customization options](#customization-options)
+By default, every comment and string is spell checked, and the rest of the code isn't. Use `customizePlugin`
+to change what gets checked. For example, to skip f-strings:
 
 **`cspell.config.ts`** or **`cspell.config.mjs`**
 
-```js
+<!--- @@inject: samples/customize/cspell.config.mts#lang=ts --->
+
+```ts
 import { customizePlugin } from '@cspell/parser-python-strings-comments/plugin';
 
-const customPlugin = customizePlugin({
-  // set the parser name to be used in languageSettings
-  name: 'python-no-f-strings',
-  tags: { '*': true, 'string.interpolated': false }, // skip f-strings
-});
-
-export default {
-  plugins: [customPlugin],
-  languageSettings: [
-    {
-      // select the customized parser by name, for python files only
-      languageId: 'python',
-      parser: 'python-no-f-strings',
-    },
-  ],
-};
+// Skip f-strings.
+export default customizePlugin({ tags: { 'string.interpolated': false } }).defineConfig();
 ```
 
-**NOTE:**
-
-> `name` overrides the parser's registered name (`python-strings-comments` by default). This matters when
-> registering more than one customized copy of this parser, since cspell selects a parser by name and two
-> parsers can't share one.
+<!--- @@inject-end: samples/customize/cspell.config.mts#lang=ts --->
 
 **NOTE:**
 
-> `tags` keys are matched hierarchically against the [tags](#tags) below.
->
-> The key `string` also matches the more specific
-> `string.singleQuote` unless a more specific key overrides it. See: [`CustomizePluginOptions`](#customizepluginoptions) and [`TagFilterOptions`](#tagfilteroptions) below.
+> Keys in `tags` are matched hierarchically against the [tags](#tags) below. For example, the key `string`
+> also matches the more specific `string.tripleQuote`, unless a more specific key overrides it. A key can also use
+> `*` as a wildcard, such as `comment.*`, or a bare `*` for everything not otherwise matched.
 
-An f-string's `{...}` interpolation holes are scanned like the rest of the file, so a string or comment
-nested inside one keeps its own normal tag rather than `string.interpolated` - filtering out
-`string.interpolated` only skips the surrounding literal text, not anything nested inside a hole. A doubled
-`{{`/`}}` is treated as a literal brace, not a hole.
+Calling `customizePlugin` gives you a customized copy of the plugin. Call `defineConfig()` on it to get a
+complete cspell config, or keep adjusting it first. For example, to give the parser a different name:
+
+```js
+customizePlugin().renameParser('python-strings-comments', 'my-python-parser');
+```
 
 ## Tags
+
+Each part of a file gets its most specific tag plus the more general ones above it. For example, an f-string
+is tagged `string.interpolated` and `string`, along with its quote style, so a filter can use whichever level
+it needs.
 
 <!--- @@inject: docs/tags-table.csv#markdown --->
 
@@ -117,46 +108,44 @@ nested inside one keeps its own normal tag rather than `string.interpolated` - f
 
 <!--- @@inject-end: docs/tags-table.csv#markdown --->
 
+In an f-string, the code in each `{...}` hole is scanned like any other code, so a string or comment inside it
+keeps its own tag rather than `string.interpolated`. Filtering out `string.interpolated` skips only the text
+around the holes. Doubled braces, `{{` and `}}`, are literal braces.
+
+<!--- Tested by src/parser.test.ts: "recurses into a hole to find a real comment nested inside it" --->
+<!--- Tested by src/parser.test.ts: "recurses into a hole to find a real string literal nested inside it" --->
+<!--- Tested by src/parser.test.ts: "treats {{ and }} as literal braces, not holes" --->
+
 ### The `code` tag
 
-By default, text tagged `code` is not spell checked. To check it too, use `customizePlugin`:
+By default, keywords, identifiers, and everything else tagged `code` aren't spell checked. To check them too:
 
 **`cspell.config.ts`** or **`cspell.config.mjs`**
 
-```js
+<!--- @@inject: samples/check-code/cspell.config.mts#lang=ts --->
+
+```ts
 import { customizePlugin } from '@cspell/parser-python-strings-comments/plugin';
 
-export default {
-  plugins: [customizePlugin({ tags: { code: true } })],
-  languageSettings: [
-    {
-      languageId: 'python',
-      parser: 'python-strings-comments',
-    },
-  ],
-};
+// Also check code, such as identifiers and keywords.
+export default customizePlugin({ tags: { code: true } }).defineConfig();
 ```
+
+<!--- @@inject-end: samples/check-code/cspell.config.mts#lang=ts --->
 
 ## Customization options
 
-The customization options have two purposes:
-
-- Change the name of the registered parser (not the plugin's own name)
-- Set up a `tags` filter to specify what is passed to the spell checker based upon
-  the attributed tags.
+Use `customizePlugin(options)` to control which parts of a file get spell checked, based on the [tags](#tags)
+the parser gives each part.
 
 ### `CustomizePluginOptions`
 
 ```ts
 interface CustomizePluginOptions {
   /**
-   * Set the name of the parser. Does not change the plugin's own name.
+   * Define which tagged segments to keep.
    */
-  name?: string;
-  /**
-   * Define which tagged segments to keep. Omit to keep the parser's own defaults (`code` excluded).
-   */
-  tags?: TagFilterOptions;
+  tags: TagFilterOptions;
 }
 ```
 
@@ -176,13 +165,11 @@ const option = { tags: { '*': true, code: false } };
 
 **Only comments**
 
-Change the parser `name` to `only-comments` and allow only comments.
-
 ```ts
-const option = { name: 'only-comments', tags: { '*': false, comment: true } };
+const option = { tags: { '*': false, comment: true } };
 ```
 
-**Turn off `string.raw`**
+**Turn off raw strings**
 
 ```ts
 const option = { tags: { 'string.raw': false } };
@@ -190,7 +177,7 @@ const option = { tags: { 'string.raw': false } };
 
 ### `TagFilterOptions`
 
-`TagFilterOptions` are used to set the filter criteria for the text sent to the spell checker.
+Use `TagFilterOptions` to set the filter criteria for the text sent to the spell checker.
 
 The values are inherited hierarchically
 
@@ -223,20 +210,9 @@ interface TagFilterOptions {
 
 ## Known limitations
 
-This parser is a small hand-written scanner, not a real grammar, which keeps it dependency-free but means it
-can't reliably tell what role a given piece of syntax plays - only what it looks like character-by-character.
-Two consequences worth knowing about:
-
-- **Docstrings aren't detected as a distinct category.** A "docstring" is really just a triple-quoted string
-  that happens to be the first statement in a module, class, or function body - recognizing that position
-  requires real parsing context (knowing you're at the start of a body, not merely seeing three quote
-  characters) that this scanner deliberately doesn't have. Every triple-quoted string gets the same
-  `string.tripleQuote` tag regardless of where it appears, so `customizePlugin` can't single out docstrings
-  specifically - only triple-quoted strings in general.
-- **A string prefix is only recognized directly against its opening quote, with a word-boundary check before
-  it** (see `CONTRIBUTING.md`), so a prefix always adjacent to its quote is detected correctly; there's no
-  attempt to resolve any ambiguity beyond that single check, since Python's grammar doesn't allow anything
-  (not even whitespace) between a prefix and its quote.
+- **Docstrings don't have their own tag.** A docstring is tagged `string.tripleQuote`, the same as any other
+  triple-quoted string, so a filter can't pick out docstrings alone.
+  <!--- Tested by src/parser.test.ts: "tags a triple-quoted string as string.tripleQuote without detecting it as a docstring" --->
 
 ## Requirements
 

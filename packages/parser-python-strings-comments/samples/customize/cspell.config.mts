@@ -1,11 +1,4 @@
 import { customizePlugin } from '@cspell/parser-python-strings-comments/plugin';
 
-export default {
-  plugins: [customizePlugin({ tags: { '*': true, 'string.interpolated': false } })],
-  languageSettings: [
-    {
-      languageId: 'python',
-      parser: 'python-strings-comments',
-    },
-  ],
-};
+// Skip f-strings.
+export default customizePlugin({ tags: { 'string.interpolated': false } }).defineConfig();
