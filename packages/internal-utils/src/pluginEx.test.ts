@@ -288,27 +288,14 @@ describe('filterTagsForFileType', () => {
     expect(texts(b.getParser('ts-strings'))).toEqual(['string']);
   });
 
-  it('accepts a list of file types handled by one parser', () => {
-    const b = mkPlugin().customize().filterTagsForFileType(['javascript', 'typescript'], {}, 'js-ts');
-
-    expect(b.getParser('js-ts').supportedFileTypes).toEqual(['javascript', 'typescript']);
-    expect(b.getParser('typescript').supportedFileTypes).toEqual([]);
-  });
-
   it('throws, without changing anything, on bad input', () => {
     const b = mkPlugin().customize();
 
     expect(() => b.filterTagsForFileType('ruby', {}, 'x')).toThrow('No parser in plugin "test" lists file type "ruby"');
-    expect(() => b.filterTagsForFileType(['typescript', 'php'], {}, 'x')).toThrow('handled by different parsers');
     expect(() => b.filterTagsForFileType('*', {}, 'x')).toThrow('not "*"');
     expect(() => b.filterTagsForFileType('typescript', {}, 'php')).toThrow('already used');
     expect(b.parserNames()).toEqual(['typescript', 'php']);
     expect(b.getParser('typescript').supportedFileTypes).toEqual(['javascript', 'typescript']);
-  });
-
-  it('does nothing for an empty list', () => {
-    const b = mkPlugin().customize().filterTagsForFileType([], {}, 'x');
-    expect(b.parserNames()).toEqual(['typescript', 'php']);
   });
 });
 

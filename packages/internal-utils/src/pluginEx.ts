@@ -225,29 +225,17 @@ class PluginBuilder extends PluginExQueries implements IPluginBuilder {
     return this.#update(target, () => ({ filterTags: options }));
   }
 
-  filterTagsForFileType(fileType: string | readonly string[], options: TagFilterOptions, newName: string): this {
-    const fileTypes = [...new Set(typeof fileType === 'string' ? [fileType] : fileType)];
-    if (fileTypes.includes('*')) {
-      throw new Error('filterTagsForFileType needs file types, not "*"; use filterTags("*", ...).');
-    }
+  filterTagsForFileType(fileType: string, options: TagFilterOptions, newName: string): this {
+    if (fileType === '*')
+      throw new Error('filterTagsForFileType needs a file type, not "*"; use filterTags("*", ...).');
     assertNameIsFree(this.name, this.#defs, newName);
     const lastParserFor = lastParserByFileType(this.#defs);
-    const unknown = fileTypes.filter((type) => !lastParserFor.has(type));
-    if (unknown.length) throw unknownFileTypesError(this.name, [...lastParserFor.keys()], unknown, '');
-    const sources = [...new Set(fileTypes.map((type) => lastParserFor.get(type)))];
-    const [source, ...others] = sources;
-    if (source === undefined) return this;
-    if (others.length) {
-      const list = sources.map((name) => `"${name}"`).join(', ');
-      throw new Error(
-        `The file types are handled by different parsers (${list}) in plugin "${this.name}"; call once per parser.`,
-      );
-    }
-    const moved = new Set(fileTypes);
-    const copy = this.findDef(source).with({ name: newName, fileTypes, filterTags: options });
+    const source = lastParserFor.get(fileType);
+    if (source === undefined) throw unknownFileTypesError(this.name, [...lastParserFor.keys()], [fileType], '');
+    const copy = this.findDef(source).with({ name: newName, fileTypes: [fileType], filterTags: options });
     this.#defs = this.#defs.map((def) =>
-      def.fileTypes.some((type) => moved.has(type))
-        ? def.with({ fileTypes: def.fileTypes.filter((type) => !moved.has(type)) })
+      def.fileTypes.includes(fileType)
+        ? def.with({ fileTypes: def.fileTypes.filter((type) => type !== fileType) })
         : def,
     );
     this.#defs.push(copy);
