@@ -10,20 +10,29 @@ import covers every language they support.
 The quickest way to get started is to import the recommended settings, which registers the plugin and
 selects the matching language's parser for every supported file type:
 
+**`cspell.config.jsonc`**
+
+<!--- @@inject: samples/recommended/cspell.config.jsonc#lang=jsonc --->
+
 ```jsonc
-// cspell.config.jsonc (or cspell.config.yaml/.mjs/...)
 {
   "import": ["@cspell/parser-strings-comments/recommended"],
 }
 ```
 
+<!--- @@inject-end: samples/recommended/cspell.config.jsonc#lang=jsonc --->
+
 For more control - for example, to apply it to only some file types, or alongside other settings - wire the
 plugin in yourself and choose which parser to use for each language ID. Each language has its own parser,
 named in the [Supported file types](#supported-file-types) table below:
 
+**`cspell.config.jsonc`**
+
+<!--- @@inject: samples/plugin/cspell.config.jsonc#lang=jsonc --->
+
 ```jsonc
 {
-  "plugins": ["@cspell/parser-strings-comments/plugin"],
+  "import": ["@cspell/parser-strings-comments"],
   "languageSettings": [
     {
       "languageId": "php",
@@ -32,6 +41,8 @@ named in the [Supported file types](#supported-file-types) table below:
   ],
 }
 ```
+
+<!--- @@inject-end: samples/plugin/cspell.config.jsonc#lang=jsonc --->
 
 ## Supported file types
 

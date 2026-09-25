@@ -17,19 +17,28 @@ npm install --save-dev @cspell/parser-typescript-tree-sitter-wasm
 The quickest way to get started is to import the recommended settings, which registers the plugin and
 selects it for TypeScript, JavaScript, TSX, and JSX files:
 
+**`cspell.config.jsonc`**
+
+<!--- @@inject: samples/recommended/cspell.config.jsonc#lang=jsonc --->
+
 ```jsonc
-// cspell.config.jsonc (or cspell.config.yaml/.mjs/...)
 {
   "import": ["@cspell/parser-typescript-tree-sitter-wasm/recommended"],
 }
 ```
 
+<!--- @@inject-end: samples/recommended/cspell.config.jsonc#lang=jsonc --->
+
 For more control — for example, to apply it to only some file types, or alongside other settings — wire the
 plugin in yourself and choose the language IDs to use it for:
 
+**`cspell.config.jsonc`**
+
+<!--- @@inject: samples/plugin/cspell.config.jsonc#lang=jsonc --->
+
 ```jsonc
 {
-  "plugins": ["@cspell/parser-typescript-tree-sitter-wasm/plugin"],
+  "import": ["@cspell/parser-typescript-tree-sitter-wasm"],
   "languageSettings": [
     {
       "languageId": "typescript,typescriptreact",
@@ -38,6 +47,8 @@ plugin in yourself and choose the language IDs to use it for:
   ],
 }
 ```
+
+<!--- @@inject-end: samples/plugin/cspell.config.jsonc#lang=jsonc --->
 
 ## Supported file types
 

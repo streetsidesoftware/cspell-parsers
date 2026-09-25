@@ -1,0 +1,9 @@
+{
+  "import": ["@cspell/parser-java-strings-comments"],
+  "languageSettings": [
+    {
+      "languageId": "java",
+      "parser": "java-strings-comments",
+    },
+  ],
+}

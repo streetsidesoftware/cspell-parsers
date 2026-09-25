@@ -9,27 +9,38 @@ syntax, so one parser covers both.
 The quickest way to get started is to import the recommended settings, which registers the plugin and
 selects it for every supported file type:
 
+**`cspell.config.jsonc`**
+
+<!--- @@inject: samples/recommended/cspell.config.jsonc#lang=jsonc --->
+
 ```jsonc
-// cspell.config.jsonc (or cspell.config.yaml/.mjs/...)
 {
   "import": ["@cspell/parser-c-cpp-strings-comments/recommended"],
 }
 ```
 
+<!--- @@inject-end: samples/recommended/cspell.config.jsonc#lang=jsonc --->
+
 For more control - for example, to apply it to only some file types, or alongside other settings - wire the
 plugin in yourself and choose the language IDs to use it for:
 
+**`cspell.config.jsonc`**
+
+<!--- @@inject: samples/plugin/cspell.config.jsonc#lang=jsonc --->
+
 ```jsonc
 {
-  "plugins": ["@cspell/parser-c-cpp-strings-comments/plugin"],
+  "import": ["@cspell/parser-c-cpp-strings-comments"],
   "languageSettings": [
     {
-      "languageId": "cpp",
+      "languageId": "c,cpp",
       "parser": "c-cpp-strings-comments",
     },
   ],
 }
 ```
+
+<!--- @@inject-end: samples/plugin/cspell.config.jsonc#lang=jsonc --->
 
 ## Supported file types
 

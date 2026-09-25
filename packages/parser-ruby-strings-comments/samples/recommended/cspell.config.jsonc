@@ -1,0 +1,3 @@
+{
+  "import": ["@cspell/parser-ruby-strings-comments/recommended"],
+}

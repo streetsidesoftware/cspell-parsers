@@ -1,0 +1,9 @@
+{
+  "import": ["@cspell/parser-ruby-strings-comments"],
+  "languageSettings": [
+    {
+      "languageId": "ruby",
+      "parser": "ruby-strings-comments",
+    },
+  ],
+}

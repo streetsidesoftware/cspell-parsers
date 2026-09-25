@@ -12,20 +12,26 @@ selects it for every supported file type:
 
 **`cspell.config.jsonc`**
 
+<!--- @@inject: samples/recommended/cspell.config.jsonc#lang=jsonc --->
+
 ```jsonc
 {
   "import": ["@cspell/parser-example/recommended"],
 }
 ```
 
+<!--- @@inject-end: samples/recommended/cspell.config.jsonc#lang=jsonc --->
+
 For more control - for example, to apply it to only some file types, or alongside other settings - wire the
 plugin in yourself and choose the language IDs to use it for:
 
 **`cspell.config.jsonc`**
 
+<!--- @@inject: samples/plugin/cspell.config.jsonc#lang=jsonc --->
+
 ```jsonc
 {
-  "plugins": ["@cspell/parser-example/plugin"],
+  "import": ["@cspell/parser-example"],
   "languageSettings": [
     {
       "languageId": "c,cpp",
@@ -34,6 +40,8 @@ plugin in yourself and choose the language IDs to use it for:
   ],
 }
 ```
+
+<!--- @@inject-end: samples/plugin/cspell.config.jsonc#lang=jsonc --->
 
 ## Supported file types
 

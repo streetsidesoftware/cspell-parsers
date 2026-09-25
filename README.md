@@ -67,12 +67,17 @@ npm install --save-dev @cspell/parser-typescript
 Then import its `recommended` settings to register the plugin and select it for the relevant file types in
 one step:
 
+**`cspell.config.jsonc`**
+
+<!--- @@inject: packages/parser-typescript/samples/recommended/cspell.config.jsonc#lang=jsonc --->
+
 ```jsonc
-// cspell.config.jsonc (or cspell.config.yaml/.mjs/...)
 {
   "import": ["@cspell/parser-typescript/recommended"],
 }
 ```
+
+<!--- @@inject-end: packages/parser-typescript/samples/recommended/cspell.config.jsonc#lang=jsonc --->
 
 For more control — applying a parser to only some file types, or alongside other settings — wire the plugin
 in yourself instead; see the package's README for the exact `languageId`s and parser name to use.

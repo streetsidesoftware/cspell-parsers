@@ -1,2 +1,0 @@
-import:
-  - '@cspell/parser-typescript-tree-sitter/recommended'

@@ -1,0 +1,9 @@
+{
+  "import": ["@cspell/parser-c-cpp-strings-comments"],
+  "languageSettings": [
+    {
+      "languageId": "c,cpp",
+      "parser": "c-cpp-strings-comments",
+    },
+  ],
+}

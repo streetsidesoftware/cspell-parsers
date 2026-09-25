@@ -11,20 +11,26 @@ selects it for every supported file type:
 
 **`cspell.config.jsonc`**
 
+<!--- @@inject: samples/recommended/cspell.config.jsonc#lang=jsonc --->
+
 ```jsonc
 {
   "import": ["@cspell/parser-php-strings-comments/recommended"],
 }
 ```
 
+<!--- @@inject-end: samples/recommended/cspell.config.jsonc#lang=jsonc --->
+
 For more control - for example, to apply it alongside other settings - wire the plugin in yourself and
 choose the language IDs to use it for:
 
 **`cspell.config.jsonc`**
 
+<!--- @@inject: samples/plugin/cspell.config.jsonc#lang=jsonc --->
+
 ```jsonc
 {
-  "plugins": ["@cspell/parser-php-strings-comments/plugin"],
+  "import": ["@cspell/parser-php-strings-comments"],
   "languageSettings": [
     {
       "languageId": "php",
@@ -33,6 +39,8 @@ choose the language IDs to use it for:
   ],
 }
 ```
+
+<!--- @@inject-end: samples/plugin/cspell.config.jsonc#lang=jsonc --->
 
 ## Supported file types
 

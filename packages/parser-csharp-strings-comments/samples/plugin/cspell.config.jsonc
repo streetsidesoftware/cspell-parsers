@@ -1,0 +1,9 @@
+{
+  "import": ["@cspell/parser-csharp-strings-comments"],
+  "languageSettings": [
+    {
+      "languageId": "csharp",
+      "parser": "csharp-strings-comments",
+    },
+  ],
+}
