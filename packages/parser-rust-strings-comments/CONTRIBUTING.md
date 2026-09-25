@@ -7,23 +7,22 @@ file only covers what's specific to this package's parsing logic.
 
 ## Shape of the parser
 
-Like `@cspell/parser-go-strings-comments` and `@cspell/parser-csharp-strings-comments`, this parser is a
-single hand-written scanner (`Scanner`, a small stateful class holding a mutable cursor `i` over `content`).
-There's no AST and no tokenizer for the language as a whole - `Scanner.run` walks `content` character by
-character, recognizing only the handful of constructs that matter (comments and strings) and silently
-advancing `i` past everything else. Since cspell only ever checks what's inside `parsedTexts`, this is how
-the parser excludes syntax noise: by never emitting it, not by filtering it out afterwards - the same
-approach `@cspell/parser-example` uses. Char literals and lifetimes get no special handling at all - see
-"Char literals and lifetimes" below.
+This parser is a single hand-written scanner (`Scanner`, a small stateful class holding a mutable cursor `i`
+over `content`). There's no AST and no tokenizer for the language as a whole - `Scanner.scanTagged` walks
+`content` character by character, recognizing only the handful of constructs that matter (comments and
+strings). The `run` method wraps it with `createCodeTagsEmitter`, which emits everything between them as a
+`code` segment. `code` is `false` in `tags`, so the default filter built by `createPluginParserWithFilterTags`
+drops it, and a user can turn it back on with `customizePlugin`. Char literals and lifetimes get no special
+handling at all - see "Char literals and lifetimes" below.
 
-Rust has no template-literal-style interpolation, so unlike the JS/TS-family scanner in this repo, `run()`
+Rust has no template-literal-style interpolation, so unlike the JS/TS-family scanner in this repo, `scanTagged()`
 doesn't need a recursive `scanCode(end, stopAtUnmatchedBrace)` helper - it's a single flat loop, and every
 scan method emits exactly one `ParsedText`.
 
 ### Generators, not an array
 
-Every emitting method returns a single `ParsedText` that `run()`'s generator `yield`s, following
-`@cspell/parser-typescript-strings-comments`'s pattern: `run()` is a generator, `parse()` returns
+Every emitting method returns a single `ParsedText` that `scanTagged()`'s generator `yield`s, following
+`@cspell/parser-typescript-strings-comments`'s pattern: `scanTagged()` is a generator, `parse()` returns
 `new Scanner(content).run()` directly, never collecting into an array first - there's nothing here holding a
 tree or other resource a consumer could leak by not fully draining the result.
 
@@ -78,7 +77,7 @@ since char literals are never spell checked, there's nothing to gain from parsin
 per Rust's grammar, just non-idiomatic).** Left unrecognized, that embedded `"` looks exactly like the start
 of a real string to `scanQuotedString`, which then scans past the literal's actual closing `'` looking for
 another `"` - potentially swallowing real code, including a genuine string, in between. Both shapes are
-unambiguous with one or two characters of lookahead (a lifetime never continues with `"` or `\`), so `run()`
+unambiguous with one or two characters of lookahead (a lifetime never continues with `"` or `\`), so `scanTagged()`
 special-cases them: it consumes `'"'` as 3 characters and `'\"'` as 4, without reintroducing a general
 char-literal parser. `fixtures/lifetimes-vs-chars.rs`'s `quote_char_then_real_string` and
 `escaped_quote_char_then_real_string` functions, and their tests in `parser.test.ts`, prove a real string
@@ -146,7 +145,7 @@ This is what makes `fixtures/raw-strings.rs`'s `double_hashed` case work: the bo
 `tryScanRawString` requires a non-identifier character (or start of file) immediately before the `b`/`c`/`r`
 prefix (mirroring `@cspell/parser-typescript-strings-comments`'s `tryScanRegExpCallArgs`), so an identifier
 ending in "r"/"b"/"c" right before an unrelated quote (`author"data"`) isn't misread as a raw-string prefix.
-`run()` applies the same guard inline for the plain `b"..."`/`c"..."` forms.
+`scanTagged()` applies the same guard inline for the plain `b"..."`/`c"..."` forms.
 
 ## Escape handling
 
@@ -175,12 +174,13 @@ plain and raw forms.
 
 ### Why `customizePlugin`/`createParser` filter in the parser, not via cspell
 
-`customizePlugin` and `createParser` are thin wrappers around `@internal/utils`'s `customizeParser`, which
-wraps `parser.parse()` so excluded segments never appear in the returned `parsedTexts` at all - the filtering
-happens here, before cspell ever sees those segments, rather than relying on cspell's own tag-based `validate`
-filtering. That's what lets `customizePlugin` work with any cspell version, including one too old to filter
-`ParsedText.tags` itself. See `packages/internal-utils/src/customize.ts`'s `customizeParser`/`compileTagFilter`
-for the actual filtering logic.
+`customizePlugin` and `createParser` are thin wrappers around `@internal/utils`'s `customizePluginEx` and
+`customizeParserEx` (`packages/internal-utils/src/pluginEx.ts`). `createPluginParserWithFilterTags`
+(`parserEx.ts`) builds the default filter from `tags`. Every filter, a consumer's included, is compiled
+against the parser's unfiltered output and its `tags`, never on top of an earlier filter. The filtering
+happens inside the parser before cspell sees the result, so it works with any cspell version, including one
+too old to filter `ParsedText.tags` itself. See the plugin-customization ADRs
+(`docs/ADRs/plugin-customization/0006-tag-filtering.md`) for the design.
 
 ## Testing
 
@@ -195,10 +195,10 @@ for the actual filtering logic.
   non-matching `#`-run that must not close a longer-delimited raw string early, plus a `cr#"..."#` C raw
   string.
 - `samples/` is a real end-to-end check: actual cspell configs plus real source files, run by
-  `pnpm run test:cspell`. `samples/customize` proves the `customizePlugin` tag filter does something real
-  (a genuine misspelling in a segment the filter excludes) - sanity-checked by temporarily swapping in the
-  plain `plugin` and confirming `cspell .` fails without the filter, the way
-  `packages/parser-typescript/samples/customize` does.
+  `pnpm run test:cspell`. `samples/customize` proves the `customizePlugin` tag filter does something real (a
+  genuine misspelling in a segment the filter excludes). Check it both ways: run cspell with the sample's config
+  and with `plugin.defineConfig()`, each with `--no-config-search`, so the sample's own config doesn't apply to
+  both runs.
 
 If you change the block-comment nesting logic or the char-literal special case, verify your test actually
 catches a regression: temporarily break it, confirm the relevant test fails, then restore the fix.
