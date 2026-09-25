@@ -114,8 +114,7 @@ export default {
 
 > It's the name of the copy. In a cspell config, `languageSettings` picks a parser for each file type by its
 > name. Because the copy has its own name, JavaScript files can use it while TypeScript files keep the
-> original. Calling
-> `customPlugin.languageSettings()` writes those entries for you.
+> original. Calling `customPlugin.languageSettings()` writes those entries for you.
 >
 > Every parser in a plugin needs its own name, so `duplicateParser` and `renameParser` always ask you for the
 > new one. Using a name that's already taken is an error, reported when cspell loads your config.
