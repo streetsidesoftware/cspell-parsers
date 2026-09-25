@@ -1,11 +1,12 @@
 # @cspell/parser-javascript
 
-A [cspell](https://cspell.org) parser plugin for JavaScript and JSX files. It has the JavaScript and JSX
-parsers of [`@cspell/parser-typescript`](https://www.npmjs.com/package/@cspell/parser-typescript), for projects
-that only want those file types. It understands
-the language well enough to skip things that were never meant to be read as words, such as keywords,
-punctuation, and numbers. It also leaves package names and names that come from imported packages alone, so
-it flags fewer words you didn't write.
+A [cspell](https://cspell.org) parser plugin for JavaScript and JSX files. It understands the language well
+enough to skip things that were never meant to be read as words, such as keywords, punctuation, and numbers.
+It also leaves package names and names that come from imported packages alone, so it flags fewer words you
+didn't write.
+
+It uses the same parsers as [`@cspell/parser-typescript`](https://www.npmjs.com/package/@cspell/parser-typescript),
+for projects that only need JavaScript and JSX.
 
 ## Install
 
