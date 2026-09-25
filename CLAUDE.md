@@ -177,7 +177,10 @@ Two more directories, both at the package root (not under `src/`):
   dependencies are shared across packages, and be conservative about adding any new production
   `dependencies` entry. tsdown's `.d.ts` bundler only inlines the `@internal/utils` declarations a package
   actually references, so sharing a type through `@internal/utils` doesn't bloat packages that don't use it.
-  Adding a type to `@internal/utils` grows only its own `dist/index.d.ts` until a package imports it.
+  Adding a type to `@internal/utils` grows only its own `dist/index.d.ts` until a package imports it. It
+  doesn't dedupe `@cspell/cspell-types` declarations reached through two different import paths, though:
+  that's why each package's `index.ts` defines `SelectedCSpellSettings` locally against `@cspell/cspell-types`
+  instead of importing a shared one.
 - Build output is plain `dist/*.js` + `dist/*.d.ts` (ESM only, one pair per entry). This requires
   `fixedExtension: false` in the shared tsdown config — tsdown's default (`fixedExtension: true` on the default
   `platform: 'node'`) would otherwise emit `.mjs`/`.d.mts`, which doesn't match a package's
