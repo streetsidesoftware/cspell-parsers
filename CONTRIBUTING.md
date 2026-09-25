@@ -135,8 +135,8 @@ plugins and parsers, what users do with a plugin, and what that means for how yo
    means — see `CLAUDE.md`'s "`README.md`" note for why these belong in the README rather than being omitted
    with the rest of the internals. Also add a short "Filtering by tag" section showing `customizePlugin` in
    use, since it's how a consumer actually applies that tags table — see
-   `packages/parser-typescript-strings-comments/README.md`'s "Filtering by tag and file type" section for the pattern to copy, and note
-   there that it needs a JS/TS cspell config (`.mjs`/`.ts`/`.cjs`), not `.json`/`.jsonc`/`.yaml`.
+   `packages/parser-typescript-strings-comments/README.md`'s "Filtering by tag and file type" section for the
+   pattern to copy.
 7. Run `pnpm install` from the repo root to link the new package(s) into the workspace.
 8. Run `pnpm run lint` before committing, and include whatever it changes (e.g. `release-please-config.json`)
    in your commit. Never hand-edit `release-please-config.json` or `.release-please-manifest.json` yourself —
