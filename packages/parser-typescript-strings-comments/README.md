@@ -52,9 +52,9 @@ The plugin provides these parsers. Where Recommended is `yes`, `recommended` ena
 By default, every comment and string is spell checked. Use `customizePlugin` to change what gets checked.
 See also: [Customization options](#customization-options)
 
-**`cspell.config.ts`** or **`cspell.config.mjs`**
-
 For example, to check only doc comments in TypeScript files:
+
+**`cspell.config.ts`** or **`cspell.config.mjs`**
 
 <!--- @@inject: samples/customize/cspell.config.mts#lang=ts --->
 
