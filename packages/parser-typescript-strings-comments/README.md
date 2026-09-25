@@ -84,24 +84,21 @@ with its own filter.
 
 Both `customizePlugin` and `plugin.customize()` give you a customized copy of the plugin. Call
 [`defineConfig()`](#defineconfig) on it to get a complete cspell config, or keep adjusting it first. For
-example, the next config checks TypeScript files as usual, but checks only the comments in JavaScript files.
-It duplicates the `typescript-strings-comments` parser under the name `js-comments-only`, then fine-tunes the
-copy's settings for JavaScript files:
+example, the next config checks TypeScript files as usual, but checks only the comments in JavaScript and JSX
+files. Each file type gets its own copy of the parser, with its own name and filter:
 
 **`cspell.config.ts`** or **`cspell.config.mjs`**
 
 <!--- @@inject: samples/customize-by-file-type/cspell.config.mts#lang=ts --->
 
 ```ts
-import { plugin } from '@cspell/parser-typescript-strings-comments/plugin';
+import { customizePlugin } from '@cspell/parser-typescript-strings-comments/plugin';
 
-// JavaScript files: check only comments.
+// JavaScript and JSX files: check only comments.
 // TypeScript files: keep the defaults.
-export default plugin
-  .customize()
-  .duplicateParser('typescript-strings-comments', 'js-comments-only')
-  .setFileTypes('js-comments-only', ['javascript', 'javascriptreact'])
-  .filterTags('js-comments-only', { '*': false, comment: true })
+export default customizePlugin()
+  .filterTagsForFileType('javascript', { '*': false, comment: true }, 'js-comments-only')
+  .filterTagsForFileType('javascriptreact', { '*': false, comment: true }, 'jsx-comments-only')
   .defineConfig();
 ```
 
@@ -113,14 +110,15 @@ export default plugin
 > `comment.block.doc`, unless a more specific key overrides it. See:
 > [`CustomizePluginOptions`](#customizepluginoptions) and [`TagFilterOptions`](#tagfilteroptions) below.
 
-**What is `js-comments-only`?**
+**What are `js-comments-only` and `jsx-comments-only`?**
 
-> It's the name of the copy. In a cspell config, `languageSettings` picks a parser for each file type by its
-> name. Because the copy has its own name, JavaScript files can use it while TypeScript files keep the
-> original. Calling `defineConfig()` writes those entries for you.
+> They're the names of the copies. In a cspell config, `languageSettings` picks a parser for each file type by
+> its name. Because each copy has its own name, JavaScript and JSX files can use them while TypeScript files
+> keep the original. Calling `defineConfig()` writes those entries for you.
 >
-> Every parser in a plugin needs its own name, so `duplicateParser` and `renameParser` always ask you for the
-> new one. Using a name that's already taken is an error, reported when cspell loads your config.
+> Every parser in a plugin needs its own name, so `filterTagsForFileType`, `duplicateParser`, and
+> `renameParser` always ask you for the new one. Using a name that's already taken is an error, reported when
+> cspell loads your config.
 
 ## Tags
 
