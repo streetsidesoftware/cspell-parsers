@@ -9,7 +9,7 @@ describe('recommended (cspell settings entry point)', () => {
     expect(recommended.plugins).toEqual([plugin]);
   });
 
-  it('selects each javascript file type its own parser, and no typescript ones', () => {
+  it('selects a separate parser for each JavaScript file type, and none for TypeScript', () => {
     expect(recommended.languageSettings).toEqual([
       { languageId: 'javascript', parser: 'javascript' },
       { languageId: 'javascriptreact', parser: 'javascriptreact' },
