@@ -2,27 +2,6 @@
 
 Thanks for considering a contribution to cspell-parsers.
 
-## TL;DR
-
-This repo publishes cspell plugins: each package under `packages/` provides parsers that let cspell users
-control what gets spell checked. Start with the
-[plugin author guide](docs/guides/plugin-author-guide.md). It explains how cspell uses plugins and
-parsers, and how to write one here.
-
-- **Set up:** `pnpm install`, then `pnpm run build` and `pnpm test`.
-- **Add a parser:** copy `packages/parser-typescript` (the full template) and follow the guide.
-- **Before a PR:** `pnpm run build`, `pnpm run typecheck`, `pnpm run lint` (auto-fixes), `pnpm test`. CI runs
-  the same.
-- **Commits:** [Conventional Commits](https://www.conventionalcommits.org/). Use `feat:`/`fix:` only for
-  changes a user of a published package would notice. Everything else is `chore:`, `refactor:`, `docs:`,
-  etc.
-- **PR descriptions:** short, with a `## Summary` that stands on its own.
-
-The rest of this file is the full reference, written mainly for coding agents.
-
-<details>
-<summary>Details for Agents</summary>
-
 ## Workspace layout
 
 This is a pnpm workspace monorepo (`packages/*`) for cspell parser packages — each package under `packages/`
@@ -72,9 +51,6 @@ CI runs `build` + `typecheck` + `test` in `.github/workflows/test.yml` and `lint
 lint-ci`/`pnpm test` pass, since it auto-fixes what it can rather than just reporting.
 
 ## Adding a new parser package
-
-Read the [plugin author guide](docs/guides/plugin-author-guide.md) first. It covers cspell's rules for
-plugins and parsers, what users do with a plugin, and what that means for how you write one.
 
 1. Copy `packages/parser-typescript` to `packages/<your-parser-name>` for the full shape below, or
    `packages/parser-example` if you just want a minimal single-file starting point (bring it in line with
@@ -235,5 +211,3 @@ Do not:
 - Add auto-generated links back to individual diff hunks or lines (e.g. `[[1]]`/`[[2]]` permalinks) — the
   diff is already there for anyone reviewing.
 - Write a separate section per commit or sub-change — one TL;DR covers the whole PR.
-
-</details>
