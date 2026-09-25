@@ -236,6 +236,10 @@ part of a `feat:`/`fix:` PR body), don't start a sentence in a paragraph or note
 the start of the sentence is missing. Lead with a word instead, e.g. "Use `customizePlugin` to…", "Both `a` and
 `b`…", "Keys in `tags`…". List items can start with code.
 
+Label every example that is a whole config file with its filename in bold, directly above the code block, e.g.
+**`cspell.config.jsonc`** or **`cspell.config.ts`** or **`cspell.config.mjs`**. Don't name the file in a comment
+inside the code. Snippets that aren't a whole file (a single call, an options object) don't need a label.
+
 If the parser emits `tags` on any segment, `README.md` must include a table listing every tag it can emit
 (including ancestor tags implied by `hierarchicalTags`, e.g. `comment` alongside `comment.block.doc`) with a
 one-line description of what each one means. This is reference material for using the plugin, not an
