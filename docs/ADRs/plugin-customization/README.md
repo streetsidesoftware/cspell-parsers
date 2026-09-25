@@ -19,6 +19,7 @@ their tags. The new types live alongside the old ones during the migration, then
 | 0007 | `IParserEx` is read-only data that carries its unfiltered parse and filter                | Accepted |
 | 0008 | `customizePlugin` stays as a thin wrapper that returns a builder                          | Accepted |
 | 0009 | `defineConfig` merges a plugin into the user's settings                                   | Accepted |
+| 0010 | `filterTagsForFileType` gives file types their own filtered parser                        | Accepted |
 
 ## Deliverables
 
