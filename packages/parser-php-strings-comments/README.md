@@ -1,19 +1,17 @@
 # @cspell/parser-php-strings-comments
 
 A cspell plugin that spell checks only the comments and string literals in PHP files. The HTML around a
-`<?php ... ?>` block (`html`) and everything else (`code`) are skipped by default - use `customizePlugin` to
-[opt into checking them](#checking-html-and-code).
-
-It implements cspell's [`Parser`](https://www.npmjs.com/package/@cspell/cspell-types) contract and exports a
-[`Plugin`](https://www.npmjs.com/package/@cspell/cspell-types) so it can be wired into a cspell configuration.
+`<?php ... ?>` block (`html`) and everything else (`code`) are skipped by default. Use `customizePlugin` to
+[check them too](#checking-html-and-code).
 
 ## Usage
 
 The quickest way to get started is to import the recommended settings, which registers the plugin and
 selects it for every supported file type:
 
+**`cspell.config.jsonc`**
+
 ```jsonc
-// cspell.config.jsonc (or cspell.config.yaml/.mjs/...)
 {
   "import": ["@cspell/parser-php-strings-comments/recommended"],
 }
@@ -21,6 +19,8 @@ selects it for every supported file type:
 
 For more control - for example, to apply it alongside other settings - wire the plugin in yourself and
 choose the language IDs to use it for:
+
+**`cspell.config.jsonc`**
 
 ```jsonc
 {
@@ -36,7 +36,8 @@ choose the language IDs to use it for:
 
 ## Supported file types
 
-The plugin provides these parsers. Where Recommended is `yes`, `recommended` enables the named parser for files with that Language ID:
+The plugin provides these parsers. Where Recommended is `yes`, `recommended` enables the named parser for
+files with that Language ID:
 
 <!--- @@inject: docs/language-id-n-parser-name.csv --->
 
@@ -46,60 +47,79 @@ The plugin provides these parsers. Where Recommended is `yes`, `recommended` ena
 
 <!--- @@inject-end: docs/language-id-n-parser-name.csv --->
 
-### Filtering by tag
+## Filtering by tag
 
-By default every comment and string gets spell checked, and `html` and `code` don't. To change which tagged
-segments get checked - for example, only PHPDoc comments - use `customizePlugin` instead of the plain `plugin`
-export. It takes a `CustomizePluginOptions` object - `tags: TagFilterOptions` and `name` are both optional,
-and omitting `tags` keeps the defaults - and returns a `Plugin` that only spell checks the tagged segments you
-keep. It works with any cspell version.
+By default, every comment and string is spell checked, and the HTML and the rest of the code aren't. Use
+`customizePlugin` to change what gets checked. For example, to check only PHPDoc comments:
 
-```js
-// cspell.config.mjs — customizePlugin returns a live Plugin object, so it needs a JS/TS config file
-// (.mjs/.ts/.cjs), not .json/.jsonc/.yaml, where "plugins" can only be a list of module-specifier strings.
+**`cspell.config.ts`** or **`cspell.config.mjs`**
+
+<!--- @@inject: samples/doc-comments-only/cspell.config.mts#lang=ts --->
+
+```ts
 import { customizePlugin } from '@cspell/parser-php-strings-comments/plugin';
 
+// Check only PHPDoc comments.
+const customPlugin = customizePlugin({ tags: { '*': false, 'comment.block.doc': true } });
+
 export default {
-  plugins: [customizePlugin({ tags: { '*': false, 'comment.block.doc': true } })], // only PHPDoc comments
-  languageSettings: [
-    {
-      languageId: 'php',
-      parser: 'php-strings-comments',
-    },
-  ],
+  plugins: [customPlugin],
+  languageSettings: customPlugin.languageSettings(),
 };
 ```
 
-`tags` keys are matched hierarchically against the tags below - `string` also matches the more specific
-`string.heredoc` unless a more specific key overrides it - and may use `*` as a wildcard (`string.*`, or a
-bare `*` for "everything not otherwise matched"; without one, each tag keeps its default). See the [Tags](#tags) table below
-for every tag this parser can emit.
+<!--- @@inject-end: samples/doc-comments-only/cspell.config.mts#lang=ts --->
 
-`name` overrides the parser's registered name (`php-strings-comments` by default). This matters when
-registering more than one customized copy of this parser, since cspell selects a parser by name and two
-parsers can't share one.
+**NOTE:**
 
-### Checking HTML and code
+> Keys in `tags` are matched hierarchically against the [tags](#tags) below. For example, the key `string`
+> also matches the more specific `string.heredoc`, unless a more specific key overrides it. A key can also use
+> `*` as a wildcard, such as `string.*`, or a bare `*` for everything not otherwise matched.
 
-`html` (markup outside `<?php ... ?>`) and `code` (everything else) are off by default.
-Opt into either, or both, with `customizePlugin`:
+Calling `customizePlugin` gives you a customized copy of the plugin. You can add it to `plugins` straight
+away, or keep adjusting it first. For example, to give the parser a different name:
 
 ```js
-// cspell.config.mjs
+customizePlugin({ tags: { '*': false, comment: true } }).renameParser('php-strings-comments', 'php-comments-only');
+```
+
+Earlier versions of `customizePlugin` took a `name` option to rename the parser. It still works, but it's
+deprecated and will be removed in a future release. Use `renameParser` instead.
+
+## Checking HTML and code
+
+The HTML outside `<?php ... ?>` (`html`) and everything else (`code`) are off by default. To check the HTML
+too:
+
+**`cspell.config.ts`** or **`cspell.config.mjs`**
+
+<!--- @@inject: samples/customize/cspell.config.mts#lang=ts --->
+
+```ts
 import { customizePlugin } from '@cspell/parser-php-strings-comments/plugin';
 
+// Also check the HTML outside <?php ... ?> blocks.
+const customPlugin = customizePlugin({ tags: { html: true } });
+
 export default {
-  plugins: [customizePlugin({ tags: { html: true, code: true } })],
-  languageSettings: [
-    {
-      languageId: 'php',
-      parser: 'php-strings-comments',
-    },
-  ],
+  plugins: [customPlugin],
+  languageSettings: customPlugin.languageSettings(),
 };
+```
+
+<!--- @@inject-end: samples/customize/cspell.config.mts#lang=ts --->
+
+To check both:
+
+```js
+customizePlugin({ tags: { html: true, code: true } });
 ```
 
 ## Tags
+
+Each part of a file gets its most specific tag plus the more general ones above it. For example, a PHPDoc
+comment is tagged `comment.block.doc`, `comment.block`, and `comment`, so a filter can use whichever level it
+needs.
 
 <!--- @@inject: docs/tags-table.csv#markdown --->
 
@@ -119,17 +139,11 @@ export default {
 
 <!--- @@inject-end: docs/tags-table.csv#markdown --->
 
-## Known limitations
+## Special cases
 
-This parser is a small hand-written scanner, not a real grammar. It resolves complex interpolation
-(`{$...}`) well enough to find the correct end of the surrounding string, but doesn't understand PHP
-expressions inside the hole beyond tracking brace depth and skipping any nested `'...'`/`"..."` quoted
-strings - which is enough for every real-world case this parser targets, since the hole's contents are
-always spell checked as part of the same string rather than parsed separately.
-
-Simple interpolation (a bare `$name` or `$arr[key]` without `{}`) isn't specially recognized at all - it's
-just ordinary text inside the double-quoted string or heredoc it appears in, which is exactly what should
-happen: it's still spell checked as part of the surrounding string content.
+- **Variables inside a string are checked as part of that string.** In a double-quoted string or a heredoc,
+  interpolated variables and expressions such as `$name` and `{$user->name}` are spell checked along with the
+  rest of the string's text.
 
 ## Requirements
 
