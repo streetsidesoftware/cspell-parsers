@@ -49,7 +49,7 @@ The plugin provides these parsers. Where Recommended is `yes`, `recommended` ena
 
 ### Filtering by tag and file type
 
-By default every comment/string the parser emits gets spell checked. Use `customizePlugin` to change what is sent on to the spell checker.
+By default, every comment and string is spell checked. Use `customizePlugin` to change what gets checked.
 See also: [Customization options](#customization-options)
 
 **`cspell.config.ts`** or **`cspell.config.mjs`**
@@ -121,9 +121,9 @@ export default {
 
 ## Tags
 
-Every segment carries its own tag plus every ancestor implied by it - a doc comment carries
-`comment.block.doc` together with `comment.block` and `comment` - so the `tags` filter above can match at
-whatever level of specificity it needs.
+Each part of a file gets its most specific tag plus the more general ones above it. For example, a doc
+comment is tagged `comment.block.doc`, `comment.block`, and `comment`, so a filter can use whichever level it
+needs.
 
 <!--- @@inject: docs/tags-table.csv#markdown --->
 
