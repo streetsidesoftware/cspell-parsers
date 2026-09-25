@@ -8,10 +8,10 @@ file only covers what's specific to this package's parsing logic.
 ## Shape of the parser
 
 This parser is a single hand-written scanner (`Scanner`) with no AST or tokenizer - `Scanner.scanCode` walks
-`content` character by character, recognizing only comments and string literals. Everything between them
-(identifiers, keywords, punctuation, numbers) is emitted as a `code` segment. `code` is `false` in `tags`, so
-the default filter built by `createPluginParserWithFilterTags` drops it, and a user can turn it back on with
-`customizePlugin`.
+`content` character by character, recognizing only comments and string literals. The `run` method wraps it
+with `createCodeTagsEmitter`, which emits everything between them (identifiers, keywords, punctuation,
+numbers) as a `code` segment. `code` is `false` in `tags`, so the default filter built by
+`createPluginParserWithFilterTags` drops it, and a user can turn it back on with `customizePlugin`.
 
 ### `scanCode`'s recursion for f-string holes
 
@@ -112,4 +112,4 @@ This package is a reasonable starting point for a new `-strings-comments` parser
 the parsing logic with your own. See the repo root `CONTRIBUTING.md`'s "Adding a new parser package" section
 for the full steps, and `packages/parser-typescript` for the canonical, more fully-featured template.
 
-<!-- cspell:ignore numbr Wlecome -->
+<!-- cspell:ignore numbr -->
