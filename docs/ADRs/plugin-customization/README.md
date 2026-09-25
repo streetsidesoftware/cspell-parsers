@@ -28,6 +28,7 @@ implementation.
 | 0014 | A renamed parser keeps its position                                                       | Accepted           |
 | 0015 | Packages export an immutable `IPluginEx`; customization happens on an `IPluginBuilder`    | Accepted           |
 | 0016 | A builder method's target can also be a list of parser names                              | Accepted           |
+| 0017 | `IParser` is read-only data with no customization methods                                 | Accepted           |
 
 ## Open questions
 
