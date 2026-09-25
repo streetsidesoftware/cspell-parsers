@@ -74,6 +74,10 @@ export default {
 
 <!--- @@inject-end: samples/customize/cspell.config.mts#lang=ts --->
 
+**NOTE:**
+
+> `tags` keys are matched hierarchically against the [tags](#tags) below.
+
 `customizePlugin` and `plugin.customize()` give you a customized copy of the plugin. You can add it to
 `plugins` straight away, or keep adjusting it first. For example, this config checks TypeScript files as
 usual, but checks only the comments in JavaScript files:
@@ -99,6 +103,12 @@ export default {
 
 <!--- @@inject-end: samples/customize-by-file-type/cspell.config.mts#lang=ts --->
 
+**NOTE:**
+
+> The `tags` key `comment` also matches the more specific `comment.line`, `comment.block`, and
+> `comment.block.doc`, unless a more specific key overrides it. See: [`CustomizePluginOptions`](#customizepluginoptions)
+> and [`TagFilterOptions`](#tagfilteroptions) below.
+
 **Why the new name?**
 
 > In a cspell config, `languageSettings` chooses a parser for each file type by the parser's name. The example
@@ -108,13 +118,6 @@ export default {
 >
 > Every parser in a plugin needs its own name, so `duplicateParser` and `renameParser` always ask you for the
 > new one. Using a name that's already taken is an error, reported when cspell loads your config.
-
-**NOTE:**
-
-> `tags` keys are matched hierarchically against the [tags](#tags) below.
->
-> The key `string` also matches the more specific
-> `string.templateLiteral` unless a more specific key overrides it. See: [`CustomizePluginOptions`](#customizepluginoptions) and [`TagFilterOptions`](#tagfilteroptions) below.
 
 ## Tags
 
