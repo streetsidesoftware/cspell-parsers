@@ -4,11 +4,11 @@ Terminology introduced or clarified while designing features with the `feature-a
 
 ## `code` tag
 
-A catch-all tag emitted for any parsed segment that isn't already covered by a more specific tag
-(`comment`, `string`, `identifier`, etc.) — the leftover keywords, punctuation, operators, and numbers that
-make up the rest of the source. Off by default (a consumer must opt in via `customizePlugin`), since it's
-the noisiest, least useful thing to spell check. Established for `parser-php-strings-comments`; extended to
-the other scanner- and tree-sitter-based parsers in
+A catch-all tag emitted for any parsed segment that isn't already covered by a more specific tag (`comment`,
+`string`, `identifier`, etc.) — the leftover keywords, punctuation, operators, and numbers that make up the
+rest of the source. Off by default (a consumer must opt in via `customizePlugin`), since it's the noisiest,
+least useful thing to spell check. Established for `parser-php-strings-comments`; extended to the other
+scanner- and tree-sitter-based parsers in
 [code-tag-rollout/0002](./ADRs/code-tag-rollout/0002-code-tag-definition-and-default.md) and
 [code-tag-rollout/0003](./ADRs/code-tag-rollout/0003-tree-sitter-code-tag-semantics.md).
 
@@ -26,8 +26,8 @@ reimplementing its own copy. Established in
 ## `IParserEx`
 
 The read-only parser type: `name`, `parse` (filtered, what cspell calls), `_parse` (unfiltered),
-`supportedFileTypes`, `tags`, and its current tag filter options. It has no customization methods. It lives alongside today's `IParser`
-while packages migrate. Established in
+`supportedFileTypes`, `tags`, and its current tag filter options. It has no customization methods. It lives
+alongside today's `IParser` while packages migrate. Established in
 [plugin-customization/0017](./ADRs/plugin-customization/0017-parser-is-read-only.md),
 [0020](./ADRs/plugin-customization/0020-parser-exposes-unfiltered-parse.md),
 [0022](./ADRs/plugin-customization/0022-remove-and-add-parser.md), and
@@ -36,8 +36,8 @@ while packages migrate. Established in
 ## `IPluginBuilder`
 
 The mutable object returned by `IPluginEx.customize()`. Its customization methods (duplicate, rename,
-remove, filter tags, change file types) change it in place and return it for chaining. It is usable
-directly as a cspell plugin, and `build()` takes an immutable `IPluginEx` snapshot. Established in
+remove, filter tags, change file types) change it in place and return it for chaining. It is usable directly
+as a cspell plugin, and `build()` takes an immutable `IPluginEx` snapshot. Established in
 [plugin-customization/0015](./ADRs/plugin-customization/0015-immutable-plugin-and-builder.md). The name is
 provisional.
 
@@ -59,6 +59,6 @@ selects a parser only by name. Established in
 
 ## Recommended parser
 
-For a given file type, the parser a plugin's `recommended` settings select: the last parser in the
-plugin's `parsers` order that lists that file type. It is derived, never stored. Established in
+For a given file type, the parser a plugin's `recommended` settings select: the last parser in the plugin's
+`parsers` order that lists that file type. It is derived, never stored. Established in
 [plugin-customization/0002](./ADRs/plugin-customization/0002-parsers-own-file-types.md).
