@@ -44,4 +44,8 @@ export function customizePlugin(options: CustomizeParserOptions): IPluginBuilder
 - The return type changes from `CSpellPlugin` to `IPluginBuilder`, which is still usable as a plugin.
 - Every existing per-language config that renames keeps working, since each of those plugins has one
   parser.
-- Still to decide: how the `parser-strings-comments` bundle's `customizePlugin(fileType, options)` fits.
+- The `parser-strings-comments` bundle's `customizePlugin(fileType, options)` gets the same shape as every
+  other package. Its old `(fileType, options)` form stays as a further `@deprecated` overload that
+  reproduces today's result: it removes the parsers that don't list `fileType`, narrows the remaining
+  parsers' file types to `fileType`, and applies `tags`. `'*'` keeps every parser and ignores `name`, as
+  it does today.
