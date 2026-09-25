@@ -253,11 +253,9 @@ built plugin's `parsers` (see `scripts/README.md`).
 The same "if the parser emits `tags`" condition also means `plugin.ts` exports `customizePlugin` (see
 "Package shape" above), and `README.md` must show it: a short "Filtering by tag" (or similarly named)
 section, after the plain `plugin`/`languageSettings` wiring example, with a runnable snippet calling
-`customizePlugin({ tags: { ... } })` and pointing at the tags table for what keys are available. Call out
-that `customizePlugin` returns a live `Plugin` object, not a module-specifier string, so it only works from a
-JS/TS cspell config (`cspell.config.mjs`/`.ts`/`.cjs`) — not `.json`/`.jsonc`/`.yaml`, where `plugins` can
-only be a list of strings cspell resolves itself. See `packages/parser-typescript-strings-comments/README.md`'s "Filtering by
-tag and file type" section for the pattern to copy.
+`customizePlugin({ tags: { ... } })` and pointing at the tags table for what keys are available. See
+`packages/parser-typescript-strings-comments/README.md`'s "Filtering by tag and file type" section for the
+pattern to copy.
 
 When adding or editing a `.md` file that contains deliberate spelling errors (e.g. demonstrating what a
 parser flags or ignores), add a `<!-- cspell:ignore ... -->` comment at the end of the file listing those
