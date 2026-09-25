@@ -80,8 +80,8 @@ export default defineConfig(
 What users can rely on:
 
 - **Targets are explicit.** A method's first argument is a parser name, a list of names, or `'*'` for
-  every parser. The exception is `filterTagsForFileType(fileType, options, newName)`, which targets file
-  types: it copies the parser that handles them, moves them to the copy, and filters it.
+  every parser. The exception is `filterTagsForFileType(fileType, options, newName)`, which targets one file
+  type: it copies the parser that handles it, moves the file type to the copy, and filters it.
 - **Users name every parser.** Nothing generates a name. `duplicateParser` and `addParser(parser, asName?)`
   append to the end, and `renameParser` keeps the parser's position.
 - **Mistakes throw when the config loads.** A name that's already taken or doesn't exist is an error,
