@@ -118,8 +118,7 @@ Every package publishes **four** things, each its own file under `src/` and its 
   `customizePluginEx(plugin, options)`, so a consumer can filter which tagged segments get spell checked
   without needing cspell itself to support that filtering. The result can be adjusted further and turned into
   a complete config with `defineConfig()`. See `packages/parser-typescript-strings-comments/src/plugin.ts` for
-  the pattern. Packages not yet migrated still use `IPlugin` and `customizeParserPlugin`; see
-  `docs/guides/plugin-author-guide.md`.
+  the pattern.
 - `src/index.ts` — the package's main entry (`.` / `main`). Exports a default settings object with just
   `plugins: [plugin]` — the parser is registered but not yet selected for any file type, so a consumer still
   has to add their own `languageSettings`. Typed as a small local `SelectedCSpellSettings` interface

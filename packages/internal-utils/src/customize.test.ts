@@ -2,8 +2,9 @@ import type { ParsedTags, ParsedText } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
 import { compileTagFilter, createParsedTextFilter } from './customize.ts';
-import { createPluginParser, customizeParser, customizeParserPlugin } from './parser.ts';
-import type { IParser, IPlugin } from './types.ts';
+import { createPluginParserWithFilterTags } from './parserEx.ts';
+import { createPluginEx } from './pluginEx.ts';
+import type { IParserEx, TagFilterOptions } from './types.ts';
 
 function mkText(content: string, tags: ParsedText['tags']): ParsedText {
   return { text: content, range: [0, content.length], tags };
@@ -15,12 +16,12 @@ function mkText(content: string, tags: ParsedText['tags']): ParsedText {
  * declares every tag any of `parsedTexts` actually carries (all defaulting to emitted/kept), the same way a
  * real parser's `tags` map is expected to list everything it can emit.
  */
-function fakeParser(parsedTexts: ParsedText[]): IParser {
+function fakeParser(parsedTexts: ParsedText[]): IParserEx {
   const tags: Record<string, boolean> = {};
   for (const { tags: parsedTags } of parsedTexts) {
     for (const tag in parsedTags) tags[tag] = true;
   }
-  return createPluginParser({
+  return createPluginParserWithFilterTags({
     name: 'fake',
     parse: (content, filename) => ({ content, filename, parsedTexts }),
     supportedFileTypes: [],
@@ -28,28 +29,36 @@ function fakeParser(parsedTexts: ParsedText[]): IParser {
   });
 }
 
-describe('customizeParser', () => {
+/** Applies `tags` to `parser` through a plugin builder, the way `customizePlugin` does. */
+function filterTags(parser: IParserEx, tags: TagFilterOptions): IParserEx {
+  return createPluginEx({ name: 'fake', parsers: [parser] })
+    .customize()
+    .filterTags(parser.name, tags)
+    .getParser(parser.name);
+}
+
+describe('tag filtering', () => {
   it('keeps everything by default (no tag keys at all)', () => {
     const parsedTexts = [mkText('a', { comment: true }), mkText('b', undefined)];
-    const parser = customizeParser(fakeParser(parsedTexts), { tags: {} });
+    const parser = filterTags(fakeParser(parsedTexts), {});
     expect([...parser.parse('', 'f').parsedTexts]).toEqual(parsedTexts);
   });
 
   it('"*": false excludes everything not otherwise matched', () => {
     const parsedTexts = [mkText('a', { comment: true }), mkText('b', undefined)];
-    const parser = customizeParser(fakeParser(parsedTexts), { tags: { '*': false } });
+    const parser = filterTags(fakeParser(parsedTexts), { '*': false });
     expect([...parser.parse('', 'f').parsedTexts]).toEqual([]);
   });
 
   it('an exact tag key overrides the "*" default', () => {
     const parsedTexts = [mkText('a', { string: true }), mkText('b', { comment: true }), mkText('c', undefined)];
-    const parser = customizeParser(fakeParser(parsedTexts), { tags: { '*': false, string: true } });
+    const parser = filterTags(fakeParser(parsedTexts), { '*': false, string: true });
     expect([...parser.parse('', 'f').parsedTexts]).toEqual([parsedTexts[0]]);
   });
 
   it('a broader key matches a more specific tag hierarchically', () => {
     const docComment = mkText('a', { comment: true, 'comment.block': true, 'comment.block.doc': true });
-    const parser = customizeParser(fakeParser([docComment]), { tags: { '*': false, comment: true } });
+    const parser = filterTags(fakeParser([docComment]), { '*': false, comment: true });
     expect([...parser.parse('', 'f').parsedTexts]).toEqual([docComment]);
   });
 
@@ -57,7 +66,7 @@ describe('customizeParser', () => {
     const blockComment = mkText('a', { comment: true, 'comment.block': true });
     const docComment = mkText('b', { comment: true, 'comment.block': true, 'comment.block.doc': true });
     const tags = { '*': true, 'comment.block': false, 'comment.block.doc': true };
-    const parser = customizeParser(fakeParser([blockComment, docComment]), { tags });
+    const parser = filterTags(fakeParser([blockComment, docComment]), tags);
     expect([...parser.parse('', 'f').parsedTexts]).toEqual([docComment]);
   });
 
@@ -65,7 +74,7 @@ describe('customizeParser', () => {
     const docComment = mkText('a', { comment: true, 'comment.block': true, 'comment.block.doc': true });
     const lineComment = mkText('b', { comment: true, 'comment.line': true });
     const tags = { '*': false, 'comment.block.*': true };
-    const parser = customizeParser(fakeParser([docComment, lineComment]), { tags });
+    const parser = filterTags(fakeParser([docComment, lineComment]), tags);
     expect([...parser.parse('', 'f').parsedTexts]).toEqual([docComment]);
   });
 
@@ -73,52 +82,21 @@ describe('customizeParser', () => {
     const docComment = mkText('a', { comment: true, 'comment.block': true, 'comment.block.doc': true });
     const identifier = mkText('b', { identifier: true, 'identifier.variable': true });
     const tags = { '*': false, 'comment*': true };
-    const parser = customizeParser(fakeParser([docComment, identifier]), { tags });
+    const parser = filterTags(fakeParser([docComment, identifier]), tags);
     expect([...parser.parse('', 'f').parsedTexts]).toEqual([docComment]);
   });
 
   it('ignores tags explicitly set to false when deciding which tags a segment "has"', () => {
     const parsedTexts = [mkText('a', { comment: false })];
-    const parser = customizeParser(fakeParser(parsedTexts), { tags: { '*': false, comment: true } });
+    const parser = filterTags(fakeParser(parsedTexts), { '*': false, comment: true });
     expect([...parser.parse('', 'f').parsedTexts]).toEqual([]);
   });
 
   it('preserves other ParseResult fields', () => {
-    const parser = customizeParser(fakeParser([]), { tags: {} });
+    const parser = filterTags(fakeParser([]), {});
     const result = parser.parse('content', 'file.ts');
     expect(result.content).toBe('content');
     expect(result.filename).toBe('file.ts');
-  });
-
-  it('keeps the original name when options.name is not given', () => {
-    const parser = customizeParser(fakeParser([]), { tags: {} });
-    expect(parser.name).toBe('fake');
-  });
-
-  it('overrides the name when options.name is given', () => {
-    const parser = customizeParser(fakeParser([]), { name: 'custom', tags: {} });
-    expect(parser.name).toBe('custom');
-  });
-});
-
-describe('customizeParserPlugin', () => {
-  const plugin: IPlugin = {
-    name: 'fake-plugin',
-    parsers: [fakeParser([])],
-    supportedFileTypes: ['c'],
-    recommendedLanguageSettings: [{ languageId: 'c', parser: 'fake' }],
-  };
-
-  it('points recommendedLanguageSettings at a renamed parser', () => {
-    const customized = customizeParserPlugin(plugin, { name: 'custom' });
-    expect(customized.parsers.map((p) => p.name)).toEqual(['custom']);
-    expect(customized.recommendedLanguageSettings).toEqual([{ languageId: 'c', parser: 'custom' }]);
-  });
-
-  it('keeps the plugin name and recommendedLanguageSettings when the parser is not renamed', () => {
-    const customized = customizeParserPlugin(plugin, { tags: {} });
-    expect(customized.name).toBe('fake-plugin');
-    expect(customized.recommendedLanguageSettings).toEqual(plugin.recommendedLanguageSettings);
   });
 });
 

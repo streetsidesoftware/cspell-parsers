@@ -5,9 +5,8 @@ configuration that is simple, easy, and obvious, with no surprises. Every plugin
 by that goal. This guide explains the rules cspell imposes, what users do with a plugin, and what that
 means for how you write one.
 
-> **Status:** the `IPluginEx`/`IPluginBuilder` API described here is implemented in `@internal/utils`.
-> `parser-typescript-strings-comments`, `parser-php-strings-comments`, and `parser-example` use it, and the
-> other packages are moving to it one at a time. The decisions behind it, and the migration plan, are in
+> **Status:** every package uses the `IPluginEx`/`IPluginBuilder` API described here, implemented in
+> `@internal/utils`. The decisions behind it are in
 > [`docs/ADRs/plugin-customization/`](../ADRs/plugin-customization/README.md).
 
 ## How cspell uses plugins and parsers
