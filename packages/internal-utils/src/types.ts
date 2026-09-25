@@ -156,8 +156,8 @@ export interface IPluginExBase {
    * Throws if no parser lists one of them.
    */
   languageSettingsForFileType(fileType: FileTypeTarget): RecommendedLanguageSettings;
-  /** A new builder, seeded from the current parsers. */
-  customize(): IPluginBuilder;
+  /** A new builder, seeded from the current parsers, named `name` or this plugin's name. */
+  customize(name?: string): IPluginBuilder;
 }
 
 /** The immutable plugin a package exports. See docs/ADRs/plugin-customization/0004-immutable-plugin-and-builder.md. */
@@ -168,6 +168,8 @@ export type IPluginEx = IPluginExBase;
  * Unknown or clashing parser names throw. See docs/ADRs/plugin-customization/0005-builder-operations.md.
  */
 export interface IPluginBuilder extends IPluginExBase {
+  /** Sets the plugin's name. */
+  setName(name: string): this;
   /** Appends a copy of the parser's current state under `newName`. */
   duplicateParser(name: string, newName: string): this;
   /** Appends `parser`, keeping its file types and filter, under `asName` or its own name. */

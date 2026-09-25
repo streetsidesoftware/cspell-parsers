@@ -196,6 +196,17 @@ describe('IPluginBuilder', () => {
     expect(texts(b.getParser('legacy.php'))).toEqual(['comment']);
   });
 
+  it('sets the plugin name through customize(name) or setName, leaving the source unchanged', () => {
+    const plugin = mkPlugin();
+    const a = plugin.customize('legacy');
+    expect(a.name).toBe('legacy');
+    expect(a.customize().name).toBe('legacy');
+    expect(a.setName('renamed')).toBe(a);
+    expect(a.build().name).toBe('renamed');
+    expect(plugin.name).toBe('test');
+    expect(() => a.getParser('go')).toThrow('in plugin "renamed"');
+  });
+
   it('checks every name in a target list before changing anything', () => {
     const b = mkPlugin().customize();
     expect(() => b.removeParser(['php', 'go'])).toThrow('Unknown parser "go"');

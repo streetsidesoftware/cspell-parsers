@@ -29,12 +29,7 @@ export function createPluginEx(options: CreatePluginExOptions): IPluginEx {
 
 /** The read-only queries, over an ordered list of parser definitions. */
 abstract class PluginExQueries implements IPluginExBase {
-  readonly name: string;
-
-  constructor(name: string) {
-    this.name = name;
-  }
-
+  abstract get name(): string;
   protected abstract get defs(): readonly ParserDef[];
 
   get parsers(): IParserEx[] {
@@ -45,8 +40,8 @@ abstract class PluginExQueries implements IPluginExBase {
     return this.defs.map((def) => def.name);
   }
 
-  customize(): IPluginBuilder {
-    return new PluginBuilder(this.name, this.defs);
+  customize(name?: string): IPluginBuilder {
+    return new PluginBuilder(name ?? this.name, this.defs);
   }
 
   get supportedFileTypes(): string[] {
@@ -117,12 +112,18 @@ abstract class PluginExQueries implements IPluginExBase {
 }
 
 class PluginEx extends PluginExQueries implements IPluginEx {
+  readonly #name: string;
   readonly #defs: readonly ParserDef[];
 
   constructor(name: string, defs: readonly ParserDef[]) {
-    super(name);
+    super();
+    this.#name = name;
     this.#defs = Object.freeze([...defs]);
     Object.freeze(this);
+  }
+
+  get name(): string {
+    return this.#name;
   }
 
   protected get defs(): readonly ParserDef[] {
@@ -131,11 +132,22 @@ class PluginEx extends PluginExQueries implements IPluginEx {
 }
 
 class PluginBuilder extends PluginExQueries implements IPluginBuilder {
+  #name: string;
   #defs: ParserDef[];
 
   constructor(name: string, defs: readonly ParserDef[]) {
-    super(name);
+    super();
+    this.#name = name;
     this.#defs = [...defs];
+  }
+
+  get name(): string {
+    return this.#name;
+  }
+
+  setName(name: string): this {
+    this.#name = name;
+    return this;
   }
 
   protected get defs(): readonly ParserDef[] {
