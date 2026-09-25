@@ -170,15 +170,28 @@ export default {
 
 A few kinds of code are handled in a specific way:
 
-- **Regex literals (`/pattern/flags`) and `RegExp(...)`/`new RegExp(...)` calls are tagged `code`, so they're
-  not spell checked by default.** A regex pattern isn't prose, so both forms are skipped entirely, including
-  any quotes inside - the same as any other unrecognized code (see [The `code` tag](#the-code-tag)). A
-  comment inside a `RegExp(...)` call's argument list is still recognized normally; only the pattern/flags
-  string arguments are tagged `code`.
-- **A module specifier string is still spell checked by default, but tagged so it can be filtered out.**
-  `import x from './mod.js'`, `import './side-effect.js'`, `export { x } from './mod.js'`, a dynamic
-  `import('./mod.js')`, and `require('./mod.js')` all get the `module`/`module.specifier`/
-  `module.specifier.literal` tags in addition to their usual string tags. Use `customizePlugin` to exclude them if a relative path or package name isn't worth checking.
+- **Regular expressions aren't spell checked by default.** A regex pattern isn't prose, so these are tagged
+  `code`, like the rest of the code:
+  - regex literals, such as `/pattern/flags`
+  - the pattern and flags passed to `RegExp(...)` or `new RegExp(...)`
+
+  A comment inside a `RegExp(...)` call is still checked. To check regular expressions too, turn on the
+  [`code` tag](#the-code-tag).
+
+- **Module specifiers are spell checked by default, but can be filtered out.** The path or package name in
+  each of these is tagged `module`, `module.specifier`, and `module.specifier.literal`, as well as with its
+  usual string tags:
+  - `import x from './mod.js'`
+  - `import './side-effect.js'`
+  - `export { x } from './mod.js'`
+  - `import('./mod.js')`
+  - `require('./mod.js')`
+
+  To skip them, for example when relative paths and package names aren't worth checking:
+
+  ```js
+  customizePlugin({ tags: { 'module.specifier': false } });
+  ```
 
 ## Customization options
 
