@@ -261,12 +261,12 @@ describe('IPluginBuilder', () => {
 });
 
 describe('filterTagsForFileType', () => {
-  it('moves the file type to a filtered copy of the parser that handles it', () => {
+  it('appends a filtered copy that wins the file type, leaving existing parsers unchanged', () => {
     const plugin = mkPlugin();
     const b = plugin.customize().filterTagsForFileType('typescript', { '*': false, comment: true }, 'ts-comments');
 
     expect(b.parserNames()).toEqual(['typescript', 'php', 'ts-comments']);
-    expect(b.getParser('typescript').supportedFileTypes).toEqual(['javascript']);
+    expect(b.getParser('typescript')).toBe(plugin.getParser('typescript'));
     expect(b.getParser('ts-comments').supportedFileTypes).toEqual(['typescript']);
     expect(texts(b.getParser('ts-comments'))).toEqual(['comment']);
     expect(texts(b.getParser('typescript'))).toEqual(['comment', 'string']);
@@ -276,16 +276,19 @@ describe('filterTagsForFileType', () => {
       { languageId: 'php', parser: 'php' },
       { languageId: 'typescript', parser: 'ts-comments' },
     ]);
+    // The original still covers the file type, e.g. for use under overrides.
+    expect(b.languageSettingsFor('typescript', b.getParser('typescript').supportedFileTypes)).toEqual([
+      { languageId: 'javascript,typescript', parser: 'typescript' },
+    ]);
   });
 
-  it('copies the last parser that lists the file type, and removes it only from that parser', () => {
+  it('copies the last parser that lists the file type', () => {
     const b = mkPlugin()
       .customize()
       .duplicateParser('typescript', 'copy')
       .filterTagsForFileType('typescript', { '*': false, string: true }, 'ts-strings');
 
-    expect(b.parserNamesFor('typescript')).toEqual(['typescript', 'ts-strings']);
-    expect(b.getParser('copy').supportedFileTypes).toEqual(['javascript']);
+    expect(b.parserNamesFor('typescript')).toEqual(['typescript', 'copy', 'ts-strings']);
     expect(b.languageSettingsForFileType('typescript')).toEqual([{ languageId: 'typescript', parser: 'ts-strings' }]);
     expect(texts(b.getParser('ts-strings'))).toEqual(['string']);
   });

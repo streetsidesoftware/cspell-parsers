@@ -231,10 +231,7 @@ class PluginBuilder extends PluginExQueries implements IPluginBuilder {
     }
     const source = this.parserNamesFor(fileType).at(-1);
     if (source === undefined) throw unknownFileTypesError(this.name, this.supportedFileTypes, [fileType], '');
-    return this.duplicateParser(source, newName)
-      .setFileTypes(newName, [fileType])
-      .filterTags(newName, options)
-      .removeFileTypes(source, [fileType]);
+    return this.duplicateParser(source, newName).setFileTypes(newName, [fileType]).filterTags(newName, options);
   }
 
   build(): IPluginEx {

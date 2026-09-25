@@ -255,8 +255,8 @@ export interface IPluginBuilder extends IPluginExBase {
   filterTags(target: ParserTarget, options: TagFilterOptions): this;
   /**
    * Gives `fileType` its own parser, named `newName` and filtered by `options`.
-   * The copy is made from the parser that currently handles `fileType`, and appended.
-   * The file type moves to the copy, and is removed from the parser it was copied from.
+   * The copy is made from the parser that currently handles `fileType`, and appended, so it wins `fileType`.
+   * Existing parsers aren't changed.
    * Throws if no parser lists `fileType`, or for `'*'`.
    * See docs/ADRs/plugin-customization/0010-filter-tags-for-file-type.md.
    */
