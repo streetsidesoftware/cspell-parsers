@@ -8,14 +8,11 @@ file only covers what's specific to this package's parsing logic.
 ## Shape of the parser
 
 This parser is a single hand-written scanner (`Scanner`, a small stateful class holding a mutable cursor `i`
-over `content`) - no AST, no tokenizer. `run` walks `content` character by character, emitting only comments,
-character/string literals, and text blocks; everything else (identifiers, keywords, punctuation, numbers) is
-simply never emitted, not filtered out afterward.
-
-This package started as the Java slice of `@cspell/parser-strings-comments`, a single scanner that also
-covered C, C++, C#, Go, JS/TS, and PHP via a `Dialect` union type. Splitting Java out into its own package
-removes every `if (dialect === ...)` branch that combined scanner needed - this package only ever handles
-one syntax, so `run` has no dialect checks at all.
+over `content`). There's no AST and no tokenizer for the language as a whole - `Scanner.run` walks `content`
+character by character, recognizing only the handful of constructs that matter (comments and strings).
+Everything between them (identifiers, keywords, punctuation, numbers) is emitted as a `code` segment. `code`
+is `false` in `tags`, so the default filter built by `createPluginParserWithFilterTags` drops it, and a user
+can turn it back on with `customizePlugin`.
 
 Unlike the JS/TS-family split (`@cspell/parser-typescript-strings-comments`), Java has none of the
 ambiguities that make that scanner's `scanCode` recursive: there's no string interpolation, so nothing needs
@@ -89,5 +86,5 @@ per segment. See `README.md`'s [Tags](README.md#tags) table for what each one me
 - `samples/` is a real, separate end-to-end check: actual cspell configs plus real source files, run for real
   by `pnpm run test:cspell` (`cspell .` from the package root). `samples/customize` in particular proves the
   `customizePlugin` tag filter is doing something real (a genuine misspelling in a segment the filter
-  excludes) - sanity-checked by temporarily swapping in the plain `plugin` and confirming `cspell .` actually
-  fails without the filter before restoring it, the way `packages/parser-typescript/samples/customize` does.
+  excludes). Check it both ways: run cspell with the sample's config and with `plugin.defineConfig()`, each with
+  `--no-config-search`, so the sample's own config doesn't apply to both runs.
