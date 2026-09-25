@@ -5,7 +5,7 @@ import { plugin as pluginGoEx } from '@cspell/parser-go-strings-comments/plugin'
 import { plugin as pluginJavaEx } from '@cspell/parser-java-strings-comments/plugin';
 import { plugin as pluginPhpEx } from '@cspell/parser-php-strings-comments/plugin';
 import { plugin as pluginPythonEx } from '@cspell/parser-python-strings-comments/plugin';
-import { plugin as pluginRuby } from '@cspell/parser-ruby-strings-comments/plugin';
+import { plugin as pluginRubyEx } from '@cspell/parser-ruby-strings-comments/plugin';
 import { plugin as pluginRust } from '@cspell/parser-rust-strings-comments/plugin';
 import { plugin as pluginTypescriptEx } from '@cspell/parser-typescript-strings-comments/plugin';
 import type { CustomizePluginOptions, IPlugin, RecommendedLanguageSettings } from '@internal/utils';
@@ -20,6 +20,7 @@ const pluginGo = toLegacyPlugin(pluginGoEx);
 const pluginJava = toLegacyPlugin(pluginJavaEx);
 const pluginPhp = toLegacyPlugin(pluginPhpEx);
 const pluginPython = toLegacyPlugin(pluginPythonEx);
+const pluginRuby = toLegacyPlugin(pluginRubyEx);
 const pluginTypescript = toLegacyPlugin(pluginTypescriptEx);
 
 const allPlugins = [
