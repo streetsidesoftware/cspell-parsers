@@ -202,7 +202,7 @@ the parser gives each part. The filter applies to every parser in the plugin.
 You can keep adjusting the plugin it returns. For example, to give the parser a different name:
 
 ```js
-customizePlugin({ tags: { '*': false, comment: true } }).renameParser('typescript-strings-comments', 'my-parser');
+customizePlugin().renameParser('typescript-strings-comments', 'my-parser');
 ```
 
 ### `CustomizePluginOptions`

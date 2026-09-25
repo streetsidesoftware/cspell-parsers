@@ -86,7 +86,7 @@ Calling `customizePlugin` gives you a customized copy of the plugin. You can add
 away, or keep adjusting it first. For example, to give the parser a different name:
 
 ```js
-customizePlugin({ tags: { '*': false, comment: true } }).renameParser('c-style-comments', 'c-comments-only');
+customizePlugin().renameParser('c-style-comments', 'my-c-parser');
 ```
 
 ## Checking code
