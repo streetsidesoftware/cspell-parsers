@@ -58,5 +58,6 @@ export default customizePlugin()
 
 - "A different filter for these file types" is one call, and the examples keep their intent.
 - The source is resolved when the method is called. Later reordering or `addParser` doesn't change it.
-- The other parsers keep their other file types. A parser left with no file types stays in the plugin, as in 0003.
+- The other parsers keep their other file types. A parser left with no file types stays in the plugin, as
+  in 0003.
 - The file types can't be spread across parsers in one call. Call the method once per source parser.
