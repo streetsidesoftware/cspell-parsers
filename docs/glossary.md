@@ -23,6 +23,15 @@ AST walk through it) alike — so gap-filling semantics are identical everywhere
 reimplementing its own copy. Established in
 [code-tag-rollout/0004](./ADRs/code-tag-rollout/0004-shared-code-tags-emitter.md).
 
+## `IParserEx`
+
+The read-only parser type: `name`, `parse` (filtered, what cspell calls), `_parse` (unfiltered),
+`supportedFileTypes`, and `tags`. It has no customization methods. It lives alongside today's `IParser`
+while packages migrate. Established in
+[plugin-customization/0017](./ADRs/plugin-customization/0017-parser-is-read-only.md),
+[0020](./ADRs/plugin-customization/0020-parser-exposes-unfiltered-parse.md), and
+[0022](./ADRs/plugin-customization/0022-remove-and-add-parser.md).
+
 ## `IPluginBuilder`
 
 The mutable object returned by `IPluginEx.customize()`. Its customization methods (duplicate, rename,
