@@ -417,6 +417,25 @@ describe('one parser per file type', () => {
     expect(find(parsedTexts, 'hello world').tags).toEqual({ jsx: true, 'jsx.text': true });
   });
 
+  describe('HTML character references in JSX text', () => {
+    const content = 'const x = <p>Caf&eacute; na&#239;ve &#x2014; &amp; &bogus; text</p>;\n';
+    const jsxTexts = parseWith('typescriptreact', content, 'file.tsx').filter((p) => p.tags?.jsx);
+
+    it('joins the run into one segment, decoding named, decimal, and hex references', () => {
+      expect(jsxTexts.map((p) => p.text)).toEqual(['Café naïve — & &bogus; text']);
+    });
+
+    it('keeps the raw source in rawText and range', () => {
+      const [text] = jsxTexts;
+      expect(text?.rawText).toBe('Caf&eacute; na&#239;ve &#x2014; &amp; &bogus; text');
+      expect(text && content.slice(...text.range)).toBe(text?.rawText);
+    });
+
+    it('maps each decoded reference back to its raw source', () => {
+      expect(jsxTexts[0]?.map).toEqual([3, 3, 8, 1, 3, 3, 6, 1, 3, 3, 8, 1, 1, 1, 5, 1, 1, 1, 7, 7, 5, 5]);
+    });
+  });
+
   it('picks the grammar from the parser, not the filename', () => {
     const content = readFixture('jsx.tsx');
     // The typescriptreact parser reads JSX even when the file is named .ts.

@@ -153,6 +153,12 @@ needs.
 
 <!--- @@inject-end: docs/tags-table.csv#markdown --->
 
+In JSX text, character references are decoded, so `Caf&eacute;` is checked as `Café`. This covers the named
+references JSX supports, as well as decimal (`&#233;`) and hex (`&#xE9;`) references. An unknown reference,
+such as `&bogus;`, is left as it is.
+
+<!--- Tested by ../parser-typescript-tree-sitter-wasm/src/parsers.test.ts: "joins the run into one segment, decoding named, decimal, and hex references" --->
+
 ### The `code` tag
 
 By default, keywords, punctuation, numbers, and everything else tagged `code` aren't spell checked. To check

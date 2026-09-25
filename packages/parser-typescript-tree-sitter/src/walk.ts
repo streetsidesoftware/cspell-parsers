@@ -1,6 +1,6 @@
 import type { ParsedText } from '@cspell/cspell-types/Parser';
 import type { StringPart } from '@internal/utils';
-import { createCodeTagsEmitter, decodeStringParts, stripCommentMarkers } from '@internal/utils';
+import { createCodeTagsEmitter, decodeHtmlTextParts, decodeStringParts, stripCommentMarkers } from '@internal/utils';
 import TreeSitterParser from 'tree-sitter';
 import JavaScriptLanguage from 'tree-sitter-javascript';
 import TypeScriptLanguages from 'tree-sitter-typescript';
@@ -364,6 +364,41 @@ function childrenToStringParts(children: readonly SyntaxNode[]): StringPart[] {
 }
 
 /**
+ * Walks a JSX element's children.
+ * Each run of text and character references (`Caf&eacute;`) becomes one `jsx.text` segment, with the references decoded.
+ */
+function* walkJsxElement(
+  node: SyntaxNode,
+  bindingScope: BindingScope | undefined,
+  imports: ImportBindings,
+): Generator<ParsedText> {
+  let run: SyntaxNode[] = [];
+  for (const child of node.namedChildren) {
+    if (child.type === 'jsx_text' || child.type === 'html_character_reference') {
+      run.push(child);
+      continue;
+    }
+    const text = makeJsxTextRun(run);
+    if (text) yield text;
+    run = [];
+    yield* walk(child, bindingScope, imports);
+  }
+  const text = makeJsxTextRun(run);
+  if (text) yield text;
+}
+
+function makeJsxTextRun(nodes: readonly SyntaxNode[]): ParsedText | undefined {
+  const first = nodes[0];
+  const last = nodes[nodes.length - 1];
+  if (!first || !last) return undefined;
+  const parts = nodes.map((n) => ({ text: n.text, isCharacterReference: n.type === 'html_character_reference' }));
+  const { text, map } = decodeHtmlTextParts(parts);
+  if (!text.trim()) return undefined;
+  const rawText = parts.map((part) => part.text).join('');
+  return { text, rawText, map, range: [first.startIndex, last.endIndex], tags: TAGS.JSX_TEXT };
+}
+
+/**
  * Walks the AST, yielding a `ParsedText` per spell-checkable leaf (identifiers, string/template
  * contents, comments). `imports` excludes names/properties from outside this file; `bindingScope`
  * overrides that where a local declaration shadows an import (see `BindingScope`).
@@ -404,6 +439,9 @@ function* walk(
       if (run) yield run;
       return;
     }
+    case 'jsx_element':
+      yield* walkJsxElement(node, bindingScope, imports);
+      return;
     case 'jsx_text':
       if (node.text.trim()) yield makeText(node, TAGS.JSX_TEXT);
       return;
