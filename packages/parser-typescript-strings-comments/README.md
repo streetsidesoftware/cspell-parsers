@@ -76,9 +76,9 @@ export default {
 
 **NOTE:**
 
-> `tags` keys are matched hierarchically against the [tags](#tags) below.
+> Keys in `tags` are matched hierarchically against the [tags](#tags) below.
 
-`customizePlugin` and `plugin.customize()` give you a customized copy of the plugin. You can add it to
+Both `customizePlugin` and `plugin.customize()` give you a customized copy of the plugin. You can add it to
 `plugins` straight away, or keep adjusting it first. For example, this config checks TypeScript files as
 usual, but checks only the comments in JavaScript files:
 
@@ -114,7 +114,7 @@ export default {
 > In a cspell config, `languageSettings` chooses a parser for each file type by the parser's name. The example
 > keeps the original `typescript-strings-comments` parser for TypeScript files, and adds a copy named
 > `js-comments-only` for JavaScript files. Because the two parsers have different names, each file type can be
-> sent to the right one. `customPlugin.languageSettings()` writes those entries for you.
+> sent to the right one. Calling `customPlugin.languageSettings()` writes those entries for you.
 >
 > Every parser in a plugin needs its own name, so `duplicateParser` and `renameParser` always ask you for the
 > new one. Using a name that's already taken is an error, reported when cspell loads your config.
@@ -182,8 +182,8 @@ export default {
 
 ## Customization options
 
-`customizePlugin(options)` controls which parts of a file get spell checked, based on the [tags](#tags) the
-parser gives each part. The filter applies to every parser in the plugin.
+Use `customizePlugin(options)` to control which parts of a file get spell checked, based on the [tags](#tags)
+the parser gives each part. The filter applies to every parser in the plugin.
 
 You can keep adjusting the plugin it returns. For example, to give the parser a different name:
 
@@ -202,8 +202,8 @@ interface CustomizePluginOptions {
 }
 ```
 
-`customizePlugin` used to take a `name` option to rename the parser. It still works, but it's deprecated and
-will be removed in a future release. Use `renameParser` instead, as shown above.
+Earlier versions of `customizePlugin` took a `name` option to rename the parser. It still works, but it's
+deprecated and will be removed in a future release. Use `renameParser` instead, as shown above.
 
 ### Examples
 
@@ -233,7 +233,7 @@ const option = { tags: { 'module.specifier': false } };
 
 ### `TagFilterOptions`
 
-`TagFilterOptions` are used to set the filter criteria for the text sent to the spell checker.
+Use `TagFilterOptions` to set the filter criteria for the text sent to the spell checker.
 
 The values are inherited hierarchically
 
