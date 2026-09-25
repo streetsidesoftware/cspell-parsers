@@ -36,6 +36,14 @@ Once you're done making changes, run `pnpm lint` from the repo root — it auto-
 After pushing more commits to an already-open PR, re-check that its body still matches — see CONTRIBUTING.md's
 "Commits & pull requests" section for what the body should contain.
 
+## Design principles
+
+An operation changes only what its caller targets or names. Don't add hidden side effects to avoid repetition
+or to keep data normalized. A convenience method is built from the explicit steps a user would write, minus any
+step that touches something the user didn't name. Where that leaves overlap, rely on order (for example, the
+last parser wins) rather than changing other entries. See
+`docs/ADRs/plugin-customization/0001-design-principles.md`.
+
 ## Code style
 
 Use explicit escape sequences (e.g. `\u2028`, `\u2029`) rather than literal invisible/non-printing

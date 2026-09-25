@@ -84,6 +84,8 @@ What users can rely on:
   type: it appends a filtered copy of the parser that handles it, and leaves existing parsers unchanged.
 - **Users name every parser.** Nothing generates a name. `duplicateParser` and `addParser(parser, asName?)`
   append to the end, and `renameParser` keeps the parser's position.
+- **No hidden side effects.** A method changes only the parsers it names. Where a new parser overlaps an
+  existing one, the later parser wins, and the existing one stays as it was.
 - **Mistakes throw when the config loads.** A name that's already taken or doesn't exist is an error,
   and cspell reports it as a configuration error.
 - **Tag filters never chain.** `filterTags` replaces a parser's filter, and every filter is compiled

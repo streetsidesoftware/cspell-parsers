@@ -9,6 +9,8 @@ control what gets spell checked. Start with the
 [plugin author guide](docs/guides/plugin-author-guide.md). It explains how cspell uses plugins and
 parsers, and how to write one here.
 
+- **No hidden side effects:** an operation changes only what its caller targets or names, even if that means
+  some repetition.
 - **Set up:** `pnpm install`, then `pnpm run build` and `pnpm test`.
 - **Add a parser:** copy `packages/parser-typescript-strings-comments` (the full template) and follow the guide.
 - **Before a PR:** `pnpm run build`, `pnpm run typecheck`, `pnpm run lint` (auto-fixes), `pnpm test`. CI runs
