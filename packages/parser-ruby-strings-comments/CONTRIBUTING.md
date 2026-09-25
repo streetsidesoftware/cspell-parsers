@@ -10,12 +10,13 @@ file only covers what's specific to this package's parsing logic.
 This parser is a single hand-written scanner (`Scanner`, a small stateful class holding a mutable cursor `i`
 over `content`). There's no AST and no tokenizer for the language as a whole - `Scanner.scanCode` walks
 `content` character by character, recognizing comments, strings, heredocs, backtick command strings, regex
-literals, and percent-literals. The `run` method wraps it with `createCodeTagsEmitter`, which emits everything
-else (identifiers, keywords, punctuation, numbers, symbols, char literals) as a `code` segment. `code` is
-`false` in `tags`, so the default filter built by `createPluginParserWithFilterTags` drops it, and a user can
-turn it back on with `customizePlugin`. Regex and percent-literals are recognized but not emitted as their own
-segments, so their text stays in the surrounding `code` segment - see "Regex, percent-literals, division,
-modulo, and char-literal-vs-ternary" below for why recognizing them is load-bearing, not just a scope choice.
+literals, percent-literals, and the `?'`, `?"`, and `?#` char literals. The `run` method wraps it with
+`createCodeTagsEmitter`, which emits everything else (identifiers, keywords, punctuation, numbers, symbols,
+other char literals) as a `code` segment. `code` is `false` in `tags`, so the default filter built by
+`createPluginParserWithFilterTags` drops it, and a user can turn it back on with `customizePlugin`. Regex
+literals, percent-literals, and those char literals are recognized but not emitted as their own segments, so
+their text stays in the surrounding `code` segment - see "Regex, percent-literals, division, modulo, and
+char-literal-vs-ternary" below for why recognizing them is load-bearing, not just a scope choice.
 
 ### `scanCode`'s one exit condition
 
