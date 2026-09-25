@@ -25,5 +25,6 @@ until every package has migrated.
 
 - A plugin can be assembled from scratch: `plugin.customize().removeParser('*').addParser(…)`.
 - `addParser` works with parsers from any package, because the builder only needs the parser's public
-  `_parse` and `tags`.
-- Still to decide: whether an added parser keeps the filter it had in its source plugin.
+  data.
+- An added parser keeps the filter it had in its source plugin
+  ([0023](./0023-parser-carries-filter-and-get-parser.md)).
