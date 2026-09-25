@@ -8,16 +8,17 @@ file only covers what's specific to this package's parsing logic.
 ## Shape of the parser
 
 This parser is a single hand-written scanner (`Scanner`, a small stateful class holding a mutable cursor `i`
-over `content`). There's no AST and no tokenizer for the language as a whole - `Scanner.run` walks `content`
-character by character, recognizing only the handful of constructs that matter (comments and strings).
-Everything between them (identifiers, keywords, punctuation, numbers) is emitted as a `code` segment. `code`
-is `false` in `tags`, so the default filter built by `createPluginParserWithFilterTags` drops it, and a user
-can turn it back on with `customizePlugin`.
+over `content`). There's no AST and no tokenizer for the language as a whole - `Scanner.scanTagged` walks
+`content` character by character, recognizing only the handful of constructs that matter (comments and
+strings). The `run` method wraps it with `createCodeTagsEmitter`, which emits everything between them
+(identifiers, keywords, punctuation, numbers) as a `code` segment. `code` is `false` in `tags`, so the default
+filter built by `createPluginParserWithFilterTags` drops it, and a user can turn it back on with
+`customizePlugin`.
 
 Unlike the JS/TS-family split (`@cspell/parser-typescript-strings-comments`), Java has none of the
 ambiguities that make that scanner's `scanCode` recursive: there's no string interpolation, so nothing needs
 to recurse back into "ordinary code" mid-literal, and there's no regex-literal-vs-division ambiguity to
-resolve. `run` is therefore a single flat loop over the whole file with no `end`/`stopAtUnmatchedBrace`
+resolve. `scanTagged` is therefore a single flat loop over the whole file with no `end`/`stopAtUnmatchedBrace`
 parameters, and every scan method (`scanLineComment`, `scanBlockComment`, `scanQuotedString`,
 `scanJavaTextBlock`) returns exactly one `ParsedText` directly - there's no `emitFragment`-style generator
 here, since nothing ever needs to split a single literal into more than one segment.
