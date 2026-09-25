@@ -89,9 +89,6 @@ away, or keep adjusting it first. For example, to give the parser a different na
 customizePlugin({ tags: { '*': false, comment: true } }).renameParser('c-style-comments', 'c-comments-only');
 ```
 
-Earlier versions of `customizePlugin` took a `name` option to rename the parser. It still works, but it's
-deprecated and will be removed in a future release. Use `renameParser` instead.
-
 ## Checking code
 
 Everything that isn't a comment, including string literals, is tagged `code` and is off by default. To check

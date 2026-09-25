@@ -213,9 +213,6 @@ interface CustomizePluginOptions {
 }
 ```
 
-Earlier versions of `customizePlugin` took a `name` option to rename the parser. It still works, but it's
-deprecated and will be removed in a future release. Use `renameParser` instead, as shown above.
-
 ### Examples
 
 **Everything including `code`**
