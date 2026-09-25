@@ -7,14 +7,13 @@ Status: Accepted
 A common request is a different filter for some file types, such as "only doc comments in TypeScript
 files". cspell never tells a parser which file type it's parsing ([0001](./0001-design-principles.md)), so
 this always needs a separate parser, with its own name, selected for those file types. The builder can
-already express it, but it takes four calls:
+already express it, but it takes three calls and the source parser's name:
 
 ```ts
 plugin
   .customize()
   .duplicateParser('typescript-strings-comments', 'ts-doc-comments')
   .setFileTypes('ts-doc-comments', ['typescript'])
-  .removeFileTypes('typescript-strings-comments', ['typescript'])
   .filterTags('ts-doc-comments', { '*': false, 'comment.block.doc': true });
 ```
 
@@ -46,10 +45,11 @@ export default customizePlugin()
 - **One file type per call.** A list was rejected: file types handled by different parsers would need
   several copies under one name, and the rule for that is harder to explain than a second call.
 - **The user names the copy.** `newName` is required, and a taken name throws, as in 0005.
-- **The file type moves.** The copy lists only that file type, and it's removed from the source parser. It's
-  exactly what a user would write: `duplicateParser`, `setFileTypes` on the copy, `filterTags`, and
-  `removeFileTypes` on the source. An earlier parser that also lists the file type keeps it, and the copy
-  wins it by coming later.
+- **It only adds a parser.** It's exactly what a user would write: `duplicateParser`, then `setFileTypes` and
+  `filterTags` on the copy. The copy lists only that file type and wins it by coming last. Existing parsers
+  aren't changed. Removing the file type from the source was rejected: it changes a parser the user didn't
+  name, so `languageSettingsFor(sourceName)`, used under `overrides` for example, would silently stop
+  covering that file type.
 - **The filter replaces, never chains.** `options` replaces the copied filter, as in
   [0006](./0006-tag-filtering.md).
 - **The copy is appended.** Like `duplicateParser`, it goes to the end of the list.
@@ -60,7 +60,8 @@ export default customizePlugin()
 
 - "A different filter for this file type" is one call, and the examples keep their intent.
 - The source is resolved when the method is called. Later reordering or `addParser` doesn't change it.
-- The source keeps its other file types. A parser left with no file types stays in the plugin, as in 0003.
+- `parserNamesFor(fileType)` lists both the source and the copy, and the last one is selected, as after a
+  plain `duplicateParser`.
+- Removing the copy later hands the file type back to the source.
 - Giving several file types one filter takes a call per file type, each with its own name, or one call
-  followed by `addFileTypes` on the copy. With `addFileTypes`, the added file types stay on the original
-  parser too, and the copy wins them only by coming later.
+  followed by `addFileTypes` on the copy. Either way the copies win by coming last.
