@@ -17,13 +17,15 @@ renaming, duplicating, tag-filtering, and adjusting the file types of its parser
 | 0006 | The user names every parser a customization creates                             | Accepted |
 | 0007 | Plugins generate `languageSettings` through helper methods                      | Accepted |
 | 0008 | Methods take the target parser as a required first argument, with `'*'` for all | Accepted |
+| 0009 | A duplicate or rename that reuses an existing parser name throws                | Accepted |
 
 ## Open questions
 
-- **Name collisions** from a user's rename or duplicate. Deferred until the user scenarios are settled, then
-  to be checked against the rules. Plugin authors must not ship two parsers with the same name. The open
-  question is only about what happens when a user's customization would create a collision.
+- **Name collisions** were settled by [0009](./0009-name-collision-throws.md).
 - **Parser selection** was settled by [0008](./0008-parser-selector-argument.md).
+
+- **Errors in the VS Code extension.** Does a config that throws show the error to the user, or should the
+  plugin also `console.error`? See [0009](./0009-name-collision-throws.md).
 
 ## Deliverables
 
