@@ -76,9 +76,9 @@ export default {
 
 **NOTE:**
 
-> Keys in `tags` are matched hierarchically against the [tags](#tags) below.
+> Keys in `tags` are used to filter the text sent to the spell checker. They are matched hierarchically against the [tags](#tags) below.
 
-Both `customizePlugin` and `plugin.customize()` give you a customized copy of the plugin. You can add it to
+Both `customizePlugin` and `plugin.customize()` (example below) give you a customized copy of the plugin. You can add it to
 `plugins` straight away, or keep adjusting it first. For example, this config checks TypeScript files as
 usual, but checks only the comments in JavaScript files:
 
@@ -109,15 +109,15 @@ export default {
 > `comment.block.doc`, unless a more specific key overrides it. See: [`CustomizePluginOptions`](#customizepluginoptions)
 > and [`TagFilterOptions`](#tagfilteroptions) below.
 
-**Why the new name?**
+**What is `js-comments-only`?**
 
+> Every parser in a plugin needs its own name, so `duplicateParser` and `renameParser` always ask you for the
+> new one. Using a name that's already taken is an error, reported when cspell loads your config.
+>
 > In a cspell config, `languageSettings` chooses a parser for each file type by the parser's name. The example
 > keeps the original `typescript-strings-comments` parser for TypeScript files, and adds a copy named
 > `js-comments-only` for JavaScript files. Because the two parsers have different names, each file type can be
 > sent to the right one. Calling `customPlugin.languageSettings()` writes those entries for you.
->
-> Every parser in a plugin needs its own name, so `duplicateParser` and `renameParser` always ask you for the
-> new one. Using a name that's already taken is an error, reported when cspell loads your config.
 
 ## Tags
 
@@ -235,11 +235,11 @@ const option = { tags: { 'module.specifier': false } };
 
 Use `TagFilterOptions` to set the filter criteria for the text sent to the spell checker.
 
-The values are inherited hierarchically
+The values are inherited hierarchically:
 
-- `comment: false` also implies `comment.line` is `false` unless overwritten by `'comment.line': true`
+- `comment: false` also implies `comment.line` is `false` unless overridden by `'comment.line': true`
 
-Wildcards
+Wildcards:
 
 - `*` wildcards are weak matches. A more specific match will win.
 
