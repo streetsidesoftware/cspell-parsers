@@ -32,6 +32,14 @@ describe('customizePlugin', () => {
     }
   });
 
+  it('checks JSX text by default, and skips it with jsx.text: false', () => {
+    const source = 'const App = () => <p>hello world</p>;\n';
+    const skipped = customizePlugin({ tags: { 'jsx.text': false } }).getParser('javascriptreact');
+
+    expect(texts('javascriptreact', source)).toContain('hello world');
+    expect([...skipped.parse(source, 'example.jsx').parsedTexts].map((p) => p.text)).not.toContain('hello world');
+  });
+
   it('keeps the catch-all `code` segments when they are explicitly included', () => {
     const customized = customizePlugin({ tags: { '*': true, comment: false } });
     const parsedTexts = [...customized.getParser('typescript').parse(content, 'example.ts').parsedTexts];
