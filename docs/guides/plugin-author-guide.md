@@ -50,12 +50,13 @@ Each exported `IPluginEx` has read-only helpers only:
 | `languageSettingsFor(name, fileTypes?)` | Entries mapping `fileTypes` (default: the parser's own) to the named parser                        |
 | `languageSettingsForFileType(fileType)` | Entries for only the given file types (throws if no parser lists one)                              |
 | `customize(name?)`                      | A new `IPluginBuilder`, optionally with a new plugin name                                          |
+| `defineConfig(settings?)`               | `settings` with the plugin and its `languageSettings` merged in; the user's own entries win        |
 
 ## What users do with a plugin
 
 A user customizes a plugin through the builder that `customize()` returns. Each method changes the
 builder and returns it. The builder works directly as a plugin, and `build()` takes an immutable
-snapshot.
+snapshot. Calling `defineConfig()` on it gives a complete config.
 
 **`cspell.config.mjs`**
 
@@ -69,10 +70,11 @@ const custom = plugin
   .setFileTypes('js-comments', ['javascript', 'javascriptreact'])
   .filterTags('js-comments', { '*': false, comment: true });
 
-export default defineConfig({
-  plugins: [custom],
-  languageSettings: [...custom.languageSettings(), ...custom.languageSettingsFor('typescript', ['astro'])],
-});
+export default defineConfig(
+  custom.defineConfig({
+    languageSettings: custom.languageSettingsFor('typescript', ['astro']),
+  }),
+);
 ```
 
 What users can rely on:
@@ -107,6 +109,6 @@ What users can rely on:
 
 - `plugin.ts` exports the `IPluginEx`, and `customizePlugin(options?)`, a thin wrapper that returns
   `plugin.customize()` with `options.tags` applied to every parser.
-- `recommended.ts` uses the plugin's `languageSettings()`, so it always agrees with the parsers.
+- `recommended.ts` exports `plugin.defineConfig()`, so it always agrees with the parsers.
 - The README documents every tag in a `Tag` / `Meaning` table and shows a short "Filtering by tag"
   example. See `CONTRIBUTING.md`'s "Adding a new parser package" for the full package shape.
