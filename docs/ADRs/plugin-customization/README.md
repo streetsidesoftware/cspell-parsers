@@ -15,6 +15,7 @@ renaming, duplicating, tag-filtering, and adjusting the file types of its parser
 | 0004 | Users customize a plugin through chained, immutable methods           | Accepted |
 | 0005 | Design from the plugin user's perspective, within cspell's rules      | Accepted |
 | 0006 | The user names every parser a customization creates                   | Accepted |
+| 0007 | Plugins generate `languageSettings` through helper methods            | Accepted |
 
 ## Open questions
 
@@ -22,7 +23,8 @@ renaming, duplicating, tag-filtering, and adjusting the file types of its parser
   to be checked against the rules. Plugin authors must not ship two parsers with the same name. The open
   question is only about what happens when a user's customization would create a collision.
 - **Parser selection.** A scoping `select()` step was rejected because it isn't obvious that it works on a
-  subset. Whether methods take a parser name only, or also a selector (several names, `'*'`, a file type), is still open.
+  subset. Whether methods take a parser name only, or also a selector (several names, `'*'`, a file
+  type), is still open.
 
 ## Deliverables
 
