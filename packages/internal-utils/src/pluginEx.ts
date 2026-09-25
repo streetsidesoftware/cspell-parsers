@@ -133,6 +133,7 @@ class PluginEx extends PluginExQueries implements IPluginEx {
 
 class PluginBuilder extends PluginExQueries implements IPluginBuilder {
   #name: string;
+  /** An array, not a Map: order picks the recommended parser, and a rename must keep its position. */
   #defs: ParserDef[];
 
   constructor(name: string, defs: readonly ParserDef[]) {
