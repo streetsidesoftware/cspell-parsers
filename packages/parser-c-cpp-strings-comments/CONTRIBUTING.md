@@ -15,17 +15,9 @@ steps.
 This parser is a single hand-written scanner (`Scanner`, a small stateful class holding a mutable cursor `i`
 over `content`). There's no AST and no tokenizer for the language as a whole - `Scanner.run` walks `content`
 character by character, recognizing only the handful of constructs that matter (comments, string/char
-literals, and C++ raw strings) and silently advancing `i` past everything else (identifiers, keywords,
-punctuation, numbers, preprocessor directives). Since cspell only ever checks what's inside `parsedTexts`,
-this is how the parser excludes syntax noise: by never emitting it, not by filtering it out afterwards -
-the same approach `@cspell/parser-example` uses.
-
-This package started as the C/C++ slice of `@cspell/parser-strings-comments`, a single scanner that also
-covered C#, Go, Java, JS/TS, and PHP. Splitting each language family into its own package removes the
-`Dialect` branching that combined scanner needed everywhere (`if (dialect === 'php') ...`, `if (dialect ===
-'csharp') ...`) - since this package only ever handles one syntax, there's no dialect type or detection at
-all, and no interpolation/template-literal handling either (C/C++ strings never split into fragments), which
-is most of why this scanner is much smaller than the combined one.
+literals, and C++ raw strings). Everything between them (identifiers, keywords, punctuation, numbers,
+preprocessor directives) is emitted as a `code` segment. `code` is `false` in `tags`, so the default filter
+built by `createPluginParserWithFilterTags` drops it, and a user can turn it back on with `customizePlugin`.
 
 ### No `emitFragment`/multi-yield helper is needed
 
@@ -111,5 +103,5 @@ any extension-based dialect detection at all.
 - `samples/` is a real, separate end-to-end check: actual cspell configs plus real source files, run for real
   by `pnpm run test:cspell` (`cspell .` from the package root). `samples/customize` in particular proves the
   `customizePlugin` tag filter is doing something real (a genuine misspelling in a segment the filter
-  excludes) - sanity-checked by temporarily swapping in the plain `plugin` and confirming `cspell .` actually
-  fails without the filter before restoring it, the way `packages/parser-typescript/samples/customize` does.
+  excludes). Check it both ways: run cspell with the sample's config and with `plugin.defineConfig()`, each with
+  `--no-config-search`, so the sample's own config doesn't apply to both runs.
