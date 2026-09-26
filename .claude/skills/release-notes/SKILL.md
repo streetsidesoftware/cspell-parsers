@@ -36,14 +36,17 @@ section. (`perf`/`revert` are also visible, but rare enough that they're not a t
 Fetch the release PR's body (`gh pr view <N> --json body --jq .body`) — it's a flat changelog grouped by those
 section headings, each line linking back to its source PR. Read CONTRIBUTING.md's "Commits & pull requests"
 section for the current type definitions: `feat`/`fix` are reserved for changes to a published package's
-actual behavior (parsing logic, exported API, `README.md` content a consumer relies on); everything else
-(repo tooling, `.claude/` skills/config, CI, lint/format config, internal restructuring, non-README docs) is
+actual behavior (parsing logic, exported API, `README.md` content a consumer relies on). Of those, `feat` is
+only for a new capability, something a consumer can do that they couldn't before; every other behavior change,
+including removals, renames, and API migrations, is `fix`. Everything else (repo tooling, `.claude/`
+skills/config, CI, lint/format config, internal restructuring, non-README docs) is
 `chore`/`refactor`/`docs`/`test`/`ci`.
 
 For each line under Features or Updates and Bug Fixes, judge from its description whether it plausibly changes
-behavior a package consumer would notice. The recurring false positives are exactly what prompted this skill:
-adding internal tooling (a Claude Code skill, a lint ignore rule) tagged `fix:` because it was "a small change,"
-when it never touched a published package.
+behavior a package consumer would notice. For each line under Features, also judge whether it's a new
+capability; if it only changes or removes existing behavior, it belongs under Bug Fixes as `fix:`. The
+recurring false positives are exactly what prompted this skill: adding internal tooling (a Claude Code skill,
+a lint ignore rule) tagged `fix:` because it was "a small change," when it never touched a published package.
 
 Present the flagged entries with your reasoning and PR numbers, and get the user's confirmation on which (if any) to correct before touching anything. This judgment is a heuristic reading of a one-line summary, not a diff review — a human call is the right gate here, not an automatic edit.
 
