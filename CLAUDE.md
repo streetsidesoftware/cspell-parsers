@@ -138,6 +138,10 @@ settings include the right `languageSettings`).
 See `docs/build-and-packaging.md` for `fixtures/`, `samples/`, `@internal/utils`, bundled types, dist size,
 and the `package.json` fields `fix-package-json` sets.
 
+**Dependency licenses** — every package is MIT. Before adding a dependency, bundling one, or copying code or
+data in, check its license by `docs/dependency-licenses.md`. If it would force a package's license to change, stop
+and tell the user exactly which dependency, which license, and what would have to change.
+
 **Release and publish flow** — see `docs/releasing.md`. Never hand-edit `release-please-config.json`'s
 `packages` map or add a package to `.release-please-manifest.json`: `pnpm run lint` maintains the first, and
 release-please the second.

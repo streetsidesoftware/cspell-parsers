@@ -25,6 +25,9 @@ Copy one of these to `packages/parser-<name>`:
 - [ ] `description` says what the plugin checks.
 - [ ] `keywords` names the programming language, plus any common alternate names, such as `go` and `golang`.
 - [ ] `dependencies` has only what the parser needs at run time. Keep production dependencies few.
+- [ ] Every dependency, and anything bundled into `dist/` or copied into `src/`, passes the
+      [license review](../dependency-licenses.md). Stop and raise any dependency that would force the package's
+      MIT license to change.
 - [ ] `exports` has a subpath for each published file (step 3).
 - [ ] `files` stays `["dist", "!dist/**/*.map"]`, so npm ships only built output, without source maps.
 - [ ] The copied `LICENSE` file stays.

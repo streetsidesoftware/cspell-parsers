@@ -53,6 +53,10 @@ Tag names are public API once released, so the build step reviews the final set 
   `tree-sitter`) and `packages/parser-typescript` (which depends on
   `@cspell/parser-typescript-tree-sitter-wasm`) are the existing precedent for swapping backends behind the
   same package shape — is this feature adding a new backend option, or is a single approach sufficient?
+- What are the candidate dependencies' licenses, including their own dependencies? Check them against
+  `docs/dependency-licenses.md` before asking which backend to use, and show each option's license in the
+  question. A license that would force our MIT license to change rules an option out unless the maintainers
+  decide otherwise.
 - If AST-based: what's the dependency cost? Check `CLAUDE.md`'s dist-size/production-dependency guidance —
   a new production dependency here is a real cost worth surfacing as a decision, not an implementation
   afterthought.

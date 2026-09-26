@@ -31,6 +31,13 @@ starting; this skill refers to its steps rather than repeating them.
      types, tags, backend, edge cases, testing and samples, and release surface.
    - Ask the way `feature-adr` step 4 describes: lettered options showing what a user would write, checking
      facts before asking, and letting the user defer.
+   - **Review licenses before choosing a backend.** For each candidate dependency, and any grammar, table,
+     or code you'd copy, check its license and its dependencies' licenses against
+     `docs/dependency-licenses.md`. Record the result in the backend ADR. If one would force our MIT license
+     to change, or its license is missing or unclear, stop and tell the user before going further, as that
+     doc's "When a license is a problem" says: the exact dependency and version, its license, why it
+     matters here, what our license would have to become and for which packages, and the alternatives. It
+     can be a show stopper, so never assume it's fine.
 
 4. **Finalize the design before building.** Once the user says the design is final, squash the ADRs into a
    tight set (`feature-adr` step 8) and commit. The package is built against these ADRs. If the build shows
@@ -61,6 +68,9 @@ starting; this skill refers to its steps rather than repeating them.
    - The README is for someone using the plugin. Its intro says what the plugin checks and why to pick it,
      and its links are absolute `https://` URLs.
    - Add the package to the `parser-strings-comments` bundle if the design says so.
+   - Repeat the license review on the final dependency tree, with
+     `pnpm licenses list --prod --filter <package-name>`, plus whatever tsdown bundles into `dist/` and
+     anything copied into `src/`. A new problem stops the build the same way.
 
 6. **Run every check** from the worktree root:
 
@@ -77,7 +87,8 @@ starting; this skill refers to its steps rather than repeating them.
 
 7. **Open one PR** with the ADR commits followed by the package. Use a `feat(parser-<name>):` title. The
    body has a Summary of what the plugin checks and for whom, then the design (one line per ADR, linking to
-   the ADR index), then the package's internals, the checks that ran, and its `dist` size. Push only when the
+   the ADR index), then the package's internals, a license review (each production, bundled, or copied
+   dependency with its license and verdict), the checks that ran, and its `dist` size. Push only when the
    user asks, or when the task was to open the PR.
 
 8. **After merge,** remove the worktree and delete the branch. From then on, amend or archive the ADRs with
