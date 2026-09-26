@@ -44,7 +44,8 @@ skills/config, CI, lint/format config, internal restructuring, non-README docs) 
 
 For each line under Features or Updates and Bug Fixes, judge from its description whether it plausibly changes
 behavior a package consumer would notice. For each line under Features, also judge whether it's a new
-capability; if it only changes or removes existing behavior, it belongs under Bug Fixes as `fix:`. The
+capability; if it only changes or removes existing behavior, it belongs under Bug Fixes as `fix:`, and if it
+only adds an export for consistency, it's `refactor:` and drops out of the changelog. The
 recurring false positives are exactly what prompted this skill: adding internal tooling (a Claude Code skill,
 a lint ignore rule) tagged `fix:` because it was "a small change," when it never touched a published package.
 

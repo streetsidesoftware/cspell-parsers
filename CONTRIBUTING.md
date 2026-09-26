@@ -101,7 +101,8 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/). Release Ple
 and changelog from the type, so pick it by user-facing impact, not by how much code changed:
 
 - `feat:` — a new capability: something a user of a published package can do that they couldn't before, such
-  as a new tag, parser, file type, option, or export.
+  as a new tag, parser, file type, or option. A new export counts only if it gives users something they
+  couldn't already reach. An export added only to match the other packages is `refactor:`.
 - `fix:` — any other change to a published package's behavior: a bug fix, a changed default or output, a
   rename, a removal, or a move to a new API that users would notice.
 - `feat!:` / `fix!:` — either of the above, but breaking. Removing or renaming something users rely on is

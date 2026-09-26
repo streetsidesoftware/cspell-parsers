@@ -38,7 +38,8 @@ export const supportedFileTypes: readonly string[] = plugin.supportedFileTypes;
  * ```
  */
 export function customizePlugin(options?: CustomizePluginOptions): IPluginBuilder {
-  // Runtime checks for JS configs, as in `customizePluginWith`; inline so this package doesn't bundle `@internal/utils` code.
+  // Runtime checks for JS configs, the same as `customizePluginWith`'s.
+  // They're inline so this package doesn't bundle `@internal/utils` code.
   if (options !== undefined && typeof options !== 'object') {
     throw new Error(
       `customizePlugin takes an options object; for one file type, use customizePlugin().filterTagsForFileType(...) (plugin "${plugin.name}").`,
