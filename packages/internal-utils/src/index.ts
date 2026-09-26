@@ -26,6 +26,7 @@ export type {
   RecommendedLanguageSetting,
   RecommendedLanguageSettings,
   RecommendedSettings,
+  SelectedCSpellSettings,
   TagFilterOptions,
   TagPattern,
   TagsFilter,

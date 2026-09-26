@@ -17,6 +17,11 @@ export interface RecommendedLanguageSetting {
 
 export type RecommendedLanguageSettings = RecommendedLanguageSetting[];
 
+/** A package's default export: settings that register the plugin without selecting it for any file type. */
+export interface SelectedCSpellSettings {
+  plugins: CSpellPlugin[];
+}
+
 export interface RecommendedSettings {
   plugins: CSpellPlugin[];
   languageSettings: RecommendedLanguageSettings;
