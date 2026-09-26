@@ -3,5 +3,3 @@ ignorePaths:
   - node_modules
   - fixtures
   - dist
-words:
-  - unaliased

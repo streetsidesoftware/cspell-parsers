@@ -1,7 +1,7 @@
 import type { ParsedTags, ParsedText } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
-import { compileTagFilter, createParsedTextFilter } from './customize.ts';
+import { createParsedTextFilter } from './customize.ts';
 import { createPluginParserWithFilterTags } from './parserDef.ts';
 import { createPlugin } from './plugin.ts';
 import type { IParser, TagFilterOptions } from './types.ts';
@@ -100,27 +100,39 @@ describe('tag filtering', () => {
   });
 });
 
-describe('compileTagFilter', () => {
+describe('createParsedTextFilter pattern matching', () => {
   const docComment: ParsedTags = { comment: true, 'comment.block': true, 'comment.block.doc': true };
   const lineComment: ParsedTags = { comment: true, 'comment.line': true };
   const identifier: ParsedTags = { identifier: true, 'identifier.variable': true };
   const code: ParsedTags = { code: true };
 
+  // Every tag used below is known and on by default, so only the patterns and "*" decide.
+  const knownTags = Object.fromEntries(
+    [docComment, lineComment, identifier, code, { string: true, 'string.singleQuote': true }].flatMap((tags) =>
+      Object.keys(tags).map((tag) => [tag, true]),
+    ),
+  );
+
+  function compile(options: TagFilterOptions) {
+    const filter = createParsedTextFilter(options, knownTags);
+    return (tags: ParsedTags | undefined) => filter(mkText('x', tags));
+  }
+
   it('returns the default for undefined tags, with no exact/prefix/general rules at all', () => {
-    expect(compileTagFilter({})(undefined)).toBe(true);
-    expect(compileTagFilter({ '*': false })(undefined)).toBe(false);
+    expect(compile({})(undefined)).toBe(true);
+    expect(compile({ '*': false })(undefined)).toBe(false);
   });
 
   it('treats an explicit `undefined` value the same as the key being absent', () => {
-    expect(compileTagFilter({ '*': false, comment: undefined })(docComment)).toBe(false);
-    expect(compileTagFilter({ '*': false, comment: true, 'comment.block': undefined })(docComment)).toBe(true);
-    expect(compileTagFilter({ '*': false, 'comment*': undefined })(docComment)).toBe(false);
-    expect(compileTagFilter({ '*': false, '*.doc': undefined })(docComment)).toBe(false);
-    expect(compileTagFilter({ '*': true, '*.doc': undefined })(docComment)).toBe(true);
+    expect(compile({ '*': false, comment: undefined })(docComment)).toBe(false);
+    expect(compile({ '*': false, comment: true, 'comment.block': undefined })(docComment)).toBe(true);
+    expect(compile({ '*': false, 'comment*': undefined })(docComment)).toBe(false);
+    expect(compile({ '*': false, '*.doc': undefined })(docComment)).toBe(false);
+    expect(compile({ '*': true, '*.doc': undefined })(docComment)).toBe(true);
   });
 
   describe('exact-only patterns (no "*" anywhere but the default key)', () => {
-    const isIncluded = compileTagFilter({ '*': false, 'comment.block.doc': true, comment: true });
+    const isIncluded = compile({ '*': false, 'comment.block.doc': true, comment: true });
 
     it('matches an own tag exactly', () => {
       expect(isIncluded({ 'comment.block.doc': true })).toBe(true);
@@ -144,7 +156,7 @@ describe('compileTagFilter', () => {
   });
 
   describe('prefix-only patterns (every "*" is a single trailing wildcard)', () => {
-    const isIncluded = compileTagFilter({ '*': false, 'comment.block.*': true, 'string*': true });
+    const isIncluded = compile({ '*': false, 'comment.block.*': true, 'string*': true });
 
     it('matches via startsWith on the literal prefix', () => {
       expect(isIncluded(docComment)).toBe(true);
@@ -157,14 +169,14 @@ describe('compileTagFilter', () => {
     });
 
     it('lets the longer (more specific) prefix win when more than one matches', () => {
-      const isIncluded2 = compileTagFilter({ '*': true, 'comment.*': false, 'comment.block.*': true });
+      const isIncluded2 = compile({ '*': true, 'comment.*': false, 'comment.block.*': true });
       expect(isIncluded2(docComment)).toBe(true);
       expect(isIncluded2(lineComment)).toBe(false); // only matches the shorter "comment.*"
-      expect(isIncluded2(code)).toBe(true); // matches the longer "comment.block.*" prefix
+      expect(isIncluded2(code)).toBe(true); // matches neither prefix, so "*" decides
     });
 
     it('lets the more specific rule win even when it is the prefix, not the exact key', () => {
-      const isIncluded2 = compileTagFilter({ '*': false, 'comment.*': true, comment: false });
+      const isIncluded2 = compile({ '*': false, 'comment.*': true, comment: false });
       // On lineComment, "comment" (exact, specificity 7) matches the "comment" own tag, but "comment.*"
       // (prefix "comment.", specificity 8) also matches the "comment.line" own tag - and wins, since 8 > 7.
       expect(isIncluded2(lineComment)).toBe(true);
@@ -173,19 +185,19 @@ describe('compileTagFilter', () => {
 
   describe('general patterns ("*" in the middle, or more than one "*")', () => {
     it('matches a leading wildcard', () => {
-      const isIncluded = compileTagFilter({ '*': false, '*.doc': true });
+      const isIncluded = compile({ '*': false, '*.doc': true });
       expect(isIncluded(docComment)).toBe(true);
       expect(isIncluded(lineComment)).toBe(false);
     });
 
     it('matches a wildcard in the middle', () => {
-      const isIncluded = compileTagFilter({ '*': false, 'comment.*.doc': true });
+      const isIncluded = compile({ '*': false, 'comment.*.doc': true });
       expect(isIncluded(docComment)).toBe(true);
       expect(isIncluded(lineComment)).toBe(false);
     });
 
     it('still applies exact and prefix rules alongside general ones', () => {
-      const isIncluded = compileTagFilter({
+      const isIncluded = compile({
         '*': false,
         '*.doc': true,
         'identifier*': true,
@@ -201,7 +213,6 @@ describe('compileTagFilter', () => {
 describe('createParsedTextFilter', () => {
   const docComment: ParsedTags = { comment: true, 'comment.block': true, 'comment.block.doc': true };
   const lineComment: ParsedTags = { comment: true, 'comment.line': true };
-  const identifier: ParsedTags = { identifier: true, 'identifier.variable': true };
   const code: ParsedTags = { code: true };
 
   // Every known tag defaults to emitted-and-checked, except "code" - mirrors a parser like
@@ -221,22 +232,13 @@ describe('createParsedTextFilter', () => {
     return (tags: ParsedTags) => filter(mkText('x', tags));
   }
 
-  it('is a parity check: behaves the same as compileTagFilter when every known tag defaults to true', () => {
-    const options = { '*': false, comment: true, 'comment.block': false, 'comment.block.doc': true };
-    const isIncluded = isIncludedWith(options);
-    const expected = compileTagFilter(options);
-    expect(isIncluded(docComment)).toBe(expected(docComment));
-    expect(isIncluded(lineComment)).toBe(expected(lineComment));
-    expect(isIncluded(identifier)).toBe(expected(identifier));
-  });
-
-  it('lets a more specific key override a broader one, same as compileTagFilter', () => {
+  it('lets a more specific key override a broader one', () => {
     const isIncluded = isIncludedWith({ '*': true, 'comment.block': false, 'comment.block.doc': true });
     expect(isIncluded(docComment)).toBe(true); // "comment.block.doc" (more specific) wins over "comment.block"
     expect(isIncluded(lineComment)).toBe(true); // untouched by either rule, falls back to "*": true
   });
 
-  it('supports prefix and general wildcard patterns, same as compileTagFilter', () => {
+  it('supports prefix and general wildcard patterns', () => {
     const prefixFilter = isIncludedWith({ '*': false, 'comment.block.*': true });
     expect(prefixFilter(docComment)).toBe(true);
     expect(prefixFilter(lineComment)).toBe(false);

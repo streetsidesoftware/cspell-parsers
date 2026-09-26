@@ -4,8 +4,6 @@ ignorePaths:
   - dist
 
 words:
-  - dedenting
-  - dedents
   - godoc
   - heredocs
   - nowdoc
