@@ -40,6 +40,8 @@ starting; this skill refers to its steps rather than repeating them.
    template chosen in the design. The rules below are the ones most easily missed; `CLAUDE.md` has the rest.
    - Every published file (`index.ts`, `plugin.ts`, `recommended.ts`) needs an entry in both
      `tsdown.config.ts` and `package.json`'s `exports`. `src/parsers.ts` is internal, even with one parser.
+   - `package.json`'s `keywords` name the programming language and its common alternate names. Ask the
+     user if unsure. `fix-package-json` adds only the generic ones.
    - A hand-written scanner emits `parsedTexts` lazily, with generators.
    - Every emitted tag is declared in `src/tags.ts`, with its meaning, which generates the README's tags
      table.

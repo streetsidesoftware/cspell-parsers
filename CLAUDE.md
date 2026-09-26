@@ -223,7 +223,7 @@ Two more directories, both at the package root (not under `src/`):
   subfolder. Without it, `npm publish`'s sigstore provenance check fails (`repository.url` is "" but the CI
   attestation expects it to match the repo the build ran in). Don't set it by hand: `fix-package-json` (part
   of `pnpm run lint`) sets `repository`, the required `keywords`, `publishConfig`, and the field order for
-  every package.
+  every package. The author adds the language-specific `keywords` (e.g. `go`, `golang`) by hand.
 
 **Release and publish flow** — `release-please` (`.github/workflows/release-please.yml`, config in
 `release-please-config.json`, versions tracked in `.release-please-manifest.json`) opens a release PR per

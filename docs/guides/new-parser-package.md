@@ -23,6 +23,8 @@ Copy one of these to `packages/parser-<name>`:
       specialization or the AST parser used, as in `@cspell/parser-php-strings-comments` or
       `@cspell/parser-typescript-tree-sitter`.
 - [ ] `description` says what the plugin checks.
+- [ ] `keywords` names the programming language, plus any common alternate name, as in `go` and `golang`.
+      Only you can add these; `fix-package-json` adds the generic ones.
 - [ ] `dependencies` has only what the parser needs at run time. Keep production dependencies few.
 - [ ] `exports` has a subpath for each published file (step 3).
 - [ ] `files` stays `["dist", "!dist/**/*.map"]`, so npm ships only built output, without source maps.
