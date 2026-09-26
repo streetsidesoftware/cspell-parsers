@@ -49,18 +49,22 @@ them for every package:
 
 Files under `src/`:
 
-| File             | Published | What it holds                                                                                           |
-| ---------------- | --------- | ------------------------------------------------------------------------------------------------------- |
-| `parsers.ts`     | no        | `parse`, the `parsers` array, and `supportedFileTypes`. All the real logic.                             |
-| `tags.ts`        | no        | `tagsAndMeaning` generates the README's tags table; `tags` sets defaults. Required, except in a bundle. |
-| `plugin.ts`      | yes       | `plugin`, `supportedFileTypes`, and `customizePlugin`.                                                  |
-| `index.ts`       | yes       | Default export: settings with just `plugins: [plugin]`.                                                 |
-| `recommended.ts` | yes       | Default export: `plugin.defineConfig()`, with `plugins` and `languageSettings`.                         |
+| File             | Published | What it holds                                                                                             |
+| ---------------- | --------- | --------------------------------------------------------------------------------------------------------- |
+| `parsers.ts`     | no        | `parse`, the `parsers` array, and `supportedFileTypes`. All the real logic.                               |
+| `tags.ts`        | no        | `tagsAndMeaning` (generates the README's tags table) and `tags` (defaults). Required, except in a bundle. |
+| `plugin.ts`      | yes       | `plugin`, `supportedFileTypes`, and `customizePlugin`.                                                    |
+| `index.ts`       | yes       | Default export: settings with just `plugins: [plugin]`, typed as a local `SelectedCSpellSettings`.        |
+| `recommended.ts` | yes       | Default export: `plugin.defineConfig()`, with `plugins` and `languageSettings`.                           |
 
 Checklist:
 
 - [ ] Each published file has both a `tsdown.config.ts` entry and a `package.json` `exports` subpath. One
       missing from `entry` builds without error and quietly leaves the subpath broken.
+- [ ] Internal modules, such as `parsers.ts`, `scanner.ts`, and `tags.ts`, have neither. tsdown bundles them
+      into the entry points that import them.
+- [ ] Publish `tags.ts` as `./tags` only if users need the tag constants. Of the current packages, only the
+      TypeScript tree-sitter ones do.
 - [ ] `parsers.ts` exports `parsers: readonly IParser[]`, even for a single parser. Each is created with
       `@internal/utils`'s `createPluginParserWithFilterTags`, which applies the default filter from `tags`.
 - [ ] `parsers.ts` is internal. The plugin is the only way to reach a parser: `plugin.getParser(name)`.
@@ -112,6 +116,18 @@ Checklist:
 
 - [ ] Each sample demonstrates or exercises one feature, tag, or edge condition.
 - [ ] There are at least `plugin/`, `recommended/`, and `customize/`.
+- [ ] Samples for common patterns use the standard folder names:
+
+      | Folder                 | Shows                                                  |
+      | ---------------------- | ------------------------------------------------------ |
+      | `plugin/`              | Wiring `plugin` and `languageSettings` by hand         |
+      | `recommended/`         | Importing `recommended`                                |
+      | `customize/`           | A tag filter with `customizePlugin`                    |
+      | `check-code/`          | Turning the `code` tag on                              |
+      | `filter-by-file-type/` | Filtering one parser or file type with the builder     |
+
+      Name any other sample after the feature or edge condition it exercises.
+
 - [ ] The package has its own root `cspell.config.yaml`, ignoring `node_modules`, `fixtures`, and `dist`, so
       `cspell .` passes over the whole package. `test:cspell` runs it as part of the package's `test` script.
 - [ ] Each filter sample, such as `customize/`, has a genuine misspelling in a segment its filter excludes.

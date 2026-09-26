@@ -46,7 +46,8 @@ starting; this skill refers to its steps rather than repeating them.
 5. **Build the package.** Follow `docs/guides/new-parser-package.md`'s steps, starting from the
    template chosen in the design. The rules below are the ones most easily missed; `CLAUDE.md` has the rest.
    - Every published file (`index.ts`, `plugin.ts`, `recommended.ts`) needs an entry in both
-     `tsdown.config.ts` and `package.json`'s `exports`. `src/parsers.ts` is internal, even with one parser.
+     `tsdown.config.ts` and `package.json`'s `exports`. Internal modules (`parsers.ts`, `scanner.ts`,
+     `tags.ts`) have neither; `src/parsers.ts` is internal even with one parser.
    - `package.json`'s `keywords` name the programming language and its common alternate names. Ask the
      user if unsure.
    - A hand-written scanner emits `parsedTexts` lazily, with generators.
