@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.1.1](https://github.com/streetsidesoftware/cspell-parsers/compare/@cspell/parser-javascript@1.1.0...@cspell/parser-javascript@1.1.1) (2026-09-26)
+
+
+### Updates and Bug Fixes
+
+* parser-typescript and parser-javascript reject a file type passed to customizePlugin ([#201](https://github.com/streetsidesoftware/cspell-parsers/issues/201)) ([d2a64d5](https://github.com/streetsidesoftware/cspell-parsers/commit/d2a64d5d117333f84ae965e3bf970a2b4c2bc53d))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @cspell/parser-typescript bumped to 1.3.1
+
 ## [1.1.0](https://github.com/streetsidesoftware/cspell-parsers/compare/@cspell/parser-javascript@1.0.6...@cspell/parser-javascript@1.1.0) (2026-09-26)
 
 

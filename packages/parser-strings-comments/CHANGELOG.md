@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.1.1](https://github.com/streetsidesoftware/cspell-parsers/compare/@cspell/parser-strings-comments@1.1.0...@cspell/parser-strings-comments@1.1.1) (2026-09-26)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @cspell/parser-c-cpp-strings-comments bumped to 1.1.1
+    * @cspell/parser-csharp-strings-comments bumped to 1.1.1
+    * @cspell/parser-go-strings-comments bumped to 1.1.1
+    * @cspell/parser-java-strings-comments bumped to 1.1.1
+    * @cspell/parser-php-strings-comments bumped to 1.1.1
+    * @cspell/parser-python-strings-comments bumped to 1.1.1
+    * @cspell/parser-ruby-strings-comments bumped to 1.1.1
+    * @cspell/parser-rust-strings-comments bumped to 1.1.1
+    * @cspell/parser-typescript-strings-comments bumped to 1.1.1
+
 ## [1.1.0](https://github.com/streetsidesoftware/cspell-parsers/compare/@cspell/parser-strings-comments@1.0.0...@cspell/parser-strings-comments@1.1.0) (2026-09-26)
 
 
