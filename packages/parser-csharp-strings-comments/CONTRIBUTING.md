@@ -102,7 +102,7 @@ computed per segment. See `README.md`'s [Tags](README.md#tags) table for what ea
 - `parsers.test.ts` reads fixtures out of `fixtures/` (via `readFixture`/`parseFixture` helpers) rather than
   embedding source strings inline - a fixture is real, syntactically valid C# content, which both exercises
   real file content and makes intent easier to read than an escaped string literal. `fixtures/` is excluded
-  from `tsc`/ESLint/Prettier (see root `CLAUDE.md`) because a fixture's exact bytes - quote style, spacing, an
+  from `tsc`/ESLint/Prettier (see [Build and packaging](../../docs/build-and-packaging.md#fixtures-and-samples)) because a fixture's exact bytes - quote style, spacing, an
   unterminated literal's missing closing delimiter - are frequently what's being asserted on; don't let a
   formatter "fix" one.
 - `fixtures/interpolation-holes.cs` specifically exercises recursion into a `{...}` hole (a nested ternary's

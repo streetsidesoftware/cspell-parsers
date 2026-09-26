@@ -1,6 +1,6 @@
 ---
 name: feature-adr
-description: 'Design a new cspell-parser feature (a new parser, a behavior change, improvements) through a structured interview, recording each decision as an ADR under docs/ADRs/<feature-slug>/ and keeping docs/glossary.md in sync. Use this whenever the user wants to design, spec out, or plan a feature before writing code, is unsure how an edge case should behave, or explicitly asks for an ADR, a design doc, or to "figure out the details" of something. Trigger even if the user doesn''t say "ADR" or "skill" by name — any request to add new behavior to this tool that has more than one reasonable interpretation is a candidate. Also use it to amend a merged ADR, or to archive a settled feature''s ADRs into a short summary. Do not use this for pure bug fixes, refactors, or requests where the behavior is already fully specified.'
+description: 'Design a cspell-parser feature (a behavior change, an API change, improvements) through a structured interview, recording each decision as an ADR under docs/ADRs/<feature-slug>/ and keeping docs/glossary.md in sync. Use this whenever the user wants to design, spec out, or plan a feature before writing code, is unsure how an edge case should behave, or explicitly asks for an ADR, a design doc, or to "figure out the details" of something. Trigger even if the user doesn''t say "ADR" or "skill" by name — any request to add new behavior to this tool that has more than one reasonable interpretation is a candidate. Also use it to amend a merged ADR, or to archive a settled feature''s ADRs into a short summary. For a brand-new parser package, use new-parser-plugin instead. Do not use this for pure bug fixes, refactors, or requests where the behavior is already fully specified.'
 ---
 
 # feature-adr
@@ -62,10 +62,11 @@ feature (including you, in six months) doesn't have to reverse-engineer why a ta
    question, let the user answer (or say "you decide" — then propose a default and state it as the
    decision), and only move to the next question once the current one is actually resolved. Read
    `references/interview-guide.md` before the first question — it's the question bank grounded in this
-   repo's real decision points (new package vs. existing, `supportedFileTypes`, tags/`hierarchicalTags`,
-   backend choice, fixtures/samples, dist-size/dependency impact) rather than generic feature-design
-   questions. Skip any topic that plainly doesn't apply (e.g. backend choice for a feature that isn't
-   `parser-typescript`-shaped) — the guide is a menu, not a script to run top to bottom regardless of fit.
+   repo's real decision points: why and stakeholders, API and cross-cutting design, and, for a change to
+   an existing parser, the parser questions in the `new-parser-plugin` skill's
+   `references/parser-interview-guide.md` (file types, tags, backend, edge cases, samples, release
+   surface). Skip any topic that plainly doesn't apply — the guide is a menu, not a script to run top to
+   bottom regardless of fit.
 
    How to ask:
    - **Give lettered options, each with the user's code.** Show what a user would write (a
@@ -173,9 +174,8 @@ feature (including you, in six months) doesn't have to reverse-engineer why a ta
 
 ## Notes
 
-- If the user is adding a genuinely new parser package, the interview should surface enough for someone to
-  follow `CONTRIBUTING.md`'s "Adding a new parser package" steps afterward — but this skill's job stops at
-  producing the decisions, not scaffolding the package itself.
+- If the user is adding a brand-new parser package, switch to the `new-parser-plugin` skill. It runs this
+  skill's design process and then builds the package, in one PR.
 - If mid-interview it becomes clear the request is actually a bug fix or a fully-specified change (no real
   decision left to make), say so and stop — don't manufacture an ADR for something that was never
   ambiguous.

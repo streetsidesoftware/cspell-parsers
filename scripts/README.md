@@ -26,6 +26,8 @@ These scripts are used to help maintain the repo.
     of its tags are on by default, so the catch-all `code` tag (off by default) is excluded without special-
     casing its name. Like the tags table, it's injected with `#markdown` so each package name renders as a
     link to its directory and each language/tag renders as a code span.
+  - `docs/tags.csv` (for `docs/tags.md`) merges every package's `src/tags.ts` into one `Tag,Meaning,Packages`
+    table, with a row per distinct meaning of each tag, and `all` when every package uses that meaning.
 
 All three scripts accept a `--dry-run` flag that reports what would change (via stderr) and exits with a
 non-zero status if a fix is needed, without writing anything. `pnpm run lint` runs all three in fixing mode

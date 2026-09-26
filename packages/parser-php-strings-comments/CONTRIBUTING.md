@@ -172,7 +172,7 @@ plugin-customization ADRs (`docs/ADRs/plugin-customization/0006-tag-filtering.md
 - `parsers.test.ts` reads fixtures out of `fixtures/` (via `readFixture`/`parseFixture` helpers) rather than
   embedding source strings inline - a fixture is real, syntactically valid PHP, which both exercises real
   file content and makes intent easier to read than an escaped string literal. `fixtures/` is excluded from
-  `tsc`/ESLint/Prettier (see root `CLAUDE.md`) because a fixture's exact bytes are frequently what's being
+  `tsc`/ESLint/Prettier (see [Build and packaging](../../docs/build-and-packaging.md#fixtures-and-samples)) because a fixture's exact bytes are frequently what's being
   asserted on; don't let a formatter "fix" one. Even though `Scanner` itself now lives in `scanner.ts`, its
   test coverage stays in `parsers.test.ts` - it's still the same parsing behavior being tested, just reached
   through `parse`/`parser.parse` rather than the `Scanner` class directly.

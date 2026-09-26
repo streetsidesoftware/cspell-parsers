@@ -67,26 +67,9 @@ This is a pnpm workspace monorepo (`packages/*`) for cspell parser packages — 
 is a standalone npm package implementing cspell's `Parser`/`Plugin` contract (types from
 `@cspell/cspell-types`) so it can be loaded via a cspell configuration's `plugins` list.
 
-**Toolchain split** — deliberately not the typical `tsc`-only setup:
-
-- **tsdown** builds each package's `dist/` output. Every option except `entry` lives once in
-  `.config/tsdown.config.ts`; each package's `tsdown.config.ts` is just
-  `mergeConfig(base, { entry: [...] })` — put new shared build options in the base, not per package.
-  TypeScript itself is used _only_ for type-checking (`tsc --noEmit`), never for emitting.
-- There is no TypeScript project-reference/`composite` build graph — `tsconfig.base.json` sets `noEmit: true`
-  and each package has its own flat `tsconfig.json` extending it. There is intentionally no root
-  `tsconfig.json`.
-- **vitest** runs tests; there's no separate test-specific tsconfig.
-- `tsdown`/`vitest`/`typescript` are declared once as root `devDependencies` (not duplicated per package) and
-  resolve into packages via Node's normal ancestor `node_modules` lookup, which works even though
-  `pnpm-workspace.yaml` sets `nodeLinker: isolated`.
-- Relative imports use `.ts` extensions (e.g. `from './parsers.ts'`), not `.js` — `tsconfig.base.json` sets
-  `allowImportingTsExtensions: true` (permitted because `noEmit` is also `true`), and tsdown resolves and
-  rewrites these to `.js` in `dist/` output.
-
-**Shared dependency versions** live in the pnpm catalog in `pnpm-workspace.yaml`
-(`typescript`, `tsdown`, `vitest`, `@cspell/cspell-types`). New packages should reference these via
-`"catalog:"` rather than pinning their own versions, so every package stays in lockstep.
+**Build and packaging** — the toolchain (tsdown builds, `tsc` only type-checks, vitest tests), the pnpm
+catalog, bundled types, `@internal/utils`, what gets published, and `fixtures/`/`samples/` are described in
+`docs/build-and-packaging.md`. Read it before changing build config, dependencies, or how types are shared.
 
 **Package shape** — `packages/parser-typescript-strings-comments` is the canonical, fully-fledged template. It has
 two parsers; most packages have one, as `packages/parser-csharp-strings-comments` does. Either way, the parsers
@@ -105,7 +88,9 @@ entry points, each its own file under `src/` and its own subpath in `package.jso
   `parse(content, filename): ParseResult` for its tests. `parse`'s `ParseResult`
   carries `parsedTexts` entries with `range: [start, end]` offsets _relative to the original file content_ —
   getting these right is the core correctness concern of any parser here, since cspell uses them to map
-  spelling issues back to the source. `parsedTexts` is typed `Iterable<ParsedText>`, not an array — for a
+  spelling issues back to the source. A parser must also survive any input: cspell can send it a fragment rather than a whole
+  file (a markdown code block, for example), so malformed or partial code must never make `parse` throw.
+  Unterminated constructs run to the end of the content, and every `range` stays within it. `parsedTexts` is typed `Iterable<ParsedText>`, not an array — for a
   hand-written scanner with no memory-retention concern (nothing held onto across the scan needs to be freed
   by a consumer draining the result, unlike a tree-sitter backend's parse tree), emit it lazily via a
   generator (`function*`/`yield`) rather than collecting into an array first; see
@@ -116,9 +101,9 @@ entry points, each its own file under `src/` and its own subpath in `package.jso
   as the single source of truth for its `languageSettings`, so the list only needs updating in one place.
 - `src/plugin.ts` — thin wiring: `export const plugin: IPlugin = createPlugin({ name, parsers })`, plus
   `export const supportedFileTypes: readonly string[] = plugin.supportedFileTypes`.
-  Published as `./plugin` → `dist/plugin.js`. If `parsers.ts` emits `tags`, also re-export `@internal/utils`'s
-  shared options (`export type { CustomizePluginOptions } from '@internal/utils'`)
-  and `function customizePlugin(options?: CustomizePluginOptions): IPluginBuilder`, a thin wrapper around
+  Published as `./plugin` → `dist/plugin.js`. Every parser emits `tags`, so it also re-exports
+  `@internal/utils`'s shared options (`export type { CustomizePluginOptions } from '@internal/utils'`) and exports
+  `function customizePlugin(options?: CustomizePluginOptions): IPluginBuilder`, a thin wrapper around
   `customizePluginWith(plugin, options)`, so a consumer can filter which tagged segments get spell checked
   without needing cspell itself to support that filtering. The result can be adjusted further and turned into
   a complete config with `defineConfig()`. See `packages/parser-typescript-strings-comments/src/plugin.ts` for
@@ -127,8 +112,8 @@ entry points, each its own file under `src/` and its own subpath in `package.jso
   `plugins: [plugin]` — the parser is registered but not yet selected for any file type, so a consumer still
   has to add their own `languageSettings`. Typed as a small local `SelectedCSpellSettings` interface
   (`{ plugins: CSpellPlugin[] }`) rather than the full `AdvancedCSpellSettings`, to keep `dist/index.d.ts`
-  small — see the dist-size bullet below. `index.test.ts` separately checks the object is still assignable
-  to `AdvancedCSpellSettings`.
+  small — see `docs/build-and-packaging.md`'s "Settings types are local". `index.test.ts` separately checks
+  the object is still assignable to `AdvancedCSpellSettings`.
 - `src/recommended.ts` — a batteries-included alternative, published as `./recommended` →
   `dist/recommended.js`. Exports `plugin.defineConfig()`: `plugins: [plugin]` **and** the plugin's
   `languageSettings`, so a consumer only has to `"import": ["@cspell/parser-x/recommended"]` and nothing
@@ -146,104 +131,20 @@ entry point is added. Internal modules (`parsers.ts`, `scanner.ts`, `tags.ts` wh
 neither list; tsdown bundles them into the entry points that import them.
 
 Tests mirror the same split: `parsers.test.ts` carries the real parsing coverage (using fixtures — see
-below); `plugin.test.ts` / `index.test.ts` / `recommended.test.ts` are thin, checking only that each file
+`docs/build-and-packaging.md`); `plugin.test.ts` / `index.test.ts` / `recommended.test.ts` are thin, checking only that each file
 wires the layer below it together correctly (e.g. `plugin.parsers` equals `parsers`, `recommended`'s
 settings include the right `languageSettings`).
 
-Two more directories, both at the package root (not under `src/`):
+See `docs/build-and-packaging.md` for `fixtures/`, `samples/`, `@internal/utils`, bundled types, dist size,
+and the `package.json` fields `fix-package-json` sets.
 
-- `fixtures/` — raw, arbitrary source snippets fed straight through a parser's `parse()` in tests. Their exact
-  bytes (quote style, spacing) are often what a test is asserting on, so this directory is excluded from
-  `tsc` (tsconfig `exclude`), ESLint (`ignores`), and Prettier (`.prettierignore`) — never let a formatter or
-  linter "fix" a fixture.
-- `samples/` — a separate nested pnpm workspace package (registered via `packages/*/samples` in the root
-  `pnpm-workspace.yaml`; its own `package.json` with a `workspace:*` devDependency on the parser package),
-  with one subfolder per usage pattern (e.g. `samples/plugin/`, `samples/recommended/`), each holding a real
-  cspell config plus real, correctly-spelled source files. This is an end-to-end demo, checked for real by
-  `test:cspell` (`cspell .` from the package root, which picks up each sample's own config), run alongside
-  `test:vitest` as the package's combined `test` script. Each package also carries its own root
-  `cspell.config.yaml` (ignoring `node_modules`/`fixtures`/`dist`, plus any package-local word list) so
-  `cspell .` passes cleanly over the whole package — `dist` is ignored because it's generated build output,
-  and (see below) now contains the bundled third-party `@cspell/cspell-types` declarations verbatim, typos
-  and all.
-- `@internal/utils` (`packages/internal-utils`) is a private, unpublished workspace package holding logic
-  shared across parser packages — currently the tag-matching engine behind `customizePlugin`
-  (`compileTagFilter` turns a `TagFilterOptions` object into a fast `TagsFilter` closure once, up front,
-  rather than re-matching patterns per parsed segment). A package that uses it lists
-  `"@internal/utils": "workspace:*"` as a `devDependencies` entry, same as `@cspell/cspell-types` —
-  but unlike `@cspell/cspell-types`, it's a workspace package, so tsdown bundles its code and types into
-  `dist/*.js`/`dist/*.d.ts` automatically and does **not** need (and warns as unused if given) its own
-  `deps.onlyBundle` entry. Its build emits only `dist/index.d.ts`: `exports` maps `types` to that file and
-  `default` to `src/index.ts`, so vitest and tsdown bundle the JS straight from source while `tsc` and tsdown's
-  (lazy, fast) dts read the prebuilt declarations. Lazy dts fails with `MISSING_EXPORT` on `.ts` source outside
-  the consumer's own `tsc` program, and `dts: { eager: true }` avoids that but made the build ~3x slower. That
-  `dist/index.d.ts` keeps `@cspell/cspell-types` external (`deps.neverBundle`) so each consumer inlines a single
-  deduped copy. Rebuild it after changing `@internal/utils`'s exported types, or consumers typecheck against
-  stale declarations.
-- `@cspell/cspell-types` is a `devDependencies` entry (not `dependencies`) on each parser package. tsdown
-  bundles the types of anything that isn't a production/peer/optional dependency straight into the emitted
-  `dist/*.d.ts` (this is the same mechanism that decides what gets bundled into `dist/*.js` — see
-  `deps.onlyBundle` in the shared tsdown config below), so a devDependency's declarations end up inlined rather
-  than referenced via an `import` a consumer would need to resolve. This means consumers get the
-  `Parser`/`Plugin`/`AdvancedCSpellSettings` types without installing `@cspell/cspell-types` themselves.
-  The shared tsdown config sets `deps: { onlyBundle: ['@cspell/cspell-types'] }` to make this
-  intentional (tsdown otherwise only logs a hint about unexpected bundled dependencies) and to fail the
-  build if some other, unintended dependency ends up inlined. A package that needs another type-only
-  dependency bundled the same way overrides `deps.onlyBundle` in its own `mergeConfig` call.
-- **Keep `dist` size and the number of production dependencies low** — both are deliberately optimized for
-  in this repo. Verify `dist` size (especially `dist/*.d.ts`) before/after any change to how types or
-  dependencies are shared across packages, and be conservative about adding any new production
-  `dependencies` entry. tsdown's `.d.ts` bundler only inlines the `@internal/utils` declarations a package
-  actually references, so sharing a type through `@internal/utils` doesn't bloat packages that don't use it.
-  Adding a type to `@internal/utils` grows only its own `dist/index.d.ts` until a package imports it. It
-  doesn't dedupe `@cspell/cspell-types` declarations reached through two different import paths, though:
-  that's why each package's `index.ts` defines `SelectedCSpellSettings` locally against `@cspell/cspell-types`
-  instead of importing a shared one.
-- Build output is plain `dist/*.js` + `dist/*.d.ts` (ESM only, one pair per entry). This requires
-  `fixedExtension: false` in the shared tsdown config — tsdown's default (`fixedExtension: true` on the default
-  `platform: 'node'`) would otherwise emit `.mjs`/`.d.mts`, which doesn't match a package's
-  `main`/`types`/`exports` fields.
-- Every package's `package.json` sets `"files": ["dist", "!dist/**/*.map"]`, so `npm publish` ships only built
-  output — without it, npm falls back to including everything not gitignored (`src/`, `fixtures/`, `samples/`,
-  `docs/`, `tsconfig.json`, `tsdown.config.ts`, ...). `package.json`, `README.md`, and `LICENSE` are always
-  included by npm regardless of `files`, so they don't need to be listed. Every package also carries its own
-  copy of the root `LICENSE` (same MIT text) at its package root, since npm only bundles a `LICENSE` that lives
-  inside the package being published, not one from the repo root.
-- The shared tsdown config sets `sourcemap: true`, so `dist/*.js.map` is generated for local debugging from a
-  checkout, but the `!dist/**/*.map` entry in `files` (above) keeps those `.map` files out of the published
-  tarball.
-- Publishable packages (`publishConfig.provenance: true`) need a `repository` field —
-  `{ "type": "git", "url": "git+https://github.com/streetsidesoftware/cspell-parsers.git", "directory": "packages/<name>" }` —
-  matching the actual GitHub remote, with `directory` pointing at that package's
-  subfolder. Without it, `npm publish`'s sigstore provenance check fails (`repository.url` is "" but the CI
-  attestation expects it to match the repo the build ran in).
+**Dependency licenses** — every package is MIT. Before adding a dependency, bundling one, or copying code or
+data in, check its license by `docs/dependency-licenses.md`. If it would force a package's license to change, stop
+and tell the user exactly which dependency, which license, and what would have to change.
 
-**Release and publish flow** — `release-please` (`.github/workflows/release-please.yml`, config in
-`release-please-config.json`, versions tracked in `.release-please-manifest.json`) opens a release PR per
-package listed in `release-please-config.json`'s `packages` map, bumping versions/changelogs from conventional
-commits. Merging that PR tags the root package (`cspell-parsers@x.y.z`, from the `"."` entry — the
-`tag-separator: "@"` / `include-v-in-tag: false` settings control that format), which is the tag
-`.github/workflows/publish.yml` listens for to run `lerna publish from-package --no-private`; lerna publishes
-every workspace package whose version changed and skips `private: true` ones regardless of whether they're in
-`release-please-config.json`. So only **publishable** packages need an entry in `release-please-config.json`'s
-`packages` map (so their version/changelog is tracked and they end up in the release PR) — private/internal
-packages don't need one, since lerna would skip them anyway. The `"."` entry must always stay: it's what
-produces the tag that triggers the publish workflow, independent of whether the root package itself is
-published (it's `private: true` and never is).
-
-**Never hand-edit `release-please-config.json`'s `packages` map.** `pnpm exec fix-release-please-config`
-(part of `pnpm run lint`, and checked read-only by `pnpm run lint-ci`'s `--dry-run` pass) regenerates it from
-every `packages/parser*/package.json`, adding an entry for any package whose name doesn't start with
-`@internal`. A new publishable package gets picked up automatically the next time `pnpm run lint` runs —
-just run it before committing, same as for `package.json` itself (see `fix-package-json`, above).
-
-**Never add a brand-new package to `.release-please-manifest.json`, by hand or otherwise** — nothing in this
-repo should. The manifest records each package's _last released_ version, and release-please computes the
-next release as a bump from whatever's there; seeding it (e.g. at `"1.0.0"`) for a package that's never
-actually shipped makes release-please treat that version as already-released, so the package's real first
-publish lands above `1.0.0` instead of at it. release-please adds its own manifest entry automatically the
-first time it actually releases the package - the `release-please-config.json` entry alone is enough for it
-to pick the package up and bootstrap it at `1.0.0` itself.
+**Release and publish flow** — see `docs/releasing.md`. Never hand-edit `release-please-config.json`'s
+`packages` map or add a package to `.release-please-manifest.json`: `pnpm run lint` maintains the first, and
+release-please the second.
 
 `README.md` is written for someone **installing and using** the parser as a cspell plugin, not for a
 contributor reading the source. Lead with the couple of lines needed to add it to a cspell config (the
@@ -261,6 +162,11 @@ part of a `feat:`/`fix:` PR body), don't start a sentence in a paragraph or note
 the start of the sentence is missing. Lead with a word instead, e.g. "Use `customizePlugin` to…", "Both `a` and
 `b`…", "Keys in `tags`…". List items can start with code.
 
+Guides (`docs/guides/`, `CONTRIBUTING.md` files) and other docs for people never point to `CLAUDE.md`. If a guide
+needs something that's only here, move it into its own doc under `docs/` and link to that from both, as
+`docs/build-and-packaging.md` and `docs/releasing.md` do. In guides, give each step a heading and list its checks
+one per item rather than burying them in a paragraph.
+
 Label every example that is a whole config file with its filename in bold, directly above the code block, e.g.
 **`cspell.config.jsonc`** or **`cspell.config.ts`** or **`cspell.config.mjs`**. Don't name the file in a comment
 inside the code. Snippets that aren't a whole file (a single call, an options object) don't need a label.
@@ -271,12 +177,17 @@ Every example that is a whole config file comes from a real sample under `sample
 in `plugins`: load it with `"import": ["@cspell/<package>"]` instead, since the package's main entry registers
 the plugin.
 
-If the parser emits `tags` on any segment, `README.md` must include a table listing every tag it can emit
+Every parser emits `tags`, declared in its package's `src/tags.ts`: its `tagsAndMeaning` generates the README's
+tags table, and its `tags` sets which are checked by default. A bundle such as `parser-strings-comments` has no
+`tags.ts`; `fix-parser-readme` merges its tags table from the packages it bundles. `README.md` must include that table, listing every tag
 (including ancestor tags implied by `hierarchicalTags`, e.g. `comment` alongside `comment.block.doc`) with a
 one-line description of what each one means. This is reference material for using the plugin, not an
 implementation detail to omit: it's what a consumer needs to write a `customizePlugin({ tags: ... })` filter
 by tag. Keep it to a plain two-column `Tag` / `Meaning` table — no discussion of how the parser computes or
 assigns the tags.
+
+Name tags by `docs/tags.md`'s conventions, and reuse the tags listed there where they fit. That page's table is
+generated from every package's `tags.ts` by `fix-parser-readme`.
 
 `README.md` must also include a "Supported file types" section — this is what a consumer checks before
 deciding whether `recommended` already covers their file types or they need to wire `languageSettings`
@@ -285,7 +196,7 @@ themselves. Don't hand-write its table: add
 markers and run `pnpm run build && pnpm run build:readme`. `fix-parser-readme` generates that CSV from the
 built plugin's `parsers` (see `scripts/README.md`).
 
-The same "if the parser emits `tags`" condition also means `plugin.ts` exports `customizePlugin` (see
+Because every parser emits `tags`, `plugin.ts` also exports `customizePlugin` (see
 "Package shape" above), and `README.md` must show it: a short "Filtering by tag" (or similarly named)
 section, after the plain `plugin`/`languageSettings` wiring example, with a runnable snippet calling
 `customizePlugin({ tags: { ... } })` and pointing at the tags table for what keys are available. See
@@ -296,7 +207,10 @@ When adding or editing a `.md` file that contains deliberate spelling errors (e.
 parser flags or ignores), add a `<!-- cspell:ignore ... -->` comment at the end of the file listing those
 words, so the repo's own spellcheck doesn't flag them.
 
-To add a new parser package: see `CONTRIBUTING.md` for the full steps.
+To add a new parser package: use the `new-parser-plugin` skill, which designs it and then builds it by
+`docs/guides/new-parser-package.md`. A new package is named `@cspell/parser-<language>[-<specialization>]`, where the
+optional suffix is a specialization or the AST parser used (`@cspell/parser-php-strings-comments`,
+`@cspell/parser-typescript-tree-sitter`).
 
 Dependency updates are handled by Dependabot (`.github/dependabot.yml`), not Renovate — dev and production
 dependencies are grouped into separate PRs, as are GitHub Actions version bumps.

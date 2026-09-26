@@ -147,7 +147,7 @@ correctly, they just won't shadow an import of the same name).
   embedding source strings inline. `parseFixture` picks the parser by the fixture's extension, the way
   `recommended` would. A fixture is real, syntactically valid JavaScript or TypeScript content, which
   makes intent easier to read than an escaped string literal, and lets one fixture back several assertions.
-  `fixtures/` is excluded from `tsc`/ESLint/Prettier (see root `CLAUDE.md`) because a fixture's exact bytes -
+  `fixtures/` is excluded from `tsc`/ESLint/Prettier (see [Build and packaging](../../docs/build-and-packaging.md#fixtures-and-samples)) because a fixture's exact bytes -
   quote style, spacing - are frequently what's being asserted on; don't let a formatter "fix" one.
 - `samples/` is a real, separate end-to-end check: actual cspell configs plus real source files, run for real
   by `pnpm run test:cspell` (`cspell .` from the package root). If you change what the parser excludes or

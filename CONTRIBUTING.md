@@ -12,8 +12,8 @@ parsers, and how to write one here.
 - **No hidden side effects:** an operation changes only what its caller targets or names, even if that means
   some repetition.
 - **Set up:** `pnpm install`, then `pnpm run build` and `pnpm test`.
-- **Add a parser:** copy `packages/parser-typescript-strings-comments` (the full template; it has two parsers, see
-  below) and follow the guide.
+- **Add a parser:** with Claude Code, use the `new-parser-plugin` skill. By hand, follow the
+  [guide to adding a new parser package](docs/guides/new-parser-package.md).
 - **Before a PR:** `pnpm run build`, `pnpm run typecheck`, `pnpm run lint` (auto-fixes), `pnpm test`. CI runs
   `build`, `typecheck`, and `test`, plus `pnpm run lint-ci` (a read-only lint) in a separate workflow.
 - **Commits:** [Conventional Commits](https://www.conventionalcommits.org/). Use `feat:`/`fix:` only for
@@ -37,7 +37,8 @@ is a standalone npm package implementing cspell's `Parser`/`Plugin` contract (ty
   has two parsers, which share a scanner; most packages have one, as `packages/parser-csharp-strings-comments`
   does.
 - `packages/parser-example` is a minimal starter with one parser; fine to start from for a trivial parser,
-  but bring it in line with the full shape (see "Adding a new parser package" below) before publishing it as
+  but bring it in line with the full shape (see the
+  [guide to adding a new parser package](docs/guides/new-parser-package.md)) before publishing it as
   a real plugin.
 
 Each package:
@@ -78,78 +79,8 @@ lint-ci`/`pnpm test` pass, since it auto-fixes what it can rather than just repo
 
 ## Adding a new parser package
 
-Read the [plugin author guide](docs/guides/plugin-author-guide.md) first. It covers cspell's rules for
-plugins and parsers, what users do with a plugin, and what that means for how you write one.
-
-1. Copy `packages/parser-typescript-strings-comments` to `packages/<your-parser-name>` for the full shape below, or
-   `packages/parser-example` if you just want a minimal starting point with one parser (bring it in line with
-   the full shape before publishing it as a real plugin).
-2. Update `package.json`: `name`, `description`, `dependencies`, and the `exports` map for each entry point
-   you're publishing. Leave `files` (`["dist", "!dist/**/*.map"]`) and `repository` as-is, and keep the copied `LICENSE` file — these are all required for `npm publish` to
-   ship a correct, provenance-verifiable package without leaking source maps (see `CLAUDE.md`'s "Package
-   shape" note). Keep `@cspell/cspell-types` a `devDependencies` entry, not `dependencies` — tsdown bundles
-   its types into `dist/*.d.ts`, so consumers don't need it installed (see `CLAUDE.md`'s "Package shape"
-   note on `deps.onlyBundle`). If `parsers.ts` will emit `tags` (see step 3), also add
-   `"@internal/utils": "workspace:*"` as a `devDependencies` entry — it's a private, unpublished
-   workspace package, and tsdown bundles workspace dependencies into `dist/*.js`/`dist/*.d.ts`
-   automatically, without needing a `deps.onlyBundle` entry of its own (see `CLAUDE.md`'s "Package shape"
-   note on `@internal/utils`). `tsdown.config.ts` only lists `entry`; every other build option comes from
-   the shared `.config/tsdown.config.ts`.
-3. Implement the parser in `src/parsers.ts`, which is internal, plus three entry points under `src/`, each
-   with a matching `package.json` `exports` subpath and `tsdown.config.ts` entry (see `CLAUDE.md`'s "Package
-   shape" for why both matter):
-   - `parsers.ts` — `parse(content, filename): ParseResult`, `export const supportedFileTypes: string[]` (the
-     cspell/vscode language IDs the parser handles, e.g. `'typescript'`, `'javascriptreact'`, kept
-     alphabetically sorted), which generate its `languageSettings`, and
-     `export const parsers: readonly IParser[]`, even for one parser (each created with `@internal/utils`'s
-     `createPluginParserWithFilterTags`, which applies the default filter from `tags`). It has no `exports`
-     subpath or `tsdown.config.ts` entry: the plugin is the only way to reach a parser, through
-     `plugin.getParser(name)`. This is where all the real logic lives. If segments carry `tags`, use
-     dot-separated hierarchical tag names as the `ParsedTags` keys (e.g. `comment.block.doc`), each with a
-     `true` value, and include every ancestor alongside the most specific tag (`comment.block.doc` implies
-     also emitting `comment` and `comment.block`) so a `customizePlugin` filter can match at any level of
-     specificity — see
-     `packages/parser-typescript/CONTRIBUTING.md`'s "Tags" section for the full convention.
-   - `plugin.ts` — `export const plugin: IPlugin = createPlugin({ name, parsers })` plus
-     `export const supportedFileTypes: readonly string[] = plugin.supportedFileTypes`. If `parsers.ts` emits
-     `tags`, also export
-     `function customizePlugin(options?: CustomizePluginOptions): IPluginBuilder`, a thin wrapper around
-     `@internal/utils`'s `customizePluginWith(plugin, options)` — see
-     `packages/parser-typescript-strings-comments/src/plugin.ts` for the pattern to copy. This is what lets a
-     consumer filter which tagged segments get spell checked, then call `defineConfig()` for a complete config.
-   - `index.ts` — default export: an `AdvancedCSpellSettings` with just `plugins: [plugin]`.
-   - `recommended.ts` — default export: `plugin.defineConfig()`, which has `plugins: [plugin]` **and** the
-     plugin's `languageSettings`, so it works standalone.
-4. Write tests: `parsers.test.ts` for real parsing behavior — put realistic input in `fixtures/` (excluded
-   from `tsc`/ESLint/Prettier, since a fixture's exact bytes are often what's being asserted on) rather than
-   inline strings — plus thin `plugin.test.ts` / `index.test.ts` / `recommended.test.ts` that just check each
-   file wires the layer below it together (including, if present, that `customizePlugin` actually filters
-   `parsedTexts` when wired to the real parser — see `packages/parser-typescript-strings-comments/src/plugin.test.ts`).
-5. Add a `samples/` package (copy `packages/parser-typescript-strings-comments/samples`) with one subfolder per usage pattern
-   — `plugin/`, `recommended/`, and, if `parsers.ts` emits `tags`, `customize/` for `customizePlugin` — each
-   holding a real cspell config and real source files it checks. This is what `test:cspell` (`cspell .`)
-   exercises end-to-end, alongside `test:vitest`'s unit tests, combined as the package's `test` script. Give
-   the package its own root `cspell.config.yaml` (ignoring `node_modules`/`fixtures`/`dist`) so that passes
-   cleanly. For `customize/` specifically, prove the filter is doing something real: put a genuine misspelling
-   cspell would otherwise flag in a segment `validate` excludes (not in a comment that explains the typo by name —
-   that comment is itself checked unless its own tag is excluded too, which is exactly the mistake to avoid),
-   and sanity-check by temporarily swapping in the plain `plugin` to confirm `cspell .` actually fails without
-   the filter, the way `packages/parser-typescript-strings-comments/samples/customize` does — see its `cspell.config.mts` and
-   `example.ts` for the pattern to copy.
-6. Write `README.md` for someone **using** the plugin, not reading its source — lead with how to add it to a
-   cspell config; keep internals secondary. Include a "Supported file types" section whose table is injected from
-   the generated `docs/language-id-n-parser-name.csv` (copy the inject markers from an existing package's
-   README, then run `pnpm run build && pnpm run build:readme`). If `parsers.ts` emits `tags`, also include a table listing every tag it can
-   emit (including implied ancestor tags, e.g. `comment` alongside `comment.block.doc`) and what each one
-   means — see `CLAUDE.md`'s "`README.md`" note for why these belong in the README rather than being omitted
-   with the rest of the internals. Also add a short "Filtering by tag" section showing `customizePlugin` in
-   use, since it's how a consumer actually applies that tags table — see
-   `packages/parser-typescript-strings-comments/README.md`'s "Filtering by tag and file type" section for the
-   pattern to copy.
-7. Run `pnpm install` from the repo root to link the new package(s) into the workspace.
-8. Run `pnpm run lint` before committing, and include whatever it changes (e.g. `release-please-config.json`)
-   in your commit. Never hand-edit `release-please-config.json` or `.release-please-manifest.json` yourself —
-   see `CLAUDE.md`'s "Release and publish flow" note for why.
+See the [guide to adding a new parser package](docs/guides/new-parser-package.md). With Claude Code, use the
+`new-parser-plugin` skill, which designs the package with you and then builds it by that guide.
 
 ## Before submitting a pull request
 

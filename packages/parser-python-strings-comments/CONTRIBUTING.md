@@ -97,7 +97,7 @@ tag regardless of position - see `parsers.test.ts`'s docstring test and `README.
 
 - `parsers.test.ts` reads fixtures from `fixtures/` rather than embedding source inline for most cases - real
   Python source is easier to read than an escaped string literal. `fixtures/` is excluded from
-  `tsc`/ESLint/Prettier (see root `CLAUDE.md`) since a fixture's exact bytes (quote style, spacing, a missing
+  `tsc`/ESLint/Prettier (see [Build and packaging](../../docs/build-and-packaging.md#fixtures-and-samples)) since a fixture's exact bytes (quote style, spacing, a missing
   closing delimiter) are often what's being asserted on. Two EOF-specific edge cases (an unterminated
   single-quoted string, and a literal ending in a trailing lone backslash) use inline `content` strings
   instead, since a fixture file can only have one thing at the true end of the file.
@@ -110,7 +110,7 @@ tag regardless of position - see `parsers.test.ts`'s docstring test and `README.
 
 This package is a reasonable starting point for a new `-strings-comments` parser: copy `src/parsers.ts`,
 `src/plugin.ts`, `src/index.ts`, and `src/recommended.ts` into a new package under `packages/` and replace
-the parsing logic with your own. See the repo root `CONTRIBUTING.md`'s "Adding a new parser package" section
-for the full steps, and `packages/parser-typescript` for the canonical, more fully-featured template.
+the parsing logic with your own. See `docs/guides/new-parser-package.md` for the full
+steps, and `packages/parser-typescript-strings-comments` for the canonical, more fully-featured template.
 
 <!-- cspell:ignore numbr -->

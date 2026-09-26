@@ -22,6 +22,9 @@ export const PACKAGE_JSON_GLOB = 'packages/*/package.json';
 /** Where the root README's generated package table lives, relative to the repo root. */
 export const PACKAGES_TABLE_PATH = 'static/packages.csv';
 
+/** Where `docs/tags.md`'s generated table of every package's tags lives, relative to the repo root. */
+export const ALL_TAGS_TABLE_PATH = 'docs/tags.csv';
+
 interface TagsModule {
   tagsAndMeaning?: Readonly<Record<string, string>>;
 }
@@ -102,6 +105,9 @@ export function renderLanguageIdTable(parsers: readonly ParserInfo[]): string {
 
 /** Longest a {@link wrapList} line is allowed to get before wrapping to the next one. */
 const LIST_WRAP_WIDTH = 36;
+
+/** Like {@link LIST_WRAP_WIDTH}, for `docs/tags.md`'s longer package names. */
+const ALL_TAGS_WRAP_WIDTH = 60;
 
 /**
  * Joins `items` with `, `, breaking onto a new line (via a Markdown `<br>`, since a GFM table cell can't
@@ -397,11 +403,41 @@ export async function updatePackagesTable(options: UpdateParserReadmeTablesOptio
   return writeIfChanged(Path.join(REPO_ROOT_DIR, PACKAGES_TABLE_PATH), renderPackagesTable(packages), options.dryRun);
 }
 
+/**
+ * Renders `docs/tags.md`'s `Tag,Meaning,Packages` CSV: every package's tags, one row per distinct meaning of each
+ * tag (see {@link mergeBundledTags}), with the packages that use that meaning, or `all`.
+ */
+export function renderAllTagsTable(rows: readonly BundledTagRow[], packageCount: number): string {
+  const lines = rows.map(({ tag, meaning, languages: packages }) => {
+    const used = packages.length === packageCount ? 'all' : wrapList(packages, ALL_TAGS_WRAP_WIDTH);
+    return [`\`${tag}\``, meaning, used].map(csvField).join(',');
+  });
+  return ['Tag,Meaning,Packages', ...lines, ''].join('\n');
+}
+
+/**
+ * Regenerates `docs/tags.csv` from every package's `src/tags.ts`, so `docs/tags.md` lists every tag in the repo.
+ * @returns `true` if the table needed updating, `false` if it was already up to date.
+ */
+export async function updateAllTagsTable(options: UpdateParserReadmeTablesOptions = {}): Promise<boolean> {
+  const perPackage: BundledPackageTags[] = [];
+  for (const tagsTsFile of await findFiles(TAGS_SOURCE_GLOB)) {
+    const tagsAndMeaning = await loadTagsAndMeaning(tagsTsFile);
+    if (!tagsAndMeaning) continue;
+    const packageDir = Path.dirname(Path.dirname(tagsTsFile)); // src/tags.ts -> package root
+    const pkg = JSON.parse(await fs.readFile(Path.join(packageDir, 'package.json'), 'utf-8')) as { name: string };
+    perPackage.push({ tagsAndMeaning, languages: [pkg.name.replace(/^@cspell\/parser-/, '')] });
+  }
+  const table = renderAllTagsTable(mergeBundledTags(perPackage), perPackage.length);
+  return writeIfChanged(Path.join(REPO_ROOT_DIR, ALL_TAGS_TABLE_PATH), table, options.dryRun);
+}
+
 /** Runs every README table generator. @returns `true` if any table needed updating. */
 export async function updateParserReadmeTables(options: UpdateParserReadmeTablesOptions = {}): Promise<boolean> {
   const tagsNeedFix = await updateTagsTables(options);
   const bundledTagsNeedFix = await updateBundledTagsTables(options);
   const languageIdsNeedFix = await updateLanguageIdTables(options);
   const packagesNeedFix = await updatePackagesTable(options);
-  return tagsNeedFix || bundledTagsNeedFix || languageIdsNeedFix || packagesNeedFix;
+  const allTagsNeedFix = await updateAllTagsTable(options);
+  return tagsNeedFix || bundledTagsNeedFix || languageIdsNeedFix || packagesNeedFix || allTagsNeedFix;
 }

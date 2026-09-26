@@ -7,7 +7,7 @@ file only covers what's specific to this package's parsing logic.
 
 This package can also serve as a starting point for a new parser package: copy `src/parsers.ts`,
 `src/plugin.ts`, `src/index.ts`, and `src/recommended.ts` into a new package under `packages/` and replace the
-parsing logic with your own. See the repo root `CONTRIBUTING.md`'s "Adding a new parser package" for the full
+parsing logic with your own. See `docs/guides/new-parser-package.md` for the full
 steps.
 
 ## Shape of the parser
@@ -104,7 +104,7 @@ cover these cases.
 - `parsers.test.ts` reads fixtures out of `fixtures/` (via `readFixture`/`parseFixture` helpers) rather than
   embedding source strings inline - a fixture is real, syntactically valid content in its own extension
   (`.c`, `.cpp`, `.hpp`), which both exercises real file content and makes intent easier to read than an
-  escaped string literal. `fixtures/` is excluded from `tsc`/ESLint/Prettier (see root `CLAUDE.md`) because a
+  escaped string literal. `fixtures/` is excluded from `tsc`/ESLint/Prettier (see [Build and packaging](../../docs/build-and-packaging.md#fixtures-and-samples)) because a
   fixture's exact bytes - quote style, spacing, an unterminated literal's missing closing delimiter - are
   frequently what's being asserted on; don't let a formatter "fix" one.
 - `fixtures/raw-strings.cpp` and `fixtures/unterminated-raw-string.cpp` specifically exercise

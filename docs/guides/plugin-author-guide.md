@@ -19,6 +19,8 @@ These are cspell's rules. Nothing in this repo can change them.
   A user can replace or update a parser by adding a newer plugin that has a parser with that name.
 - **`languageSettings` connects file types to parsers**, by name. `overrides[].languageSettings` does the
   same for files matched by filename or location.
+- **A parser may be given a fragment, not a whole file.** For example, cspell sends a markdown code block to
+  the parser for the block's language. The fragment can start or end in the middle of a construct.
 - **A parser is never told which file type it is parsing.** `parse(content, filename)` receives only the
   content and filename. Two file types can only behave differently if they go to two parsers with
   different names.
@@ -97,7 +99,14 @@ What users can rely on:
   builder can recompile them.
 - **Emit hierarchical tags.** Use dot-separated names such as `comment.block.doc`, and include every
   ancestor (`comment`, `comment.block`) on the same segment, so users can filter at any level. Treat tag
-  names as public API: once a user filters on one, renaming it breaks their config.
+  names as public API: once a user filters on one, renaming it breaks their config. See the
+  [tags reference](../tags.md) for the naming conventions and every tag in use.
+- **Survive any input.** cspell can send a parser a fragment, so:
+  - `parse` never throws, whatever it's given: malformed code, a fragment, or text in another language.
+  - An unterminated string or comment runs to the end of the content. Anything else it can't make sense of is
+    best effort.
+  - Every `range` stays within the content it was given.
+  - Tests include fragments and malformed input, not just whole, valid files.
 - **Never depend on the file type inside `parse`.** If two file types need different behavior, that's two
   parsers with two names.
 - **Keep `parse` free of filtering.** The factory applies the default filter. A parser exposes its
@@ -111,4 +120,6 @@ What users can rely on:
   `plugin.customize()` with `options.tags` applied to every parser.
 - `recommended.ts` exports `plugin.defineConfig()`, so it always agrees with the parsers.
 - The README documents every tag in a `Tag` / `Meaning` table and shows a short "Filtering by tag"
-  example. See `CONTRIBUTING.md`'s "Adding a new parser package" for the full package shape.
+  example.
+
+See the [guide to adding a new parser package](./new-parser-package.md) for the full package shape.

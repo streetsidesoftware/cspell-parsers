@@ -1,0 +1,71 @@
+Tag,Meaning,Packages
+`code`,Everything else (off by default),all
+`comment`,Any comment,all
+`comment.block`,A `/* ... */` block comment,"c-cpp-strings-comments, csharp-strings-comments, example<br>go-strings-comments, java-strings-comments, javascript<br>php-strings-comments, typescript<br>typescript-strings-comments, typescript-tree-sitter<br>typescript-tree-sitter-wasm"
+`comment.block`,An `=begin` ... `=end` block comment,ruby-strings-comments
+`comment.block`,A `/* ... */` block comment (including a nested one),rust-strings-comments
+`comment.block.doc`,A `/** ... */` doc comment (Doxygen-style),c-cpp-strings-comments
+`comment.block.doc`,"A `/** ... */` doc-style block comment (not a conventional C# form, but handled)",csharp-strings-comments
+`comment.block.doc`,A `/** ... */` doc comment,"example, javascript, typescript, typescript-tree-sitter<br>typescript-tree-sitter-wasm"
+`comment.block.doc`,"A `/** ... */` doc comment (rare in idiomatic Go, which favors plain `//` comments for godoc)",go-strings-comments
+`comment.block.doc`,A `/** ... */` Javadoc comment,java-strings-comments
+`comment.block.doc`,A `/** ... */` PHPDoc-style comment,php-strings-comments
+`comment.block.doc`,A `/** ... */` outer doc block or `/*! ... */` inner doc block,rust-strings-comments
+`comment.block.doc`,A `/** ... */` doc comment (JSDoc-style),typescript-strings-comments
+`comment.line`,A `//` line comment,"c-cpp-strings-comments, csharp-strings-comments, example<br>go-strings-comments, java-strings-comments, javascript<br>rust-strings-comments, typescript<br>typescript-strings-comments, typescript-tree-sitter<br>typescript-tree-sitter-wasm"
+`comment.line`,"A `//` or `#` line comment (`#[` starts a PHP 8 attribute, not a comment)",php-strings-comments
+`comment.line`,A `#` line comment,"python-strings-comments, ruby-strings-comments"
+`comment.line.doc`,A Doxygen-style `///` or `//!` doc-comment line,c-cpp-strings-comments
+`comment.line.doc`,A `///` XML doc comment line (not a `////`-or-more separator line),csharp-strings-comments
+`comment.line.doc`,A `///` outer doc comment or `//!` inner doc comment line,rust-strings-comments
+`html`,HTML (or other non-PHP) content outside `<?php`/`<?=`/`<?` ... `?>` (off by default),php-strings-comments
+`identifier`,Any identifier,"javascript, typescript, typescript-tree-sitter<br>typescript-tree-sitter-wasm"
+`identifier.exportBinding`,A renamed export alias (`export { x as y }`),"javascript, typescript, typescript-tree-sitter<br>typescript-tree-sitter-wasm"
+`identifier.importBinding`,"A renamed import alias, default import name, or namespace import name","javascript, typescript, typescript-tree-sitter<br>typescript-tree-sitter-wasm"
+`identifier.label`,A statement label,"javascript, typescript, typescript-tree-sitter<br>typescript-tree-sitter-wasm"
+`identifier.privateProperty`,A `#private` class property name,"javascript, typescript, typescript-tree-sitter<br>typescript-tree-sitter-wasm"
+`identifier.property`,An object or class property name,"javascript, typescript, typescript-tree-sitter<br>typescript-tree-sitter-wasm"
+`identifier.shorthandProperty`,A shorthand object property name (the `foo` in `{ foo }`),"javascript, typescript, typescript-tree-sitter<br>typescript-tree-sitter-wasm"
+`identifier.type`,A type name,"javascript, typescript, typescript-tree-sitter<br>typescript-tree-sitter-wasm"
+`identifier.variable`,A variable name,"javascript, typescript, typescript-tree-sitter<br>typescript-tree-sitter-wasm"
+`jsx`,Any JSX text (JSX attribute strings and names keep their `string` and `identifier` tags),"javascript, typescript, typescript-tree-sitter<br>typescript-tree-sitter-wasm"
+`jsx.text`,"The text between JSX tags, such as the `Hello` in `<p>Hello</p>`","javascript, typescript, typescript-tree-sitter<br>typescript-tree-sitter-wasm"
+`module`,Any module specifier string,"javascript, typescript, typescript-strings-comments<br>typescript-tree-sitter, typescript-tree-sitter-wasm"
+`module.specifier`,"Any module specifier string (same as `module`, for a more specific filter)","javascript, typescript, typescript-strings-comments<br>typescript-tree-sitter, typescript-tree-sitter-wasm"
+`module.specifier.literal`,The module specifier string of an `import`/`export ... from` statement or a dynamic `import('...')` call,"javascript, typescript, typescript-tree-sitter<br>typescript-tree-sitter-wasm"
+`module.specifier.literal`,"The module specifier string of an `import`/`export ... from` statement, a dynamic `import('...')`, or a `require(...)` call",typescript-strings-comments
+`string`,Any string-like literal,"c-cpp-strings-comments, csharp-strings-comments<br>go-strings-comments, java-strings-comments<br>php-strings-comments, python-strings-comments<br>ruby-strings-comments, typescript-strings-comments"
+`string`,"A string literal (fallback for a quote style that's neither `'` nor `""`)","javascript, typescript, typescript-tree-sitter<br>typescript-tree-sitter-wasm"
+`string`,"Any string-like literal, including a plain `""...""` string",rust-strings-comments
+`string.backtick`,A `` `...` `` backtick command string (including interpolated fragments),ruby-strings-comments
+`string.byte`,"A `b""...""` byte string literal (also carried by `string.byte.raw`)",rust-strings-comments
+`string.byte.raw`,"A byte raw string literal (`br""...""`, `br#""...""#`, ...)",rust-strings-comments
+`string.c`,"A `c""...""` C string literal (also carried by `string.c.raw`)",rust-strings-comments
+`string.c.raw`,"A C raw string literal (`cr""...""`, `cr#""...""#`, ...)",rust-strings-comments
+`string.doubleQuote`,"A `""...""` string literal","c-cpp-strings-comments, csharp-strings-comments<br>java-strings-comments, javascript, python-strings-comments<br>typescript, typescript-strings-comments<br>typescript-tree-sitter, typescript-tree-sitter-wasm"
+`string.doubleQuote`,"A `""...""` interpreted string literal",go-strings-comments
+`string.doubleQuote`,"A `""...""` string literal (interpolation-aware)",php-strings-comments
+`string.doubleQuote`,"A `""...""` string literal (including interpolated fragments)",ruby-strings-comments
+`string.doubleQuote.module`,"A `""...""` string literal that is also a module specifier","javascript, typescript, typescript-strings-comments<br>typescript-tree-sitter, typescript-tree-sitter-wasm"
+`string.heredoc`,A `<<<ID ... ID` heredoc body (interpolation-aware),php-strings-comments
+`string.heredoc`,A `<<~ID`/`<<-ID`/`<<ID` heredoc body (any of its fragments),ruby-strings-comments
+`string.interpolated`,"A `$""...""` interpolated string literal fragment",csharp-strings-comments
+`string.interpolated`,Any `f`-prefixed string (an f-string) - composes with the tags above,python-strings-comments
+`string.module`,"A module specifier string literal (fallback for a quote style that's neither `'` nor `""`)","javascript, typescript, typescript-tree-sitter<br>typescript-tree-sitter-wasm"
+`string.nowdoc`,A `<<<'ID' ... ID` nowdoc body (no interpolation),php-strings-comments
+`string.raw`,"A C++11 raw string literal (`R""delim(...)delim""`)",c-cpp-strings-comments
+`string.raw`,"A C# 11 `""""""...""""""` raw string literal",csharp-strings-comments
+`string.raw`,A `` `...` `` raw string literal,go-strings-comments
+`string.raw`,"Any `r`-prefixed string (`r`, `rb`/`br`, `rf`/`fr`) - composes with the tags above",python-strings-comments
+`string.raw`,"A raw string literal (`r""...""`, `r#""...""#`, ...) - not a byte or C raw string",rust-strings-comments
+`string.singleQuote`,A `'...'` char literal,c-cpp-strings-comments
+`string.singleQuote`,A `'...'` character literal,"csharp-strings-comments, java-strings-comments"
+`string.singleQuote`,A `'...'` rune literal,go-strings-comments
+`string.singleQuote`,A `'...'` string literal,"javascript, python-strings-comments, ruby-strings-comments<br>typescript, typescript-strings-comments<br>typescript-tree-sitter, typescript-tree-sitter-wasm"
+`string.singleQuote`,A `'...'` string literal (no interpolation),php-strings-comments
+`string.singleQuote.module`,A `'...'` string literal that is also a module specifier,"javascript, typescript, typescript-strings-comments<br>typescript-tree-sitter, typescript-tree-sitter-wasm"
+`string.templateLiteral`,"A literal text fragment of a template string (`` `...` ``), excluding `${...}` substitutions","javascript, typescript, typescript-tree-sitter<br>typescript-tree-sitter-wasm"
+`string.templateLiteral`,"A literal text fragment of a template string (`` `...` ``), excluding `${...}` expressions",typescript-strings-comments
+`string.textBlock`,"A `""""""...""""""` text block (Java 15+)",java-strings-comments
+`string.tripleQuote`,"A `'''...'''` or `""""""...""""""` string literal",python-strings-comments
+`string.verbatim`,"A `@""...""` verbatim string literal",csharp-strings-comments

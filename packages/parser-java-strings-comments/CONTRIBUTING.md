@@ -78,7 +78,7 @@ per segment. See `README.md`'s [Tags](README.md#tags) table for what each one me
 - `parsers.test.ts` reads fixtures out of `fixtures/` (via `readFixture`/`parseFixture` helpers) rather than
   embedding source strings inline for the larger, more realistic cases - a fixture is real, syntactically
   valid Java content, which both exercises real file content and makes intent easier to read than an escaped
-  string literal. `fixtures/` is excluded from `tsc`/ESLint/Prettier (see root `CLAUDE.md`) because a
+  string literal. `fixtures/` is excluded from `tsc`/ESLint/Prettier (see [Build and packaging](../../docs/build-and-packaging.md#fixtures-and-samples)) because a
   fixture's exact bytes - quote style, spacing, an unterminated literal's missing closing delimiter - are
   frequently what's being asserted on; don't let a formatter "fix" one. Smaller, boundary-specific cases (the
   `"""` dispatch, Javadoc detection, unterminated literals at EOF) use short inline content instead, the same
