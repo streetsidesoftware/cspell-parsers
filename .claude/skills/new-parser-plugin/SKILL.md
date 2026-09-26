@@ -41,7 +41,7 @@ starting; this skill refers to its steps rather than repeating them.
    - Every published file (`index.ts`, `plugin.ts`, `recommended.ts`) needs an entry in both
      `tsdown.config.ts` and `package.json`'s `exports`. `src/parsers.ts` is internal, even with one parser.
    - `package.json`'s `keywords` name the programming language and its common alternate names. Ask the
-     user if unsure. `fix-package-json` adds only the generic ones.
+     user if unsure.
    - A hand-written scanner emits `parsedTexts` lazily, with generators.
    - `src/tags.ts` is required: every parser emits tags. Tags emerge while building. Add each one to
      `tagsAndMeaning` as soon as the parser emits it, so the list stays complete; it generates the README's

@@ -23,8 +23,7 @@ Copy one of these to `packages/parser-<name>`:
       specialization or the AST parser used, as in `@cspell/parser-php-strings-comments` or
       `@cspell/parser-typescript-tree-sitter`.
 - [ ] `description` says what the plugin checks.
-- [ ] `keywords` names the programming language, plus any common alternate name, as in `go` and `golang`.
-      Only you can add these; `fix-package-json` adds the generic ones.
+- [ ] `keywords` names the programming language, plus any common alternate names, such as `go` and `golang`.
 - [ ] `dependencies` has only what the parser needs at run time. Keep production dependencies few.
 - [ ] `exports` has a subpath for each published file (step 3).
 - [ ] `files` stays `["dist", "!dist/**/*.map"]`, so npm ships only built output, without source maps.
@@ -37,7 +36,6 @@ Don't edit these by hand: `pnpm run lint` runs `fix-package-json` (`scripts/fix-
 them for every package:
 
 - `repository`, with `directory` pointing at the package. npm's provenance check needs it.
-- `keywords`: adds the required ones (`cspell`, `parser`, `plugin`, `spell`, `spellchecker`) and sorts them.
 - `publishConfig`: public access with provenance.
 - The order of the fields.
 
