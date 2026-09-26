@@ -1,12 +1,14 @@
 import type { CustomizePluginExOptions, IPluginBuilder, IPluginEx } from '@internal/utils';
 import { createPluginEx, customizePluginEx } from '@internal/utils';
 
-import { parser } from './parser.ts';
+import { parsers } from './parsers.ts';
 
-export { supportedFileTypes } from './parser.ts';
 export type { CustomizePluginExOptions as CustomizePluginOptions } from '@internal/utils';
 
-export const plugin: IPluginEx = createPluginEx({ name: 'typescript-strings-comments', parsers: [parser] });
+/** Has two parsers: `javascript-strings-comments` for JavaScript and JSX, and `typescript-strings-comments` for TypeScript and TSX. */
+export const plugin: IPluginEx = createPluginEx({ name: 'typescript-strings-comments', parsers });
+
+export const supportedFileTypes: readonly string[] = plugin.supportedFileTypes;
 
 export const recommendedLanguageSettings = plugin.languageSettings();
 

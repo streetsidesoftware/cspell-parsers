@@ -29,10 +29,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./parser": {
-      "types": "./dist/parser.d.ts",
-      "default": "./dist/parser.js"
-    },
     "./plugin": {
       "types": "./dist/plugin.d.ts",
       "default": "./dist/plugin.js"

@@ -20,6 +20,7 @@ describe('plugin', () => {
       'python-strings-comments',
       'ruby-strings-comments',
       'rust-strings-comments',
+      'javascript-strings-comments',
       'typescript-strings-comments',
     ]);
   });
