@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { parsers } from './parsers.ts';
-import { customizePlugin, plugin } from './plugin.ts';
+import { customizePlugin, plugin, supportedFileTypes } from './plugin.ts';
 
 const content = "// a comment\nconst greeting = 'hello';\n";
 
@@ -19,6 +19,13 @@ describe('plugin', () => {
     for (const name of plugin.parserNames()) {
       expect(texts(name)).toContain('greeting');
     }
+  });
+});
+
+describe('supportedFileTypes', () => {
+  it("lists the plugin's file types", () => {
+    expect(supportedFileTypes).toEqual(plugin.supportedFileTypes);
+    expect([...supportedFileTypes].sort()).toEqual(['javascript', 'javascriptreact', 'typescript', 'typescriptreact']);
   });
 });
 

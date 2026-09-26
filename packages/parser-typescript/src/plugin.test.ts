@@ -1,7 +1,7 @@
 import { plugin as wasmPlugin } from '@cspell/parser-typescript-tree-sitter-wasm/plugin';
 import { describe, expect, it } from 'vitest';
 
-import { customizePlugin, plugin } from './plugin.ts';
+import { customizePlugin, plugin, supportedFileTypes } from './plugin.ts';
 
 describe('plugin', () => {
   it("uses the wasm backend's parsers, one per file type", () => {
@@ -15,6 +15,13 @@ describe('plugin', () => {
       ...plugin.getParser('typescript').parse("const greeting = 'hello';\n", 'example.ts').parsedTexts,
     ];
     expect(parsedTexts.some((p) => p.text === 'greeting')).toBe(true);
+  });
+});
+
+describe('supportedFileTypes', () => {
+  it("lists the plugin's file types", () => {
+    expect(supportedFileTypes).toEqual(plugin.supportedFileTypes);
+    expect([...supportedFileTypes].sort()).toEqual(['javascript', 'javascriptreact', 'typescript', 'typescriptreact']);
   });
 });
 

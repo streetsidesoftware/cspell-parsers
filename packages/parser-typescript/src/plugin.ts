@@ -12,6 +12,8 @@ export const plugin: IPlugin = wasmPlugin.customize('typescript').build();
 
 export const recommendedLanguageSettings = plugin.languageSettings();
 
+export const supportedFileTypes: readonly string[] = plugin.supportedFileTypes;
+
 /**
  * Creates a customized copy of {@link plugin}.
  * `options.tags` chooses which tagged segments every parser keeps.
