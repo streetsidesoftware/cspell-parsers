@@ -35,7 +35,8 @@ starting; this skill refers to its steps rather than repeating them.
 
 5. **Build the package.** Follow `docs/guides/new-parser-package.md`'s steps, starting from the
    template chosen in the design. The rules below are the ones most easily missed; `CLAUDE.md` has the rest.
-   - Every top-level `src/*.ts` needs an entry in both `tsdown.config.ts` and `package.json`'s `exports`.
+   - Every published file (`index.ts`, `plugin.ts`, `recommended.ts`) needs an entry in both
+     `tsdown.config.ts` and `package.json`'s `exports`. `src/parsers.ts` is internal, even with one parser.
    - A hand-written scanner emits `parsedTexts` lazily, with generators.
    - Every emitted tag is declared in `src/tags.ts`, with its meaning, which generates the README's tags
      table.

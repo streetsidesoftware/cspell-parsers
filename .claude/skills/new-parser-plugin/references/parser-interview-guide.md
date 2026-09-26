@@ -21,9 +21,9 @@ rather than asking it as a fully open question.
 - Which template? For a hand-written scanner, `packages/parser-typescript-strings-comments` (full-featured)
   or `packages/parser-example` (minimal starter), the two `CONTRIBUTING.md` names. For an AST-based parser,
   `packages/parser-typescript-tree-sitter-wasm` (tree-sitter, with no native dependency).
-- One parser or several? One parser per language is the usual shape (`src/parser.ts`). Several parsers
-  sharing one scanner use `src/parsers.ts` and have no `./parser` subpath, as
-  `parser-typescript-strings-comments` does.
+- One parser or several? One parser per language is the usual shape. Several parsers can share one scanner,
+  as `parser-typescript-strings-comments` does. Either way, they live in `src/parsers.ts`, and the plugin is
+  the only entry point.
 
 ## 2. File type coverage
 
