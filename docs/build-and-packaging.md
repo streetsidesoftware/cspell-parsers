@@ -43,9 +43,9 @@ This isn't the typical `tsc`-only setup.
   `deps: { onlyBundle: ['@cspell/cspell-types'] }`, so the build fails if some other dependency gets inlined by
   accident. A package that needs another type-only dependency bundled overrides `deps.onlyBundle` in its own
   `mergeConfig` call.
-- **Settings types are local.** tsdown doesn't dedupe `@cspell/cspell-types` declarations reached through two
-  import paths, so each package's `index.ts` defines `SelectedCSpellSettings` itself instead of importing a
-  shared one.
+- **Settings types are shared.** Each package's `index.ts` imports `SelectedCSpellSettings` from
+  `@internal/utils`. Because `@internal/utils` keeps `@cspell/cspell-types` external, each package's `dist` still
+  has one copy of the `@cspell/cspell-types` declarations.
 
 ## `@internal/utils`
 

@@ -1,6 +1,8 @@
-import type { CSpellPlugin } from '@cspell/cspell-types';
+import type { SelectedCSpellSettings } from '@internal/utils';
 
 import { plugin } from './plugin.ts';
+
+export type { SelectedCSpellSettings };
 
 /**
  * The shape of this package's default export - a minimal cspell settings object that registers the
@@ -8,10 +10,6 @@ import { plugin } from './plugin.ts';
  * it applies to, or import `@cspell/parser-go-strings-comments/recommended` instead for a settings object
  * that already includes them.
  */
-export interface SelectedCSpellSettings {
-  plugins: CSpellPlugin[];
-}
-
 const settings: SelectedCSpellSettings = {
   plugins: [plugin],
 };

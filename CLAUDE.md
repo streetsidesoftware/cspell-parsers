@@ -110,10 +110,10 @@ entry points, each its own file under `src/` and its own subpath in `package.jso
   the pattern.
 - `src/index.ts` — the package's main entry (`.` / `main`). Exports a default settings object with just
   `plugins: [plugin]` — the parser is registered but not yet selected for any file type, so a consumer still
-  has to add their own `languageSettings`. Typed as a small local `SelectedCSpellSettings` interface
-  (`{ plugins: CSpellPlugin[] }`) rather than the full `AdvancedCSpellSettings`, to keep `dist/index.d.ts`
-  small — see `docs/build-and-packaging.md`'s "Settings types are local". `index.test.ts` separately checks
-  the object is still assignable to `AdvancedCSpellSettings`.
+  has to add their own `languageSettings`. Typed as `@internal/utils`'s small `SelectedCSpellSettings`
+  interface (`{ plugins: CSpellPlugin[] }`, re-exported) rather than the full `AdvancedCSpellSettings`, to keep
+  `dist/index.d.ts` small — see `docs/build-and-packaging.md`'s "Settings types are shared". `index.test.ts`
+  separately checks the object is still assignable to `AdvancedCSpellSettings`.
 - `src/recommended.ts` — a batteries-included alternative, published as `./recommended` →
   `dist/recommended.js`. Exports `plugin.defineConfig()`: `plugins: [plugin]` **and** the plugin's
   `languageSettings`, so a consumer only has to `"import": ["@cspell/parser-x/recommended"]` and nothing
