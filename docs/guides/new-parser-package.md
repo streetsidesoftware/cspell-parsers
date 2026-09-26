@@ -60,8 +60,13 @@ first.
    `parsedTexts` when wired to the real parser — see
    `packages/parser-typescript-strings-comments/src/plugin.test.ts`).
 5. Add a `samples/` package (copy `packages/parser-typescript-strings-comments/samples`) with one subfolder
-   per usage pattern — `plugin/`, `recommended/`, and, if the parser emits `tags`, `customize/` for
-   `customizePlugin` — each holding a real cspell config and real source files it checks. This is what
+   per sample, each holding a real cspell config and real source files it checks. Samples have two purposes:
+   - They're the examples in the README. Every config example there is injected from a sample.
+   - They prove the plugin works with cspell: that `recommended` does what it should, and that each feature,
+     tag, or edge condition behaves as described. There can be many more samples than the README uses.
+
+   Each sample demonstrates or exercises one feature, tag, or edge condition. Start with `plugin/`,
+   `recommended/`, and, if the parser emits `tags`, `customize/` for `customizePlugin`. The samples are what
    `test:cspell` (`cspell .`) exercises end-to-end, alongside `test:vitest`'s unit tests, combined as the
    package's `test` script. Give the package its own root `cspell.config.yaml` (ignoring
    `node_modules`/`fixtures`/`dist`) so that passes cleanly. For `customize/` specifically, prove the filter
@@ -71,6 +76,7 @@ first.
    sample's config and with `plugin.defineConfig()`, each with `--no-config-search`, so the sample's own
    config doesn't apply to both runs. See `packages/parser-typescript-strings-comments/samples/customize` for
    the pattern to copy.
+
 6. Write `README.md` for someone **using** the plugin, not reading its source — lead with how to add it to a
    cspell config; keep internals secondary. Its intro says what the plugin checks and why someone would pick
    it. Every config example is injected from a sample

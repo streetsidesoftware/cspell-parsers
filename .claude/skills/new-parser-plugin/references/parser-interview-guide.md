@@ -75,8 +75,9 @@ against this codebase's existing parsers:
 ## 6. Testing and samples
 
 - Fixtures: what raw snippets belong in `fixtures/` to pin exact byte-level behavior (quote style, spacing)?
-- Samples: does this warrant a new `samples/<pattern>/` subfolder (e.g. a new usage pattern beyond the
-  existing `plugin`/`recommended` split), or do the existing sample patterns already cover it?
+- Samples: which features, tags, and edge conditions get a sample of their own? Each sample demonstrates or
+  exercises one thing, proving it works with cspell, and some also serve as README examples. Include
+  `recommended/`, to prove it does what it should.
 
 ## 7. Release surface
 

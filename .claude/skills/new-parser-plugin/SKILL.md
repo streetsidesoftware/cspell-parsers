@@ -42,9 +42,12 @@ starting; this skill refers to its steps rather than repeating them.
      table.
    - Tests use raw snippets in `fixtures/`. Every special case the README mentions has a test, linked from
      the README with a hidden `<!--- Tested by ... --->` comment.
-   - `samples/` holds real configs and correctly spelled sources. Every config example in the README is
-     injected from a sample. Check each filter sample both ways, with and without its filter, using
-     `--no-config-search`.
+   - `samples/` holds real configs and correctly spelled sources, one subfolder per sample. Samples are the
+     README's examples, and every config example there is injected from one. They also prove the plugin
+     works with cspell: that `recommended` does what it should, and that each feature, tag, and edge condition
+     from the design behaves as described. So there are usually more samples than the README uses, each
+     demonstrating or exercising one thing. Check each filter sample both ways, with and without its filter,
+     using `--no-config-search`.
    - The README is for someone using the plugin. Its intro says what the plugin checks and why to pick it,
      and its links are absolute `https://` URLs.
    - Add the package to the `parser-strings-comments` bundle if the design says so.

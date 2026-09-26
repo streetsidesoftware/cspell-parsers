@@ -158,10 +158,13 @@ Two more directories, both at the package root (not under `src/`):
   linter "fix" a fixture.
 - `samples/` — a separate nested pnpm workspace package (registered via `packages/*/samples` in the root
   `pnpm-workspace.yaml`; its own `package.json` with a `workspace:*` devDependency on the parser package),
-  with one subfolder per usage pattern (e.g. `samples/plugin/`, `samples/recommended/`), each holding a real
-  cspell config plus real, correctly-spelled source files. This is an end-to-end demo, checked for real by
-  `test:cspell` (`cspell .` from the package root, which picks up each sample's own config), run alongside
-  `test:vitest` as the package's combined `test` script. Each package also carries its own root
+  with one subfolder per sample, each holding a real cspell config plus real, correctly-spelled source files.
+  Samples have two purposes. They're the examples in the README: every config example there is injected from
+  one. And they prove the plugin works with cspell: that `recommended` does what it should, and that each
+  feature, tag, or edge condition behaves as described. Each sample demonstrates or exercises one of those, and
+  there can be many more samples than the README uses. They're checked for real by `test:cspell` (`cspell .`
+  from the package root, which picks up each sample's own config), run alongside `test:vitest` as the
+  package's combined `test` script. Each package also carries its own root
   `cspell.config.yaml` (ignoring `node_modules`/`fixtures`/`dist`, plus any package-local word list) so
   `cspell .` passes cleanly over the whole package — `dist` is ignored because it's generated build output,
   and (see below) now contains the bundled third-party `@cspell/cspell-types` declarations verbatim, typos
