@@ -1,13 +1,20 @@
 import { plugin as typescriptPlugin } from '@cspell/parser-typescript/plugin';
 import { describe, expect, it } from 'vitest';
 
-import { customizePlugin, plugin } from './plugin.ts';
+import { customizePlugin, plugin, supportedFileTypes } from './plugin.ts';
 
 describe('plugin', () => {
   it("has parser-typescript's javascript and javascriptreact parsers, the same objects", () => {
     expect(plugin.parserNames()).toEqual(['javascript', 'javascriptreact']);
     expect(plugin.getParser('javascript')).toBe(typescriptPlugin.getParser('javascript'));
     expect(plugin.getParser('javascriptreact')).toBe(typescriptPlugin.getParser('javascriptreact'));
+  });
+});
+
+describe('supportedFileTypes', () => {
+  it("lists the plugin's file types", () => {
+    expect(supportedFileTypes).toEqual(plugin.supportedFileTypes);
+    expect([...supportedFileTypes].sort()).toEqual(['javascript', 'javascriptreact']);
   });
 });
 

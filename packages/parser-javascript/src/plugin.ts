@@ -21,6 +21,8 @@ export const plugin: IPlugin = typescriptPlugin
 
 export const recommendedLanguageSettings = plugin.languageSettings();
 
+export const supportedFileTypes: readonly string[] = plugin.supportedFileTypes;
+
 /**
  * Creates a customized copy of {@link plugin}.
  * `options.tags` chooses which tagged segments both parsers keep.
