@@ -134,6 +134,87 @@ needs.
 
 <!--- @@inject-end: docs/tags-table.csv#markdown --->
 
+## Customization options
+
+Use `customizePlugin(options)` to control which parts of a file get spell checked, based on the [tags](#tags)
+the parser gives each part.
+
+### `CustomizePluginOptions`
+
+```ts
+interface CustomizePluginOptions {
+  /**
+   * Define which tagged segments to keep.
+   */
+  tags: TagFilterOptions;
+}
+```
+
+### Examples
+
+**Everything, including HTML and code**
+
+```ts
+const option = { tags: { '*': true } };
+```
+
+**Everything except `code` (keeps HTML)**
+
+```ts
+const option = { tags: { '*': true, code: false } };
+```
+
+**Only comments**
+
+```ts
+const option = { tags: { '*': false, comment: true } };
+```
+
+**Turn off PHPDoc comments**
+
+```ts
+const option = { tags: { 'comment.*.doc': false } };
+```
+
+**Skip nowdoc bodies**
+
+```ts
+const option = { tags: { 'string.nowdoc': false } };
+```
+
+### `TagFilterOptions`
+
+Use `TagFilterOptions` to set the filter criteria for the text sent to the spell checker.
+
+The values are inherited hierarchically
+
+- `comment: false` also implies `comment.line` is `false` unless overwritten by `'comment.line': true`
+
+Wildcards
+
+- `*` wildcards are weak matches. A more specific match will win.
+
+```ts
+/**
+ * A tag name, or a `*`-wildcard pattern matching one.
+ */
+type TagPattern = string;
+
+interface TagFilterOptions {
+  /**
+   * The default filter setting for any tag not otherwise matched.
+   */
+  '*'?: boolean | undefined;
+
+  /**
+   * Filter setting for the specific tag or wildcard pattern.
+   *
+   * If not specified, the default (`'*'`) will be used.
+   */
+  [tag: TagPattern]: boolean | undefined;
+}
+```
+
 ## Special cases
 
 - **Variables inside a string are checked as part of that string.** In a double-quoted string or a heredoc,
