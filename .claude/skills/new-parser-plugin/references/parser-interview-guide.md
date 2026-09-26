@@ -67,7 +67,10 @@ Ask concretely, with example input, rather than abstractly ("how should nested c
 than "given `/* outer /* inner */ still outer? */`, what should happen?"). Common categories worth checking
 against this codebase's existing parsers:
 
-- Malformed/incomplete input (unterminated string, unterminated comment) — error out, or best-effort parse?
+- Malformed or partial input. A parser never throws: it may be given a fragment, such as a markdown code
+  block, that starts or ends in the middle of a construct. The question is what the best-effort result is
+  for an unterminated string or comment, an unmatched delimiter, or a fragment that starts inside a
+  construct.
 - Nesting and adjacency (comment inside string, string inside comment, back-to-back constructs)
 - Leading/trailing content (front-matter blocks, BOM, trailing newline handling)
 - Escape sequences and how they interact with word boundaries for spell-checking

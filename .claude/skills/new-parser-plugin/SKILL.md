@@ -45,6 +45,9 @@ starting; this skill refers to its steps rather than repeating them.
      table.
    - Tests use raw snippets in `fixtures/`. Every special case the README mentions has a test, linked from
      the README with a hidden `<!--- Tested by ... --->` comment.
+   - The parser survives any input. cspell can send it a fragment, such as a markdown code block, so `parse`
+     never throws on malformed or partial code, and every `range` stays within the content. Fixtures cover
+     unterminated constructs, fragments that start or end mid-construct, and text in another language.
    - `samples/` holds real configs and correctly spelled sources, one subfolder per sample. Samples are the
      README's examples, and every config example there is injected from one. They also prove the plugin
      works with cspell: that `recommended` does what it should, and that each feature, tag, and edge condition

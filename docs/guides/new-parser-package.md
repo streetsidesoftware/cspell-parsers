@@ -60,7 +60,10 @@ first.
    inline strings — plus thin `plugin.test.ts` / `index.test.ts` / `recommended.test.ts` that just check each
    file wires the layer below it together (including, if present, that `customizePlugin` actually filters
    `parsedTexts` when wired to the real parser — see
-   `packages/parser-typescript-strings-comments/src/plugin.test.ts`).
+   `packages/parser-typescript-strings-comments/src/plugin.test.ts`). Include fixtures for malformed and
+   partial input (an unterminated string or comment, a fragment that starts or ends mid-construct, text in
+   another language), and test that `parse` doesn't throw on them and keeps every `range` within the content:
+   cspell can send a parser a fragment, such as a markdown code block.
 5. Add a `samples/` package (copy `packages/parser-typescript-strings-comments/samples`) with one subfolder
    per sample, each holding a real cspell config and real source files it checks. Samples have two purposes:
    - They're the examples in the README. Every config example there is injected from a sample.

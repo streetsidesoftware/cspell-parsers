@@ -105,7 +105,9 @@ entry points, each its own file under `src/` and its own subpath in `package.jso
   `parse(content, filename): ParseResult` for its tests. `parse`'s `ParseResult`
   carries `parsedTexts` entries with `range: [start, end]` offsets _relative to the original file content_ —
   getting these right is the core correctness concern of any parser here, since cspell uses them to map
-  spelling issues back to the source. `parsedTexts` is typed `Iterable<ParsedText>`, not an array — for a
+  spelling issues back to the source. A parser must also survive any input: cspell can send it a fragment rather than a whole
+  file (a markdown code block, for example), so malformed or partial code must never make `parse` throw.
+  Unterminated constructs run to the end of the content, and every `range` stays within it. `parsedTexts` is typed `Iterable<ParsedText>`, not an array — for a
   hand-written scanner with no memory-retention concern (nothing held onto across the scan needs to be freed
   by a consumer draining the result, unlike a tree-sitter backend's parse tree), emit it lazily via a
   generator (`function*`/`yield`) rather than collecting into an array first; see
