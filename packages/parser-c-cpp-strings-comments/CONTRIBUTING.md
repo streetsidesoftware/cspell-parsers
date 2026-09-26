@@ -7,7 +7,7 @@ file only covers what's specific to this package's parsing logic.
 
 This package can also serve as a starting point for a new parser package: copy `src/parsers.ts`,
 `src/plugin.ts`, `src/index.ts`, and `src/recommended.ts` into a new package under `packages/` and replace the
-parsing logic with your own. See the repo root `CONTRIBUTING.md`'s "Adding a new parser package" for the full
+parsing logic with your own. See `docs/guides/new-parser-package.md` for the full
 steps.
 
 ## Shape of the parser

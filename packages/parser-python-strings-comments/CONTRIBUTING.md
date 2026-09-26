@@ -110,7 +110,7 @@ tag regardless of position - see `parsers.test.ts`'s docstring test and `README.
 
 This package is a reasonable starting point for a new `-strings-comments` parser: copy `src/parsers.ts`,
 `src/plugin.ts`, `src/index.ts`, and `src/recommended.ts` into a new package under `packages/` and replace
-the parsing logic with your own. See the repo root `CONTRIBUTING.md`'s "Adding a new parser package" section
-for the full steps, and `packages/parser-typescript` for the canonical, more fully-featured template.
+the parsing logic with your own. See `docs/guides/new-parser-package.md` for the full
+steps, and `packages/parser-typescript-strings-comments` for the canonical, more fully-featured template.
 
 <!-- cspell:ignore numbr -->

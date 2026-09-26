@@ -33,7 +33,7 @@ starting; this skill refers to its steps rather than repeating them.
    tight set (`feature-adr` step 8) and commit. The package is built against these ADRs. If the build shows
    a decision was wrong, stop, update the ADR with the user, and then continue.
 
-5. **Build the package.** Follow `CONTRIBUTING.md`'s "Adding a new parser package" steps, starting from the
+5. **Build the package.** Follow `docs/guides/new-parser-package.md`'s steps, starting from the
    template chosen in the design. The rules below are the ones most easily missed; `CLAUDE.md` has the rest.
    - Every top-level `src/*.ts` needs an entry in both `tsdown.config.ts` and `package.json`'s `exports`.
    - A hand-written scanner emits `parsedTexts` lazily, with generators.

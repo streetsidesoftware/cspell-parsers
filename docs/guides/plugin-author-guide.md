@@ -111,4 +111,4 @@ What users can rely on:
   `plugin.customize()` with `options.tags` applied to every parser.
 - `recommended.ts` exports `plugin.defineConfig()`, so it always agrees with the parsers.
 - The README documents every tag in a `Tag` / `Meaning` table and shows a short "Filtering by tag"
-  example. See `CONTRIBUTING.md`'s "Adding a new parser package" for the full package shape.
+  example. See the [guide to adding a new parser package](./new-parser-package.md) for the full package shape.
