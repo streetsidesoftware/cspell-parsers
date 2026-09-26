@@ -158,10 +158,10 @@ feature (including you, in six months) doesn't have to reverse-engineer why a ta
     - Note the last commit on `main` that has the full ADRs.
     - First, rescue anything still in force. Search the repo for links to the feature's ADR files (CLAUDE.md,
       guides, other features' ADRs, code comments). A principle that's still in force moves to
-      `docs/design-principles.md`, with a note on the feature it came from (see
-      `references/adr-template.md`). A rule that belongs with a guide or CLAUDE.md moves there. Repoint
-      every link to the new home. A link that only needs the history can point at the git permalink below.
-      Never delete a file while something in force still depends on it.
+      `docs/design-principles.md`, with a note on the feature it came from (see `references/adr-template.md`).
+      A rule that belongs with a guide or CLAUDE.md moves there. Update every link to point at the new home. A
+      link that only needs the history can point at the git permalink below. Never delete a file while
+      something in force still depends on it.
     - Rewrite `docs/ADRs/<feature-slug>/README.md` as the summary (see `references/adr-template.md`): why
       the feature was done, who it was for and how they were affected, its goal, what was built, each key
       decision in one line with its reason, and the learnings and improvements that came out of
