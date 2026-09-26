@@ -1,5 +1,48 @@
 # Changelog
 
+## [1.3.0](https://github.com/streetsidesoftware/cspell-parsers/compare/cspell-parsers@1.2.0...cspell-parsers@1.3.0) (2026-09-26)
+
+
+### Features
+
+* **parser-c-cpp-strings-comments:** add catch-all `code` tag ([#126](https://github.com/streetsidesoftware/cspell-parsers/issues/126)) ([f5493dd](https://github.com/streetsidesoftware/cspell-parsers/commit/f5493dd1908a7867d26ec072ed83d7d6697dfa11))
+* **parser-c-cpp-strings-comments:** move to the IPluginEx plugin API ([#181](https://github.com/streetsidesoftware/cspell-parsers/issues/181)) ([50e095e](https://github.com/streetsidesoftware/cspell-parsers/commit/50e095e7084a4160fd9b5badca14bc8a8452c8cd))
+* **parser-csharp-strings-comments:** add catch-all `code` tag ([#128](https://github.com/streetsidesoftware/cspell-parsers/issues/128)) ([82a534b](https://github.com/streetsidesoftware/cspell-parsers/commit/82a534b39128920f07ad5cdb77d707e2267a9cf8))
+* **parser-csharp-strings-comments:** move to the IPluginEx plugin API ([#182](https://github.com/streetsidesoftware/cspell-parsers/issues/182)) ([f46aeeb](https://github.com/streetsidesoftware/cspell-parsers/commit/f46aeebe2d076dbb0c2f2c2cc34460752183e760))
+* **parser-example:** add catch-all `code` tag ([#147](https://github.com/streetsidesoftware/cspell-parsers/issues/147)) ([0364dfb](https://github.com/streetsidesoftware/cspell-parsers/commit/0364dfb15cd0653c8cffea96bd50552e6aa34990))
+* **parser-example:** move to the IPluginEx plugin API ([#171](https://github.com/streetsidesoftware/cspell-parsers/issues/171)) ([7c2062f](https://github.com/streetsidesoftware/cspell-parsers/commit/7c2062f531d2475e7b77f41e4a2e50c3ced1a778))
+* **parser-go-strings-comments:** add catch-all `code` tag ([#129](https://github.com/streetsidesoftware/cspell-parsers/issues/129)) ([8e12599](https://github.com/streetsidesoftware/cspell-parsers/commit/8e12599e56609f9f0cb57766fe03f38b4e3d5d9e))
+* **parser-go-strings-comments:** move to the IPluginEx plugin API ([#183](https://github.com/streetsidesoftware/cspell-parsers/issues/183)) ([d9a7202](https://github.com/streetsidesoftware/cspell-parsers/commit/d9a72024b5b098421ff83264a6d50ec9ae76d676))
+* **parser-java-strings-comments:** add catch-all `code` tag ([#130](https://github.com/streetsidesoftware/cspell-parsers/issues/130)) ([f66a2e2](https://github.com/streetsidesoftware/cspell-parsers/commit/f66a2e23c1ae8aee815ed0b60d3f382a2d8650da))
+* **parser-java-strings-comments:** move to the IPluginEx plugin API ([#184](https://github.com/streetsidesoftware/cspell-parsers/issues/184)) ([4ec07b4](https://github.com/streetsidesoftware/cspell-parsers/commit/4ec07b45c82cd443c314d2214c527bb19e6b3955))
+* **parser-php-strings-comments:** move to the IPluginEx plugin API ([#170](https://github.com/streetsidesoftware/cspell-parsers/issues/170)) ([836c20d](https://github.com/streetsidesoftware/cspell-parsers/commit/836c20d2569a9d9105a94d999c4b9e21107081cb))
+* **parser-php-strings-comments:** use defineConfig ([#174](https://github.com/streetsidesoftware/cspell-parsers/issues/174)) ([cda75c9](https://github.com/streetsidesoftware/cspell-parsers/commit/cda75c939f15bebb91eb2ed2f811ca303bfe1e8f))
+* **parser-python-strings-comments:** add catch-all `code` tag ([#131](https://github.com/streetsidesoftware/cspell-parsers/issues/131)) ([c612931](https://github.com/streetsidesoftware/cspell-parsers/commit/c612931b39765a770734552bc8ba0aa90e697d81))
+* **parser-python-strings-comments:** move to the IPluginEx plugin API ([#185](https://github.com/streetsidesoftware/cspell-parsers/issues/185)) ([d900dd9](https://github.com/streetsidesoftware/cspell-parsers/commit/d900dd993f46306e159ee6e09da16de7a5650fc1))
+* **parser-ruby-strings-comments:** add catch-all `code` tag ([#138](https://github.com/streetsidesoftware/cspell-parsers/issues/138)) ([7b10097](https://github.com/streetsidesoftware/cspell-parsers/commit/7b1009763ff099949f9a5c1df6f5ade3e59a39ba))
+* **parser-ruby-strings-comments:** move to the IPluginEx plugin API ([#186](https://github.com/streetsidesoftware/cspell-parsers/issues/186)) ([6457d0b](https://github.com/streetsidesoftware/cspell-parsers/commit/6457d0b2eaf1321c7aa2db5c55b1138b93d48b76))
+* **parser-rust-strings-comments:** add catch-all `code` tag ([#139](https://github.com/streetsidesoftware/cspell-parsers/issues/139)) ([a9c5d9d](https://github.com/streetsidesoftware/cspell-parsers/commit/a9c5d9d43f68dc3a7454c6c2d4dff35df2b320ba))
+* **parser-rust-strings-comments:** move to the IPluginEx plugin API ([#187](https://github.com/streetsidesoftware/cspell-parsers/issues/187)) ([dd1a924](https://github.com/streetsidesoftware/cspell-parsers/commit/dd1a924291a83085671d2f09f7cc0f79d43a2aba))
+* **parser-strings-comments:** move to the IPluginEx plugin API ([#188](https://github.com/streetsidesoftware/cspell-parsers/issues/188)) ([f31d745](https://github.com/streetsidesoftware/cspell-parsers/commit/f31d745970ad1d958d770bc701c7835d85b81c73))
+* **parser-typescript-strings-comments:** add catch-all `code` tag ([#140](https://github.com/streetsidesoftware/cspell-parsers/issues/140)) ([987547f](https://github.com/streetsidesoftware/cspell-parsers/commit/987547f76f482295846f3cc06011637e7dc094e0))
+* **parser-typescript-strings-comments:** add plugin.defineConfig and filterTagsForFileType ([#172](https://github.com/streetsidesoftware/cspell-parsers/issues/172)) ([a7cf082](https://github.com/streetsidesoftware/cspell-parsers/commit/a7cf082dcbb4c71d6caeb145ad639c65e5dd83b0))
+* **parser-typescript-strings-comments:** move to the IPluginEx plugin API ([#167](https://github.com/streetsidesoftware/cspell-parsers/issues/167)) ([36204e2](https://github.com/streetsidesoftware/cspell-parsers/commit/36204e27ce8adf313fd5d9de20a0fd0d907b8a4d))
+* **parser-typescript-strings-comments:** one parser for JavaScript and one for TypeScript ([#195](https://github.com/streetsidesoftware/cspell-parsers/issues/195)) ([91bfef9](https://github.com/streetsidesoftware/cspell-parsers/commit/91bfef92f2aa5130b75c62c7d63338751f2a19f0))
+* **parser-typescript-tree-sitter-wasm:** one parser per file type, each with its own grammar ([#176](https://github.com/streetsidesoftware/cspell-parsers/issues/176)) ([3012c50](https://github.com/streetsidesoftware/cspell-parsers/commit/3012c50885a927b3469dab7dcdcf0fdc43db42f7))
+* **parser-typescript-tree-sitter,parser-typescript-tree-sitter-wasm:** add catch-all `code` tag ([#141](https://github.com/streetsidesoftware/cspell-parsers/issues/141)) ([4c57766](https://github.com/streetsidesoftware/cspell-parsers/commit/4c577666de18a9cb324cfe6fcae0059e5ae0a2fd))
+* **parser-typescript-tree-sitter:** one parser per file type, each with its own grammar ([#177](https://github.com/streetsidesoftware/cspell-parsers/issues/177)) ([2486e16](https://github.com/streetsidesoftware/cspell-parsers/commit/2486e16680d76c2f4d6e1a473c7567205f658969))
+* **parser-typescript-tree-sitter:** tag JSX text as jsx.text ([#189](https://github.com/streetsidesoftware/cspell-parsers/issues/189)) ([cbb11e3](https://github.com/streetsidesoftware/cspell-parsers/commit/cbb11e3db272f38285f79d5f845e012a3f4b4559))
+* remove the deprecated customization forms ([#194](https://github.com/streetsidesoftware/cspell-parsers/issues/194)) ([0130783](https://github.com/streetsidesoftware/cspell-parsers/commit/01307836f08ee6140b1ce9a58625ec5d120998fa))
+
+
+### Updates and Bug Fixes
+
+* keep recommendedLanguageSettings in sync when customizePlugin renames a parser ([#155](https://github.com/streetsidesoftware/cspell-parsers/issues/155)) ([3989951](https://github.com/streetsidesoftware/cspell-parsers/commit/3989951a8a1baa5150a94c85bfa237919d904d6b))
+* **parser-c-cpp-strings-comments:** check digit separators in linear time ([#193](https://github.com/streetsidesoftware/cspell-parsers/issues/193)) ([52468fe](https://github.com/streetsidesoftware/cspell-parsers/commit/52468fe1c22b493b2275746042932d36a85e883f))
+* **parser-c-cpp-strings-comments:** read digit separators as part of the number ([#190](https://github.com/streetsidesoftware/cspell-parsers/issues/190)) ([312ecba](https://github.com/streetsidesoftware/cspell-parsers/commit/312ecbaa6fc2b3a7bee121ffc41be15dbba48fa7))
+* **parser-php-strings-comments:** don't spell check HTML by default ([#153](https://github.com/streetsidesoftware/cspell-parsers/issues/153)) ([4504989](https://github.com/streetsidesoftware/cspell-parsers/commit/4504989092a8ad518cdf09051ebc84d4a47d6028))
+* **parser-typescript-tree-sitter:** tag module specifiers reliably ([#157](https://github.com/streetsidesoftware/cspell-parsers/issues/157)) ([21464f1](https://github.com/streetsidesoftware/cspell-parsers/commit/21464f196b9dc91c0d41475007ccc755aebd954d))
+
 ## [1.2.0](https://github.com/streetsidesoftware/cspell-parsers/compare/cspell-parsers@1.1.5...cspell-parsers@1.2.0) (2026-09-21)
 
 

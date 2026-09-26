@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.1.0](https://github.com/streetsidesoftware/cspell-parsers/compare/@cspell/parser-c-cpp-strings-comments@1.0.0...@cspell/parser-c-cpp-strings-comments@1.1.0) (2026-09-26)
+
+
+### Features
+
+* **parser-c-cpp-strings-comments:** add catch-all `code` tag ([#126](https://github.com/streetsidesoftware/cspell-parsers/issues/126)) ([f5493dd](https://github.com/streetsidesoftware/cspell-parsers/commit/f5493dd1908a7867d26ec072ed83d7d6697dfa11))
+* **parser-c-cpp-strings-comments:** move to the IPluginEx plugin API ([#181](https://github.com/streetsidesoftware/cspell-parsers/issues/181)) ([50e095e](https://github.com/streetsidesoftware/cspell-parsers/commit/50e095e7084a4160fd9b5badca14bc8a8452c8cd))
+* remove the deprecated customization forms ([#194](https://github.com/streetsidesoftware/cspell-parsers/issues/194)) ([0130783](https://github.com/streetsidesoftware/cspell-parsers/commit/01307836f08ee6140b1ce9a58625ec5d120998fa))
+
+
+### Updates and Bug Fixes
+
+* keep recommendedLanguageSettings in sync when customizePlugin renames a parser ([#155](https://github.com/streetsidesoftware/cspell-parsers/issues/155)) ([3989951](https://github.com/streetsidesoftware/cspell-parsers/commit/3989951a8a1baa5150a94c85bfa237919d904d6b))
+* **parser-c-cpp-strings-comments:** check digit separators in linear time ([#193](https://github.com/streetsidesoftware/cspell-parsers/issues/193)) ([52468fe](https://github.com/streetsidesoftware/cspell-parsers/commit/52468fe1c22b493b2275746042932d36a85e883f))
+* **parser-c-cpp-strings-comments:** read digit separators as part of the number ([#190](https://github.com/streetsidesoftware/cspell-parsers/issues/190)) ([312ecba](https://github.com/streetsidesoftware/cspell-parsers/commit/312ecbaa6fc2b3a7bee121ffc41be15dbba48fa7))
+* **parser-php-strings-comments:** don't spell check HTML by default ([#153](https://github.com/streetsidesoftware/cspell-parsers/issues/153)) ([4504989](https://github.com/streetsidesoftware/cspell-parsers/commit/4504989092a8ad518cdf09051ebc84d4a47d6028))
+
 ## 1.0.0 (2026-09-21)
 
 

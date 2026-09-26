@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.1.0](https://github.com/streetsidesoftware/cspell-parsers/compare/@cspell/parser-java-strings-comments@1.0.0...@cspell/parser-java-strings-comments@1.1.0) (2026-09-26)
+
+
+### Features
+
+* **parser-java-strings-comments:** add catch-all `code` tag ([#130](https://github.com/streetsidesoftware/cspell-parsers/issues/130)) ([f66a2e2](https://github.com/streetsidesoftware/cspell-parsers/commit/f66a2e23c1ae8aee815ed0b60d3f382a2d8650da))
+* **parser-java-strings-comments:** move to the IPluginEx plugin API ([#184](https://github.com/streetsidesoftware/cspell-parsers/issues/184)) ([4ec07b4](https://github.com/streetsidesoftware/cspell-parsers/commit/4ec07b45c82cd443c314d2214c527bb19e6b3955))
+* **parser-typescript-strings-comments:** one parser for JavaScript and one for TypeScript ([#195](https://github.com/streetsidesoftware/cspell-parsers/issues/195)) ([91bfef9](https://github.com/streetsidesoftware/cspell-parsers/commit/91bfef92f2aa5130b75c62c7d63338751f2a19f0))
+* remove the deprecated customization forms ([#194](https://github.com/streetsidesoftware/cspell-parsers/issues/194)) ([0130783](https://github.com/streetsidesoftware/cspell-parsers/commit/01307836f08ee6140b1ce9a58625ec5d120998fa))
+
+
+### Updates and Bug Fixes
+
+* keep recommendedLanguageSettings in sync when customizePlugin renames a parser ([#155](https://github.com/streetsidesoftware/cspell-parsers/issues/155)) ([3989951](https://github.com/streetsidesoftware/cspell-parsers/commit/3989951a8a1baa5150a94c85bfa237919d904d6b))
+* **parser-php-strings-comments:** don't spell check HTML by default ([#153](https://github.com/streetsidesoftware/cspell-parsers/issues/153)) ([4504989](https://github.com/streetsidesoftware/cspell-parsers/commit/4504989092a8ad518cdf09051ebc84d4a47d6028))
+
 ## 1.0.0 (2026-09-21)
 
 

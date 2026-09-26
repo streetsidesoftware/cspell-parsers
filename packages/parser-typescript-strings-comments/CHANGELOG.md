@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.1.0](https://github.com/streetsidesoftware/cspell-parsers/compare/@cspell/parser-typescript-strings-comments@1.0.0...@cspell/parser-typescript-strings-comments@1.1.0) (2026-09-26)
+
+
+### Features
+
+* **parser-example:** move to the IPluginEx plugin API ([#171](https://github.com/streetsidesoftware/cspell-parsers/issues/171)) ([7c2062f](https://github.com/streetsidesoftware/cspell-parsers/commit/7c2062f531d2475e7b77f41e4a2e50c3ced1a778))
+* **parser-typescript-strings-comments:** add catch-all `code` tag ([#140](https://github.com/streetsidesoftware/cspell-parsers/issues/140)) ([987547f](https://github.com/streetsidesoftware/cspell-parsers/commit/987547f76f482295846f3cc06011637e7dc094e0))
+* **parser-typescript-strings-comments:** add plugin.defineConfig and filterTagsForFileType ([#172](https://github.com/streetsidesoftware/cspell-parsers/issues/172)) ([a7cf082](https://github.com/streetsidesoftware/cspell-parsers/commit/a7cf082dcbb4c71d6caeb145ad639c65e5dd83b0))
+* **parser-typescript-strings-comments:** move to the IPluginEx plugin API ([#167](https://github.com/streetsidesoftware/cspell-parsers/issues/167)) ([36204e2](https://github.com/streetsidesoftware/cspell-parsers/commit/36204e27ce8adf313fd5d9de20a0fd0d907b8a4d))
+* **parser-typescript-strings-comments:** one parser for JavaScript and one for TypeScript ([#195](https://github.com/streetsidesoftware/cspell-parsers/issues/195)) ([91bfef9](https://github.com/streetsidesoftware/cspell-parsers/commit/91bfef92f2aa5130b75c62c7d63338751f2a19f0))
+* remove the deprecated customization forms ([#194](https://github.com/streetsidesoftware/cspell-parsers/issues/194)) ([0130783](https://github.com/streetsidesoftware/cspell-parsers/commit/01307836f08ee6140b1ce9a58625ec5d120998fa))
+
+
+### Updates and Bug Fixes
+
+* keep recommendedLanguageSettings in sync when customizePlugin renames a parser ([#155](https://github.com/streetsidesoftware/cspell-parsers/issues/155)) ([3989951](https://github.com/streetsidesoftware/cspell-parsers/commit/3989951a8a1baa5150a94c85bfa237919d904d6b))
+* **parser-php-strings-comments:** don't spell check HTML by default ([#153](https://github.com/streetsidesoftware/cspell-parsers/issues/153)) ([4504989](https://github.com/streetsidesoftware/cspell-parsers/commit/4504989092a8ad518cdf09051ebc84d4a47d6028))
+
 ## 1.0.0 (2026-09-21)
 
 
