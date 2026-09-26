@@ -100,10 +100,12 @@ What users can rely on:
 - **Emit hierarchical tags.** Use dot-separated names such as `comment.block.doc`, and include every
   ancestor (`comment`, `comment.block`) on the same segment, so users can filter at any level. Treat tag
   names as public API: once a user filters on one, renaming it breaks their config.
-- **Survive any input.** `parse` never throws, whatever it's given: malformed code, a fragment, or text
-  that isn't the language at all. An unterminated string or comment runs to the end of the content, and
-  anything the parser can't make sense of is best effort. Every `range` stays within the content it was
-  given. Test with fragments and malformed input, not just whole, valid files.
+- **Survive any input.** cspell can send a parser a fragment, so:
+  - `parse` never throws, whatever it's given: malformed code, a fragment, or text in another language.
+  - An unterminated string or comment runs to the end of the content. Anything else it can't make sense of is
+    best effort.
+  - Every `range` stays within the content it was given.
+  - Tests include fragments and malformed input, not just whole, valid files.
 - **Never depend on the file type inside `parse`.** If two file types need different behavior, that's two
   parsers with two names.
 - **Keep `parse` free of filtering.** The factory applies the default filter. A parser exposes its
@@ -117,4 +119,6 @@ What users can rely on:
   `plugin.customize()` with `options.tags` applied to every parser.
 - `recommended.ts` exports `plugin.defineConfig()`, so it always agrees with the parsers.
 - The README documents every tag in a `Tag` / `Meaning` table and shows a short "Filtering by tag"
-  example. See the [guide to adding a new parser package](./new-parser-package.md) for the full package shape.
+  example.
+
+See the [guide to adding a new parser package](./new-parser-package.md) for the full package shape.
