@@ -12,8 +12,9 @@ parsers, and how to write one here.
 - **No hidden side effects:** an operation changes only what its caller targets or names, even if that means
   some repetition.
 - **Set up:** `pnpm install`, then `pnpm run build` and `pnpm test`.
-- **Add a parser:** copy `packages/parser-typescript-strings-comments` (the full template; it has two parsers, see
-  below) and follow the guide.
+- **Add a parser:** with Claude Code, use the `new-parser-plugin` skill. By hand, copy
+  `packages/parser-typescript-strings-comments` (the full template; it has two parsers, see below) and follow
+  the guide.
 - **Before a PR:** `pnpm run build`, `pnpm run typecheck`, `pnpm run lint` (auto-fixes), `pnpm test`. CI runs
   `build`, `typecheck`, and `test`, plus `pnpm run lint-ci` (a read-only lint) in a separate workflow.
 - **Commits:** [Conventional Commits](https://www.conventionalcommits.org/). Use `feat:`/`fix:` only for

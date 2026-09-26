@@ -1,0 +1,97 @@
+# Parser interview guide
+
+The parser-specific decisions for a new parser plugin package, grouped by theme. Start with the `feature-adr`
+interview guide's group 0 (why, stakeholders, and the goal), then pull from these. Ask one question, resolve
+it, write it down (as an ADR if it's genuinely a judgment call, or fold it into another ADR's context if it's
+a detail), then move to the next.
+
+The `feature-adr` skill also uses groups 2–7 when a design changes an existing parser's behavior.
+
+Where a question has an obvious, low-stakes default given the rest of the repo's conventions, propose that
+default up front ("I'd default to X because the rest of the repo does Y — any reason to deviate here?")
+rather than asking it as a fully open question.
+
+## 1. Scope and template
+
+- What language or file format is this, and what's the actual input? Give an example snippet of what should
+  get spell checked and what shouldn't. This is usually the fastest way to pin down scope before it turns
+  into edge-case debates later.
+- Does an existing package already cover it, or come close? A new file type for an existing parser may be a
+  change to that package instead (use the `feature-adr` skill for that).
+- Which template? For a hand-written scanner, `packages/parser-typescript-strings-comments` (full-featured)
+  or `packages/parser-example` (minimal starter), the two `CONTRIBUTING.md` names. For an AST-based parser,
+  `packages/parser-typescript-tree-sitter-wasm` (tree-sitter, with no native dependency).
+- One parser or several? One parser per language is the usual shape (`src/parser.ts`). Several parsers
+  sharing one scanner use `src/parsers.ts` and have no `./parser` subpath, as
+  `parser-typescript-strings-comments` does.
+
+## 2. File type coverage
+
+- Which cspell/vscode language IDs belong in `supportedFileTypes`? Note this list is the single source of
+  truth `recommended.ts` builds `languageSettings` from and what the README's "Supported file types" table
+  is generated from — getting it right here avoids a second pass later.
+- Are there closely related file types deliberately being left out for now (e.g. `.tsx` handled, `.mtsx`
+  not)? Worth stating explicitly as context even if it doesn't rise to its own ADR.
+
+## 3. Tags (only if this parser emits `tags`)
+
+- What's the full tag set, and which tags are hierarchical (dot-separated, e.g. `comment.block.doc`)? Per
+  `CONTRIBUTING.md`'s tags convention, every ancestor tag must be emitted alongside the most specific one.
+- Is the tag naming consistent with sibling packages that tag similar constructs (check
+  `packages/parser-typescript-tree-sitter-wasm/src/tags.ts` and any `*-strings-comments` package for
+  precedent) — reusing an existing tag name is usually preferable to minting a near-duplicate.
+  `parser-javascript` reusing `parser-typescript`'s tags (see commit history) is the precedent for this.
+- Since tags become part of the package's effective public API the moment someone writes a
+  `customizePlugin({ tags: ... })` filter against them, treat a tag rename later as a breaking change when
+  deciding names now.
+- Does `plugin.ts` need to export `customizePlugin`/`CustomizePluginOptions` (required whenever `tags` are
+  emitted at all — see `CLAUDE.md`'s "Package shape")?
+
+## 4. Backend / implementation strategy
+
+- Hand-written scanner (regex/character-scan, generator-based `parsedTexts` per `CLAUDE.md`'s "Package
+  shape" section) vs. AST-based (tree-sitter or similar)? `packages/parser-typescript-tree-sitter` (native
+  `tree-sitter`) and `packages/parser-typescript` (which depends on
+  `@cspell/parser-typescript-tree-sitter-wasm`) are the existing precedent for swapping backends behind the
+  same package shape — is this feature adding a new backend option, or is a single approach sufficient?
+- If AST-based: what's the dependency cost? Check `CLAUDE.md`'s dist-size/production-dependency guidance —
+  a new production dependency here is a real cost worth surfacing as a decision, not an implementation
+  afterthought.
+- If scanner-based: are `parsedTexts` ranges straightforward to compute relative to the original file
+  content, or are there escaping/normalization edge cases (e.g. multi-byte characters, `\u2028`/`\u2029` per
+  this repo's code-style rule on invisible characters) worth calling out in context?
+
+## 5. Edge cases
+
+Ask concretely, with example input, rather than abstractly ("how should nested comments behave?" is worse
+than "given `/* outer /* inner */ still outer? */`, what should happen?"). Common categories worth checking
+against this codebase's existing parsers:
+
+- Malformed/incomplete input (unterminated string, unterminated comment) — error out, or best-effort parse?
+- Nesting and adjacency (comment inside string, string inside comment, back-to-back constructs)
+- Leading/trailing content (front-matter blocks, BOM, trailing newline handling)
+- Escape sequences and how they interact with word boundaries for spell-checking
+
+## 6. Testing and samples
+
+- Fixtures: what raw snippets belong in `fixtures/` to pin exact byte-level behavior (quote style, spacing)?
+- Samples: does this warrant a new `samples/<pattern>/` subfolder (e.g. a new usage pattern beyond the
+  existing `plugin`/`recommended` split), or do the existing sample patterns already cover it?
+
+## 7. Release surface
+
+- Is this a new publishable package (needs to be picked up by `fix-release-please-config`, i.e. its name
+  doesn't start with `@internal`), or private/internal?
+- Does the README need a new tags table and/or "Filtering by tag" section (required whenever `tags` are
+  emitted — see `CLAUDE.md`)?
+- Should the `parser-strings-comments` bundle include it? A strings-and-comments parser for a new language
+  usually belongs there too.
+- What's the package name, and the parser names? Parser names are what users write in `languageSettings`,
+  so they're public API from the first release.
+
+## Wrapping a topic into a decision
+
+Not every answered question needs its own ADR. Bundle related answers from the same group into one ADR when
+they'd only make sense read together (e.g. the whole tag set from group 3 is usually one ADR); split them
+when they're independently changeable later (backend choice and file-type coverage almost always warrant
+separate ADRs, since one can change without the other).

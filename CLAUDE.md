@@ -296,7 +296,8 @@ When adding or editing a `.md` file that contains deliberate spelling errors (e.
 parser flags or ignores), add a `<!-- cspell:ignore ... -->` comment at the end of the file listing those
 words, so the repo's own spellcheck doesn't flag them.
 
-To add a new parser package: see `CONTRIBUTING.md` for the full steps.
+To add a new parser package: use the `new-parser-plugin` skill, which designs it and then builds it by
+`CONTRIBUTING.md`'s steps.
 
 Dependency updates are handled by Dependabot (`.github/dependabot.yml`), not Renovate — dev and production
 dependencies are grouped into separate PRs, as are GitHub Actions version bumps.
