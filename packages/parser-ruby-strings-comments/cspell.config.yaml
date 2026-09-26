@@ -9,6 +9,5 @@ words:
   - dedenting
   - gsub
   - heredocs
-  - misdetected
   - rdoc
   - unscanned

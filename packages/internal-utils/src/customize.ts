@@ -20,36 +20,13 @@ interface GeneralRule extends Rule {
   readonly regExp: RegExp;
 }
 
-/**
- * Compiles `options` into a {@link TagsFilter}, classifying patterns once up front so the returned
- * closure is cheap to call per `ParsedText`. Non-`'*'` keys fall into three buckets:
- * - **exact** (no `*`) - `Map` lookup.
- * - **prefix** (single trailing `*`, e.g. `comment.block.*`) - `startsWith`, longest-prefix-first.
- * - **general** (`*` elsewhere, or more than one) - compiled `RegExp`.
- */
-export function compileTagFilter(options: TagFilterOptions): TagsFilter {
-  const defaultValue = options['*'] ?? true;
-  const { exact, prefixes, general } = classifyTagPatterns(options);
-
-  if (prefixes.length === 0 && general.length === 0) {
-    return exact.size === 0 ? () => defaultValue : (tags) => matchExactOnly(tags, exact, defaultValue);
-  }
-  if (general.length === 0) {
-    return (tags) => matchExactAndPrefixes(tags, exact, prefixes, defaultValue);
-  }
-  return (tags) => matchAnyPattern(tags, exact, prefixes, general, defaultValue);
-}
-
 interface ClassifiedPatterns {
   exact: Map<string, boolean>;
   prefixes: PrefixRule[];
   general: GeneralRule[];
 }
 
-/**
- * Splits `options`' keys into the exact/prefix/general buckets described in {@link compileTagFilter}; shared
- * with {@link compileTagScoreCard}.
- */
+/** Splits `options`' keys into exact, prefix (`comment.*`, longest first) and general (`*.doc`) patterns. */
 function classifyTagPatterns(options: TagFilterOptions): ClassifiedPatterns {
   const exact = new Map<string, boolean>();
   const prefixes: PrefixRule[] = [];
@@ -76,67 +53,6 @@ function classifyTagPatterns(options: TagFilterOptions): ClassifiedPatterns {
   return { exact, prefixes, general };
 }
 
-function matchExactOnly(
-  tags: ParsedTags | undefined,
-  exact: ReadonlyMap<string, boolean>,
-  defaultValue: boolean,
-): boolean {
-  if (!tags) return defaultValue;
-  let bestValue: boolean | undefined;
-  let bestSpecificity = -1;
-  for (const tag in tags) {
-    if (!tags[tag]) continue;
-    const value = exact.get(tag);
-    if (value === undefined) continue;
-    const specificity = tag.length;
-    if (specificity > bestSpecificity) {
-      bestValue = value;
-      bestSpecificity = specificity;
-    }
-  }
-  return bestValue ?? defaultValue;
-}
-
-function matchExactAndPrefixes(
-  tags: ParsedTags | undefined,
-  exact: ReadonlyMap<string, boolean>,
-  prefixes: readonly PrefixRule[],
-  defaultValue: boolean,
-): boolean {
-  if (!tags) return defaultValue;
-  const best: Best = { specificity: -1, value: undefined };
-  for (const tag in tags) {
-    if (!tags[tag]) continue;
-    matchExact(best, tag, exact);
-    matchPrefixes(best, tag, prefixes);
-  }
-  return best?.value ?? defaultValue;
-}
-
-function matchAnyPattern(
-  tags: ParsedTags | undefined,
-  exact: ReadonlyMap<string, boolean>,
-  prefixes: readonly PrefixRule[],
-  general: readonly GeneralRule[],
-  defaultValue: boolean,
-): boolean {
-  if (!tags) return defaultValue;
-  const best: Best = { specificity: -1, value: undefined };
-  for (const tag in tags) {
-    if (!tags[tag]) continue;
-    matchExact(best, tag, exact);
-    matchPrefixes(best, tag, prefixes);
-    for (const rule of general) {
-      if (rule.specificity <= best.specificity) continue;
-      if (rule.regExp.test(tag)) {
-        best.specificity = rule.specificity;
-        best.value = rule.value;
-      }
-    }
-  }
-  return best?.value ?? defaultValue;
-}
-
 function matchExact(best: Best, tag: string, exact: ReadonlyMap<string, boolean>): void {
   if (tag.length < best.specificity) return;
   const value = exact.get(tag);
@@ -145,7 +61,7 @@ function matchExact(best: Best, tag: string, exact: ReadonlyMap<string, boolean>
   best.specificity = tag.length;
 }
 
-/** `prefixes` must already be sorted longest-first (see `compileTagFilter`). */
+/** `prefixes` must already be sorted longest-first (see `classifyTagPatterns`). */
 function matchPrefixes(best: Best, tag: string, prefixes: readonly PrefixRule[]): void {
   for (const rule of prefixes) {
     // Sorted desc by specificity: once one rule can't beat the floor, none after it can either.
@@ -166,7 +82,7 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-/** 0 = default value; positive = on, negative = off; magnitude = strength of the match. */
+/** Positive = on, negative = off; magnitude = strength of the match. */
 type TagScore = number;
 
 interface TagScoreCard {
@@ -176,9 +92,8 @@ interface TagScoreCard {
 type KnownTagsAndDefaults = Record<string, boolean>;
 
 /**
- * Resolves one tag name against classified `options`, using the same specificity rules as
- * {@link matchAnyPattern} applies to a whole `ParsedTags` object. Returns `undefined` if `options`
- * doesn't address this tag at all.
+ * Resolves one tag name against classified `options`: the most specific matching pattern wins.
+ * Returns `undefined` if `options` doesn't address this tag at all.
  */
 function matchSingleTag(
   tag: string,
@@ -217,8 +132,8 @@ function toScore(included: boolean, magnitude: number): TagScore {
  *
  * Per tag, resolution order is: an explicit `options` pattern, then `options['*']`, then the tag's own
  * default (e.g. `code` in `@cspell/parser-php-strings-comments`, which defaults off). `'*'` being merely
- * *absent* from `options` must NOT implicitly mean `true` (unlike {@link compileTagFilter}) - that would
- * make every tag's own default unreachable.
+ * *absent* from `options` must NOT implicitly mean `true` - that would make every tag's own default
+ * unreachable.
  *
  * A real `ParsedText`'s tags carry the whole ancestor chain, so `compileTagFilterFromScoreCard` still
  * picks whichever known tag is present on a segment *and* has the strongest score.
@@ -253,7 +168,7 @@ function compileTagFilterFromScoreCard(scoreCard: TagScoreCard, defaultValue: bo
 
     for (const [tag, score] of scores) {
       if (tag in tags && tags[tag]) {
-        const resultForTag = score > 0 || (score === 0 && defaultValue);
+        const resultForTag = score > 0;
         if (Object.isFrozen(tags)) {
           cachedResult.set(tags, resultForTag);
         }
@@ -272,7 +187,7 @@ export function createParsedTextFilter(
   knownTagsAndDefaults: KnownTagsAndDefaults,
 ): (text: ParsedText) => boolean {
   const scoreCard = compileTagScoreCard(options, knownTagsAndDefaults);
-  // `options['*']` decides untagged/unknown-tagged segments, same as compileTagFilter.
+  // `options['*']` decides untagged/unknown-tagged segments.
   const tagFilter = compileTagFilterFromScoreCard(scoreCard, options['*'] ?? true);
   return (text: ParsedText) => tagFilter(text.tags);
 }
