@@ -134,6 +134,21 @@ The full ADRs are in git history: [docs/ADRs/<feature-slug> at <short-sha>](http
 
 In `docs/ADRs/README.md`, mark the feature's bullet `(archived)`.
 
+## `docs/design-principles.md` (created on the first archive that has principles still in force)
+
+```markdown
+# Design principles
+
+Principles still in force from features whose ADRs have been archived. Each links to its feature's summary.
+
+## <Principle, stated as a rule>
+
+<The rule, and why it holds.> From [<feature-slug>](./ADRs/<feature-slug>/README.md).
+```
+
+Add a principle when its feature is archived. If a later feature changes a principle, edit it in place and
+add that feature to its "From" line.
+
 ## `docs/glossary.md` (created once, repo-wide)
 
 ```markdown

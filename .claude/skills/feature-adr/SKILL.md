@@ -78,7 +78,8 @@ feature (including you, in six months) doesn't have to reverse-engineer why a ta
      `README.md` under Open questions, and come back to it before closing the loop.
    - **Capture side remarks as rules.** A remark made in passing ("use `fileType`, not `filetype`", "no
      hidden side effects") is often a standing rule. Confirm it, then record it where it applies: the
-     design-principles ADR, CLAUDE.md, or memory.
+     design-principles ADR (which moves to `docs/design-principles.md` when the feature is archived),
+     CLAUDE.md, or memory.
 
    Keep sight of the description's own boundary: if a question turns out to have only one reasonable
    answer once you look at the code, that's not an ADR-worthy decision — just note it in context and move
@@ -155,12 +156,18 @@ feature (including you, in six months) doesn't have to reverse-engineer why a ta
     feature about three months after it's implemented, or when the user asks:
     - Work in a worktree on a `claude-archive-<feature-slug>` branch, as in step 2.
     - Note the last commit on `main` that has the full ADRs.
+    - First, rescue anything still in force. Search the repo for links to the feature's ADR files (CLAUDE.md,
+      guides, other features' ADRs, code comments). A principle that's still in force moves to
+      `docs/design-principles.md`, with a note on the feature it came from (see
+      `references/adr-template.md`). A rule that belongs with a guide or CLAUDE.md moves there. Repoint
+      every link to the new home. A link that only needs the history can point at the git permalink below.
+      Never delete a file while something in force still depends on it.
     - Rewrite `docs/ADRs/<feature-slug>/README.md` as the summary (see `references/adr-template.md`): why
       the feature was done, who it was for and how they were affected, its goal, what was built, each key
       decision in one line with its reason, and the learnings and improvements that came out of
       implementation, review, and amendments.
     - Link to the full ADRs in git history: a permalink to the feature's directory at that commit.
-    - Delete the individual ADR files. Point glossary links and any other links at the summary instead.
+    - Delete the individual ADR files. Point glossary links, and any remaining links, at the summary.
     - Mark the feature as archived in `docs/ADRs/README.md`.
     - Open a PR, so the user reviews the summary before the detail leaves the tree.
 

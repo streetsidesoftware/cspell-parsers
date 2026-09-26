@@ -36,10 +36,10 @@ decision. The why is what the archive summary keeps when the ADRs are gone.
 - Is this a brand-new parser package, a behavior change to an existing one, or something cross-cutting
   (touches `@internal/utils`, affects multiple packages at once)? This determines which of the groups below
   even apply.
-- If new: which package makes the better starting template, per `CONTRIBUTING.md`? For a hand-written
-  scanner, `packages/parser-typescript-strings-comments` (full-featured) or `packages/parser-example`
-  (minimal starter). For an AST-based parser, `packages/parser-typescript-tree-sitter-wasm` (tree-sitter,
-  with no native dependency).
+- If new: which package makes the better starting template? For a hand-written scanner,
+  `packages/parser-typescript-strings-comments` (full-featured) or `packages/parser-example` (minimal
+  starter), the two `CONTRIBUTING.md` names. For an AST-based parser,
+  `packages/parser-typescript-tree-sitter-wasm` (tree-sitter, with no native dependency).
 - What's the actual input this parses, and what's out of scope? Concretely: give an example snippet of what
   should get spell-checked and what shouldn't — this is usually the fastest way to pin down scope
   disagreements before they turn into edge-case debates later.
@@ -114,7 +114,9 @@ than adding a parser. The plugin-customization ADRs are the worked example.
   Context. Many later questions are settled by pointing back at them.
 - **Principles before mechanics.** Agree on the principles first (for example, "judge everything from the
   plugin user's config", "an operation changes only what it names") and record them as ADR `0001`. Later
-  options are then weighed against them rather than argued from scratch.
+  options are then weighed against them rather than argued from scratch. Principles usually outlive the
+  feature: when it's archived, they move to `docs/design-principles.md`, and any that are already there
+  should be cited rather than restated.
 - **The user's code for each option.** Ask with what a user writes and what happens, not with type
   signatures.
 - **Mutability and identity.** What does the user hold, can they change it by accident, and what happens to
