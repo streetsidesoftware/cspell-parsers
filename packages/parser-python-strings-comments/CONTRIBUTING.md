@@ -77,8 +77,8 @@ each tag means to a consumer.
 
 ## Why `customizePlugin` works with any cspell version
 
-`customizePlugin` is a thin wrapper around `@internal/utils`'s `customizePluginEx`
-(`packages/internal-utils/src/pluginEx.ts`). `createPluginParserWithFilterTags` (`parserEx.ts`) builds the
+`customizePlugin` is a thin wrapper around `@internal/utils`'s `customizePluginWith`
+(`packages/internal-utils/src/plugin.ts`). `createPluginParserWithFilterTags` (`parserDef.ts`) builds the
 default filter from `tags`. Every filter, a consumer's included, is compiled against the parser's unfiltered
 output and its `tags`, never on top of an earlier filter. The filtering happens inside the parser before
 cspell sees the result, so it works with any cspell version, including one too old to filter `ParsedText.tags`

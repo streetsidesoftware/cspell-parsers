@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import type { ParsedText } from '@cspell/cspell-types/Parser';
-import type { IParserEx } from '@internal/utils';
+import type { IParser } from '@internal/utils';
 import { describe, expect, it } from 'vitest';
 
 import { plugin } from './plugin.ts';
@@ -22,7 +22,7 @@ const fileTypeByExtension: Record<string, string> = {
 };
 
 /** Returns the parser `recommended` selects for `name`, by its extension. */
-function parserFor(name: string): IParserEx {
+function parserFor(name: string): IParser {
   const extension = name.slice(name.lastIndexOf('.'));
   return plugin.getParser(fileTypeByExtension[extension] ?? 'typescript');
 }

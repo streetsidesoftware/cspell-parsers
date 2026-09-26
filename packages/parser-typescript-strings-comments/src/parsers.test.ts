@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import type { ParsedText } from '@cspell/cspell-types';
-import type { IParserEx } from '@internal/utils';
+import type { IParser } from '@internal/utils';
 import { describe, expect, it } from 'vitest';
 
 import { parse, parsers } from './parsers.ts';
@@ -11,7 +11,7 @@ import { tags } from './tags.ts';
 
 const fixturesDir = join(import.meta.dirname, '../fixtures');
 
-function getParser(name: string): IParserEx {
+function getParser(name: string): IParser {
   const found = parsers.find((p) => p.name === name);
   if (!found) throw new Error(`No parser named ${name}`);
   return found;

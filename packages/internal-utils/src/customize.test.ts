@@ -2,9 +2,9 @@ import type { ParsedTags, ParsedText } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
 import { compileTagFilter, createParsedTextFilter } from './customize.ts';
-import { createPluginParserWithFilterTags } from './parserEx.ts';
-import { createPluginEx } from './pluginEx.ts';
-import type { IParserEx, TagFilterOptions } from './types.ts';
+import { createPluginParserWithFilterTags } from './parserDef.ts';
+import { createPlugin } from './plugin.ts';
+import type { IParser, TagFilterOptions } from './types.ts';
 
 function mkText(content: string, tags: ParsedText['tags']): ParsedText {
   return { text: content, range: [0, content.length], tags };
@@ -16,7 +16,7 @@ function mkText(content: string, tags: ParsedText['tags']): ParsedText {
  * declares every tag any of `parsedTexts` actually carries (all defaulting to emitted/kept), the same way a
  * real parser's `tags` map is expected to list everything it can emit.
  */
-function fakeParser(parsedTexts: ParsedText[]): IParserEx {
+function fakeParser(parsedTexts: ParsedText[]): IParser {
   const tags: Record<string, boolean> = {};
   for (const { tags: parsedTags } of parsedTexts) {
     for (const tag in parsedTags) tags[tag] = true;
@@ -30,8 +30,8 @@ function fakeParser(parsedTexts: ParsedText[]): IParserEx {
 }
 
 /** Applies `tags` to `parser` through a plugin builder, the way `customizePlugin` does. */
-function filterTags(parser: IParserEx, tags: TagFilterOptions): IParserEx {
-  return createPluginEx({ name: 'fake', parsers: [parser] })
+function filterTags(parser: IParser, tags: TagFilterOptions): IParser {
+  return createPlugin({ name: 'fake', parsers: [parser] })
     .customize()
     .filterTags(parser.name, tags)
     .getParser(parser.name);

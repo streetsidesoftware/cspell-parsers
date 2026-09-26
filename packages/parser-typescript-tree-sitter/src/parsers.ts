@@ -1,5 +1,5 @@
 import type { ParseResult } from '@cspell/cspell-types/Parser';
-import type { IParserEx } from '@internal/utils';
+import type { IParser } from '@internal/utils';
 import { createPluginParserWithFilterTags } from '@internal/utils';
 
 import { tags } from './tags.ts';
@@ -11,7 +11,7 @@ function parseWith(grammar: Grammar): (content: string, filename: string) => Par
   return (content, filename) => ({ content, filename, parsedTexts: collectParsedTexts(grammar, content) });
 }
 
-function createParser(fileType: string, grammar: Grammar): IParserEx {
+function createParser(fileType: string, grammar: Grammar): IParser {
   return createPluginParserWithFilterTags({
     name: fileType,
     parse: parseWith(grammar),
@@ -25,7 +25,7 @@ function createParser(fileType: string, grammar: Grammar): IParserEx {
  * `code` is off by default through `tags`.
  * See docs/ADRs/typescript-parser-split/0003-grammars.md.
  */
-export const parsers: readonly IParserEx[] = [
+export const parsers: readonly IParser[] = [
   createParser('javascript', 'javascript'),
   createParser('javascriptreact', 'javascript'),
   createParser('typescript', 'typescript'),

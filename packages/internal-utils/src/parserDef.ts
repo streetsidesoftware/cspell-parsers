@@ -1,5 +1,5 @@
 import { createParsedTextFilter } from './customize.ts';
-import type { IParserEx, ParsedTextFilter, ParseFunction, ParserTags, TagFilterOptions } from './types.ts';
+import type { IParser, ParsedTextFilter, ParseFunction, ParserTags, TagFilterOptions } from './types.ts';
 
 export interface CreatePluginParserWithFilterTagsOptions {
   name: string;
@@ -14,7 +14,7 @@ export interface CreatePluginParserWithFilterTagsOptions {
 }
 
 /** Creates a parser whose default filter comes only from `options.tags`. */
-export function createPluginParserWithFilterTags(options: CreatePluginParserWithFilterTagsOptions): IParserEx {
+export function createPluginParserWithFilterTags(options: CreatePluginParserWithFilterTagsOptions): IParser {
   return new ParserDef(options.name, options.parse, options.supportedFileTypes, options.tags, undefined).parser;
 }
 
@@ -35,14 +35,14 @@ export class ParserDef {
    * Maps each parser this module created back to its definition.
    * `from` uses it to return the same parser object, so a plugin's `parsers` include the exported `parser`.
    */
-  static readonly #defsByParser = new WeakMap<IParserEx, ParserDef>();
+  static readonly #defsByParser = new WeakMap<IParser, ParserDef>();
 
   readonly #parse: ParseFunction;
   readonly #tags: Readonly<ParserTags>;
   readonly name: string;
   readonly fileTypes: readonly string[];
   readonly filterTags: Readonly<TagFilterOptions> | undefined;
-  #parser: IParserEx | undefined;
+  #parser: IParser | undefined;
 
   constructor(
     name: string,
@@ -59,10 +59,10 @@ export class ParserDef {
   }
 
   /**
-   * Reads any package's `IParserEx` through its public data.
+   * Reads any package's `IParser` through its public data.
    * A parser this module created maps back to its own definition.
    */
-  static from(parser: IParserEx): ParserDef {
+  static from(parser: IParser): ParserDef {
     return (
       ParserDef.#defsByParser.get(parser) ??
       new ParserDef(parser.name, parser._parse, parser.supportedFileTypes, parser.tags, parser.filterTags)
@@ -80,18 +80,18 @@ export class ParserDef {
   }
 
   /** Returns the read-only parser that cspell uses, creating it on first use. */
-  get parser(): IParserEx {
+  get parser(): IParser {
     this.#parser ??= this.#createParser();
     return this.#parser;
   }
 
-  #createParser(): IParserEx {
+  #createParser(): IParser {
     const parser = this.#buildParser();
     ParserDef.#defsByParser.set(parser, this);
     return parser;
   }
 
-  #buildParser(): IParserEx {
+  #buildParser(): IParser {
     const tags = this.#tags;
     const filterTags = this.filterTags;
     const keepsEverything = !filterTags && Object.values(tags).every(Boolean);

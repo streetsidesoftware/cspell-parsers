@@ -7,10 +7,10 @@ general package shape.
 
 ## Shape of the plugin
 
-`src/plugin.ts` builds `plugin` with `@internal/utils`'s `createPluginEx`, from the parsers of every bundled
+`src/plugin.ts` builds `plugin` with `@internal/utils`'s `createPlugin`, from the parsers of every bundled
 plugin, in order. Each language package keeps its own parser name, so the bundle's parser names are the same as
 the packages' (`php-strings-comments`, ...), and a parser's file types, tags, and default filter come along
-unchanged. Parser names must stay unique across the bundled packages: `createPluginEx` throws on a duplicate.
+unchanged. Parser names must stay unique across the bundled packages: `createPlugin` throws on a duplicate.
 
 To bundle a new language package:
 
@@ -22,7 +22,7 @@ To bundle a new language package:
 
 ## `customizePlugin`
 
-`customizePlugin(options?)` is a thin wrapper around `customizePluginEx`, the same as in every language package.
+`customizePlugin(options?)` is a thin wrapper around `customizePluginWith`, the same as in every language package.
 To change one language only, use `filterTagsForFileType` on the result. See
 `docs/ADRs/plugin-customization/0008-customize-plugin-wrapper.md`.
 

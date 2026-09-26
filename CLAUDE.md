@@ -111,13 +111,13 @@ Every package publishes **four** things, each its own file under `src/` and its 
   `supportedFileTypes: string[]` — the cspell/vscode language IDs (e.g. `'typescript'`, `'javascriptreact'`)
   the parser is meant to handle, kept alphabetically sorted — as the single source of truth `recommended.ts`
   builds its `languageSettings` from, so the list only needs updating in one place.
-- `src/plugin.ts` — thin wiring: `export const plugin: IPluginEx = createPluginEx({ name, parsers: [parser] })`
+- `src/plugin.ts` — thin wiring: `export const plugin: IPlugin = createPlugin({ name, parsers: [parser] })`
   (with `parser` created by `@internal/utils`'s `createPluginParserWithFilterTags`), plus
   `export { supportedFileTypes } from './parser.ts'` so it's reachable from the `./plugin` subpath too.
   Published as `./plugin` → `dist/plugin.js`. If `parser.ts` emits `tags`, also re-export `@internal/utils`'s
-  shared options (`export type { CustomizePluginExOptions as CustomizePluginOptions } from '@internal/utils'`)
+  shared options (`export type { CustomizePluginOptions } from '@internal/utils'`)
   and `function customizePlugin(options?: CustomizePluginOptions): IPluginBuilder`, a thin wrapper around
-  `customizePluginEx(plugin, options)`, so a consumer can filter which tagged segments get spell checked
+  `customizePluginWith(plugin, options)`, so a consumer can filter which tagged segments get spell checked
   without needing cspell itself to support that filtering. The result can be adjusted further and turned into
   a complete config with `defineConfig()`. See `packages/parser-typescript-strings-comments/src/plugin.ts` for
   the pattern.

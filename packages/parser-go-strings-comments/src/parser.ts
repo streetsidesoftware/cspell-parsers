@@ -1,5 +1,5 @@
 import type { ParseResult } from '@cspell/cspell-types';
-import type { IParserEx } from '@internal/utils';
+import type { IParser } from '@internal/utils';
 import { createPluginParserWithFilterTags } from '@internal/utils';
 
 import { Scanner } from './scanner.ts';
@@ -13,7 +13,7 @@ export function parse(content: string, filename: string): ParseResult {
 export const supportedFileTypes: Readonly<string[]> = Object.freeze(['go']);
 
 /** `code` is off by default through `tags`. */
-export const parser: IParserEx = createPluginParserWithFilterTags({
+export const parser: IParser = createPluginParserWithFilterTags({
   name: 'go-strings-comments',
   parse,
   supportedFileTypes,

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { stripCommentMarkers as stripCommentMarkersImpl } from './comments.ts';
-import { codeTagMeaning, customizePluginEx, decodeStringParts, stripCommentMarkers } from './index.ts';
-import { customizePluginEx as customizePluginExImpl } from './pluginEx.ts';
+import { codeTagMeaning, customizePluginWith, decodeStringParts, stripCommentMarkers } from './index.ts';
+import { customizePluginWith as customizePluginWithImpl } from './plugin.ts';
 import { decodeStringParts as decodeStringPartsImpl } from './strings.ts';
 import { codeTagMeaning as codeTagMeaningImpl } from './tags.ts';
 
@@ -15,8 +15,8 @@ describe('index', () => {
     expect(decodeStringParts).toBe(decodeStringPartsImpl);
   });
 
-  it('re-exports customizePluginEx from pluginEx.js', () => {
-    expect(customizePluginEx).toBe(customizePluginExImpl);
+  it('re-exports customizePluginWith from plugin.js', () => {
+    expect(customizePluginWith).toBe(customizePluginWithImpl);
   });
 
   it('re-exports codeTagMeaning from tags.js', () => {

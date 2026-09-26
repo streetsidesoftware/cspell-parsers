@@ -1,12 +1,12 @@
-import type { CustomizePluginExOptions, IPluginBuilder, IPluginEx } from '@internal/utils';
-import { createPluginEx, customizePluginEx } from '@internal/utils';
+import type { CustomizePluginOptions, IPlugin, IPluginBuilder } from '@internal/utils';
+import { createPlugin, customizePluginWith } from '@internal/utils';
 
 import { parser } from './parser.ts';
 
 export { supportedFileTypes } from './parser.ts';
-export type { CustomizePluginExOptions as CustomizePluginOptions } from '@internal/utils';
+export type { CustomizePluginOptions } from '@internal/utils';
 
-export const plugin: IPluginEx = createPluginEx({ name: 'example', parsers: [parser] });
+export const plugin: IPlugin = createPlugin({ name: 'example', parsers: [parser] });
 
 export const recommendedLanguageSettings = plugin.languageSettings();
 
@@ -24,6 +24,6 @@ export const recommendedLanguageSettings = plugin.languageSettings();
  * export default customizePlugin({ tags: { '*': false, 'comment.block.doc': true } }).defineConfig();
  * ```
  */
-export function customizePlugin(options?: CustomizePluginExOptions): IPluginBuilder {
-  return customizePluginEx(plugin, options);
+export function customizePlugin(options?: CustomizePluginOptions): IPluginBuilder {
+  return customizePluginWith(plugin, options);
 }

@@ -1,5 +1,5 @@
 import type { ParseResult } from '@cspell/cspell-types';
-import type { IParserEx } from '@internal/utils';
+import type { IParser } from '@internal/utils';
 import { createPluginParserWithFilterTags } from '@internal/utils';
 
 import { Scanner } from './scanner.ts';
@@ -10,7 +10,7 @@ export function parse(content: string, filename: string): ParseResult {
   return { content, filename, parsedTexts: new Scanner(content).run() };
 }
 
-function createParser(name: string, supportedFileTypes: readonly string[]): IParserEx {
+function createParser(name: string, supportedFileTypes: readonly string[]): IParser {
   return createPluginParserWithFilterTags({ name, parse, supportedFileTypes, tags });
 }
 
@@ -18,7 +18,7 @@ function createParser(name: string, supportedFileTypes: readonly string[]): IPar
  * One parser for JavaScript and JSX, and one for TypeScript and TSX, sharing the same scanner.
  * `code` is off by default through `tags`.
  */
-export const parsers: readonly IParserEx[] = [
+export const parsers: readonly IParser[] = [
   createParser('javascript-strings-comments', ['javascript', 'javascriptreact']),
   createParser('typescript-strings-comments', ['typescript', 'typescriptreact']),
 ];
