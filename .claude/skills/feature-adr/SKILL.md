@@ -51,9 +51,12 @@ feature (including you, in six months) doesn't have to reverse-engineer why a ta
    - If either file already exists, read it first — don't clobber prior features' entries.
 
 4. **Interview one decision at a time.** Start with why, before any option: what problem or pain prompted
-   this, for whom, and why it's worth doing now. Then the goal (what success looks like) and what's out of
-   scope. Write them in the feature's `README.md` under Why, Goal, and Out of scope. Every later decision is
-   weighed against the why, and it's the one thing the archive summary must keep (step 10).
+   this, and why it's worth doing now. Offer the five whys as a way to get there: ask "why?" of each answer
+   until you reach the underlying reason. It's a framework, not a script; stop when the answer is clear.
+   Then the stakeholders: who it's for, who else it touches, and how each is affected. Then the goal (what
+   success looks like) and what's out of scope. Write them in the feature's `README.md` under Why,
+   Stakeholders, Goal, and Out of scope. Every later decision is weighed against the why and the
+   stakeholders, and the why is the one thing the archive summary must keep (step 10).
 
    Then take the decisions one at a time. Don't front-load a giant questionnaire. Ask a single, concrete
    question, let the user answer (or say "you decide" — then propose a default and state it as the
@@ -153,8 +156,9 @@ feature (including you, in six months) doesn't have to reverse-engineer why a ta
     - Work in a worktree on a `claude-archive-<feature-slug>` branch, as in step 2.
     - Note the last commit on `main` that has the full ADRs.
     - Rewrite `docs/ADRs/<feature-slug>/README.md` as the summary (see `references/adr-template.md`): why
-      the feature was done, its goal, what was built, each key decision in one line with its reason, and
-      the learnings and improvements that came out of implementation, review, and amendments.
+      the feature was done, who it was for and how they were affected, its goal, what was built, each key
+      decision in one line with its reason, and the learnings and improvements that came out of
+      implementation, review, and amendments.
     - Link to the full ADRs in git history: a permalink to the feature's directory at that commit.
     - Delete the individual ADR files. Point glossary links and any other links at the summary instead.
     - Mark the feature as archived in `docs/ADRs/README.md`.

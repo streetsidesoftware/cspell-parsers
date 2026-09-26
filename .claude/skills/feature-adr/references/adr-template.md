@@ -31,6 +31,10 @@ bullets when adding to a feature that's already listed.
 - <Why now: the request, bug, or limit hit that made it worth doing.>
 - <Constraints that shape it: the platform's fixed rules, compatibility, size budget, ...>
 
+## Stakeholders
+
+- **<Who>:** <what it gives them, and how it affects them (what changes, what they need to do).>
+
 ## Goal
 
 <What success looks like: something a user can do, or a config they can write, that they can't today.>
@@ -106,6 +110,10 @@ The full ADRs are in git history: [docs/ADRs/<feature-slug> at <short-sha>](http
 ## Why
 
 - <Carried over from the index. This is the part that must survive: why the feature was done.>
+
+## Stakeholders
+
+- **<Who>:** <how the finished feature affected them.>
 
 ## Goal
 

@@ -10,17 +10,26 @@ propose that default up front ("I'd default to X because the rest of the repo do
 deviate here?") rather than asking it as a fully open question. That's still a decision worth an ADR if the
 user could reasonably have picked differently; it just makes the interview faster.
 
-## 0. Why, and the goal (always first)
+## 0. Why, stakeholders, and the goal (always first)
 
-- Why are we doing this? What problem or pain prompted it, and who has it: plugin users writing a config,
-  plugin authors, or maintainers?
+- Why are we doing this? What problem or pain prompted it?
 - Why now? What made it worth doing: a bug, a request, a limit hit while building something else?
+- If the first answer is a solution ("we need a builder") rather than a reason, try the five whys: ask "why?"
+  of each answer until you reach the underlying need. Use it loosely; three whys are often enough, and it's
+  fine to stop as soon as the reason is clear.
+- Who are the stakeholders? Who is this for, and who else does it touch? In this repo that's usually:
+  - users writing a cspell config (JSON/YAML or JS/TS);
+  - plugin authors, in this repo or outside it;
+  - maintainers of this repo;
+  - cspell itself and its VS Code extension, when the change depends on or affects their behavior.
+- How is each stakeholder affected? What gets easier, what changes under them (a breaking change, a
+  migration, a renamed parser), and what they need to know or do.
 - What does success look like? Describe it as something a user can do, or a config they can write, that
   they can't today.
 - What's deliberately out of scope?
 
-Record the answers in the feature's `README.md` (Why, Goal, Out of scope) before the first decision. The
-why is what the archive summary keeps when the ADRs are gone.
+Record the answers in the feature's `README.md` (Why, Stakeholders, Goal, Out of scope) before the first
+decision. The why is what the archive summary keeps when the ADRs are gone.
 
 ## 1. Shape of the change
 
@@ -115,6 +124,8 @@ than adding a parser. The plugin-customization ADRs are the worked example.
   needs a runtime check.
 - **Public surface.** Which exports and subpaths are public API, and which are experimental? This decides
   what counts as a breaking change later.
+- **Impact on each stakeholder.** For each option, go back to the stakeholders from group 0: whose config
+  or code changes, what breaks, and how they find out (a type error, a runtime error, a release note).
 - **Migration.** How do the new and old APIs coexist, in what order do packages move, and what happens to
   the old forms: kept, deprecated, or removed, and when?
 - **Provisional names.** Which names are placeholders? List them in the feature index, with when each must
