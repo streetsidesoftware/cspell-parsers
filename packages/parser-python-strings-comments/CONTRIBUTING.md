@@ -1,8 +1,8 @@
 # Contributing to @cspell/parser-python-strings-comments
 
-This is a contributor-facing walkthrough of how `src/parser.ts` actually works. `README.md` is written for
+This is a contributor-facing walkthrough of how `src/parsers.ts` actually works. `README.md` is written for
 someone using the plugin; this file is for someone changing it. See the repo root `CONTRIBUTING.md` for the
-general package shape (`parser.ts`/`plugin.ts`/`index.ts`/`recommended.ts`, `fixtures/`, `samples/`) - this
+general package shape (`parsers.ts`/`plugin.ts`/`index.ts`/`recommended.ts`, `fixtures/`, `samples/`) - this
 file only covers what's specific to this package's parsing logic.
 
 ## Shape of the parser
@@ -25,7 +25,7 @@ separate expression scanner to keep in sync.
 
 `detectStringPrefix(content, i)` requires `content[i - 1]` not be an identifier character, so a longer
 identifier that merely _ends_ in a prefix-like letter (`r`, `u`, `f`, `b`, or a 2-letter combination) is never
-misread as starting one - see `parser.test.ts`'s "prefix-like substring in the middle of a longer identifier"
+misread as starting one - see `parsers.test.ts`'s "prefix-like substring in the middle of a longer identifier"
 test (`numbr"..."`: "br" is a valid prefix but isn't at a word boundary here).
 
 This guards prefix detection only; `scanCode` treats any bare `'`/`"` it meets as an ordinary string
@@ -42,7 +42,7 @@ how Python's own tokenizer behaves: a raw string doesn't _interpret_ `\n`/`\t`/e
 backslash still "protects" the character after it from ending the string while the tokenizer looks for the
 closing quote. That's why `r'\''` is an unterminated-string error in real Python, while `r'\\'` is valid and
 contains one literal backslash - `isRaw` only ever changes which _tag_ a string gets, never the algorithm
-that finds where it ends. Regression coverage: `parser.test.ts`'s "still boundary-skips a backslash-quote in
+that finds where it ends. Regression coverage: `parsers.test.ts`'s "still boundary-skips a backslash-quote in
 a raw string" test, against `fixtures/raw-strings.py`'s `r"a\"b"`.
 
 ### Triple-quote detection
@@ -90,12 +90,12 @@ design.
 A "docstring" is a triple-quoted string that happens to be the first statement in a module, class, or
 function body - not distinct syntax. Recognizing that position would require tracking statement/indentation
 context this scanner deliberately doesn't have. Every triple-quoted string gets the plain `string.tripleQuote`
-tag regardless of position - see `parser.test.ts`'s docstring test and `README.md`'s
+tag regardless of position - see `parsers.test.ts`'s docstring test and `README.md`'s
 [Known limitations](README.md#known-limitations) section.
 
 ## Testing
 
-- `parser.test.ts` reads fixtures from `fixtures/` rather than embedding source inline for most cases - real
+- `parsers.test.ts` reads fixtures from `fixtures/` rather than embedding source inline for most cases - real
   Python source is easier to read than an escaped string literal. `fixtures/` is excluded from
   `tsc`/ESLint/Prettier (see root `CLAUDE.md`) since a fixture's exact bytes (quote style, spacing, a missing
   closing delimiter) are often what's being asserted on. Two EOF-specific edge cases (an unterminated
@@ -108,7 +108,7 @@ tag regardless of position - see `parser.test.ts`'s docstring test and `README.m
 
 ## Using this package as a template
 
-This package is a reasonable starting point for a new `-strings-comments` parser: copy `src/parser.ts`,
+This package is a reasonable starting point for a new `-strings-comments` parser: copy `src/parsers.ts`,
 `src/plugin.ts`, `src/index.ts`, and `src/recommended.ts` into a new package under `packages/` and replace
 the parsing logic with your own. See the repo root `CONTRIBUTING.md`'s "Adding a new parser package" section
 for the full steps, and `packages/parser-typescript` for the canonical, more fully-featured template.

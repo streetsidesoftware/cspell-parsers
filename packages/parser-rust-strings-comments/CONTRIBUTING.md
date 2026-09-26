@@ -1,8 +1,8 @@
 # Contributing to @cspell/parser-rust-strings-comments
 
-This is a contributor-facing walkthrough of how `src/parser.ts` actually works. `README.md` is written for
+This is a contributor-facing walkthrough of how `src/parsers.ts` actually works. `README.md` is written for
 someone using the plugin; this file is for someone changing it. See the repo root `CONTRIBUTING.md` for the
-general package shape (`parser.ts`/`plugin.ts`/`index.ts`/`recommended.ts`, `fixtures/`, `samples/`) - this
+general package shape (`parsers.ts`/`plugin.ts`/`index.ts`/`recommended.ts`, `fixtures/`, `samples/`) - this
 file only covers what's specific to this package's parsing logic.
 
 ## Shape of the parser
@@ -80,7 +80,7 @@ another `"` - potentially swallowing real code, including a genuine string, in b
 unambiguous with one or two characters of lookahead (a lifetime never continues with `"` or `\`), so `scanTagged()`
 special-cases them: it consumes `'"'` as 3 characters and `'\"'` as 4, without reintroducing a general
 char-literal parser. `fixtures/lifetimes-vs-chars.rs`'s `quote_char_then_real_string` and
-`escaped_quote_char_then_real_string` functions, and their tests in `parser.test.ts`, prove a real string
+`escaped_quote_char_then_real_string` functions, and their tests in `parsers.test.ts`, prove a real string
 right after either form is still recognized correctly. (An earlier version of this parser only handled the
 unescaped form, which mis-scanned the escaped one as a runaway string - the two tests above are the
 regression coverage for that.)
@@ -152,7 +152,7 @@ ending in "r"/"b"/"c" right before an unrelated quote (`author"data"`) isn't mis
 `skipEscape(content, i)` clamps a backslash-escape skip (`i + 2`) to `content.length`, so a trailing lone
 backslash right at EOF (an unterminated string ending mid-escape) lands on the end of `content` instead of
 one past it. Every backslash-skip in `scanQuotedString` goes through this - without it, the emitted
-`range`/`map` can exceed `content.length`, inconsistent with the actual `rawText`. See `parser.test.ts`'s
+`range`/`map` can exceed `content.length`, inconsistent with the actual `rawText`. See `parsers.test.ts`'s
 "unterminated literals ending mid-token at EOF" tests. Raw strings never call this at all - a backslash
 inside one is just a literal character, per Rust's grammar.
 
@@ -184,7 +184,7 @@ design.
 
 ## Testing
 
-- `parser.test.ts` reads fixtures out of `fixtures/` (via `readFixture`/`parseFixture` helpers) rather than
+- `parsers.test.ts` reads fixtures out of `fixtures/` (via `readFixture`/`parseFixture` helpers) rather than
   embedding source strings inline. `fixtures/` is excluded from `tsc`/ESLint/Prettier since a fixture's exact
   bytes are often what's being asserted on; don't let a formatter "fix" one.
 - `fixtures/nested-comments.rs` and `fixtures/unterminated.rs` exercise block-comment nesting depth,

@@ -116,7 +116,7 @@ needs.
 Rust only uses `"` for strings, so a string's tags describe its kind (byte, raw, or C) rather than its quote
 style. A nested block comment, such as `/* outer /* inner */ still outer */`, is one comment.
 
-<!--- Tested by src/parser.test.ts: "treats "/* /* nested */ still open */" as ONE comment, not two" --->
+<!--- Tested by src/parsers.test.ts: "treats "/* /* nested */ still open */" as ONE comment, not two" --->
 
 ### The `code` tag
 
@@ -213,7 +213,7 @@ interface TagFilterOptions {
 ## Known limitations
 
 - **Char literals aren't checked.** A char literal such as `'a'` or `b'x'` is code, the same as a lifetime.
-  <!--- Tested by src/parser.test.ts: "does not emit anything for a char literal ("'A'") - char literals are never spell checked" --->
+  <!--- Tested by src/parsers.test.ts: "does not emit anything for a char literal ("'A'") - char literals are never spell checked" --->
 
 ## Requirements
 

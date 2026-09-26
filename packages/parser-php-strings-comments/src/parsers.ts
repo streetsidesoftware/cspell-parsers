@@ -16,10 +16,10 @@ export function parse(content: string, filename: string): ParseResult {
 
 export const supportedFileTypes: Readonly<string[]> = Object.freeze(['php']);
 
-/** Both `code` and `html` are off by default through `tags`. */
-export const parser: IParser = createPluginParserWithFilterTags({
-  name: 'php-strings-comments',
-  parse,
-  supportedFileTypes,
-  tags,
-});
+/**
+ * This package has one parser.
+ * Both `code` and `html` are off by default through `tags`.
+ */
+export const parsers: readonly IParser[] = [
+  createPluginParserWithFilterTags({ name: 'php-strings-comments', parse, supportedFileTypes, tags }),
+];

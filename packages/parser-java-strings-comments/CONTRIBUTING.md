@@ -1,8 +1,8 @@
 # Contributing to @cspell/parser-java-strings-comments
 
-This is a contributor-facing walkthrough of how `src/parser.ts` actually works. `README.md` is written for
+This is a contributor-facing walkthrough of how `src/parsers.ts` actually works. `README.md` is written for
 someone using the plugin; this file is for someone changing it. See the repo root `CONTRIBUTING.md` for the
-general package shape (`parser.ts`/`plugin.ts`/`index.ts`/`recommended.ts`, `fixtures/`, `samples/`) - this
+general package shape (`parsers.ts`/`plugin.ts`/`index.ts`/`recommended.ts`, `fixtures/`, `samples/`) - this
 file only covers what's specific to this package's parsing logic.
 
 ## Shape of the parser
@@ -30,7 +30,7 @@ A `"` only starts a text block once the scanner has confirmed the next _two_ cha
 `scanQuotedString('"')` call, exactly the same dispatch order the combined `@cspell/parser-strings-comments`
 package used for its `'java'` dialect. This is why an empty string (`""`) right before a real text block, or
 a text block whose content happens to start with a quote character, are both still handled correctly - see
-`parser.test.ts`'s `""" vs "..." dispatch boundary` tests, which would fail if this look-ahead were shortened
+`parsers.test.ts`'s `""" vs "..." dispatch boundary` tests, which would fail if this look-ahead were shortened
 to only checking one extra character.
 
 ### Emitting a segment
@@ -56,14 +56,14 @@ backslash right at EOF (an unterminated char/string literal or text block ending
 end of `content` instead of one past it. Every backslash-skip in `scanQuotedString`/`scanJavaTextBlock` goes
 through this - without it, the emitted `range`/`map` can exceed `content.length`, inconsistent with the
 actual `rawText` (this was a real bug, found by Copilot's review of `@cspell/parser-strings-comments` PR #60 -
-see `parser.test.ts`'s "unterminated literals at EOF" tests).
+see `parsers.test.ts`'s "unterminated literals at EOF" tests).
 
 ## Javadoc detection
 
 A `/* ... */` block comment is additionally tagged `comment.block.doc` when `rawText.startsWith('/**')` and
 `rawText.length >= 5` - the length check exists so the 4-character `/**/` (an empty ordinary block comment,
 `/*` immediately closed by `*/`, with no room left for a 3-character `/**` opener that still has its own
-`*/` to close) isn't misread as an empty Javadoc comment. See `parser.test.ts`'s "Javadoc detection" tests,
+`*/` to close) isn't misread as an empty Javadoc comment. See `parsers.test.ts`'s "Javadoc detection" tests,
 including the boundary case `/***/` (5 characters), which _is_ a valid (empty) Javadoc comment.
 
 ## Tags
@@ -75,7 +75,7 @@ per segment. See `README.md`'s [Tags](README.md#tags) table for what each one me
 
 ## Testing
 
-- `parser.test.ts` reads fixtures out of `fixtures/` (via `readFixture`/`parseFixture` helpers) rather than
+- `parsers.test.ts` reads fixtures out of `fixtures/` (via `readFixture`/`parseFixture` helpers) rather than
   embedding source strings inline for the larger, more realistic cases - a fixture is real, syntactically
   valid Java content, which both exercises real file content and makes intent easier to read than an escaped
   string literal. `fixtures/` is excluded from `tsc`/ESLint/Prettier (see root `CLAUDE.md`) because a

@@ -22,10 +22,10 @@ export const supportedFileTypes: Readonly<string[]> = Object.freeze([
   'typescript',
 ]);
 
-/** `code` is off by default through `tags`. */
-export const parser: IParser = createPluginParserWithFilterTags({
-  name: 'c-style-comments',
-  parse,
-  supportedFileTypes,
-  tags,
-});
+/**
+ * This package has one parser.
+ * `code` is off by default through `tags`.
+ */
+export const parsers: readonly IParser[] = [
+  createPluginParserWithFilterTags({ name: 'c-style-comments', parse, supportedFileTypes, tags }),
+];

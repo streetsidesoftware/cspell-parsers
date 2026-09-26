@@ -80,7 +80,7 @@ is a standalone npm package implementing cspell's `Parser`/`Plugin` contract (ty
 - `tsdown`/`vitest`/`typescript` are declared once as root `devDependencies` (not duplicated per package) and
   resolve into packages via Node's normal ancestor `node_modules` lookup, which works even though
   `pnpm-workspace.yaml` sets `nodeLinker: isolated`.
-- Relative imports use `.ts` extensions (e.g. `from './parser.ts'`), not `.js` — `tsconfig.base.json` sets
+- Relative imports use `.ts` extensions (e.g. `from './parsers.ts'`), not `.js` — `tsconfig.base.json` sets
   `allowImportingTsExtensions: true` (permitted because `noEmit` is also `true`), and tsdown resolves and
   rewrites these to `.js` in `dist/` output.
 
@@ -89,16 +89,20 @@ is a standalone npm package implementing cspell's `Parser`/`Plugin` contract (ty
 `"catalog:"` rather than pinning their own versions, so every package stays in lockstep.
 
 **Package shape** — `packages/parser-typescript-strings-comments` is the canonical, fully-fledged template. It has
-two parsers, so it keeps them in `src/parsers.ts` (see the exception below); a package with one parser uses
-`src/parser.ts`, as `packages/parser-csharp-strings-comments` does. `packages/parser-example`
-predates this convention and is kept as a minimal single-file reference (fine to start from for a trivial
-parser, but bring it in line with the shape below if it needs `tags`/`scope`/a `recommended` entry point).
+two parsers; most packages have one, as `packages/parser-csharp-strings-comments` does. Either way, the parsers
+live in `src/parsers.ts`. `packages/parser-example` is kept as a minimal reference (fine to start from for a
+trivial parser, but bring it in line with the shape below if it needs `scope` or more tags).
 
-Every package publishes **four** things, each its own file under `src/` and its own subpath in `package.json`'s
-`exports`:
+The plugin is the only way to reach a parser (`plugin.getParser(name)`); no package publishes a `./parser`
+subpath. See `docs/ADRs/typescript-parser-split/0005-plugin-only-entry-point.md`. Every package publishes three
+entry points, each its own file under `src/` and its own subpath in `package.json`'s `exports`: `.`
+(`src/index.ts`), `./plugin`, and `./recommended`. The TypeScript tree-sitter packages (`parser-typescript`,
+`parser-typescript-tree-sitter`, `parser-typescript-tree-sitter-wasm`) also publish `./tags`.
 
-- `src/parser.ts` — the real parsing logic. Exports `parse(content, filename): ParseResult` and
-  `parser: Parser` (`{ name, parse }`), matching the types in `@cspell/cspell-types`. `parse`'s `ParseResult`
+- `src/parsers.ts` — internal (no `exports` subpath, no tsdown entry), and the real parsing logic. Exports
+  `parsers: readonly IParser[]`, even when the package has only one parser, each built with `@internal/utils`'s
+  `createPluginParserWithFilterTags`. A hand-written scanner package also exports the raw
+  `parse(content, filename): ParseResult` for its tests. `parse`'s `ParseResult`
   carries `parsedTexts` entries with `range: [start, end]` offsets _relative to the original file content_ —
   getting these right is the core correctness concern of any parser here, since cspell uses them to map
   spelling issues back to the source. `parsedTexts` is typed `Iterable<ParsedText>`, not an array — for a
@@ -107,14 +111,12 @@ Every package publishes **four** things, each its own file under `src/` and its 
   generator (`function*`/`yield`) rather than collecting into an array first; see
   `packages/parser-typescript-strings-comments/src/scanner.ts`'s `Scanner` for the pattern (`run()` and its
   per-construct helpers are generators that `yield`/`yield*` directly, rather than pushing onto an array
-  field). Published as `./parser` → `dist/parser.js`. Also exports
-  `supportedFileTypes: string[]` — the cspell/vscode language IDs (e.g. `'typescript'`, `'javascriptreact'`)
-  the parser is meant to handle, kept alphabetically sorted — as the single source of truth `recommended.ts`
-  builds its `languageSettings` from, so the list only needs updating in one place.
-- `src/plugin.ts` — thin wiring: `export const plugin: IPlugin = createPlugin({ name, parsers: [parser] })`
-  (with `parser` created by `@internal/utils`'s `createPluginParserWithFilterTags`), plus
-  `export { supportedFileTypes } from './parser.ts'` so it's reachable from the `./plugin` subpath too.
-  Published as `./plugin` → `dist/plugin.js`. If `parser.ts` emits `tags`, also re-export `@internal/utils`'s
+  field). A package with one parser also exports `supportedFileTypes: string[]` — the cspell/vscode language
+  IDs (e.g. `'typescript'`, `'javascriptreact'`) the parser is meant to handle, kept alphabetically sorted —
+  as the single source of truth for its `languageSettings`, so the list only needs updating in one place.
+- `src/plugin.ts` — thin wiring: `export const plugin: IPlugin = createPlugin({ name, parsers })`, plus
+  `export const supportedFileTypes: readonly string[] = plugin.supportedFileTypes`.
+  Published as `./plugin` → `dist/plugin.js`. If `parsers.ts` emits `tags`, also re-export `@internal/utils`'s
   shared options (`export type { CustomizePluginOptions } from '@internal/utils'`)
   and `function customizePlugin(options?: CustomizePluginOptions): IPluginBuilder`, a thin wrapper around
   `customizePluginWith(plugin, options)`, so a consumer can filter which tagged segments get spell checked
@@ -132,25 +134,25 @@ Every package publishes **four** things, each its own file under `src/` and its 
   `languageSettings`, so a consumer only has to `"import": ["@cspell/parser-x/recommended"]` and nothing
   else.
 
-Exception: a package with more than one parser (the tree-sitter TypeScript backends, `parser-typescript`,
-`parser-javascript`, and `parser-typescript-strings-comments`) has no `src/parser.ts` or `./parser` subpath.
-Its parsers live in an internal module, and `plugin` is the only entry point (`plugin.getParser(name)`). See
-`docs/ADRs/typescript-parser-split/0005-plugin-only-entry-point.md`.
+Packages built from other packages' plugins have no `src/parsers.ts`: `parser-typescript` and
+`parser-javascript` (from `parser-typescript-tree-sitter-wasm`'s plugin), and `parser-strings-comments`
+(which bundles the language packages' plugins).
 
-Every top-level `src/*.ts` file needs a matching entry in **both** `tsdown.config.ts`'s `entry` array and
+Every entry-point file needs a matching entry in **both** `tsdown.config.ts`'s `entry` array and
 `package.json`'s `exports` map — these two lists are independent and tsdown does not infer one from the
 other. A file missing from `entry` builds no error, just a `dist/` quietly missing that file, which only
 surfaces when something imports the corresponding `exports` subpath. Double-check both whenever a new
-top-level file is added.
+entry point is added. Internal modules (`parsers.ts`, `scanner.ts`, `tags.ts` when not published) are in
+neither list; tsdown bundles them into the entry points that import them.
 
-Tests mirror the same split: `parser.test.ts` carries the real parsing coverage (using fixtures — see
+Tests mirror the same split: `parsers.test.ts` carries the real parsing coverage (using fixtures — see
 below); `plugin.test.ts` / `index.test.ts` / `recommended.test.ts` are thin, checking only that each file
-wires the layer below it together correctly (e.g. `plugin.parsers` includes `parser`, `recommended`'s
+wires the layer below it together correctly (e.g. `plugin.parsers` equals `parsers`, `recommended`'s
 settings include the right `languageSettings`).
 
 Two more directories, both at the package root (not under `src/`):
 
-- `fixtures/` — raw, arbitrary source snippets fed straight through `parser.parse()` in tests. Their exact
+- `fixtures/` — raw, arbitrary source snippets fed straight through a parser's `parse()` in tests. Their exact
   bytes (quote style, spacing) are often what a test is asserting on, so this directory is excluded from
   `tsc` (tsconfig `exclude`), ESLint (`ignores`), and Prettier (`.prettierignore`) — never let a formatter or
   linter "fix" a fixture.
