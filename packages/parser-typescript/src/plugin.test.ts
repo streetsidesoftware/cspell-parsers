@@ -34,4 +34,9 @@ describe('customizePlugin', () => {
     const options = { name: 'custom', tags: {} } as unknown as Parameters<typeof customizePlugin>[0];
     expect(() => customizePlugin(options)).toThrow('use renameParser instead');
   });
+
+  it('rejects a file type in place of options, as the old bundle form took', () => {
+    const fileType = 'typescript' as unknown as Parameters<typeof customizePlugin>[0];
+    expect(() => customizePlugin(fileType)).toThrow('filterTagsForFileType');
+  });
 });
