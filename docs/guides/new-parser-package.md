@@ -70,11 +70,13 @@ Checklist:
 - [ ] `parse` survives any input and never throws. cspell can send it a fragment, such as a markdown code
       block. Unterminated constructs run to the end of the content, and every `range` stays within it.
 - [ ] A hand-written scanner emits `parsedTexts` lazily, with generators.
-- [ ] Tags are dot-separated and hierarchical (`comment.block.doc`), and each segment carries every ancestor
-      (`comment`, `comment.block`), so a filter can match at any level. See
-      `packages/parser-typescript/CONTRIBUTING.md`'s "Tags" section.
-- [ ] Every emitted tag is in `tags.ts`: `tagsAndMeaning` gives its one-line meaning (which generates the
-      README's tags table), and `tags` says whether it's checked by default.
+- [ ] Tags follow the [tag naming conventions](../tags.md#naming-conventions) and reuse existing tags where
+      they fit. The tags emerge as you build the parser; you don't need them all up front.
+- [ ] Every emitted tag is in `tags.ts` as soon as the parser emits it: `tagsAndMeaning` gives its one-line
+      meaning (which generates the README's tags table and [`docs/tags.md`](../tags.md)), and `tags` says whether
+      it's checked by default.
+- [ ] Before the PR, the whole tag set is reviewed against the conventions. After release, a renamed tag breaks
+      users' filters.
 - [ ] `plugin.ts` builds `plugin` with `createPlugin({ name, parsers })` and exports
       `supportedFileTypes = plugin.supportedFileTypes`.
 - [ ] `plugin.ts` exports `customizePlugin(options?)`, a thin wrapper around

@@ -35,17 +35,16 @@ rather than asking it as a fully open question.
 
 ## 3. Tags
 
-- What's the full tag set, and which tags are hierarchical (dot-separated, e.g. `comment.block.doc`)? Per
-  `CONTRIBUTING.md`'s tags convention, every ancestor tag must be emitted alongside the most specific one.
-- Is the tag naming consistent with sibling packages that tag similar constructs (check
-  `packages/parser-typescript-tree-sitter-wasm/src/tags.ts` and any `*-strings-comments` package for
-  precedent) — reusing an existing tag name is usually preferable to minting a near-duplicate.
-  `parser-javascript` reusing `parser-typescript`'s tags (see commit history) is the precedent for this.
-- Since tags become part of the package's effective public API the moment someone writes a
-  `customizePlugin({ tags: ... })` filter against them, treat a tag rename later as a breaking change when
-  deciding names now.
-- Every parser emits tags, so `src/tags.ts`, `customizePlugin`, and the README's tags table are always
-  required. The question is only which tags, and which are checked by default.
+Don't try to settle the full tag set in the interview. Tags emerge while building the parser. Settle only:
+
+- Which families apply, from [`docs/tags.md`](../../../../docs/tags.md): usually `comment`, `string`, and
+  `code`. Does the language have a kind of text no family covers yet?
+- What should users be able to tell apart? For example, doc comments from plain ones, or raw strings from
+  others. Show example code for each.
+- What's off by default? Usually only `code`.
+
+Every parser emits tags, so `src/tags.ts`, `customizePlugin`, and the README's tags table are always required.
+Tag names are public API once released, so the build step reviews the final set against the conventions.
 
 ## 4. Backend / implementation strategy
 

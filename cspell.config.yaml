@@ -32,10 +32,12 @@ words:
   - COMMIT_EDITMSG
   - dedup
   - gitdir
+  - godoc
   - heredocs
   - inlines
   - miscategorized
   - mistagged
+  - nowdoc
   - prebuilds
   - Precomputes
   - sigstore

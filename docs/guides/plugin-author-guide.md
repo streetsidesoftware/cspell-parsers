@@ -99,7 +99,8 @@ What users can rely on:
   builder can recompile them.
 - **Emit hierarchical tags.** Use dot-separated names such as `comment.block.doc`, and include every
   ancestor (`comment`, `comment.block`) on the same segment, so users can filter at any level. Treat tag
-  names as public API: once a user filters on one, renaming it breaks their config.
+  names as public API: once a user filters on one, renaming it breaks their config. See the
+  [tags reference](../tags.md) for the naming conventions and every tag in use.
 - **Survive any input.** cspell can send a parser a fragment, so:
   - `parse` never throws, whatever it's given: malformed code, a fragment, or text in another language.
   - An unterminated string or comment runs to the end of the content. Anything else it can't make sense of is

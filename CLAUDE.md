@@ -286,6 +286,9 @@ implementation detail to omit: it's what a consumer needs to write a `customizeP
 by tag. Keep it to a plain two-column `Tag` / `Meaning` table — no discussion of how the parser computes or
 assigns the tags.
 
+Name tags by `docs/tags.md`'s conventions, and reuse the tags listed there where they fit. That page's table is
+generated from every package's `tags.ts` by `fix-parser-readme`.
+
 `README.md` must also include a "Supported file types" section — this is what a consumer checks before
 deciding whether `recommended` already covers their file types or they need to wire `languageSettings`
 themselves. Don't hand-write its table: add
