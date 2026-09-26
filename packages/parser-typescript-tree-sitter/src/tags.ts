@@ -30,6 +30,8 @@ export const tagsAndMeaning = {
   'identifier.label': 'A statement label',
   'identifier.importBinding': 'A renamed import alias, default import name, or namespace import name',
   'identifier.exportBinding': 'A renamed export alias (`export { x as y }`)',
+  jsx: 'Any JSX text (JSX attribute strings and names keep their `string` and `identifier` tags)',
+  'jsx.text': 'The text between JSX tags, such as the `Hello` in `<p>Hello</p>`',
   code: codeTagMeaning,
 } as const satisfies Record<string, string>;
 
@@ -93,6 +95,8 @@ const COMMENT_LINE_TAG = defineTag(hierarchicalTags('comment.line'));
 const COMMENT_BLOCK_TAG = defineTag(hierarchicalTags('comment.block'));
 const COMMENT_BLOCK_DOC_TAG = defineTag(hierarchicalTags('comment.block.doc'));
 
+const JSX_TEXT_TAG = defineTag(hierarchicalTags('jsx.text'));
+
 export type IdentifierKind =
   | 'variable'
   | 'property'
@@ -115,7 +119,7 @@ const identifierTagByKind: Record<IdentifierKind, Tags> = {
   exportBinding: defineTag(hierarchicalTags('identifier.exportBinding')),
 };
 
-/** Punctuation, keywords, and anything else `walk` doesn't visit - everything not a comment, string, or identifier. */
+/** Punctuation, keywords, and anything else `walk` doesn't visit - everything not a comment, string, identifier, or JSX text. */
 const CODE_TAG: Tags = defineTag({ code: true });
 
 export const TAGS = {
@@ -129,6 +133,7 @@ export const TAGS = {
   COMMENT_LINE: COMMENT_LINE_TAG,
   COMMENT_BLOCK: COMMENT_BLOCK_TAG,
   COMMENT_BLOCK_DOC: COMMENT_BLOCK_DOC_TAG,
+  JSX_TEXT: JSX_TEXT_TAG,
   IDENTIFIER_BY_KIND: identifierTagByKind,
   CODE: CODE_TAG,
 } as const;

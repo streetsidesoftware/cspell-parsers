@@ -4,4 +4,5 @@ ignorePaths:
   - fixtures
   - dist
 words:
+  - eacute
   - unaliased

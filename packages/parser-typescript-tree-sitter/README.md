@@ -122,7 +122,7 @@ export default customizePlugin().filterTags('javascript', { '*': false, comment:
 
 Each part of a file gets its most specific tag plus the more general ones above it. For example, a doc
 comment is tagged `comment.block.doc`, `comment.block`, and `comment`, so a filter can use whichever level it
-needs. JSX text is checked, but has no tag.
+needs.
 
 <!--- @@inject: docs/tags-table.csv#markdown --->
 
@@ -151,9 +151,17 @@ needs. JSX text is checked, but has no tag.
 | `identifier.label`             | A statement label                                                                                        |
 | `identifier.importBinding`     | A renamed import alias, default import name, or namespace import name                                    |
 | `identifier.exportBinding`     | A renamed export alias (`export { x as y }`)                                                             |
+| `jsx`                          | Any JSX text (JSX attribute strings and names keep their `string` and `identifier` tags)                 |
+| `jsx.text`                     | The text between JSX tags, such as the `Hello` in `<p>Hello</p>`                                         |
 | `code`                         | Everything else (off by default)                                                                         |
 
 <!--- @@inject-end: docs/tags-table.csv#markdown --->
+
+In JSX text, character references are decoded, so `Caf&eacute;` is checked as `Café`. This covers the named
+references JSX supports, as well as decimal (`&#233;`) and hex (`&#xE9;`) references. An unknown reference,
+such as `&bogus;`, is left as it is.
+
+<!--- Tested by src/parsers.test.ts: "joins the run into one segment, decoding named, decimal, and hex references" --->
 
 ### The `code` tag
 

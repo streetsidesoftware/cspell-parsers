@@ -3,6 +3,8 @@ export { createCodeTagsEmitter } from './codeTagEmitter.ts';
 export type { CommentText } from './comments.ts';
 export { stripCommentMarkers } from './comments.ts';
 export { createParsedTextFilter } from './customize.ts';
+export type { HtmlTextPart } from './htmlEntities.ts';
+export { decodeHtmlCharacterReference, decodeHtmlTextParts } from './htmlEntities.ts';
 export type { CreatePluginParserWithFilterTagsOptions } from './parserEx.ts';
 export { createPluginParserWithFilterTags } from './parserEx.ts';
 export type { CreatePluginExOptions } from './pluginEx.ts';
