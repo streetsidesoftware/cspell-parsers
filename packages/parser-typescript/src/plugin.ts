@@ -27,7 +27,12 @@ export const recommendedLanguageSettings = plugin.languageSettings();
  * ```
  */
 export function customizePlugin(options?: CustomizePluginOptions): IPluginBuilder {
-  // Rejected at runtime too, since the old API took `name` and a JS config wouldn't see the type error.
+  // Runtime checks for JS configs, as in `customizePluginWith`; inline so this package doesn't bundle `@internal/utils` code.
+  if (options !== undefined && typeof options !== 'object') {
+    throw new Error(
+      `customizePlugin takes an options object; for one file type, use customizePlugin().filterTagsForFileType(...) (plugin "${plugin.name}").`,
+    );
+  }
   if (options?.name !== undefined) {
     throw new Error(`"name" isn't supported; use renameParser instead (plugin "${plugin.name}").`);
   }
