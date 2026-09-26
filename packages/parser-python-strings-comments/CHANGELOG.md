@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/streetsidesoftware/cspell-parsers/compare/@cspell/parser-python-strings-comments@1.1.0...@cspell/parser-python-strings-comments@1.1.1) (2026-09-26)
+
+
+### Updates and Bug Fixes
+
+* remove the experimental ./parser subpath; use plugin.getParser(name) instead ([0f2abd8](https://github.com/streetsidesoftware/cspell-parsers/commit/0f2abd838cb3284023823bf9750990acba7670a9))
+
 ## [1.1.0](https://github.com/streetsidesoftware/cspell-parsers/compare/@cspell/parser-python-strings-comments@1.0.0...@cspell/parser-python-strings-comments@1.1.0) (2026-09-26)
 
 
