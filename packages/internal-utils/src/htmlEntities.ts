@@ -9,9 +9,10 @@ export interface HtmlTextPart {
 }
 
 /**
- * The named character references JSX supports (HTML 4), as `name:hexCodePoint` pairs.
- * Taken from TypeScript's JSX transform. Names with digits, such as `frac12`, are listed but never reached,
- * since tree-sitter only parses `&[A-Za-z]+;` as a named reference.
+ * The named character references JSX supports, as `name:hexCodePoint` pairs: the 253 of XHTML 1.0
+ * (HTML 4.01's 252, plus `apos`), from https://www.w3.org/TR/xhtml1/#h-A2. JSX compilers decode the same set.
+ * Names with digits, such as `frac12`, are listed but never reached, since tree-sitter only parses `&[A-Za-z]+;`
+ * as a named reference.
  */
 const namedEntityTable = [
   'quot:22 amp:26 apos:27 lt:3c gt:3e nbsp:a0 iexcl:a1 cent:a2 pound:a3 curren:a4 yen:a5 brvbar:a6',
