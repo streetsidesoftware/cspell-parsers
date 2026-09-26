@@ -1,8 +1,8 @@
 # Contributing to @cspell/parser-csharp-strings-comments
 
-This is a contributor-facing walkthrough of how `src/parser.ts` actually works. `README.md` is written for
+This is a contributor-facing walkthrough of how `src/parsers.ts` actually works. `README.md` is written for
 someone using the plugin; this file is for someone changing it. See the repo root `CONTRIBUTING.md` for the
-general package shape (`parser.ts`/`plugin.ts`/`index.ts`/`recommended.ts`, `fixtures/`, `samples/`) - this
+general package shape (`parsers.ts`/`plugin.ts`/`index.ts`/`recommended.ts`, `fixtures/`, `samples/`) - this
 file only covers what's specific to this package's parsing logic.
 
 ## Shape of the parser
@@ -69,7 +69,7 @@ after the prefix isn't a `"`, and `scanCode` falls through to treating `@` as an
 
 Both only affect formatting/identifier-checking of an already-rare form, not whether the literal's own
 boundaries (open/close delimiter matching) are found correctly, so this is a reasonable, documented scope
-limit rather than a bug. See `fixtures/raw-strings.cs` and its coverage in `parser.test.ts` for what is and
+limit rather than a bug. See `fixtures/raw-strings.cs` and its coverage in `parsers.test.ts` for what is and
 isn't split out.
 
 ### The `///` vs `////` doc-comment boundary
@@ -79,7 +79,7 @@ isn't split out.
 separator" convention in C#) is deliberately excluded: it's still tagged `comment.line`, just not
 `comment.line.doc`. The marker length stripped by `stripLineMarker` is always computed from `isTripleSlash`
 alone (`3` vs `2`), so a `////` line still only has its leading `//` stripped, leaving the extra `//` as part
-of the checked text - see `parser.test.ts`'s "doc-comment boundary" tests, which fail if the fourth-slash
+of the checked text - see `parsers.test.ts`'s "doc-comment boundary" tests, which fail if the fourth-slash
 check is removed.
 
 ### Escape handling
@@ -88,7 +88,7 @@ check is removed.
 backslash right at EOF (an unterminated string ending mid-escape) lands on the end of `content` instead of
 one past it. Every backslash-skip in `scanQuotedString`/`scanCSharpInterpolatedString` (when not verbatim)
 goes through this - without it, the emitted `range`/`map` can exceed `content.length`, inconsistent with the
-actual `rawText`. See `parser.test.ts`'s "unterminated literals ending in a trailing lone backslash" tests.
+actual `rawText`. See `parsers.test.ts`'s "unterminated literals ending in a trailing lone backslash" tests.
 
 ## Tags
 
@@ -99,7 +99,7 @@ computed per segment. See `README.md`'s [Tags](README.md#tags) table for what ea
 
 ## Testing
 
-- `parser.test.ts` reads fixtures out of `fixtures/` (via `readFixture`/`parseFixture` helpers) rather than
+- `parsers.test.ts` reads fixtures out of `fixtures/` (via `readFixture`/`parseFixture` helpers) rather than
   embedding source strings inline - a fixture is real, syntactically valid C# content, which both exercises
   real file content and makes intent easier to read than an escaped string literal. `fixtures/` is excluded
   from `tsc`/ESLint/Prettier (see root `CLAUDE.md`) because a fixture's exact bytes - quote style, spacing, an

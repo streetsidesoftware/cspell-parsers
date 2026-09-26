@@ -105,6 +105,8 @@ What users can rely on:
 
 ## Wiring the package
 
+- `parsers.ts` exports the `parsers` array, even for one parser. It is internal, with no `exports` subpath:
+  the plugin is the only way to reach a parser, through `plugin.getParser(name)`.
 - `plugin.ts` exports the `IPlugin`, and `customizePlugin(options?)`, a thin wrapper that returns
   `plugin.customize()` with `options.tags` applied to every parser.
 - `recommended.ts` exports `plugin.defineConfig()`, so it always agrees with the parsers.

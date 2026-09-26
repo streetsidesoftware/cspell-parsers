@@ -114,15 +114,15 @@ it needs.
 A string can have two string tags. A `$@"..."` or `@$"..."` string is tagged both `string.verbatim` and
 `string.interpolated`. An interpolated raw string is tagged both `string.raw` and `string.interpolated`.
 
-<!--- Tested by src/parser.test.ts: "splits a combined $@ verbatim-interpolated string, keeping doubled quotes literal" --->
-<!--- Tested by src/parser.test.ts: "treats $@ and @$ prefixes identically" --->
+<!--- Tested by src/parsers.test.ts: "splits a combined $@ verbatim-interpolated string, keeping doubled quotes literal" --->
+<!--- Tested by src/parsers.test.ts: "treats $@ and @$ prefixes identically" --->
 
 In an interpolated string, the code in each `{...}` hole is scanned like any other code, so a string or comment
 inside it is checked and tagged as usual. Doubled braces, `{{` and `}}`, are literal braces.
 
-<!--- Tested by src/parser.test.ts: "recurses into a {...} hole to find the nested string literals in a ternary's branches" --->
-<!--- Tested by src/parser.test.ts: "recognizes a comment nested inside an interpolation hole" --->
-<!--- Tested by src/parser.test.ts: "keeps doubled {{ and }} as literal braces, not the start of a hole" --->
+<!--- Tested by src/parsers.test.ts: "recurses into a {...} hole to find the nested string literals in a ternary's branches" --->
+<!--- Tested by src/parsers.test.ts: "recognizes a comment nested inside an interpolation hole" --->
+<!--- Tested by src/parsers.test.ts: "keeps doubled {{ and }} as literal braces, not the start of a hole" --->
 
 ### The `code` tag
 
@@ -220,10 +220,10 @@ interface TagFilterOptions {
 
 - **Raw strings keep their indentation.** The leading indentation a raw string shares with its closing
   delimiter isn't removed, so each line's text includes it.
-  <!--- Tested by src/parser.test.ts: "recognizes a plain (3-quote) raw string literal" --->
+  <!--- Tested by src/parsers.test.ts: "recognizes a plain (3-quote) raw string literal" --->
 - **An interpolated raw string is checked as one piece.** Its `{...}` holes aren't scanned as code, so any
   names in them are spell checked as part of the string.
-  <!--- Tested by src/parser.test.ts: "does not split an interpolated raw string's {...} hole into its own segment (documented simplification)" --->
+  <!--- Tested by src/parsers.test.ts: "does not split an interpolated raw string's {...} hole into its own segment (documented simplification)" --->
 
 ## Requirements
 

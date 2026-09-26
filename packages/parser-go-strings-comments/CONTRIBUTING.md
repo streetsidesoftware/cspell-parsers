@@ -1,8 +1,8 @@
 # Contributing to @cspell/parser-go-strings-comments
 
-This is a contributor-facing walkthrough of how `src/parser.ts` actually works. `README.md` is written for
+This is a contributor-facing walkthrough of how `src/parsers.ts` actually works. `README.md` is written for
 someone using the plugin; this file is for someone changing it. See the repo root `CONTRIBUTING.md` for the
-general package shape (`parser.ts`/`plugin.ts`/`index.ts`/`recommended.ts`, `fixtures/`, `samples/`) - this
+general package shape (`parsers.ts`/`plugin.ts`/`index.ts`/`recommended.ts`, `fixtures/`, `samples/`) - this
 file only covers what's specific to this package's parsing logic.
 
 ## Shape of the parser
@@ -43,7 +43,7 @@ backslash right at EOF (an unterminated rune/string literal ending mid-escape) l
 instead of one past it. Every backslash-skip in `scanQuotedString` goes through this - without it, the
 emitted `range`/`map` can exceed `content.length`, inconsistent with the actual `rawText` (this was a real bug
 in the combined package, found by Copilot's review of `@cspell/parser-strings-comments` PR #60 - see
-`parser.test.ts`'s "unterminated literals ending in a trailing lone backslash" tests).
+`parsers.test.ts`'s "unterminated literals ending in a trailing lone backslash" tests).
 
 `scanGoRawString` deliberately does **not** call `skipEscape` at all - a raw string never processes
 backslashes as escapes, so a backslash right before the closing backtick must not "swallow" it. See
@@ -87,7 +87,7 @@ no module-specifier detection, and no template-literal interpolation:
 
 ## Testing
 
-- `parser.test.ts` reads fixtures out of `fixtures/` (via `readFixture`/`parseFixture` helpers) rather than
+- `parsers.test.ts` reads fixtures out of `fixtures/` (via `readFixture`/`parseFixture` helpers) rather than
   embedding source strings inline - a fixture is real, syntactically plausible Go content, which both
   exercises real file content and makes intent easier to read than an escaped string literal. `fixtures/` is
   excluded from `tsc`/ESLint/Prettier (see root `CLAUDE.md`) because a fixture's exact bytes - quote style,
@@ -104,7 +104,7 @@ no module-specifier detection, and no template-literal interpolation:
 
 ## Using this package as a template
 
-To start a new parser package, copy `src/parser.ts`, `src/plugin.ts`, `src/index.ts`, and `src/recommended.ts`
+To start a new parser package, copy `src/parsers.ts`, `src/plugin.ts`, `src/index.ts`, and `src/recommended.ts`
 into a new package under `packages/` and replace the parsing logic with your own. See the repo root
 `CONTRIBUTING.md` for the full steps.
 

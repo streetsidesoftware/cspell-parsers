@@ -110,14 +110,14 @@ tagged `string.heredoc` and `string`, so a filter can use whichever level it nee
 In a double-quoted string, backtick command string, or interpolated heredoc, the code in each `#{...}` hole
 is scanned like any other code, so a string inside it keeps its own tag rather than the surrounding string's.
 
-<!--- Tested by src/parser.test.ts: "keeps a string nested in a #{...} hole under its own tag, not the surrounding string's" --->
+<!--- Tested by src/parsers.test.ts: "keeps a string nested in a #{...} hole under its own tag, not the surrounding string's" --->
 
 Regex literals (`/pattern/flags`) and percent-literals (`%w[]`, `%q()`, `%r{}`, ...) have no tag of their own.
 They're part of the surrounding `code`, so they're checked only when `code` is.
 
-<!--- Tested by src/parser.test.ts: "leaves regex and percent-literal content in code, with no tag of its own" --->
-<!--- Tested by src/parser.test.ts: "emits only the file's comments and its two real strings - nothing from inside any regex" --->
-<!--- Tested by src/parser.test.ts: "emits only the comment and the one real string - nothing from inside any percent-literal" --->
+<!--- Tested by src/parsers.test.ts: "leaves regex and percent-literal content in code, with no tag of its own" --->
+<!--- Tested by src/parsers.test.ts: "emits only the file's comments and its two real strings - nothing from inside any regex" --->
+<!--- Tested by src/parsers.test.ts: "emits only the comment and the one real string - nothing from inside any percent-literal" --->
 
 ### The `code` tag
 
@@ -217,16 +217,16 @@ interface TagFilterOptions {
   `<<heredoc` vs. left shift, `%w[]` vs. modulo, and `?'` vs. the ternary operator. It handles almost all real
   code, but a literal passed as a bare argument (no parentheses) to an uncommon method, a regex spanning
   several lines, or a literal right after a `}` can be read as code, and then it isn't checked.
-  <!--- Tested by src/parser.test.ts: "does not mistake ordinary division (identifier, number, call, paren, bracket) for a regex" --->
-  <!--- Tested by src/parser.test.ts: "treats a same-line "}" as division/append-like, so a real string right after it is never swallowed" --->
-  <!--- Tested by src/parser.test.ts: "does treat "puts <<~MSG" (a whitelisted bare method call) as a heredoc opener" --->
+  <!--- Tested by src/parsers.test.ts: "does not mistake ordinary division (identifier, number, call, paren, bracket) for a regex" --->
+  <!--- Tested by src/parsers.test.ts: "treats a same-line "}" as division/append-like, so a real string right after it is never swallowed" --->
+  <!--- Tested by src/parsers.test.ts: "does treat "puts <<~MSG" (a whitelisted bare method call) as a heredoc opener" --->
 - **Only one heredoc is checked per line.** Anything after a heredoc's marker on the same line, such as a
   second heredoc or a string argument, isn't checked.
-  <!--- Tested by src/parser.test.ts: "does not check a second heredoc or a string after a heredoc marker on the same line" --->
+  <!--- Tested by src/parsers.test.ts: "does not check a second heredoc or a string after a heredoc marker on the same line" --->
 - **Symbols and char literals aren't checked.** A bare symbol (`:name`) and a char literal (`?a`) are code. A
   quoted symbol (`:"..."` or `:'...'`) is checked as a string.
-  <!--- Tested by src/parser.test.ts: "skips a bare symbol but checks a quoted symbol as a string" --->
-  <!--- Tested by src/parser.test.ts: "does not emit anything for a plain char literal ("?a")" --->
+  <!--- Tested by src/parsers.test.ts: "skips a bare symbol but checks a quoted symbol as a string" --->
+  <!--- Tested by src/parsers.test.ts: "does not emit anything for a plain char literal ("?a")" --->
 
 ## Requirements
 

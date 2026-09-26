@@ -112,9 +112,9 @@ In an f-string, the code in each `{...}` hole is scanned like any other code, so
 keeps its own tag rather than `string.interpolated`. Filtering out `string.interpolated` skips only the text
 around the holes. Doubled braces, `{{` and `}}`, are literal braces.
 
-<!--- Tested by src/parser.test.ts: "recurses into a hole to find a real comment nested inside it" --->
-<!--- Tested by src/parser.test.ts: "recurses into a hole to find a real string literal nested inside it" --->
-<!--- Tested by src/parser.test.ts: "treats {{ and }} as literal braces, not holes" --->
+<!--- Tested by src/parsers.test.ts: "recurses into a hole to find a real comment nested inside it" --->
+<!--- Tested by src/parsers.test.ts: "recurses into a hole to find a real string literal nested inside it" --->
+<!--- Tested by src/parsers.test.ts: "treats {{ and }} as literal braces, not holes" --->
 
 ### The `code` tag
 
@@ -212,7 +212,7 @@ interface TagFilterOptions {
 
 - **Docstrings don't have their own tag.** A docstring is tagged `string.tripleQuote`, the same as any other
   triple-quoted string, so a filter can't pick out docstrings alone.
-  <!--- Tested by src/parser.test.ts: "tags a triple-quoted string as string.tripleQuote without detecting it as a docstring" --->
+  <!--- Tested by src/parsers.test.ts: "tags a triple-quoted string as string.tripleQuote without detecting it as a docstring" --->
 
 ## Requirements
 

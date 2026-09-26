@@ -1,12 +1,13 @@
 import type { CustomizePluginOptions, IPlugin, IPluginBuilder } from '@internal/utils';
 import { createPlugin, customizePluginWith } from '@internal/utils';
 
-import { parser } from './parser.ts';
+import { parsers } from './parsers.ts';
 
-export { supportedFileTypes } from './parser.ts';
 export type { CustomizePluginOptions } from '@internal/utils';
 
-export const plugin: IPlugin = createPlugin({ name: 'example', parsers: [parser] });
+export const plugin: IPlugin = createPlugin({ name: 'example', parsers });
+
+export const supportedFileTypes: readonly string[] = plugin.supportedFileTypes;
 
 export const recommendedLanguageSettings = plugin.languageSettings();
 

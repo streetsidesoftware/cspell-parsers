@@ -1,6 +1,6 @@
 # 0005. The plugin is the only entry point; the `./parser` subpath is removed
 
-Status: Accepted
+Status: Accepted, amended (see [Amendment](#amendment-every-package-uses-parsersts-and-no-parser))
 
 ## Context
 
@@ -25,3 +25,14 @@ subpath stays.
   ([0004](./0004-parser-javascript.md)).
 - Code that imported `@cspell/parser-typescript/parser` breaks, and the release notes say what replaces each
   export.
+
+## Amendment: every package uses `parsers.ts` and no `./parser`
+
+This decision first covered only the TypeScript packages, so the package shape had two forms: one-parser
+packages kept `src/parser.ts` and a `./parser` subpath, while packages with more than one parser used
+`src/parsers.ts` and no subpath. Two forms meant two templates to copy and two sets of docs to keep in sync.
+
+Now every parser package keeps its parsers in an internal `src/parsers.ts` that exports a `parsers` array,
+even when there is only one parser, and no package publishes `./parser`. The plugin is the only entry point:
+`plugin.getParser(name)`. The `./parser` subpath was experimental, so removing it from the remaining
+packages is not a breaking change.

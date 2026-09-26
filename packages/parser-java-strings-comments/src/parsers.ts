@@ -12,10 +12,10 @@ export function parse(content: string, filename: string): ParseResult {
 
 export const supportedFileTypes: Readonly<string[]> = Object.freeze(['java']);
 
-/** `code` is off by default through `tags`. */
-export const parser: IParser = createPluginParserWithFilterTags({
-  name: 'java-strings-comments',
-  parse,
-  supportedFileTypes,
-  tags,
-});
+/**
+ * This package has one parser.
+ * `code` is off by default through `tags`.
+ */
+export const parsers: readonly IParser[] = [
+  createPluginParserWithFilterTags({ name: 'java-strings-comments', parse, supportedFileTypes, tags }),
+];

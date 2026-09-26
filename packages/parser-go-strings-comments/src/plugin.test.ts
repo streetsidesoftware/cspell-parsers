@@ -1,16 +1,16 @@
 import type { Parser as CSpellParser } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
-import { parser, supportedFileTypes as parserSupportedFileTypes } from './parser.ts';
+import { parsers, supportedFileTypes as parserSupportedFileTypes } from './parsers.ts';
 import { customizePlugin, plugin, supportedFileTypes } from './plugin.ts';
 
 describe('plugin', () => {
   it('exposes the go-strings-comments parser', () => {
-    expect(plugin.parsers).toEqual([parser]);
+    expect(plugin.parsers).toEqual(parsers);
   });
 
-  it('re-exports supportedFileTypes from the parser', () => {
-    expect(supportedFileTypes).toBe(parserSupportedFileTypes);
+  it('lists the supported file types of its parser', () => {
+    expect(supportedFileTypes).toEqual(parserSupportedFileTypes);
   });
 
   it('is usable to parse content', () => {

@@ -1,11 +1,11 @@
 # Contributing to @cspell/parser-c-cpp-strings-comments
 
-This is a contributor-facing walkthrough of how `src/parser.ts` actually works. `README.md` is written for
+This is a contributor-facing walkthrough of how `src/parsers.ts` actually works. `README.md` is written for
 someone using the plugin; this file is for someone changing it. See the repo root `CONTRIBUTING.md` for the
-general package shape (`parser.ts`/`plugin.ts`/`index.ts`/`recommended.ts`, `fixtures/`, `samples/`) - this
+general package shape (`parsers.ts`/`plugin.ts`/`index.ts`/`recommended.ts`, `fixtures/`, `samples/`) - this
 file only covers what's specific to this package's parsing logic.
 
-This package can also serve as a starting point for a new parser package: copy `src/parser.ts`,
+This package can also serve as a starting point for a new parser package: copy `src/parsers.ts`,
 `src/plugin.ts`, `src/index.ts`, and `src/recommended.ts` into a new package under `packages/` and replace the
 parsing logic with your own. See the repo root `CONTRIBUTING.md`'s "Adding a new parser package" for the full
 steps.
@@ -52,7 +52,7 @@ backslash right at EOF (an unterminated string/char literal ending mid-escape) l
 instead of one past it. Every backslash-skip in `scanQuotedString` goes through this - without it, the
 emitted `range`/`map` can exceed `content.length`, inconsistent with the actual `rawText` (this was a real
 bug, found by Copilot's review of `@cspell/parser-strings-comments` PR #60 before this package was split out
-of it - see `parser.test.ts`'s "unterminated literals ending in a trailing lone backslash" tests). Raw strings
+of it - see `parsers.test.ts`'s "unterminated literals ending in a trailing lone backslash" tests). Raw strings
 have no escapes at all, so `tryScanCppRawString` doesn't need this.
 
 ## Tags
@@ -101,7 +101,7 @@ cover these cases.
 
 ## Testing
 
-- `parser.test.ts` reads fixtures out of `fixtures/` (via `readFixture`/`parseFixture` helpers) rather than
+- `parsers.test.ts` reads fixtures out of `fixtures/` (via `readFixture`/`parseFixture` helpers) rather than
   embedding source strings inline - a fixture is real, syntactically valid content in its own extension
   (`.c`, `.cpp`, `.hpp`), which both exercises real file content and makes intent easier to read than an
   escaped string literal. `fixtures/` is excluded from `tsc`/ESLint/Prettier (see root `CLAUDE.md`) because a

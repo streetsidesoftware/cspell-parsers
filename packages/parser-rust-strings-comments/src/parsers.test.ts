@@ -4,10 +4,12 @@ import { join } from 'node:path';
 import type { ParsedText } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
-import { parse, parser } from './parser.ts';
+import { parse, parsers } from './parsers.ts';
 import { tags } from './tags.ts';
 
 const fixturesDir = join(import.meta.dirname, '../fixtures');
+
+const [parser] = parsers;
 
 function readFixture(name: string): string {
   return readFileSync(join(fixturesDir, name), 'utf8');

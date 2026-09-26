@@ -1,8 +1,8 @@
 # Contributing to @cspell/parser-ruby-strings-comments
 
-This is a contributor-facing walkthrough of how `src/parser.ts` actually works. `README.md` is written for
+This is a contributor-facing walkthrough of how `src/parsers.ts` actually works. `README.md` is written for
 someone using the plugin; this file is for someone changing it. See the repo root `CONTRIBUTING.md` for the
-general package shape (`parser.ts`/`plugin.ts`/`index.ts`/`recommended.ts`, `fixtures/`, `samples/`) - this
+general package shape (`parsers.ts`/`plugin.ts`/`index.ts`/`recommended.ts`, `fixtures/`, `samples/`) - this
 file only covers what's specific to this package's parsing logic.
 
 ## Shape of the parser
@@ -88,7 +88,7 @@ character-level `canPrecedeString` mitigation for regexes, below, or plain ordin
 outcome either way). Treating `}` as expression-context and getting _that_ wrong is worse: `tryScanRegexLiteral`
 would attempt to parse real division as a regex, scanning ahead for the next unrelated `/` in the file as if
 it were the closing delimiter and silently swallowing whatever real string or comment sat in between - see
-`parser.test.ts`'s "treats a same-line `}`..." test, which reproduces exactly this.
+`parsers.test.ts`'s "treats a same-line `}`..." test, which reproduces exactly this.
 
 `EXPRESSION_START_KEYWORDS` is deliberately not exhaustive - it covers Ruby's own control-flow/boolean
 keywords (`if`, `unless`, `while`, `case`, `when`, `and`, `or`, `not`, ...) plus a handful of very common
@@ -121,7 +121,7 @@ unit, exactly like `tryScanRegexLiteral` does for a regex - no `ParsedText` is e
 This exists to fix a real bug, not just to add coverage: before it existed, an unrecognized percent-literal's
 embedded quote (`%w[don't stop]`, `%q(it's fine)`) reached the ordinary quote dispatch in `scanCode` and
 kicked off a runaway string scan - hunting for the next unrelated `'`/`"` in the file as the "closing quote"
-and silently swallowing whatever real code sat in between. `parser.test.ts`'s `percent-literals.rb` suite
+and silently swallowing whatever real code sat in between. `parsers.test.ts`'s `percent-literals.rb` suite
 reproduces this.
 
 Only a curated delimiter set is recognized - `( [ { <` (which nest: `%w(foo (bar) baz)` is one literal, so
@@ -212,7 +212,7 @@ over-recognizing an indented terminator could only matter in an already-invalid 
 was wrong**: a plain heredoc's body can legitimately contain an _indented_ line that happens to equal the
 marker word - it's ordinary body content, not the terminator, precisely because it isn't at column 0 - and
 the old code would still close the heredoc there, silently dropping the rest of the (valid) body from spell
-checking. `fixtures/heredocs.rb`'s `plain_with_indented_lookalike` and its test in `parser.test.ts`
+checking. `fixtures/heredocs.rb`'s `plain_with_indented_lookalike` and its test in `parsers.test.ts`
 reproduce this.
 
 Once the closing marker's position is known, the body is emitted:
@@ -243,7 +243,7 @@ never recognized in the first place.
 
 ## Testing
 
-- `parser.test.ts` reads fixtures out of `fixtures/` (via `readFixture`/`parseFixture` helpers) rather than
+- `parsers.test.ts` reads fixtures out of `fixtures/` (via `readFixture`/`parseFixture` helpers) rather than
   embedding source strings inline for the "typical case" coverage - including `fixtures/percent-literals.rb`
   (each percent-literal form plus nested-bracket depth tracking) and `fixtures/char-literals-and-backticks.rb`
   (the `?'`/`?"`/`?#` special case, a plain char literal, a ternary both with and without a space, and backtick

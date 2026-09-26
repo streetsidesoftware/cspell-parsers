@@ -8,14 +8,13 @@ TSX. The scanner doesn't look at the file type, so both give the same result. Se
 
 ## Using this package as a template
 
-This package has two parsers, so it keeps them in `src/parsers.ts` and has no `./parser` subpath. A package
-with one parser has `src/parser.ts` instead, exporting `parse`, `parser`, and `supportedFileTypes`; see
-`@cspell/parser-csharp-strings-comments` for that shape. To add a new parser for another language, copy
-`src/plugin.ts`, `src/index.ts`, `src/recommended.ts`, and `src/tags.ts`, plus `src/parsers.ts` or a
-single-parser `src/parser.ts`, into a new package under `packages/`. Then replace `src/scanner.ts` with your
-own parsing logic, and `src/tags.ts` with the tags it emits. A parser's default filter comes only from `tags`,
-so set a tag to `false` there to leave it unchecked by default. See the repo root `CONTRIBUTING.md` for the
-full steps.
+Like every parser package, this one keeps its parsers in `src/parsers.ts`, which exports the raw `parse` and a
+`parsers` array. This package has two parsers; most have one, as `@cspell/parser-csharp-strings-comments`
+does. To add a new parser for another language, copy `src/parsers.ts`, `src/plugin.ts`, `src/index.ts`,
+`src/recommended.ts`, and `src/tags.ts` into a new package under `packages/`. Then replace `src/scanner.ts`
+with your own parsing logic, and `src/tags.ts` with the tags it emits. A parser's default filter comes only
+from `tags`, so set a tag to `false` there to leave it unchecked by default. See the repo root
+`CONTRIBUTING.md` for the full steps.
 
 ## Shape
 

@@ -7,7 +7,7 @@ description: 'Design a new cspell-parser feature (a new parser, a behavior chang
 
 Turns a vague feature request into a small set of committed decisions, each captured as an ADR, before any
 code gets written. The point isn't ceremony — it's that this repo's package shape
-(`parser.ts`/`plugin.ts`/`index.ts`/`recommended.ts`, `tags`/`hierarchicalTags`, `customizePlugin`,
+(`parsers.ts`/`plugin.ts`/`index.ts`/`recommended.ts`, `tags`/`hierarchicalTags`, `customizePlugin`,
 `supportedFileTypes`, backend choice) bakes a lot of decisions into files that are annoying to unwind later
 (a tag name becomes public API the moment a consumer writes a `customizePlugin` filter against it; a
 `supportedFileTypes` entry becomes a documented promise in the README). An interview surfaces those

@@ -11,10 +11,10 @@ three `src/` files beyond the usual template shape:
   scanner walks `content` character by character, recognizing the handful of constructs that get their own
   specific tag (comments, strings) and letting a second cursor, `j`, sweep up everything else it advances `i`
   past as plain `html`/`code` (see "Emitting a segment" below).
-- `tags.ts` - every tag `Scanner` can emit, and the derived `tags` map `parser.ts` passes to
+- `tags.ts` - every tag `Scanner` can emit, and the derived `tags` map `parsers.ts` passes to
   `createPluginParserWithFilterTags` (see "Tags" below).
-- `parser.ts` - thin wiring: `parse()` just calls `new Scanner(content).run()`, and `parser` is
-  `createPluginParserWithFilterTags({ name, parse, supportedFileTypes, tags })`. Its default filter comes
+- `parsers.ts` - thin wiring: `parse()` just calls `new Scanner(content).run()`, and `parsers` holds the one
+  parser, `createPluginParserWithFilterTags({ name, parse, supportedFileTypes, tags })`. Its default filter comes
   from `tags` (see "Why `code` and `html` are off by default" below).
 
 ### The html/code mode toggle
@@ -128,7 +128,7 @@ t.range[0])` - and, the same way, is only emitted when that slice is non-empty (
 
 `skipEscape(content, i)` clamps a backslash-escape skip (`i + 2`) to `content.length`, so a trailing lone
 backslash right at EOF (an unterminated string ending mid-escape) lands on the end of `content` instead of
-one past it - without this, the emitted `range`/`map` can exceed `content.length`. See `parser.test.ts`'s
+one past it - without this, the emitted `range`/`map` can exceed `content.length`. See `parsers.test.ts`'s
 "unterminated literals ending in a trailing lone backslash" test.
 
 ## Tags
@@ -153,14 +153,13 @@ for what each one means to a consumer.
 - `NOT_ON_BY_DEFAULT` is the short list of tags that are off by default: `code` and `html`.
 - `tags` is load-bearing, not just descriptive: every filter, the default one included, is compiled against
   it. A tag `Scanner` emits that isn't a key in `tags` can't be filtered with `customizePlugin`'s `tags`
-  option. `parser.test.ts`'s `tags` describe block is the regression test for this: it runs the raw `parse()`
+  option. `parsers.test.ts`'s `tags` describe block is the regression test for this: it runs the raw `parse()`
   over every fixture and asserts every tag key it actually produces is a key in `parser.tags`.
 
 ### Why `code` and `html` are off by default
 
 Both are `false` in `tags` (via `NOT_ON_BY_DEFAULT`), and `createPluginParserWithFilterTags` builds the
-parser's default filter from `tags`, so the exported `parser`, `plugin`, and `recommended` skip them out of the
-box. `parse()` still emits them, and a consumer turns them on with, for example,
+parser's default filter from `tags`, so the parser, `plugin`, and `recommended` skip them out of the box. `parse()` still emits them, and a consumer turns them on with, for example,
 `customizePlugin({ tags: { html: true } })`.
 
 Every filter, a consumer's included, is compiled against the parser's unfiltered output and its `tags`, never
@@ -170,12 +169,12 @@ plugin-customization ADRs (`docs/ADRs/plugin-customization/0006-tag-filtering.md
 
 ## Testing
 
-- `parser.test.ts` reads fixtures out of `fixtures/` (via `readFixture`/`parseFixture` helpers) rather than
+- `parsers.test.ts` reads fixtures out of `fixtures/` (via `readFixture`/`parseFixture` helpers) rather than
   embedding source strings inline - a fixture is real, syntactically valid PHP, which both exercises real
   file content and makes intent easier to read than an escaped string literal. `fixtures/` is excluded from
   `tsc`/ESLint/Prettier (see root `CLAUDE.md`) because a fixture's exact bytes are frequently what's being
   asserted on; don't let a formatter "fix" one. Even though `Scanner` itself now lives in `scanner.ts`, its
-  test coverage stays in `parser.test.ts` - it's still the same parsing behavior being tested, just reached
+  test coverage stays in `parsers.test.ts` - it's still the same parsing behavior being tested, just reached
   through `parse`/`parser.parse` rather than the `Scanner` class directly.
 - `parseFixture(name, parse = parser.parse)` defaults to the default-filtered view (`code` and `html` excluded), which
   is what almost every test wants. The `mixed.php` block passes the unfiltered `parse` instead, since several
@@ -185,7 +184,7 @@ plugin-customization ADRs (`docs/ADRs/plugin-customization/0006-tag-filtering.md
   `heredoc-nowdoc.php`, and `interpolation.php` (the nested-quote-inside-`{$...}` case) - in addition to
   `mixed.php` and `strings.php` for the more ordinary cases. When changing any of this logic, prefer adding
   to or extending one of these over inlining a one-off string in the test file itself.
-- `parser.test.ts`'s `tags` describe block is the regression test for `tags.ts` staying in sync with what
+- `parsers.test.ts`'s `tags` describe block is the regression test for `tags.ts` staying in sync with what
   `Scanner` actually emits (see "Tags" above) - it collects every tag key produced across all of `fixtures/`
   and asserts each one is declared in `parser.tags`, plus a couple of direct assertions on `code`'s default.
 - `samples/` is a real, separate end-to-end check: actual cspell configs plus real source files, run for real
