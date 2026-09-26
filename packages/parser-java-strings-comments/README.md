@@ -125,6 +125,8 @@ export default customizePlugin({ tags: { code: true } }).defineConfig();
 
 <!--- @@inject-end: samples/check-code/cspell.config.mts#lang=ts --->
 
+<!--- @@inject: ../../static/customization-options-intro.md#value=given-by:parser gives each part. --->
+
 ## Customization options
 
 Use `customizePlugin(options)` to control which parts of a file get spell checked, based on the [tags](#tags)
@@ -134,9 +136,7 @@ the parser gives each part.
 
 ```ts
 interface CustomizePluginOptions {
-  /**
-   * Define which tagged segments to keep.
-   */
+  /** Chooses which tagged segments every parser keeps. */
   tags: TagFilterOptions;
 }
 ```
@@ -161,21 +161,25 @@ const option = { tags: { '*': true, code: false } };
 const option = { tags: { '*': false, comment: true } };
 ```
 
+<!--- @@inject-end: ../../static/customization-options-intro.md#value=given-by:parser gives each part. --->
+
 **Turn off Javadoc comments**
 
 ```ts
 const option = { tags: { 'comment.block.doc': false } };
 ```
 
+<!--- @@inject: ../../static/customization-options-tag-filter.md --->
+
 ### `TagFilterOptions`
 
 Use `TagFilterOptions` to set the filter criteria for the text sent to the spell checker.
 
-The values are inherited hierarchically
+The values are inherited hierarchically:
 
-- `comment: false` also implies `comment.line` is `false` unless overwritten by `'comment.line': true`
+- `comment: false` also implies `comment.line` is `false` unless overridden by `'comment.line': true`
 
-Wildcards
+Wildcards:
 
 - `*` wildcards are weak matches. A more specific match will win.
 
@@ -188,6 +192,7 @@ type TagPattern = string;
 interface TagFilterOptions {
   /**
    * The default filter setting for any tag not otherwise matched.
+   * @default true
    */
   '*'?: boolean | undefined;
 
@@ -199,6 +204,8 @@ interface TagFilterOptions {
   [tag: TagPattern]: boolean | undefined;
 }
 ```
+
+<!--- @@inject-end: ../../static/customization-options-tag-filter.md --->
 
 ## Requirements
 

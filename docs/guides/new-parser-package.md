@@ -155,6 +155,12 @@ The README is for someone using the plugin, not reading its source. npmjs.com re
       `comment`. It's injected from `docs/tags-table.csv`, generated from `tags.ts`.
 - [ ] A short "Filtering by tag" section shows `customizePlugin`. See
       `packages/parser-typescript-strings-comments/README.md`'s "Filtering by tag and file type".
+- [ ] A "Customization options" section injects `static/customization-options-intro.md` and
+      `static/customization-options-tag-filter.md`. Copy the inject markers from
+      `packages/parser-rust-strings-comments/README.md`.
+- [ ] The intro's `given-by` value matches the parser count: `parser gives each part.` for one parser, and
+      `parsers give each part. The filter applies to every parser in the plugin.` for more.
+- [ ] One example between the two injected blocks turns off a tag specific to this language.
 
 ## 7. Link, lint, and check
 

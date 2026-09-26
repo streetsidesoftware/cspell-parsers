@@ -139,16 +139,18 @@ needs.
 Use `customizePlugin(options)` to control which parts of a file get spell checked, based on the [tags](#tags)
 the parser gives each part.
 
+<!--- @@inject: ../../static/customization-options-intro.md#heading=%60CustomizePluginOptions%60 --->
+
 ### `CustomizePluginOptions`
 
 ```ts
 interface CustomizePluginOptions {
-  /**
-   * Define which tagged segments to keep.
-   */
+  /** Chooses which tagged segments every parser keeps. */
   tags: TagFilterOptions;
 }
 ```
+
+<!--- @@inject-end: ../../static/customization-options-intro.md#heading=%60CustomizePluginOptions%60 --->
 
 ### Examples
 
@@ -182,15 +184,17 @@ const option = { tags: { 'comment.*.doc': false } };
 const option = { tags: { 'string.nowdoc': false } };
 ```
 
+<!--- @@inject: ../../static/customization-options-tag-filter.md --->
+
 ### `TagFilterOptions`
 
 Use `TagFilterOptions` to set the filter criteria for the text sent to the spell checker.
 
-The values are inherited hierarchically
+The values are inherited hierarchically:
 
-- `comment: false` also implies `comment.line` is `false` unless overwritten by `'comment.line': true`
+- `comment: false` also implies `comment.line` is `false` unless overridden by `'comment.line': true`
 
-Wildcards
+Wildcards:
 
 - `*` wildcards are weak matches. A more specific match will win.
 
@@ -203,6 +207,7 @@ type TagPattern = string;
 interface TagFilterOptions {
   /**
    * The default filter setting for any tag not otherwise matched.
+   * @default true
    */
   '*'?: boolean | undefined;
 
@@ -214,6 +219,8 @@ interface TagFilterOptions {
   [tag: TagPattern]: boolean | undefined;
 }
 ```
+
+<!--- @@inject-end: ../../static/customization-options-tag-filter.md --->
 
 ## Special cases
 

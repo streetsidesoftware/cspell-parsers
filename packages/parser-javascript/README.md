@@ -188,6 +188,8 @@ customizePlugin({ tags: { code: true } }).defineConfig();
   your own name, so it's checked where it's in scope.
   <!--- Tested by packages/parser-typescript-tree-sitter-wasm/src/parsers.test.ts: "imports-and-local-variables.mts" and "lets a JavaScript parameter shadow an import of the same name" --->
 
+<!--- @@inject: ../../static/customization-options-intro.md#value=given-by:parsers give each part. The filter applies to every parser in the plugin. --->
+
 ## Customization options
 
 Use `customizePlugin(options)` to control which parts of a file get spell checked, based on the [tags](#tags)
@@ -197,9 +199,7 @@ the parsers give each part. The filter applies to every parser in the plugin.
 
 ```ts
 interface CustomizePluginOptions {
-  /**
-   * Define which tagged segments to keep.
-   */
+  /** Chooses which tagged segments every parser keeps. */
   tags: TagFilterOptions;
 }
 ```
@@ -224,21 +224,25 @@ const option = { tags: { '*': true, code: false } };
 const option = { tags: { '*': false, comment: true } };
 ```
 
+<!--- @@inject-end: ../../static/customization-options-intro.md#value=given-by:parsers give each part. The filter applies to every parser in the plugin. --->
+
 **Turn off `identifier.property`**
 
 ```ts
 const option = { tags: { 'identifier.property': false } };
 ```
 
+<!--- @@inject: ../../static/customization-options-tag-filter.md --->
+
 ### `TagFilterOptions`
 
 Use `TagFilterOptions` to set the filter criteria for the text sent to the spell checker.
 
-The values are inherited hierarchically
+The values are inherited hierarchically:
 
-- `comment: false` also implies `comment.line` is `false` unless overwritten by `'comment.line': true`
+- `comment: false` also implies `comment.line` is `false` unless overridden by `'comment.line': true`
 
-Wildcards
+Wildcards:
 
 - `*` wildcards are weak matches. A more specific match will win.
 
@@ -251,6 +255,7 @@ type TagPattern = string;
 interface TagFilterOptions {
   /**
    * The default filter setting for any tag not otherwise matched.
+   * @default true
    */
   '*'?: boolean | undefined;
 
@@ -262,6 +267,8 @@ interface TagFilterOptions {
   [tag: TagPattern]: boolean | undefined;
 }
 ```
+
+<!--- @@inject-end: ../../static/customization-options-tag-filter.md --->
 
 ## Notes
 
