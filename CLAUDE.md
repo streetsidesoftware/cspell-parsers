@@ -118,9 +118,9 @@ entry points, each its own file under `src/` and its own subpath in `package.jso
   as the single source of truth for its `languageSettings`, so the list only needs updating in one place.
 - `src/plugin.ts` — thin wiring: `export const plugin: IPlugin = createPlugin({ name, parsers })`, plus
   `export const supportedFileTypes: readonly string[] = plugin.supportedFileTypes`.
-  Published as `./plugin` → `dist/plugin.js`. If `parsers.ts` emits `tags`, also re-export `@internal/utils`'s
-  shared options (`export type { CustomizePluginOptions } from '@internal/utils'`)
-  and `function customizePlugin(options?: CustomizePluginOptions): IPluginBuilder`, a thin wrapper around
+  Published as `./plugin` → `dist/plugin.js`. Every parser emits `tags`, so it also re-exports
+  `@internal/utils`'s shared options (`export type { CustomizePluginOptions } from '@internal/utils'`) and exports
+  `function customizePlugin(options?: CustomizePluginOptions): IPluginBuilder`, a thin wrapper around
   `customizePluginWith(plugin, options)`, so a consumer can filter which tagged segments get spell checked
   without needing cspell itself to support that filtering. The result can be adjusted further and turned into
   a complete config with `defineConfig()`. See `packages/parser-typescript-strings-comments/src/plugin.ts` for
@@ -278,7 +278,8 @@ Every example that is a whole config file comes from a real sample under `sample
 in `plugins`: load it with `"import": ["@cspell/<package>"]` instead, since the package's main entry registers
 the plugin.
 
-If the parser emits `tags` on any segment, `README.md` must include a table listing every tag it can emit
+Every parser emits `tags`, declared in a required `src/tags.ts`: its `tagsAndMeaning` generates the README's tags
+table, and its `tags` sets which are checked by default. `README.md` must include that table, listing every tag
 (including ancestor tags implied by `hierarchicalTags`, e.g. `comment` alongside `comment.block.doc`) with a
 one-line description of what each one means. This is reference material for using the plugin, not an
 implementation detail to omit: it's what a consumer needs to write a `customizePlugin({ tags: ... })` filter
@@ -292,7 +293,7 @@ themselves. Don't hand-write its table: add
 markers and run `pnpm run build && pnpm run build:readme`. `fix-parser-readme` generates that CSV from the
 built plugin's `parsers` (see `scripts/README.md`).
 
-The same "if the parser emits `tags`" condition also means `plugin.ts` exports `customizePlugin` (see
+Because every parser emits `tags`, `plugin.ts` also exports `customizePlugin` (see
 "Package shape" above), and `README.md` must show it: a short "Filtering by tag" (or similarly named)
 section, after the plain `plugin`/`languageSettings` wiring example, with a runnable snippet calling
 `customizePlugin({ tags: { ... } })` and pointing at the tags table for what keys are available. See

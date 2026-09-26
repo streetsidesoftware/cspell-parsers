@@ -31,8 +31,7 @@ Copy one of these to `packages/parser-<name>`:
 - [ ] The copied `LICENSE` file stays.
 - [ ] `@cspell/cspell-types` is a `devDependencies` entry, not `dependencies`. Its types are bundled into
       `dist/*.d.ts`, so users don't need it installed.
-- [ ] If the parser emits `tags`, `"@internal/utils": "workspace:*"` is a `devDependencies` entry. tsdown
-      bundles it automatically.
+- [ ] `"@internal/utils": "workspace:*"` is a `devDependencies` entry. tsdown bundles it automatically.
 
 Don't edit these by hand: `pnpm run lint` runs `fix-package-json` (`scripts/fix-package-json.ts`), which sets
 them for every package:
@@ -49,13 +48,13 @@ them for every package:
 
 Files under `src/`:
 
-| File             | Published | What it holds                                                                   |
-| ---------------- | --------- | ------------------------------------------------------------------------------- |
-| `parsers.ts`     | no        | `parse`, the `parsers` array, and `supportedFileTypes`. All the real logic.     |
-| `tags.ts`        | optional  | `tagsAndMeaning` and `tags`, if the parser emits tags.                          |
-| `plugin.ts`      | yes       | `plugin`, `supportedFileTypes`, and `customizePlugin` if the parser emits tags. |
-| `index.ts`       | yes       | Default export: settings with just `plugins: [plugin]`.                         |
-| `recommended.ts` | yes       | Default export: `plugin.defineConfig()`, with `plugins` and `languageSettings`. |
+| File             | Published | What it holds                                                                       |
+| ---------------- | --------- | ----------------------------------------------------------------------------------- |
+| `parsers.ts`     | no        | `parse`, the `parsers` array, and `supportedFileTypes`. All the real logic.         |
+| `tags.ts`        | no        | Required. `tagsAndMeaning` generates the README's tags table; `tags` sets defaults. |
+| `plugin.ts`      | yes       | `plugin`, `supportedFileTypes`, and `customizePlugin`.                              |
+| `index.ts`       | yes       | Default export: settings with just `plugins: [plugin]`.                             |
+| `recommended.ts` | yes       | Default export: `plugin.defineConfig()`, with `plugins` and `languageSettings`.     |
 
 Checklist:
 
@@ -78,7 +77,7 @@ Checklist:
       README's tags table), and `tags` says whether it's checked by default.
 - [ ] `plugin.ts` builds `plugin` with `createPlugin({ name, parsers })` and exports
       `supportedFileTypes = plugin.supportedFileTypes`.
-- [ ] If the parser emits tags, `plugin.ts` exports `customizePlugin(options?)`, a thin wrapper around
+- [ ] `plugin.ts` exports `customizePlugin(options?)`, a thin wrapper around
       `@internal/utils`'s `customizePluginWith(plugin, options)`. Copy
       `packages/parser-typescript-strings-comments/src/plugin.ts`.
 
@@ -92,7 +91,7 @@ Checklist:
 - [ ] A test checks that `parse` doesn't throw on those fixtures and keeps every `range` within the content.
 - [ ] `plugin.test.ts`, `index.test.ts`, and `recommended.test.ts` are thin: each checks that its file wires
       the layer below it together.
-- [ ] If the parser emits tags, `plugin.test.ts` checks that `customizePlugin` actually filters `parsedTexts`.
+- [ ] `plugin.test.ts` checks that `customizePlugin` actually filters `parsedTexts`.
       See `packages/parser-typescript-strings-comments/src/plugin.test.ts`.
 - [ ] Every special case the README mentions has a test.
 
@@ -109,7 +108,7 @@ two purposes:
 Checklist:
 
 - [ ] Each sample demonstrates or exercises one feature, tag, or edge condition.
-- [ ] There are at least `plugin/` and `recommended/`, and `customize/` if the parser emits tags.
+- [ ] There are at least `plugin/`, `recommended/`, and `customize/`.
 - [ ] The package has its own root `cspell.config.yaml`, ignoring `node_modules`, `fixtures`, and `dist`, so
       `cspell .` passes over the whole package. `test:cspell` runs it as part of the package's `test` script.
 - [ ] Each filter sample, such as `customize/`, has a genuine misspelling in a segment its filter excludes.
@@ -133,9 +132,9 @@ The README is for someone using the plugin, not reading its source. npmjs.com re
 - [ ] Every link and image is an absolute `https://` URL. Same-page anchors (`#tags`) are fine.
 - [ ] A "Supported file types" section injects the generated `docs/language-id-n-parser-name.csv`. Copy the
       inject markers from another package's README.
-- [ ] If the parser emits tags, a `Tag` / `Meaning` table lists every tag, including ancestors such as
+- [ ] A `Tag` / `Meaning` table lists every tag, including ancestors such as
       `comment`. It's injected from `docs/tags-table.csv`, generated from `tags.ts`.
-- [ ] If the parser emits tags, a short "Filtering by tag" section shows `customizePlugin`. See
+- [ ] A short "Filtering by tag" section shows `customizePlugin`. See
       `packages/parser-typescript-strings-comments/README.md`'s "Filtering by tag and file type".
 
 ## 7. Link, lint, and check

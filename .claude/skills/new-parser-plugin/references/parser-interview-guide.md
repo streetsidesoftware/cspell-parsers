@@ -33,7 +33,7 @@ rather than asking it as a fully open question.
 - Are there closely related file types deliberately being left out for now (e.g. `.tsx` handled, `.mtsx`
   not)? Worth stating explicitly as context even if it doesn't rise to its own ADR.
 
-## 3. Tags (only if this parser emits `tags`)
+## 3. Tags
 
 - What's the full tag set, and which tags are hierarchical (dot-separated, e.g. `comment.block.doc`)? Per
   `CONTRIBUTING.md`'s tags convention, every ancestor tag must be emitted alongside the most specific one.
@@ -44,8 +44,8 @@ rather than asking it as a fully open question.
 - Since tags become part of the package's effective public API the moment someone writes a
   `customizePlugin({ tags: ... })` filter against them, treat a tag rename later as a breaking change when
   deciding names now.
-- Does `plugin.ts` need to export `customizePlugin`/`CustomizePluginOptions` (required whenever `tags` are
-  emitted at all — see `CLAUDE.md`'s "Package shape")?
+- Every parser emits tags, so `src/tags.ts`, `customizePlugin`, and the README's tags table are always
+  required. The question is only which tags, and which are checked by default.
 
 ## 4. Backend / implementation strategy
 
@@ -86,8 +86,6 @@ against this codebase's existing parsers:
 
 - Is this a new publishable package (needs to be picked up by `fix-release-please-config`, i.e. its name
   doesn't start with `@internal`), or private/internal?
-- Does the README need a new tags table and/or "Filtering by tag" section (required whenever `tags` are
-  emitted — see `CLAUDE.md`)?
 - Should the `parser-strings-comments` bundle include it? A strings-and-comments parser for a new language
   usually belongs there too.
 - What's the package name, and the parser names? A package name has the form

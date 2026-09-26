@@ -43,8 +43,8 @@ starting; this skill refers to its steps rather than repeating them.
    - `package.json`'s `keywords` name the programming language and its common alternate names. Ask the
      user if unsure. `fix-package-json` adds only the generic ones.
    - A hand-written scanner emits `parsedTexts` lazily, with generators.
-   - Every emitted tag is declared in `src/tags.ts`, with its meaning, which generates the README's tags
-     table.
+   - `src/tags.ts` is required: every parser emits tags. Every emitted tag is declared there, with its
+     meaning, which generates the README's tags table.
    - Tests use raw snippets in `fixtures/`. Every special case the README mentions has a test, linked from
      the README with a hidden `<!--- Tested by ... --->` comment.
    - The parser survives any input. cspell can send it a fragment, such as a markdown code block, so `parse`
