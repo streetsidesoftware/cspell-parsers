@@ -16,9 +16,9 @@ parsers, and how to write one here.
   [guide to adding a new parser package](docs/guides/new-parser-package.md).
 - **Before a PR:** `pnpm run build`, `pnpm run typecheck`, `pnpm run lint` (auto-fixes), `pnpm test`. CI runs
   `build`, `typecheck`, and `test`, plus `pnpm run lint-ci` (a read-only lint) in a separate workflow.
-- **Commits:** [Conventional Commits](https://www.conventionalcommits.org/). Use `feat:`/`fix:` only for
-  changes a user of a published package would notice. Everything else is `chore:`, `refactor:`, `docs:`,
-  etc.
+- **Commits:** [Conventional Commits](https://www.conventionalcommits.org/). Use `feat:` only for a new
+  capability, and `fix:` for any other change to a published package's behavior. A change with no behavior
+  change is `refactor:`, and everything else is `chore:`, `docs:`, etc.
 - **PR descriptions:** short, with a `## Summary` that stands on its own.
 
 The rest of this file is the full reference, written mainly for coding agents.
@@ -100,9 +100,12 @@ Keep commits focused and describe the _why_ in the commit message, not just the 
 Follow [Conventional Commits](https://www.conventionalcommits.org/). Release Please derives the version bump
 and changelog from the type, so pick it by user-facing impact, not by how much code changed:
 
-- `feat:` — a feature or other change a user of a published package would notice.
-- `fix:` — a bug fix that changes published behavior.
-- `feat!:` / `fix!:` — either of the above, but breaking.
+- `feat:` — a new capability: something a user of a published package can do that they couldn't before, such
+  as a new tag, parser, file type, option, or export.
+- `fix:` — any other change to a published package's behavior: a bug fix, a changed default or output, a
+  rename, a removal, or a move to a new API that users would notice.
+- `feat!:` / `fix!:` — either of the above, but breaking. Removing or renaming something users rely on is
+  `fix!:`, not `feat!:`, unless the same change also adds a new capability.
 - `perf:` — a performance improvement a consumer would notice, with no behavior change.
 - `revert:` — undoes a previously merged commit. Visible in the changelog under its own "Reverts" section, so
   consumers can see a shipped `feat:`/`fix:` got undone.
