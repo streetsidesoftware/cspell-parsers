@@ -33,3 +33,17 @@ All three scripts accept a `--dry-run` flag that reports what would change (via 
 non-zero status if a fix is needed, without writing anything. `pnpm run lint` runs all three in fixing mode
 before `eslint`/`prettier`; `pnpm run lint-ci` runs all three with `--dry-run` so CI fails if a package.json,
 `release-please-config.json`, or a generated `.csv` table is out of date.
+
+## Shared README sections
+
+`pnpm run build:readme` also injects hand-written snippets from `static/` into every package README, so shared
+text is maintained in one place:
+
+- `static/requirements.md`, `static/sponsor.md` and `static/footer.md` are injected whole.
+- `static/customization-options-intro.md` is the start of the "Customization options" section. Its
+  `{@ given-by @}` placeholder is filled by the directive's `value=`, which differs for single- and
+  multi-parser packages. A README that needs local text between its parts injects single sections with
+  `#heading=`, as `packages/parser-typescript-strings-comments/README.md` does.
+- `static/customization-options-tag-filter.md` is the `TagFilterOptions` reference. It and the
+  `CustomizePluginOptions` block in the intro copy the types in `packages/internal-utils/src/types.ts`, so
+  update them together.

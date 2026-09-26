@@ -215,16 +215,20 @@ For example, this renames the TypeScript and TSX parser, and JavaScript and JSX 
 customizePlugin().renameParser('typescript-strings-comments', 'my-parser');
 ```
 
+<!--- @@inject: ../../static/customization-options-intro.md#heading=%60CustomizePluginOptions%60 --->
+
 ### `CustomizePluginOptions`
 
 ```ts
 interface CustomizePluginOptions {
-  /**
-   * Define which tagged segments to keep.
-   */
+  /** Chooses which tagged segments every parser keeps. */
   tags: TagFilterOptions;
 }
 ```
+
+<!--- @@inject-end: ../../static/customization-options-intro.md#heading=%60CustomizePluginOptions%60 --->
+
+<!--- @@inject: ../../static/customization-options-intro.md#heading=Examples --->
 
 ### Examples
 
@@ -245,6 +249,8 @@ const option = { tags: { '*': true, code: false } };
 ```ts
 const option = { tags: { '*': false, comment: true } };
 ```
+
+<!--- @@inject-end: ../../static/customization-options-intro.md#heading=Examples --->
 
 **Turn off `module.specifier`**
 
@@ -274,6 +280,8 @@ export default plugin.defineConfig({
 
 <!--- @@inject-end: samples/define-config/cspell.config.mts#lang=ts --->
 
+<!--- @@inject: ../../static/customization-options-tag-filter.md --->
+
 ### `TagFilterOptions`
 
 Use `TagFilterOptions` to set the filter criteria for the text sent to the spell checker.
@@ -295,6 +303,7 @@ type TagPattern = string;
 interface TagFilterOptions {
   /**
    * The default filter setting for any tag not otherwise matched.
+   * @default true
    */
   '*'?: boolean | undefined;
 
@@ -306,6 +315,8 @@ interface TagFilterOptions {
   [tag: TagPattern]: boolean | undefined;
 }
 ```
+
+<!--- @@inject-end: ../../static/customization-options-tag-filter.md --->
 
 ## Known limitations
 
