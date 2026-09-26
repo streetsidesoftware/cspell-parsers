@@ -5,22 +5,21 @@ export { stripCommentMarkers } from './comments.ts';
 export { createParsedTextFilter } from './customize.ts';
 export type { HtmlTextPart } from './htmlEntities.ts';
 export { decodeHtmlCharacterReference, decodeHtmlTextParts } from './htmlEntities.ts';
-export type { CreatePluginParserWithFilterTagsOptions } from './parserEx.ts';
-export { createPluginParserWithFilterTags } from './parserEx.ts';
-export type { CreatePluginExOptions } from './pluginEx.ts';
-export { createPluginEx, customizePluginEx } from './pluginEx.ts';
+export type { CreatePluginParserWithFilterTagsOptions } from './parserDef.ts';
+export { createPluginParserWithFilterTags } from './parserDef.ts';
+export type { CreatePluginOptions } from './plugin.ts';
+export { createPlugin, customizePluginWith } from './plugin.ts';
 export type { DecodedText, StringPart } from './strings.ts';
 export { decodeStringParts } from './strings.ts';
 export { codeTagMeaning } from './tags.ts';
 export type {
-  CustomizePluginExOptions,
+  CustomizePluginOptions,
   DefineConfigSettings,
   DefinedConfig,
   FileTypeTarget,
-  IParserEx,
+  IParser,
+  IPlugin,
   IPluginBuilder,
-  IPluginEx,
-  IPluginExBase,
   ParsedTextFilter,
   ParseFunction,
   ParserTags,

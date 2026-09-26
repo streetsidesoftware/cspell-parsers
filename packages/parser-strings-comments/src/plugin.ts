@@ -7,12 +7,12 @@ import { plugin as pluginPython } from '@cspell/parser-python-strings-comments/p
 import { plugin as pluginRuby } from '@cspell/parser-ruby-strings-comments/plugin';
 import { plugin as pluginRust } from '@cspell/parser-rust-strings-comments/plugin';
 import { plugin as pluginTypescript } from '@cspell/parser-typescript-strings-comments/plugin';
-import type { CustomizePluginExOptions, IPluginBuilder, IPluginEx } from '@internal/utils';
-import { createPluginEx, customizePluginEx } from '@internal/utils';
+import type { CustomizePluginOptions, IPlugin, IPluginBuilder } from '@internal/utils';
+import { createPlugin, customizePluginWith } from '@internal/utils';
 
-export type { CustomizePluginExOptions as CustomizePluginOptions } from '@internal/utils';
+export type { CustomizePluginOptions } from '@internal/utils';
 
-const bundledPlugins: readonly IPluginEx[] = [
+const bundledPlugins: readonly IPlugin[] = [
   pluginC,
   pluginCsharp,
   pluginGo,
@@ -24,7 +24,7 @@ const bundledPlugins: readonly IPluginEx[] = [
   pluginTypescript,
 ];
 
-export const plugin: IPluginEx = createPluginEx({
+export const plugin: IPlugin = createPlugin({
   name: 'strings-comments',
   parsers: bundledPlugins.flatMap((p) => p.parsers),
 });
@@ -47,6 +47,6 @@ export const recommendedLanguageSettings = plugin.languageSettings();
  * export default customizePlugin({ tags: { '*': false, comment: true } }).defineConfig();
  * ```
  */
-export function customizePlugin(options?: CustomizePluginExOptions): IPluginBuilder {
-  return customizePluginEx(plugin, options);
+export function customizePlugin(options?: CustomizePluginOptions): IPluginBuilder {
+  return customizePluginWith(plugin, options);
 }

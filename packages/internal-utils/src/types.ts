@@ -59,7 +59,7 @@ export type TagsFilter = (tags: ParsedTags | undefined) => boolean;
  * A builder in any package can re-filter it, because `_parse` gives it the unfiltered output.
  * See docs/ADRs/plugin-customization/0007-parser-data.md.
  */
-export interface IParserEx {
+export interface IParser {
   /** The name cspell uses to select this parser in `languageSettings`. */
   readonly name: string;
   /** Parses a file for cspell, keeping only the segments the current tag filter allows. */
@@ -89,15 +89,19 @@ export type ParserTarget = string | readonly string[];
 /** Selects file types by a single file type, a list of them, or `'*'` for every file type the parsers list. */
 export type FileTypeTarget = string | readonly string[];
 
-/** The read-only members shared by {@link IPluginEx} and {@link IPluginBuilder}. */
-export interface IPluginExBase {
+/**
+ * The immutable plugin each parser package exports.
+ * {@link IPluginBuilder} extends it with the customization methods.
+ * See docs/ADRs/plugin-customization/0004-immutable-plugin-and-builder.md.
+ */
+export interface IPlugin {
   /** The plugin's name. */
   readonly name: string;
   /**
    * Returns the plugin's parsers, in order.
    * Each read returns a new array, so changing it doesn't change the plugin.
    */
-  readonly parsers: IParserEx[];
+  readonly parsers: IParser[];
   /** Returns every file type the parsers list, without duplicates, in parser order. */
   readonly supportedFileTypes: readonly string[];
   /** Returns the parser names, in order, ready to use as a {@link ParserTarget}. */
@@ -106,7 +110,7 @@ export interface IPluginExBase {
    * Returns the parser with the given name.
    * Throws if the plugin has no parser with that name.
    */
-  getParser(name: string): IParserEx;
+  getParser(name: string): IParser;
   /** Reports whether the plugin has a parser with the given name. */
   hasParser(name: string): boolean;
   /** Returns the names of the parsers that list `fileType`, in parser order. */
@@ -163,18 +167,12 @@ export type DefinedConfig<T extends DefineConfigSettings> = Omit<T, 'plugins' | 
 };
 
 /**
- * The immutable plugin each parser package exports.
- * See docs/ADRs/plugin-customization/0004-immutable-plugin-and-builder.md.
- */
-export type IPluginEx = IPluginExBase;
-
-/**
  * Customizes a plugin in place, with each method returning the builder so calls can be chained.
  * It can be passed to cspell directly as a plugin.
  * A parser name that's unknown, or already taken, throws.
  * See docs/ADRs/plugin-customization/0005-builder-operations.md.
  */
-export interface IPluginBuilder extends IPluginExBase {
+export interface IPluginBuilder extends IPlugin {
   /** Sets the plugin's name. */
   setName(name: string): this;
   /** Appends a copy of the named parser, with its current file types and filter, under `newName`. */
@@ -183,7 +181,7 @@ export interface IPluginBuilder extends IPluginExBase {
    * Appends `parser`, keeping its file types and filter.
    * It's added under `asName`, or under its own name when `asName` is omitted.
    */
-  addParser(parser: IParserEx, asName?: string): this;
+  addParser(parser: IParser, asName?: string): this;
   /** Renames a parser without changing its position, file types, or filter. */
   renameParser(name: string, newName: string): this;
   /** Removes the targeted parsers. */
@@ -209,7 +207,7 @@ export interface IPluginBuilder extends IPluginExBase {
    */
   filterTagsForFileType(fileType: string, options: TagFilterOptions, newName: string): this;
   /** Creates an immutable snapshot of the builder, which later builder calls don't affect. */
-  build(): IPluginEx;
+  build(): IPlugin;
 }
 
 /**
@@ -217,7 +215,7 @@ export interface IPluginBuilder extends IPluginExBase {
  * To rename a parser, use `renameParser` on the result.
  * See docs/ADRs/plugin-customization/0008-customize-plugin-wrapper.md.
  */
-export interface CustomizePluginExOptions {
+export interface CustomizePluginOptions {
   /** Not supported: `name` was removed. Rename a parser with `renameParser` instead. */
   name?: undefined;
   /** Chooses which tagged segments every parser keeps. */

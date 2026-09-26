@@ -23,30 +23,30 @@ AST walk through it) alike — so gap-filling semantics are identical everywhere
 reimplementing its own copy. Established in
 [code-tag-rollout/0004](./ADRs/code-tag-rollout/0004-shared-code-tags-emitter.md).
 
-## `IParserEx`
+## `IParser`
 
 The read-only parser type: `name`, `parse` (filtered, what cspell calls), `_parse` (unfiltered),
 `supportedFileTypes`, `tags`, and its current tag filter options. It has no customization methods. It
-replaced the old `IParser`, which is removed. Established in
-[plugin-customization/0007](./ADRs/plugin-customization/0007-parser-data.md).
+replaced the old ad hoc `IParser` of the same name. It was called `IParserEx` during the migration. Established
+in [plugin-customization/0007](./ADRs/plugin-customization/0007-parser-data.md).
 
-## `IPluginBuilder`
+## `IPlugin`
 
-The mutable object returned by `IPluginEx.customize()`. Its customization methods (duplicate, add, rename,
-remove, filter tags, change file types) change it in place and return it for chaining. It is usable directly
-as a cspell plugin, and `build()` takes an immutable `IPluginEx` snapshot. Established in
-[plugin-customization/0004](./ADRs/plugin-customization/0004-immutable-plugin-and-builder.md). The name is
-provisional.
-
-## `IPluginEx`
-
-The immutable plugin each parser package exports. It replaced `@internal/utils`'s ad hoc `IPlugin`, which is
-removed. It has read-only helpers (`getParser()`, `hasParser()`, `parserNamesFor()`, `languageSettings()`,
-`languageSettingsFor()`, `defineConfig()`) and `customize()`, which returns an `IPluginBuilder`. The `Ex`
-suffix goes once the provisional names are settled. Established in
+The immutable plugin each parser package exports. It replaced `@internal/utils`'s old ad hoc `IPlugin` of the
+same name. It was called `IPluginEx` during the migration. It has read-only helpers (`getParser()`,
+`hasParser()`, `parserNamesFor()`, `languageSettings()`, `languageSettingsFor()`, `defineConfig()`) and
+`customize()`, which returns an `IPluginBuilder`. Established in
 [plugin-customization/0002](./ADRs/plugin-customization/0002-compatibility-and-migration.md) and
 [0004](./ADRs/plugin-customization/0004-immutable-plugin-and-builder.md), with `defineConfig()` added in
 [0009](./ADRs/plugin-customization/0009-define-config.md).
+
+## `IPluginBuilder`
+
+The mutable object returned by `IPlugin.customize()`. Its customization methods (duplicate, add, rename,
+remove, filter tags, change file types) change it in place and return it for chaining. It is usable directly
+as a cspell plugin, and `build()` takes an immutable `IPlugin` snapshot. Established in
+[plugin-customization/0004](./ADRs/plugin-customization/0004-immutable-plugin-and-builder.md). The name is
+provisional.
 
 ## Parser file types
 

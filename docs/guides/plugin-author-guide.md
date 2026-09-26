@@ -5,7 +5,7 @@ configuration that is simple, easy, and obvious, with no surprises. Every plugin
 by that goal. This guide explains the rules cspell imposes, what users do with a plugin, and what that
 means for how you write one.
 
-> **Status:** every package uses the `IPluginEx`/`IPluginBuilder` API described here, implemented in
+> **Status:** every package uses the `IPlugin`/`IPluginBuilder` API described here, implemented in
 > `@internal/utils`. The decisions behind it are in
 > [`docs/ADRs/plugin-customization/`](../ADRs/plugin-customization/README.md).
 
@@ -33,10 +33,10 @@ Each parser package exports a plugin, and the plugin comes with recommended sett
   generate `languageSettings`. They don't restrict what a user can point at the parser.
 - For a file type listed by several parsers, `recommended` picks the **last** one in the plugin's
   `parsers` order.
-- The exported plugin is an **immutable `IPluginEx`**. Users can always get back the original plugin and
+- The exported plugin is an **immutable `IPlugin`**. Users can always get back the original plugin and
   its parsers.
 
-Each exported `IPluginEx` has read-only helpers only:
+Each exported `IPlugin` has read-only helpers only:
 
 | Member                                  | Returns                                                                                            |
 | --------------------------------------- | -------------------------------------------------------------------------------------------------- |
@@ -105,7 +105,7 @@ What users can rely on:
 
 ## Wiring the package
 
-- `plugin.ts` exports the `IPluginEx`, and `customizePlugin(options?)`, a thin wrapper that returns
+- `plugin.ts` exports the `IPlugin`, and `customizePlugin(options?)`, a thin wrapper that returns
   `plugin.customize()` with `options.tags` applied to every parser.
 - `recommended.ts` exports `plugin.defineConfig()`, so it always agrees with the parsers.
 - The README documents every tag in a `Tag` / `Meaning` table and shows a short "Filtering by tag"

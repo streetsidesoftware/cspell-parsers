@@ -96,7 +96,7 @@ plugins and parsers, what users do with a plugin, and what that means for how yo
    the shared `.config/tsdown.config.ts`.
 3. Implement the parser as four files under `src/`, each with a matching `package.json` `exports` subpath
    and `tsdown.config.ts` entry (see `CLAUDE.md`'s "Package shape" for why both matter):
-   - `parser.ts` — `parse(content, filename): ParseResult`, `export const parser: IParserEx` (created with
+   - `parser.ts` — `parse(content, filename): ParseResult`, `export const parser: IParser` (created with
      `@internal/utils`'s `createPluginParserWithFilterTags`, which applies the default filter from `tags`), and
      `export const supportedFileTypes: string[]` (the cspell/vscode language IDs the parser handles, e.g.
      `'typescript'`, `'javascriptreact'`, kept alphabetically sorted), which generate its `languageSettings`.
@@ -105,10 +105,10 @@ plugins and parsers, what users do with a plugin, and what that means for how yo
      alongside the most specific tag (`comment.block.doc` implies also emitting `comment` and `comment.block`)
      so a `customizePlugin` filter can match at any level of specificity — see
      `packages/parser-typescript/CONTRIBUTING.md`'s "Tags" section for the full convention.
-   - `plugin.ts` — `export const plugin: IPluginEx = createPluginEx({ name, parsers: [parser] })` plus
+   - `plugin.ts` — `export const plugin: IPlugin = createPlugin({ name, parsers: [parser] })` plus
      `export { supportedFileTypes } from './parser.ts'`. If `parser.ts` emits `tags`, also export
      `function customizePlugin(options?: CustomizePluginOptions): IPluginBuilder`, a thin wrapper around
-     `@internal/utils`'s `customizePluginEx(plugin, options)` — see
+     `@internal/utils`'s `customizePluginWith(plugin, options)` — see
      `packages/parser-typescript-strings-comments/src/plugin.ts` for the pattern to copy. This is what lets a
      consumer filter which tagged segments get spell checked, then call `defineConfig()` for a complete config.
    - `index.ts` — default export: an `AdvancedCSpellSettings` with just `plugins: [plugin]`.

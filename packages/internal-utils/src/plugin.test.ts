@@ -2,9 +2,9 @@ import type { AdvancedCSpellSettings, ParsedText } from '@cspell/cspell-types';
 import { defineConfig } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
-import { createPluginParserWithFilterTags } from './parserEx.ts';
-import { createPluginEx, customizePluginEx } from './pluginEx.ts';
-import type { IParserEx, IPluginEx, RecommendedSettings } from './types.ts';
+import { createPluginParserWithFilterTags } from './parserDef.ts';
+import { createPlugin, customizePluginWith } from './plugin.ts';
+import type { IParser, IPlugin, RecommendedSettings } from './types.ts';
 
 const segments: ParsedText[] = [
   { text: 'comment', range: [0, 7], tags: { comment: true } },
@@ -12,7 +12,7 @@ const segments: ParsedText[] = [
   { text: 'code', range: [15, 19], tags: { code: true } },
 ];
 
-function mkParser(name: string, supportedFileTypes: string[]): IParserEx {
+function mkParser(name: string, supportedFileTypes: string[]): IParser {
   return createPluginParserWithFilterTags({
     name,
     parse: (content, filename) => ({ content, filename, parsedTexts: segments }),
@@ -21,12 +21,12 @@ function mkParser(name: string, supportedFileTypes: string[]): IParserEx {
   });
 }
 
-function texts(parser: IParserEx): string[] {
+function texts(parser: IParser): string[] {
   return [...parser.parse('', 'file').parsedTexts].map((t) => t.text);
 }
 
-function mkPlugin(): IPluginEx {
-  return createPluginEx({
+function mkPlugin(): IPlugin {
+  return createPlugin({
     name: 'test',
     parsers: [mkParser('typescript', ['javascript', 'typescript']), mkParser('php', ['php'])],
   });
@@ -42,9 +42,9 @@ describe('createPluginParserWithFilterTags', () => {
   });
 });
 
-describe('createPluginEx', () => {
+describe('createPlugin', () => {
   it('rejects duplicate parser names', () => {
-    expect(() => createPluginEx({ name: 'test', parsers: [mkParser('a', []), mkParser('a', [])] })).toThrow(
+    expect(() => createPlugin({ name: 'test', parsers: [mkParser('a', []), mkParser('a', [])] })).toThrow(
       'Parser name "a" is already used in plugin "test".',
     );
   });
@@ -180,7 +180,7 @@ describe('IPluginBuilder', () => {
     expect(() => b.duplicateParser('php', '')).toThrow(invalid);
     expect(() => b.addParser(mkParser('p', []), '')).toThrow(invalid);
     expect(() => b.addParser(mkParser('', []))).toThrow(invalid);
-    expect(() => createPluginEx({ name: 'test', parsers: [mkParser('', [])] })).toThrow(invalid);
+    expect(() => createPlugin({ name: 'test', parsers: [mkParser('', [])] })).toThrow(invalid);
   });
 
   it('names every unknown parser in the error', () => {
@@ -311,7 +311,7 @@ describe('defineConfig', () => {
 
   it("puts the plugin's entries first, so the user's win, and keeps other keys", () => {
     const plugin = mkPlugin();
-    const other = createPluginEx({ name: 'other', parsers: [mkParser('other', ['astro'])] });
+    const other = createPlugin({ name: 'other', parsers: [mkParser('other', ['astro'])] });
     const userSetting = { languageId: 'javascript', parser: 'other', words: ['x'] };
     const config = plugin.defineConfig({ words: ['y'], plugins: [other], languageSettings: [userSetting] });
 
@@ -333,7 +333,7 @@ describe('defineConfig', () => {
     const config = b.defineConfig();
     b.renameParser('php', 'php2');
 
-    const [registered] = config.plugins as IPluginEx[];
+    const [registered] = config.plugins as IPlugin[];
     expect(registered).not.toBe(b);
     expect(registered?.parserNames()).toEqual(['typescript', 'php']);
     expect(config.languageSettings).toEqual(registered?.languageSettings());
@@ -380,7 +380,7 @@ describe('filterTags', () => {
     const parser = commentsOnly.getParser('php');
     expect(parser.filterTags).toEqual({ '*': false, comment: true });
 
-    const b = createPluginEx({ name: 'other', parsers: [] }).customize().addParser(parser, 'php-comments');
+    const b = createPlugin({ name: 'other', parsers: [] }).customize().addParser(parser, 'php-comments');
     expect(texts(b.getParser('php-comments'))).toEqual(['comment']);
 
     b.filterTags('php-comments', { code: true });
@@ -388,31 +388,31 @@ describe('filterTags', () => {
   });
 });
 
-describe('customizePluginEx', () => {
+describe('customizePluginWith', () => {
   it('applies tags to every parser and returns a builder', () => {
-    const b = customizePluginEx(mkPlugin(), { tags: { '*': false, comment: true } });
+    const b = customizePluginWith(mkPlugin(), { tags: { '*': false, comment: true } });
     expect(texts(b.getParser('typescript'))).toEqual(['comment']);
     expect(texts(b.getParser('php'))).toEqual(['comment']);
-    expect(customizePluginEx(mkPlugin()).parserNames()).toEqual(['typescript', 'php']);
+    expect(customizePluginWith(mkPlugin()).parserNames()).toEqual(['typescript', 'php']);
   });
 
   it('rejects a file type in place of options, as the old bundle form took', () => {
-    const single = createPluginEx({ name: 'one', parsers: [mkParser('a', ['x'])] });
-    const fileType = 'x' as unknown as Parameters<typeof customizePluginEx>[1];
-    expect(() => customizePluginEx(single, fileType)).toThrow('filterTagsForFileType');
+    const single = createPlugin({ name: 'one', parsers: [mkParser('a', ['x'])] });
+    const fileType = 'x' as unknown as Parameters<typeof customizePluginWith>[1];
+    expect(() => customizePluginWith(single, fileType)).toThrow('filterTagsForFileType');
   });
 
   it('rejects the removed name option, even from a JS config that skips the type check', () => {
-    const options = { name: 'b', tags: {} } as unknown as Parameters<typeof customizePluginEx>[1];
-    const single = createPluginEx({ name: 'one', parsers: [mkParser('a', ['x'])] });
-    expect(() => customizePluginEx(single, options)).toThrow('use renameParser instead');
+    const options = { name: 'b', tags: {} } as unknown as Parameters<typeof customizePluginWith>[1];
+    const single = createPlugin({ name: 'one', parsers: [mkParser('a', ['x'])] });
+    expect(() => customizePluginWith(single, options)).toThrow('use renameParser instead');
   });
 });
 
 describe('ParserDef.from', () => {
   it('keeps the same parser object when a plugin is built from it', () => {
     const parser = mkParser('p', ['x']);
-    expect(createPluginEx({ name: 'x', parsers: [parser] }).parsers[0]).toBe(parser);
+    expect(createPlugin({ name: 'x', parsers: [parser] }).parsers[0]).toBe(parser);
   });
 });
 

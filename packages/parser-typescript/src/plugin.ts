@@ -1,14 +1,14 @@
 import { plugin as wasmPlugin } from '@cspell/parser-typescript-tree-sitter-wasm/plugin';
-import type { CustomizePluginExOptions, IPluginBuilder, IPluginEx } from '@internal/utils';
+import type { CustomizePluginOptions, IPlugin, IPluginBuilder } from '@internal/utils';
 
-export type { CustomizePluginExOptions as CustomizePluginOptions } from '@internal/utils';
+export type { CustomizePluginOptions } from '@internal/utils';
 
 /**
  * Has one parser per file type: `javascript`, `javascriptreact`, `typescript`, and `typescriptreact`.
  * The parsers are `@cspell/parser-typescript-tree-sitter-wasm`'s.
  * Built with that package's own builder, so this package doesn't bundle a second copy of `@internal/utils`.
  */
-export const plugin: IPluginEx = wasmPlugin.customize('typescript').build();
+export const plugin: IPlugin = wasmPlugin.customize('typescript').build();
 
 export const recommendedLanguageSettings = plugin.languageSettings();
 
@@ -26,7 +26,7 @@ export const recommendedLanguageSettings = plugin.languageSettings();
  * export default customizePlugin({ tags: { '*': false, comment: true } }).defineConfig();
  * ```
  */
-export function customizePlugin(options?: CustomizePluginExOptions): IPluginBuilder {
+export function customizePlugin(options?: CustomizePluginOptions): IPluginBuilder {
   // Rejected at runtime too, since the old API took `name` and a JS config wouldn't see the type error.
   if (options?.name !== undefined) {
     throw new Error(`"name" isn't supported; use renameParser instead (plugin "${plugin.name}").`);

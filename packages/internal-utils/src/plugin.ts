@@ -1,43 +1,42 @@
-import type { ParserDefChanges } from './parserEx.ts';
-import { ParserDef } from './parserEx.ts';
+import type { ParserDefChanges } from './parserDef.ts';
+import { ParserDef } from './parserDef.ts';
 import type {
-  CustomizePluginExOptions,
+  CustomizePluginOptions,
   DefineConfigSettings,
   DefinedConfig,
   FileTypeTarget,
-  IParserEx,
+  IParser,
+  IPlugin,
   IPluginBuilder,
-  IPluginEx,
-  IPluginExBase,
   ParserTarget,
   RecommendedLanguageSettings,
   TagFilterOptions,
 } from './types.ts';
 
-export interface CreatePluginExOptions {
+export interface CreatePluginOptions {
   name: string;
   /** The plugin's parsers, in order, each with a unique name. */
-  parsers: readonly IParserEx[];
+  parsers: readonly IParser[];
 }
 
 /** Creates the immutable plugin a package exports. */
-export function createPluginEx(options: CreatePluginExOptions): IPluginEx {
+export function createPlugin(options: CreatePluginOptions): IPlugin {
   const defs: ParserDef[] = [];
   for (const parser of options.parsers) {
     assertNameIsFree(options.name, defs, parser.name);
     defs.push(ParserDef.from(parser));
   }
-  return new PluginEx(options.name, defs);
+  return new Plugin(options.name, defs);
 }
 
 /** Implements the read-only plugin members over an ordered list of parser definitions. */
-abstract class PluginExQueries implements IPluginExBase {
+abstract class PluginQueries implements IPlugin {
   abstract get name(): string;
   protected abstract get defs(): readonly ParserDef[];
   /** Returns the immutable plugin that `defineConfig` registers. */
-  protected abstract snapshot(): IPluginEx;
+  protected abstract snapshot(): IPlugin;
 
-  get parsers(): IParserEx[] {
+  get parsers(): IParser[] {
     return this.defs.map((def) => def.parser);
   }
 
@@ -62,7 +61,7 @@ abstract class PluginExQueries implements IPluginExBase {
     } as DefinedConfig<T>;
   }
 
-  getParser(name: string): IParserEx {
+  getParser(name: string): IParser {
     return this.findDef(name).parser;
   }
 
@@ -128,7 +127,7 @@ abstract class PluginExQueries implements IPluginExBase {
   }
 }
 
-class PluginEx extends PluginExQueries implements IPluginEx {
+class Plugin extends PluginQueries implements IPlugin {
   readonly #name: string;
   readonly #defs: readonly ParserDef[];
 
@@ -147,12 +146,12 @@ class PluginEx extends PluginExQueries implements IPluginEx {
     return this.#defs;
   }
 
-  protected snapshot(): IPluginEx {
+  protected snapshot(): IPlugin {
     return this;
   }
 }
 
-class PluginBuilder extends PluginExQueries implements IPluginBuilder {
+class PluginBuilder extends PluginQueries implements IPluginBuilder {
   #name: string;
   /**
    * Kept as an array, not a Map, because order decides the recommended parser.
@@ -186,7 +185,7 @@ class PluginBuilder extends PluginExQueries implements IPluginBuilder {
     return this;
   }
 
-  addParser(parser: IParserEx, asName?: string): this {
+  addParser(parser: IParser, asName?: string): this {
     const name = asName ?? parser.name;
     assertNameIsFree(this.name, this.#defs, name);
     this.#defs.push(ParserDef.from(parser).with({ name }));
@@ -233,11 +232,11 @@ class PluginBuilder extends PluginExQueries implements IPluginBuilder {
     return this.duplicateParser(source, newName).setFileTypes(newName, [fileType]).filterTags(newName, options);
   }
 
-  build(): IPluginEx {
-    return new PluginEx(this.name, this.#defs);
+  build(): IPlugin {
+    return new Plugin(this.name, this.#defs);
   }
 
-  protected snapshot(): IPluginEx {
+  protected snapshot(): IPlugin {
     return this.build();
   }
 
@@ -253,7 +252,7 @@ class PluginBuilder extends PluginExQueries implements IPluginBuilder {
  * It applies `tags` to every parser.
  * See docs/ADRs/plugin-customization/0008-customize-plugin-wrapper.md.
  */
-export function customizePluginEx(plugin: IPluginEx, options?: CustomizePluginExOptions): IPluginBuilder {
+export function customizePluginWith(plugin: IPlugin, options?: CustomizePluginOptions): IPluginBuilder {
   // Rejected at runtime too, since the old API took `name` or a file type, and a JS config wouldn't see the type error.
   if (options !== undefined && typeof options !== 'object') {
     throw new Error(

@@ -1,6 +1,6 @@
 # 0002. Breaking externally is allowed; the repo is never broken internally
 
-Status: Accepted
+Status: Accepted, amended (see [Amendment](#amendment-the-ex-names-are-folded))
 
 ## Context
 
@@ -36,3 +36,14 @@ order, each step in its own PR (or a few):
   rebuilt whenever its exported types change. dist size is checked per PR.
 - `CONTRIBUTING.md`'s step-by-step package instructions describe the old API and are updated during the
   migration.
+
+## Amendment: the `Ex` names are folded
+
+Step 4 is done. The old API was removed first, and then the new names dropped their `Ex` suffix:
+
+- `IPluginEx` became `IPlugin`, and `IPluginExBase` was merged into it.
+- `IParserEx` became `IParser`.
+- `createPluginEx` became `createPlugin`, and `CustomizePluginExOptions` became `CustomizePluginOptions`.
+- `customizePluginEx` became `customizePluginWith`, since each package already exports its own `customizePlugin`.
+
+`IPluginBuilder` and the `filterTags` field keep their provisional names until issue #169 settles them.

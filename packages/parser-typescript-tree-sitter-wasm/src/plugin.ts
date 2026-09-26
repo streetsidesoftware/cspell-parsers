@@ -1,12 +1,12 @@
-import type { CustomizePluginExOptions, IPluginBuilder, IPluginEx } from '@internal/utils';
-import { createPluginEx, customizePluginEx } from '@internal/utils';
+import type { CustomizePluginOptions, IPlugin, IPluginBuilder } from '@internal/utils';
+import { createPlugin, customizePluginWith } from '@internal/utils';
 
 import { parsers } from './parsers.ts';
 
-export type { CustomizePluginExOptions as CustomizePluginOptions } from '@internal/utils';
+export type { CustomizePluginOptions } from '@internal/utils';
 
 /** Has one parser per file type: `javascript`, `javascriptreact`, `typescript`, and `typescriptreact`. */
-export const plugin: IPluginEx = createPluginEx({ name: 'typescript-tree-sitter-wasm', parsers });
+export const plugin: IPlugin = createPlugin({ name: 'typescript-tree-sitter-wasm', parsers });
 
 export const recommendedLanguageSettings = plugin.languageSettings();
 
@@ -24,6 +24,6 @@ export const recommendedLanguageSettings = plugin.languageSettings();
  * export default customizePlugin({ tags: { '*': false, comment: true } }).defineConfig();
  * ```
  */
-export function customizePlugin(options?: CustomizePluginExOptions): IPluginBuilder {
-  return customizePluginEx(plugin, options);
+export function customizePlugin(options?: CustomizePluginOptions): IPluginBuilder {
+  return customizePluginWith(plugin, options);
 }

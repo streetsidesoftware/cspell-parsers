@@ -1,7 +1,7 @@
 import { plugin as typescriptPlugin } from '@cspell/parser-typescript/plugin';
-import type { CustomizePluginExOptions, IPluginBuilder, IPluginEx } from '@internal/utils';
+import type { CustomizePluginOptions, IPlugin, IPluginBuilder } from '@internal/utils';
 
-export type { CustomizePluginExOptions as CustomizePluginOptions } from '@internal/utils';
+export type { CustomizePluginOptions } from '@internal/utils';
 
 /**
  * Names the parsers this plugin keeps.
@@ -14,7 +14,7 @@ const javascriptParserNames: readonly string[] = ['javascript', 'javascriptreact
  * Built with that package's own builder, so this package doesn't bundle a second copy of `@internal/utils`.
  * See docs/ADRs/typescript-parser-split/0004-parser-javascript.md.
  */
-export const plugin: IPluginEx = typescriptPlugin
+export const plugin: IPlugin = typescriptPlugin
   .customize('javascript')
   .removeParser(typescriptPlugin.parserNames().filter((name) => !javascriptParserNames.includes(name)))
   .build();
@@ -35,7 +35,7 @@ export const recommendedLanguageSettings = plugin.languageSettings();
  * export default customizePlugin({ tags: { '*': false, comment: true } }).defineConfig();
  * ```
  */
-export function customizePlugin(options?: CustomizePluginExOptions): IPluginBuilder {
+export function customizePlugin(options?: CustomizePluginOptions): IPluginBuilder {
   // Rejected at runtime too, since the old API took `name` and a JS config wouldn't see the type error.
   if (options?.name !== undefined) {
     throw new Error(`"name" isn't supported; use renameParser instead (plugin "${plugin.name}").`);
