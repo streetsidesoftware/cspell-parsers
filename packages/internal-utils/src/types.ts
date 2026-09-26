@@ -55,22 +55,6 @@ export interface TagFilterOptions {
 export type TagsFilter = (tags: ParsedTags | undefined) => boolean;
 
 /**
- * Options for the deprecated `name` form of `customizePlugin`, and for `createParser`.
- * See docs/ADRs/plugin-customization/0008-customize-plugin-wrapper.md.
- */
-export interface CustomizeParserOptions {
-  /**
-   * Override the parser's `name`. Useful when registering more than one customized copy of the same
-   * parser (e.g. under `plugins`), since cspell selects a parser by name and two parsers can't share one.
-   */
-  name?: string;
-  /**
-   * Which tagged segments to keep. Omit to keep the parser's own defaults.
-   */
-  tags?: TagFilterOptions;
-}
-
-/**
  * A parser as read-only data, with no customization methods.
  * A builder in any package can re-filter it, because `_parse` gives it the unfiltered output.
  * See docs/ADRs/plugin-customization/0007-parser-data.md.
@@ -230,10 +214,11 @@ export interface IPluginBuilder extends IPluginExBase {
 
 /**
  * The options a package's `customizePlugin` accepts.
- * To rename a parser, use `renameParser` on the result, or the deprecated `CustomizeParserOptions` overload.
+ * To rename a parser, use `renameParser` on the result.
  * See docs/ADRs/plugin-customization/0008-customize-plugin-wrapper.md.
  */
 export interface CustomizePluginExOptions {
+  /** Not supported: `name` was removed. Rename a parser with `renameParser` instead. */
   name?: undefined;
   /** Chooses which tagged segments every parser keeps. */
   tags: TagFilterOptions;

@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import type { ParsedText } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
-import { createParser, parse, parser } from './parser.ts';
+import { parse, parser } from './parser.ts';
 import { tags } from './tags.ts';
 
 const fixturesDir = join(import.meta.dirname, '../fixtures');
@@ -314,27 +314,6 @@ describe('typescript-strings-comments parser', () => {
       const parsed = [...parse(content, 'file.ts').parsedTexts];
       const str = parsed.find((p) => p.tags?.['string.templateLiteral']);
       expectRangeMatchesRawText(str, content);
-    });
-  });
-
-  describe('createParser', () => {
-    const content = '// a comment\n"a string"\n';
-
-    it('defaults to the "typescript-strings-comments" name and keeps everything when called with no options', () => {
-      const customized = createParser();
-      expect(customized.name).toBe('typescript-strings-comments');
-
-      const parsedTexts = [...customized.parse(content, 'file.ts').parsedTexts];
-      expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(true);
-      expect(parsedTexts.some((p) => p.text === 'a string')).toBe(true);
-    });
-
-    it('filters segments by tag when tags is given', () => {
-      const customized = createParser({ tags: { '*': false, comment: true } });
-      const parsedTexts = [...customized.parse(content, 'file.ts').parsedTexts];
-
-      expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(true);
-      expect(parsedTexts.some((p) => p.text === 'a string')).toBe(false);
     });
   });
 

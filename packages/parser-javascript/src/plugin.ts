@@ -38,9 +38,7 @@ export const recommendedLanguageSettings = plugin.languageSettings();
 export function customizePlugin(options?: CustomizePluginExOptions): IPluginBuilder {
   // Rejected at runtime too, since the old API took `name` and a JS config wouldn't see the type error.
   if (options?.name !== undefined) {
-    throw new Error(
-      `"name" only works for a plugin with one parser; use renameParser instead (plugin "${plugin.name}").`,
-    );
+    throw new Error(`"name" isn't supported; use renameParser instead (plugin "${plugin.name}").`);
   }
   const builder = plugin.customize();
   return options?.tags ? builder.filterTags('*', options.tags) : builder;

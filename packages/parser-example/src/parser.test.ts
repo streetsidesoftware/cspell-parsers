@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import type { ParsedText } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
-import { createParser, parse, parser } from './parser.ts';
+import { parse, parser } from './parser.ts';
 
 const fixturesDir = join(import.meta.dirname, '../fixtures');
 
@@ -111,7 +111,7 @@ describe('c-style-comments parser', () => {
 
   describe('tags', () => {
     it('declares every tag the Scanner actually emits, across every fixture', () => {
-      // A tag emitted but missing from `parser.tags` can't be filtered via `createParser`/`customizePlugin`.
+      // A tag emitted but missing from `parser.tags` can't be filtered via `customizePlugin`.
       const emittedTags = new Set<string>();
       for (const fixture of readdirSync(fixturesDir)) {
         for (const p of parse(readFixture(fixture), `fixtures/${fixture}`).parsedTexts) {
@@ -130,44 +130,5 @@ describe('c-style-comments parser', () => {
       expect(code).toBe(false);
       expect(Object.values(rest).every((value) => value === true)).toBe(true);
     });
-  });
-});
-
-describe('createParser', () => {
-  const content = '// a comment\n/* a block */\n';
-
-  it('defaults to the "c-style-comments" name and keeps everything when called with no options', () => {
-    const customized = createParser();
-    expect(customized.name).toBe('c-style-comments');
-
-    const parsedTexts = [...customized.parse(content, 'file.c').parsedTexts];
-    expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(true);
-    expect(parsedTexts.some((p) => p.text === 'a block')).toBe(true);
-  });
-
-  it('overrides the name without filtering when tags is omitted', () => {
-    const customized = createParser({ name: 'custom-example' });
-    expect(customized.name).toBe('custom-example');
-
-    const parsedTexts = [...customized.parse(content, 'file.c').parsedTexts];
-    expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(true);
-    expect(parsedTexts.some((p) => p.text === 'a block')).toBe(true);
-  });
-
-  it('filters segments by tag when tags is given', () => {
-    const customized = createParser({ tags: { '*': false, 'comment.line': true } });
-    const parsedTexts = [...customized.parse(content, 'file.c').parsedTexts];
-
-    expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(true);
-    expect(parsedTexts.some((p) => p.text === 'a block')).toBe(false);
-  });
-
-  it('combines a name override with tag filtering', () => {
-    const customized = createParser({ name: 'custom-example', tags: { '*': false, 'comment.line': true } });
-    expect(customized.name).toBe('custom-example');
-
-    const parsedTexts = [...customized.parse(content, 'file.c').parsedTexts];
-    expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(true);
-    expect(parsedTexts.some((p) => p.text === 'a block')).toBe(false);
   });
 });

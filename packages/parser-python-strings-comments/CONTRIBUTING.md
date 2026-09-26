@@ -75,15 +75,15 @@ twelve combinations as named constants - `isRaw`/`isInterpolated` are known once
 few extra object spreads, not a per-character cost. See `README.md`'s [Tags](README.md#tags) table for what
 each tag means to a consumer.
 
-## Why `customizePlugin`/`createParser` work with any cspell version
+## Why `customizePlugin` works with any cspell version
 
-`customizePlugin` and `createParser` are thin wrappers around `@internal/utils`'s `customizePluginEx` and
-`customizeParserEx` (`packages/internal-utils/src/pluginEx.ts`). `createPluginParserWithFilterTags`
-(`parserEx.ts`) builds the default filter from `tags`. Every filter, a consumer's included, is compiled
-against the parser's unfiltered output and its `tags`, never on top of an earlier filter. The filtering
-happens inside the parser before cspell sees the result, so it works with any cspell version, including one
-too old to filter `ParsedText.tags` itself. See the plugin-customization ADRs
-(`docs/ADRs/plugin-customization/0006-tag-filtering.md`) for the design.
+`customizePlugin` is a thin wrapper around `@internal/utils`'s `customizePluginEx`
+(`packages/internal-utils/src/pluginEx.ts`). `createPluginParserWithFilterTags` (`parserEx.ts`) builds the
+default filter from `tags`. Every filter, a consumer's included, is compiled against the parser's unfiltered
+output and its `tags`, never on top of an earlier filter. The filtering happens inside the parser before
+cspell sees the result, so it works with any cspell version, including one too old to filter `ParsedText.tags`
+itself. See the plugin-customization ADRs (`docs/ADRs/plugin-customization/0006-tag-filtering.md`) for the
+design.
 
 ## Known limitation: no docstring detection
 

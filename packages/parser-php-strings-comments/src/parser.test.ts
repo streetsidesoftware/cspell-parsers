@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import type { ParsedText } from '@cspell/cspell-types';
 import { describe, expect, it } from 'vitest';
 
-import { createParser, parse, parser } from './parser.ts';
+import { parse, parser } from './parser.ts';
 
 const fixturesDir = join(import.meta.dirname, '../fixtures');
 
@@ -294,35 +294,6 @@ describe('php-strings-comments parser', () => {
     });
   });
 
-  describe('createParser', () => {
-    const content = "<?php // a comment\n$s = 'a string';\n";
-
-    it('defaults to the "php-strings-comments" name and keeps everything when called with no options', () => {
-      const customized = createParser();
-      expect(customized.name).toBe('php-strings-comments');
-
-      const parsedTexts = [...customized.parse(content, 'file.php').parsedTexts];
-      expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(true);
-      expect(parsedTexts.some((p) => p.text === 'a string')).toBe(true);
-    });
-
-    it('filters segments by tag when tags is given', () => {
-      const customized = createParser({ tags: { '*': false, comment: true } });
-      const parsedTexts = [...customized.parse(content, 'file.php').parsedTexts];
-
-      expect(parsedTexts.some((p) => p.text === 'a comment')).toBe(true);
-      expect(parsedTexts.some((p) => p.text === 'a string')).toBe(false);
-    });
-
-    it('keeps html once opted into, still leaving code off', () => {
-      const customized = createParser({ tags: { html: true } });
-      const parsedTexts = [...customized.parse('<p>markup</p>\n' + content, 'file.php').parsedTexts];
-
-      expect(parsedTexts.some((p) => p.tags?.html)).toBe(true);
-      expect(parsedTexts.some((p) => p.tags?.code)).toBe(false);
-    });
-  });
-
   describe('parse (named export used directly by the Parser)', () => {
     it('parser.parse wraps the raw parse export, filtering out code and html by default', () => {
       const content = "<p>markup</p>\n<?php // a comment\n$s = 'a string';\n";
@@ -339,7 +310,7 @@ describe('php-strings-comments parser', () => {
     it('declares every tag the Scanner actually emits, across every fixture', () => {
       // Regression coverage for a tag silently becoming impossible to filter: a tag filter only
       // knows about tags listed in `parser.tags`, so a tag the Scanner emits but `tags` doesn't declare
-      // would never be reachable via `createParser`/`customizePlugin`'s `tags` option, with no error to
+      // would never be reachable via `customizePlugin`'s `tags` option, with no error to
       // catch the mistake.
       const emittedTags = new Set<string>();
       for (const fixture of readdirSync(fixturesDir)) {

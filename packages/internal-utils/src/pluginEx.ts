@@ -1,7 +1,6 @@
 import type { ParserDefChanges } from './parserEx.ts';
 import { ParserDef } from './parserEx.ts';
 import type {
-  CustomizeParserOptions,
   CustomizePluginExOptions,
   DefineConfigSettings,
   DefinedConfig,
@@ -252,37 +251,21 @@ class PluginBuilder extends PluginExQueries implements IPluginBuilder {
 /**
  * Implements a package's `customizePlugin`.
  * It applies `tags` to every parser.
- * Given the deprecated `name`, it renames the plugin's only parser.
  * See docs/ADRs/plugin-customization/0008-customize-plugin-wrapper.md.
  */
-export function customizePluginEx(
-  plugin: IPluginEx,
-  options?: CustomizePluginExOptions | CustomizeParserOptions,
-): IPluginBuilder {
-  const builder = plugin.customize();
-  if (options?.name !== undefined) {
-    const [only, ...others] = builder.parserNames();
-    if (only === undefined || others.length) {
-      throw new Error(
-        `"name" only works for a plugin with one parser; use renameParser instead (plugin "${plugin.name}").`,
-      );
-    }
-    builder.renameParser(only, options.name);
+export function customizePluginEx(plugin: IPluginEx, options?: CustomizePluginExOptions): IPluginBuilder {
+  // Rejected at runtime too, since the old API took `name` or a file type, and a JS config wouldn't see the type error.
+  if (options !== undefined && typeof options !== 'object') {
+    throw new Error(
+      `customizePlugin takes an options object; for one file type, use customizePlugin().filterTagsForFileType(...) (plugin "${plugin.name}").`,
+    );
   }
+  if (options?.name !== undefined) {
+    throw new Error(`"name" isn't supported; use renameParser instead (plugin "${plugin.name}").`);
+  }
+  const builder = plugin.customize();
   if (options?.tags) builder.filterTags('*', options.tags);
   return builder;
-}
-
-/**
- * Implements a package's deprecated `createParser`.
- * Returns a renamed and/or re-filtered copy of `parser`.
- */
-export function customizeParserEx(parser: IParserEx, options: CustomizeParserOptions = {}): IParserEx {
-  const builder = createPluginEx({ name: parser.name, parsers: [parser] }).customize();
-  if (options.tags) builder.filterTags(parser.name, options.tags);
-  const name = options.name ?? parser.name;
-  if (name !== parser.name) builder.renameParser(parser.name, name);
-  return builder.getParser(name);
 }
 
 function assertNameIsFree(pluginName: string, defs: readonly ParserDef[], name: string): void {

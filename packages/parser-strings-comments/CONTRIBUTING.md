@@ -23,14 +23,13 @@ To bundle a new language package:
 ## `customizePlugin`
 
 `customizePlugin(options?)` is a thin wrapper around `customizePluginEx`, the same as in every language package.
-Its deprecated `(fileType, options)` form reproduces the old bundle's result: it keeps only the parsers that list
-`fileType`, narrows them to `fileType`, renames them to `options.name`, and applies `options.tags`. With `'*'`, it
-keeps every parser and names only the plugin. See `docs/ADRs/plugin-customization/0008-customize-plugin-wrapper.md`.
+To change one language only, use `filterTagsForFileType` on the result. See
+`docs/ADRs/plugin-customization/0008-customize-plugin-wrapper.md`.
 
 ## Testing
 
-- `src/plugin.test.ts` checks that every bundled parser is present, in order, and that both forms of
-  `customizePlugin` filter and narrow as described above. Parsing itself is tested in each language package.
+- `src/plugin.test.ts` checks that every bundled parser is present, in order, and that `customizePlugin` filters
+  every language. Parsing itself is tested in each language package.
 - `samples/` is a real, separate end-to-end check: actual cspell configs plus real source files, run for real by
   `pnpm run test:cspell` (`cspell .` from the package root). `samples/comments` and `samples/customize` each hold
   a genuine misspelling in a segment their filter excludes. Check them both ways: run cspell with the sample's

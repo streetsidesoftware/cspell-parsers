@@ -1,4 +1,4 @@
-import type { CustomizeParserOptions, CustomizePluginExOptions, IPluginBuilder, IPluginEx } from '@internal/utils';
+import type { CustomizePluginExOptions, IPluginBuilder, IPluginEx } from '@internal/utils';
 import { createPluginEx, customizePluginEx } from '@internal/utils';
 
 import { parser } from './parser.ts';
@@ -24,9 +24,6 @@ export const recommendedLanguageSettings = plugin.languageSettings();
  * export default customizePlugin({ tags: { 'string.interpolated': false } }).defineConfig();
  * ```
  */
-export function customizePlugin(options?: CustomizePluginExOptions): IPluginBuilder;
-/** @deprecated Rename the parser with `customizePlugin().renameParser(...)` instead of `name`. */
-export function customizePlugin(options: CustomizeParserOptions): IPluginBuilder;
-export function customizePlugin(options?: CustomizePluginExOptions | CustomizeParserOptions): IPluginBuilder {
+export function customizePlugin(options?: CustomizePluginExOptions): IPluginBuilder {
   return customizePluginEx(plugin, options);
 }
