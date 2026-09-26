@@ -15,8 +15,11 @@ starting; this skill refers to its steps rather than repeating them.
 
 ## Workflow
 
-1. **Name it.** Agree on the package name (`@cspell/parser-<name>`, directory `packages/parser-<name>`).
-   The package directory name is also the ADR feature slug: `docs/ADRs/parser-<name>/`.
+1. **Name it.** Agree on the package name. It has the form `@cspell/parser-<language>[-<specialization>]`,
+   where the optional suffix is a specialization or the AST parser used: `@cspell/parser-typescript`,
+   `@cspell/parser-php-strings-comments`, `@cspell/parser-typescript-tree-sitter`. The directory is
+   `packages/parser-<name>`, where `<name>` is everything after `parser-`, and it's also the ADR feature slug:
+   `docs/ADRs/parser-<name>/`.
 
 2. **Set up a worktree** on a `claude-new-parser-<name>` branch, as in `feature-adr` step 2. The design and
    the package go in the same branch and the same PR.

@@ -15,10 +15,12 @@ first.
      dependency).
    - For a minimal single-file starting point, `packages/parser-example`. Bring it in line with the full shape
      before publishing it as a real plugin.
-2. Update `package.json`: `name`, `description`, `dependencies`, and the `exports` map for each file you're
-   publishing. Leave `files` (`["dist", "!dist/**/*.map"]`) and `repository` as-is, and keep the copied
-   `LICENSE` file — these are all required for `npm publish` to ship a correct, provenance-verifiable package
-   without leaking source maps (see [`CLAUDE.md`](../../CLAUDE.md)'s "Package shape" note). Keep
+2. Update `package.json`: `name` (of the form `@cspell/parser-<language>[-<specialization>]`, where the
+   optional suffix is a specialization or the AST parser used, as in `@cspell/parser-php-strings-comments` or
+   `@cspell/parser-typescript-tree-sitter`), `description`, `dependencies`, and the `exports` map for each
+   file you're publishing. Leave `files` (`["dist", "!dist/**/*.map"]`) and `repository` as-is, and keep the
+   copied `LICENSE` file — these are all required for `npm publish` to ship a correct, provenance-verifiable
+   package without leaking source maps (see [`CLAUDE.md`](../../CLAUDE.md)'s "Package shape" note). Keep
    `@cspell/cspell-types` a `devDependencies` entry, not `dependencies` — tsdown bundles its types into
    `dist/*.d.ts`, so consumers don't need it installed (see `CLAUDE.md`'s "Package shape" note on
    `deps.onlyBundle`). If the parser will emit `tags` (see step 3), also add

@@ -300,7 +300,9 @@ parser flags or ignores), add a `<!-- cspell:ignore ... -->` comment at the end 
 words, so the repo's own spellcheck doesn't flag them.
 
 To add a new parser package: use the `new-parser-plugin` skill, which designs it and then builds it by
-`docs/guides/new-parser-package.md`.
+`docs/guides/new-parser-package.md`. A new package is named `@cspell/parser-<language>[-<specialization>]`, where the
+optional suffix is a specialization or the AST parser used (`@cspell/parser-php-strings-comments`,
+`@cspell/parser-typescript-tree-sitter`).
 
 Dependency updates are handled by Dependabot (`.github/dependabot.yml`), not Renovate — dev and production
 dependencies are grouped into separate PRs, as are GitHub Actions version bumps.

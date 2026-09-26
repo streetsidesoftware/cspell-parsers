@@ -87,8 +87,10 @@ against this codebase's existing parsers:
   emitted — see `CLAUDE.md`)?
 - Should the `parser-strings-comments` bundle include it? A strings-and-comments parser for a new language
   usually belongs there too.
-- What's the package name, and the parser names? Parser names are what users write in `languageSettings`,
-  so they're public API from the first release.
+- What's the package name, and the parser names? A package name has the form
+  `@cspell/parser-<language>[-<specialization>]`, where the optional suffix is a specialization or the AST
+  parser used, as in `@cspell/parser-php-strings-comments` or `@cspell/parser-typescript-tree-sitter`. Parser
+  names are what users write in `languageSettings`, so they're public API from the first release.
 
 ## Wrapping a topic into a decision
 
