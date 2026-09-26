@@ -1,6 +1,6 @@
 ---
 name: feature-adr
-description: 'Design a new cspell-parser feature (a new parser, a behavior change, improvements) through a structured interview, recording each decision as an ADR under docs/ADRs/<feature-slug>/ and keeping docs/glossary.md in sync. Use this whenever the user wants to design, spec out, or plan a feature before writing code, is unsure how an edge case should behave, or explicitly asks for an ADR, a design doc, or to "figure out the details" of something. Trigger even if the user doesn''t say "ADR" or "skill" by name — any request to add new behavior to this tool that has more than one reasonable interpretation is a candidate. Do not use this for pure bug fixes, refactors, or requests where the behavior is already fully specified.'
+description: 'Design a new cspell-parser feature (a new parser, a behavior change, improvements) through a structured interview, recording each decision as an ADR under docs/ADRs/<feature-slug>/ and keeping docs/glossary.md in sync. Use this whenever the user wants to design, spec out, or plan a feature before writing code, is unsure how an edge case should behave, or explicitly asks for an ADR, a design doc, or to "figure out the details" of something. Trigger even if the user doesn''t say "ADR" or "skill" by name — any request to add new behavior to this tool that has more than one reasonable interpretation is a candidate. Also use it to amend a merged ADR, or to archive a settled feature''s ADRs into a short summary. Do not use this for pure bug fixes, refactors, or requests where the behavior is already fully specified.'
 ---
 
 # feature-adr
@@ -50,7 +50,15 @@ feature (including you, in six months) doesn't have to reverse-engineer why a ta
    - Create `docs/ADRs/<feature-slug>/` and its own `README.md` index for this feature.
    - If either file already exists, read it first — don't clobber prior features' entries.
 
-4. **Interview one decision at a time.** Don't front-load a giant questionnaire. Ask a single, concrete
+4. **Interview one decision at a time.** Start with why, before any option: what problem or pain prompted
+   this, and why it's worth doing now. Offer the five whys as a way to get there: ask "why?" of each answer
+   until you reach the underlying reason. It's a framework, not a script; stop when the answer is clear.
+   Then the stakeholders: who it's for, who else it touches, and how each is affected. Then the goal (what
+   success looks like) and what's out of scope. Write them in the feature's `README.md` under Why,
+   Stakeholders, Goal, and Out of scope. Every later decision is weighed against the why and the
+   stakeholders, and the why is the one thing the archive summary must keep (step 10).
+
+   Then take the decisions one at a time. Don't front-load a giant questionnaire. Ask a single, concrete
    question, let the user answer (or say "you decide" — then propose a default and state it as the
    decision), and only move to the next question once the current one is actually resolved. Read
    `references/interview-guide.md` before the first question — it's the question bank grounded in this
@@ -58,6 +66,20 @@ feature (including you, in six months) doesn't have to reverse-engineer why a ta
    backend choice, fixtures/samples, dist-size/dependency impact) rather than generic feature-design
    questions. Skip any topic that plainly doesn't apply (e.g. backend choice for a feature that isn't
    `parser-typescript`-shaped) — the guide is a menu, not a script to run top to bottom regardless of fit.
+
+   How to ask:
+   - **Give lettered options, each with the user's code.** Show what a user would write (a
+     `cspell.config.mts` snippet, a call chain) and what happens, for each option: "(a) … (b) … (c) …".
+     Put your recommendation first and say why. Concrete options get decided in one reply; abstract
+     questions ("should it be mutable?") don't.
+   - **Check facts before asking.** If an option depends on how cspell or the code actually behaves (how an
+     error is reported, what a parser receives), try it first and bring the result to the question.
+   - **Let the user defer.** "Let's circle back to that" is an answer: note the question in the feature's
+     `README.md` under Open questions, and come back to it before closing the loop.
+   - **Capture side remarks as rules.** A remark made in passing ("use `fileType`, not `filetype`", "no
+     hidden side effects") is often a standing rule. Confirm it, then record it where it applies: the
+     design-principles ADR (which moves to `docs/design-principles.md` when the feature is archived),
+     CLAUDE.md, or memory.
 
    Keep sight of the description's own boundary: if a question turns out to have only one reasonable
    answer once you look at the code, that's not an ADR-worthy decision — just note it in context and move
@@ -95,8 +117,14 @@ feature (including you, in six months) doesn't have to reverse-engineer why a ta
    short list, one line per ADR) and point at the feature's `docs/ADRs/<feature-slug>/README.md`. If
    anything was explicitly left open (deferred rather than decided), say so plainly rather than letting it
    quietly vanish — a `Proposed` ADR with an unresolved question in its Context section is a fine way to
-   carry that forward. Don't start writing implementation code as part of this skill; the ADRs are the
-   handoff artifact, and the user can start a fresh task for implementation once they're ready.
+   carry that forward.
+
+   List any names still marked provisional (see the feature index's Provisional names section). Each needs
+   a decision, or a tracking issue that says when it must be decided (for example, before a type becomes
+   public API, or before a migration's final step makes it permanent).
+
+   Don't start writing implementation code as part of this skill; the ADRs are the handoff artifact, and the
+   user can start a fresh task for implementation once they're ready.
 
    Tell the user where the work lives: the `claude-adr-<feature-slug>` branch in
    `.claude/worktrees/claude-adr-<feature-slug>`. Once its PR is merged, remove the worktree and delete the
@@ -116,6 +144,32 @@ feature (including you, in six months) doesn't have to reverse-engineer why a ta
      `README.md`, cross-links between ADRs, and `docs/glossary.md` links to match.
    - Commit the consolidation on the same branch. The intermediate history stays in the branch and PR
      (which gets squash-merged), not in the ADR files.
+
+9. **Amend after the design has merged.** Implementation and review can change an accepted decision. Don't
+   rewrite a merged ADR, and don't squash again. Add an `## Amendment: <what changed>` section to the ADR,
+   say what changed and why, and set its status to `Accepted, amended`, linking to the amendment. A change
+   big enough to reverse the decision gets a new ADR that supersedes the old one instead. Update the
+   glossary to match.
+
+10. **Archive once the feature has settled.** Most ADRs describe a change to the system. A few months after
+    it's finished, their detail matters much less than the essence of what was done and why. Archive a
+    feature about three months after it's implemented, or when the user asks:
+    - Work in a worktree on a `claude-archive-<feature-slug>` branch, as in step 2.
+    - Note the last commit on `main` that has the full ADRs.
+    - First, rescue anything still in force. Search the repo for links to the feature's ADR files (CLAUDE.md,
+      guides, other features' ADRs, code comments). A principle that's still in force moves to
+      `docs/design-principles.md`, with a note on the feature it came from (see `references/adr-template.md`).
+      A rule that belongs with a guide or CLAUDE.md moves there. Update every link to point at the new home. A
+      link that only needs the history can point at the git permalink below. Never delete a file while
+      something in force still depends on it.
+    - Rewrite `docs/ADRs/<feature-slug>/README.md` as the summary (see `references/adr-template.md`): why
+      the feature was done, who it was for and how they were affected, its goal, what was built, each key
+      decision in one line with its reason, and the learnings and improvements that came out of
+      implementation, review, and amendments.
+    - Link to the full ADRs in git history: a permalink to the feature's directory at that commit.
+    - Delete the individual ADR files. Point glossary links, and any remaining links, at the summary.
+    - Mark the feature as archived in `docs/ADRs/README.md`.
+    - Open a PR, so the user reviews the summary before the detail leaves the tree.
 
 ## Notes
 

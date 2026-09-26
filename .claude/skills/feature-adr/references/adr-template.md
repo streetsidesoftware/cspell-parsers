@@ -25,20 +25,47 @@ bullets when adding to a feature that's already listed.
 
 <One or two sentences: what this feature is and why it needed design decisions.>
 
+## Why
+
+- <The problem or pain that prompted this, and who has it.>
+- <Why now: the request, bug, or limit hit that made it worth doing.>
+- <Constraints that shape it: the platform's fixed rules, compatibility, size budget, ...>
+
+## Stakeholders
+
+- **<Who>:** <what it gives them, and how it affects them (what changes, what they need to do).>
+
+## Goal
+
+<What success looks like: something a user can do, or a config they can write, that they can't today.>
+
+## Out of scope
+
+- <What this feature deliberately doesn't do.>
+
 ## Decisions
 
 | #   | Title | Status |
 | --- | ----- | ------ |
+
+## Open questions
+
+- <Question deferred during the interview, and what it's waiting on.>
+
+## Provisional names
+
+- `<Name>`: <what it names>. Decide by <when, e.g. before the migration's final step>. Tracked in <issue>.
 ```
 
-Append one table row per ADR as it's written: `| 0001 | <title> | Accepted |`.
+Append one table row per ADR as it's written: `| 0001 | <title> | Accepted |`. Remove the Open questions
+and Provisional names sections when they're empty.
 
 ## `docs/ADRs/<feature-slug>/NNNN-<decision-slug>.md` (one per decision)
 
 ```markdown
 # NNNN. <Decision title, phrased as the thing being decided>
 
-Status: Proposed | Accepted | Superseded by [NNNN](./NNNN-slug.md)
+Status: Proposed | Accepted | Accepted, amended (see [Amendment](#amendment-...)) | Superseded by [NNNN](./NNNN-slug.md)
 
 ## Context
 
@@ -58,8 +85,69 @@ surface once a consumer can `customizePlugin` against it" or "this rules out lat
 swappable without a breaking change to `supportedFileTypes`."
 ```
 
+An ADR amended after its design merged gets one more section at the end. Keep the original text as it was:
+
+```markdown
+## Amendment: <what changed>
+
+What changed, why (what implementation or review found), and what the decision is now.
+```
+
 Title case the filename slug the same way the feature slug is cased (kebab-case), e.g.
 `0001-emit-hierarchical-comment-tags.md`.
+
+## `docs/ADRs/<feature-slug>/README.md` after archiving (step 10)
+
+Replaces the feature index and its ADR files. Keep it short: the essence, not the detail.
+
+```markdown
+# <Feature Name> (archived)
+
+<One or two sentences: what this feature is.>
+
+The full ADRs are in git history: [docs/ADRs/<feature-slug> at <short-sha>](https://github.com/<owner>/<repo>/tree/<full-sha>/docs/ADRs/<feature-slug>).
+
+## Why
+
+- <Carried over from the index. This is the part that must survive: why the feature was done.>
+
+## Stakeholders
+
+- **<Who>:** <how the finished feature affected them.>
+
+## Goal
+
+<Carried over from the index.>
+
+## What was built
+
+<A few sentences, or a short list: what exists now because of this feature, and where it lives.>
+
+## Key decisions
+
+- **<Decision>.** <Why, in one sentence.>
+
+## Learnings and improvements
+
+- <What implementation or review changed, and what to do differently next time.>
+```
+
+In `docs/ADRs/README.md`, mark the feature's bullet `(archived)`.
+
+## `docs/design-principles.md` (created on the first archive that has principles still in force)
+
+```markdown
+# Design principles
+
+Principles still in force from features whose ADRs have been archived. Each links to its feature's summary.
+
+## <Principle, stated as a rule>
+
+<The rule, and why it holds.> From [<feature-slug>](./ADRs/<feature-slug>/README.md).
+```
+
+Add a principle when its feature is archived. If a later feature changes a principle, edit it in place and
+add that feature to its "From" line.
 
 ## `docs/glossary.md` (created once, repo-wide)
 
