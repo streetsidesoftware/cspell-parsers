@@ -50,7 +50,8 @@ starting; this skill refers to its steps rather than repeating them.
    - `package.json`'s `keywords` name the programming language and its common alternate names. Ask the
      user if unsure.
    - A hand-written scanner emits `parsedTexts` lazily, with generators.
-   - `src/tags.ts` is required: every parser emits tags. Tags emerge while building. Add each one to
+   - `src/tags.ts` is required: every parser emits tags. (A bundle of other packages' parsers has none; its
+     tags table is merged from theirs.) Tags emerge while building. Add each one to
      `tagsAndMeaning` as soon as the parser emits it, so the list stays complete; it generates the README's
      tags table and `docs/tags.md`. Follow `docs/tags.md`'s naming conventions, reuse existing tags, and
      review the final set with the user before the PR, since tag names are public API once released.

@@ -49,13 +49,13 @@ them for every package:
 
 Files under `src/`:
 
-| File             | Published | What it holds                                                                       |
-| ---------------- | --------- | ----------------------------------------------------------------------------------- |
-| `parsers.ts`     | no        | `parse`, the `parsers` array, and `supportedFileTypes`. All the real logic.         |
-| `tags.ts`        | no        | Required. `tagsAndMeaning` generates the README's tags table; `tags` sets defaults. |
-| `plugin.ts`      | yes       | `plugin`, `supportedFileTypes`, and `customizePlugin`.                              |
-| `index.ts`       | yes       | Default export: settings with just `plugins: [plugin]`.                             |
-| `recommended.ts` | yes       | Default export: `plugin.defineConfig()`, with `plugins` and `languageSettings`.     |
+| File             | Published | What it holds                                                                                           |
+| ---------------- | --------- | ------------------------------------------------------------------------------------------------------- |
+| `parsers.ts`     | no        | `parse`, the `parsers` array, and `supportedFileTypes`. All the real logic.                             |
+| `tags.ts`        | no        | `tagsAndMeaning` generates the README's tags table; `tags` sets defaults. Required, except in a bundle. |
+| `plugin.ts`      | yes       | `plugin`, `supportedFileTypes`, and `customizePlugin`.                                                  |
+| `index.ts`       | yes       | Default export: settings with just `plugins: [plugin]`.                                                 |
+| `recommended.ts` | yes       | Default export: `plugin.defineConfig()`, with `plugins` and `languageSettings`.                         |
 
 Checklist:
 

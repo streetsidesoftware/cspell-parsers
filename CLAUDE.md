@@ -177,8 +177,9 @@ Every example that is a whole config file comes from a real sample under `sample
 in `plugins`: load it with `"import": ["@cspell/<package>"]` instead, since the package's main entry registers
 the plugin.
 
-Every parser emits `tags`, declared in a required `src/tags.ts`: its `tagsAndMeaning` generates the README's tags
-table, and its `tags` sets which are checked by default. `README.md` must include that table, listing every tag
+Every parser emits `tags`, declared in its package's `src/tags.ts`: its `tagsAndMeaning` generates the README's
+tags table, and its `tags` sets which are checked by default. A bundle such as `parser-strings-comments` has no
+`tags.ts`; `fix-parser-readme` merges its tags table from the packages it bundles. `README.md` must include that table, listing every tag
 (including ancestor tags implied by `hierarchicalTags`, e.g. `comment` alongside `comment.block.doc`) with a
 one-line description of what each one means. This is reference material for using the plugin, not an
 implementation detail to omit: it's what a consumer needs to write a `customizePlugin({ tags: ... })` filter

@@ -44,6 +44,8 @@ Don't try to settle the full tag set in the interview. Tags emerge while buildin
 - What's off by default? Usually only `code`.
 
 Every parser emits tags, so `src/tags.ts`, `customizePlugin`, and the README's tags table are always required.
+The exception is a bundle of other packages' parsers: it has no `tags.ts`, and its tags table is merged from
+theirs.
 Tag names are public API once released, so the build step reviews the final set against the conventions.
 
 ## 4. Backend / implementation strategy
