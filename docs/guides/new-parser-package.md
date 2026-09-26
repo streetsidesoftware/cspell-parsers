@@ -42,7 +42,7 @@ them for every package:
 - The order of the fields.
 
 `tsdown.config.ts` lists only `entry`; every other build option comes from the shared
-`.config/tsdown.config.ts`. See [`CLAUDE.md`](../../CLAUDE.md)'s "Package shape" for the reasons behind these.
+`.config/tsdown.config.ts`. [Build and packaging](../build-and-packaging.md) explains the reasons behind these.
 
 ## 3. Implement the parser
 
@@ -145,7 +145,7 @@ The README is for someone using the plugin, not reading its source. npmjs.com re
 - [ ] `pnpm run build && pnpm run build:readme` generates the README tables.
 - [ ] `pnpm run lint` fixes what it can and adds the package to `release-please-config.json`. Commit what it
       changes. Never edit `release-please-config.json` or `.release-please-manifest.json` by hand; see
-      `CLAUDE.md`'s "Release and publish flow".
+      [Releasing](../releasing.md).
 - [ ] `pnpm run lint-ci`, `pnpm run typecheck`, and `pnpm test` pass.
 - [ ] `pnpm exec cspell .` passes from the repo root. CI's spell check covers the whole repo, which `lint-ci`
       doesn't.
