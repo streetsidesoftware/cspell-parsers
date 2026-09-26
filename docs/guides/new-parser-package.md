@@ -26,13 +26,19 @@ Copy one of these to `packages/parser-<name>`:
 - [ ] `dependencies` has only what the parser needs at run time. Keep production dependencies few.
 - [ ] `exports` has a subpath for each published file (step 3).
 - [ ] `files` stays `["dist", "!dist/**/*.map"]`, so npm ships only built output, without source maps.
-- [ ] `repository` stays as copied, with `directory` pointing at the new package. npm's provenance check
-      needs it.
 - [ ] The copied `LICENSE` file stays.
 - [ ] `@cspell/cspell-types` is a `devDependencies` entry, not `dependencies`. Its types are bundled into
       `dist/*.d.ts`, so users don't need it installed.
 - [ ] If the parser emits `tags`, `"@internal/utils": "workspace:*"` is a `devDependencies` entry. tsdown
       bundles it automatically.
+
+Don't edit these by hand: `pnpm run lint` runs `fix-package-json` (`scripts/fix-package-json.ts`), which sets
+them for every package:
+
+- `repository`, with `directory` pointing at the package. npm's provenance check needs it.
+- `keywords`: adds the required ones (`cspell`, `parser`, `plugin`, `spell`, `spellchecker`) and sorts them.
+- `publishConfig`: public access with provenance.
+- The order of the fields.
 
 `tsdown.config.ts` lists only `entry`; every other build option comes from the shared
 `.config/tsdown.config.ts`. See [`CLAUDE.md`](../../CLAUDE.md)'s "Package shape" for the reasons behind these.
