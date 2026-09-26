@@ -36,8 +36,10 @@ decision. The why is what the archive summary keeps when the ADRs are gone.
 - Is this a brand-new parser package, a behavior change to an existing one, or something cross-cutting
   (touches `@internal/utils`, affects multiple packages at once)? This determines which of the groups below
   even apply.
-- If new: does `packages/parser-typescript-strings-comments` (full-featured) or `packages/parser-example`
-  (minimal starter) make the better starting template, per `CONTRIBUTING.md`?
+- If new: which package makes the better starting template, per `CONTRIBUTING.md`? For a hand-written
+  scanner, `packages/parser-typescript-strings-comments` (full-featured) or `packages/parser-example`
+  (minimal starter). For an AST-based parser, `packages/parser-typescript-tree-sitter-wasm` (tree-sitter,
+  with no native dependency).
 - What's the actual input this parses, and what's out of scope? Concretely: give an example snippet of what
   should get spell-checked and what shouldn't — this is usually the fastest way to pin down scope
   disagreements before they turn into edge-case debates later.
