@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.1.0](https://github.com/streetsidesoftware/cspell-parsers/compare/@cspell/parser-php-strings-comments@1.0.0...@cspell/parser-php-strings-comments@1.1.0) (2026-09-26)
+
+
+### Features
+
+* **parser-php-strings-comments:** move to the IPluginEx plugin API ([#170](https://github.com/streetsidesoftware/cspell-parsers/issues/170)) ([836c20d](https://github.com/streetsidesoftware/cspell-parsers/commit/836c20d2569a9d9105a94d999c4b9e21107081cb))
+* **parser-php-strings-comments:** use defineConfig ([#174](https://github.com/streetsidesoftware/cspell-parsers/issues/174)) ([cda75c9](https://github.com/streetsidesoftware/cspell-parsers/commit/cda75c939f15bebb91eb2ed2f811ca303bfe1e8f))
+* remove the deprecated customization forms ([#194](https://github.com/streetsidesoftware/cspell-parsers/issues/194)) ([0130783](https://github.com/streetsidesoftware/cspell-parsers/commit/01307836f08ee6140b1ce9a58625ec5d120998fa))
+
+
+### Updates and Bug Fixes
+
+* keep recommendedLanguageSettings in sync when customizePlugin renames a parser ([#155](https://github.com/streetsidesoftware/cspell-parsers/issues/155)) ([3989951](https://github.com/streetsidesoftware/cspell-parsers/commit/3989951a8a1baa5150a94c85bfa237919d904d6b))
+* **parser-php-strings-comments:** don't spell check HTML by default ([#153](https://github.com/streetsidesoftware/cspell-parsers/issues/153)) ([4504989](https://github.com/streetsidesoftware/cspell-parsers/commit/4504989092a8ad518cdf09051ebc84d4a47d6028))
+
 ## 1.0.0 (2026-09-21)
 
 
