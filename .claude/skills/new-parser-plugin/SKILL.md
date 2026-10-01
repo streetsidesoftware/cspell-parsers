@@ -93,8 +93,8 @@ starting; this skill refers to its steps rather than repeating them.
    dependency with its license and verdict), the checks that ran, and its `dist` size. Push only when the
    user asks, or when the task was to open the PR.
 
-8. **After merge,** remove the worktree and delete the branch. From then on, amend or archive the ADRs with
-   `feature-adr` (steps 9 and 10).
+8. **After merge,** remove the worktree and delete the branch. From then on, update the ADRs when the design
+   changes, or archive them, with `feature-adr` (steps 9 and 10).
 
 ## Notes
 

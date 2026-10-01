@@ -65,7 +65,7 @@ and Provisional names sections when they're empty.
 ```markdown
 # NNNN. <Decision title, phrased as the thing being decided>
 
-Status: Proposed | Accepted | Accepted, amended (see [Amendment](#amendment-...)) | Superseded by [NNNN](./NNNN-slug.md)
+Status: Proposed | Accepted | Superseded by [NNNN](./NNNN-slug.md)
 
 ## Context
 
@@ -83,14 +83,6 @@ What this makes easier, what it makes harder, and what it forecloses. Include co
 specific to this repo where they apply — e.g. "the `foo.block.doc` tag becomes part of the package's public
 surface once a consumer can `customizePlugin` against it" or "this rules out later making the backend
 swappable without a breaking change to `supportedFileTypes`."
-```
-
-An ADR amended after its design merged gets one more section at the end. Keep the original text as it was:
-
-```markdown
-## Amendment: <what changed>
-
-What changed, why (what implementation or review found), and what the decision is now.
 ```
 
 Title case the filename slug the same way the feature slug is cased (kebab-case), e.g.

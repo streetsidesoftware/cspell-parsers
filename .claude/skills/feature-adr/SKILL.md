@@ -1,9 +1,11 @@
 ---
 name: feature-adr
-description: 'Design a cspell-parser feature (a behavior change, an API change, improvements) through a structured interview, recording each decision as an ADR under docs/ADRs/<feature-slug>/ and keeping docs/glossary.md in sync. Use this whenever the user wants to design, spec out, or plan a feature before writing code, is unsure how an edge case should behave, or explicitly asks for an ADR, a design doc, or to "figure out the details" of something. Trigger even if the user doesn''t say "ADR" or "skill" by name — any request to add new behavior to this tool that has more than one reasonable interpretation is a candidate. Also use it to amend a merged ADR, or to archive a settled feature''s ADRs into a short summary. For a brand-new parser package, use new-parser-plugin instead. Do not use this for pure bug fixes, refactors, or requests where the behavior is already fully specified.'
+description: 'Design a cspell-parser feature (a behavior change, an API change, improvements) through a structured interview, recording each decision as an ADR under docs/ADRs/<feature-slug>/ and keeping docs/glossary.md in sync. Use this whenever the user wants to design, spec out, or plan a feature before writing code, is unsure how an edge case should behave, or explicitly asks for an ADR, a design doc, or to "figure out the details" of something. Trigger even if the user doesn''t say "ADR" or "skill" by name — any request to add new behavior to this tool that has more than one reasonable interpretation is a candidate. Also use it to update a merged ADR when the design changes, or to archive a settled feature''s ADRs into a short summary. For a brand-new parser package, use new-parser-plugin instead. Do not use this for pure bug fixes, refactors, or requests where the behavior is already fully specified.'
 ---
 
 # feature-adr
+
+The goal is a well-designed feature. ADRs are a tool for getting there, not a deliverable.
 
 Turns a vague feature request into a small set of committed decisions, each captured as an ADR, before any
 code gets written. The point isn't ceremony — it's that this repo's package shape
@@ -124,8 +126,8 @@ feature (including you, in six months) doesn't have to reverse-engineer why a ta
    a decision, or a tracking issue that says when it must be decided (for example, before a type becomes
    public API, or before a migration's final step makes it permanent).
 
-   Don't start writing implementation code as part of this skill; the ADRs are the handoff artifact, and the
-   user can start a fresh task for implementation once they're ready.
+   Don't start writing implementation code as part of this skill. The skill stops at the design. If a question
+   is easier to answer by trying it, a quick prototype is fine.
 
    Tell the user where the work lives: the `claude-adr-<feature-slug>` branch in
    `.claude/worktrees/claude-adr-<feature-slug>`. Once its PR is merged, remove the worktree and delete the
@@ -146,11 +148,11 @@ feature (including you, in six months) doesn't have to reverse-engineer why a ta
    - Commit the consolidation on the same branch. The intermediate history stays in the branch and PR
      (which gets squash-merged), not in the ADR files.
 
-9. **Amend after the design has merged.** Implementation and review can change an accepted decision. Don't
-   rewrite a merged ADR, and don't squash again. Add an `## Amendment: <what changed>` section to the ADR,
-   say what changed and why, and set its status to `Accepted, amended`, linking to the amendment. A change
-   big enough to reverse the decision gets a new ADR that supersedes the old one instead. Update the
-   glossary to match.
+9. **Change a merged design.** Building or using a feature often shows a better answer. When it does, change
+   the design, and update its ADRs in the same PR. Rewrite the ADR to state the current decision, and add a
+   sentence to its Context on what changed and why. The earlier version stays in git history. If a decision
+   is replaced outright, write a new ADR and mark the old one `Superseded by NNNN`. Update the glossary to
+   match.
 
 10. **Archive once the feature has settled.** Most ADRs describe a change to the system. A few months after
     it's finished, their detail matters much less than the essence of what was done and why. Archive a
@@ -166,7 +168,7 @@ feature (including you, in six months) doesn't have to reverse-engineer why a ta
     - Rewrite `docs/ADRs/<feature-slug>/README.md` as the summary (see `references/adr-template.md`): why
       the feature was done, who it was for and how they were affected, its goal, what was built, each key
       decision in one line with its reason, and the learnings and improvements that came out of
-      implementation, review, and amendments.
+      implementation and review.
     - Link to the full ADRs in git history: a permalink to the feature's directory at that commit.
     - Delete the individual ADR files. Point glossary links, and any remaining links, at the summary.
     - Mark the feature as archived in `docs/ADRs/README.md`.
