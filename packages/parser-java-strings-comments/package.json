@@ -1,6 +1,6 @@
 {
   "name": "@cspell/parser-java-strings-comments",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A strings-and-comments parser plugin for cspell covering Java.",
   "repository": {
     "type": "git",
