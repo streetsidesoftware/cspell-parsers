@@ -126,8 +126,9 @@ feature (including you, in six months) doesn't have to reverse-engineer why a ta
    a decision, or a tracking issue that says when it must be decided (for example, before a type becomes
    public API, or before a migration's final step makes it permanent).
 
-   Don't start writing implementation code as part of this skill. The skill stops at the design. If a question
-   is easier to answer by trying it, a quick prototype is fine.
+   The skill usually stops at the design. If a question is easier to answer by trying it, a quick prototype is
+   fine. A small feature can have its design and implementation in a single PR: once the design is final
+   (step 8), implement it on the same branch if the user agrees.
 
    Tell the user where the work lives: the `claude-adr-<feature-slug>` branch in
    `.claude/worktrees/claude-adr-<feature-slug>`. Once its PR is merged, remove the worktree and delete the
