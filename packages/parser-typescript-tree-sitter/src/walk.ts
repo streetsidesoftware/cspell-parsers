@@ -27,7 +27,7 @@ const referenceNodeTypes = new Set(['identifier', 'type_identifier']);
 /** The tree-sitter grammar a parser uses. */
 export type Grammar = 'javascript' | 'typescript' | 'tsx';
 
-type TSLanguage = typeof TypeScriptLanguages.typescript;
+type TSLanguage = typeof JavaScriptLanguage | typeof TypeScriptLanguages.typescript;
 
 const languageByGrammar: Record<Grammar, TSLanguage> = {
   javascript: JavaScriptLanguage,
