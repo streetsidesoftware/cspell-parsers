@@ -1,0 +1,102 @@
+name: '🔗 Update CSpell'
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+env:
+  NEW_BRANCH: update-cspell
+
+jobs:
+  update-cspell:
+    if: github.repository_owner == 'streetsidesoftware'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22.x
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Current Version
+        id: current
+        run: echo "version=$(node -p 'require("./node_modules/cspell/package.json").version')" >> "$GITHUB_OUTPUT"
+
+      # Stays within the current major; transitive matches (cspell-lib, @cspell/dict-*, ...) are updated too.
+      - name: Update
+        run: pnpm -r update 'cspell' '@cspell/*' 'cspell-*'
+
+      - name: New Version
+        id: new
+        run: echo "version=$(node -p 'require("./node_modules/cspell/package.json").version')" >> "$GITHUB_OUTPUT"
+
+      - name: PR Info
+        id: info
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CURRENT: ${{ steps.current.outputs.version }}
+          NEW: ${{ steps.new.outputs.version }}
+        run: |
+          if [ "$CURRENT" = "$NEW" ]; then
+            title="chore(deps-dev): update cspell dependencies"
+            summary="Updates the dependencies of cspell \`$NEW\` (dictionaries and other \`@cspell/*\` packages)."
+            releases=""
+          else
+            title="chore(deps-dev): update cspell from $CURRENT to $NEW"
+            summary="Updates cspell and the \`@cspell/*\` packages from \`$CURRENT\` to \`$NEW\`, along with their dependencies."
+            releases=$(gh release list -R streetsidesoftware/cspell --exclude-drafts --exclude-pre-releases --limit 100 \
+                --json tagName --jq '.[].tagName' \
+              | sed -n 's/^v\([0-9.]*\)$/\1/p' \
+              | while read -r v; do
+                  if [ "$(printf '%s\n' "$CURRENT" "$v" | sort -V | tail -1)" = "$v" ] && [ "$v" != "$CURRENT" ] \
+                    && [ "$(printf '%s\n' "$NEW" "$v" | sort -V | tail -1)" = "$NEW" ]; then
+                    echo "$v"
+                  fi
+                done \
+              | sort -V \
+              | sed 's|.*|- [v&](https://github.com/streetsidesoftware/cspell/releases/tag/v&)|')
+          fi
+          {
+            echo "title=$title"
+            echo 'body<<__BODY__'
+            echo '## Summary'
+            echo
+            echo "$summary"
+            if [ -n "$releases" ]; then
+              echo
+              echo '## cspell releases'
+              echo
+              echo "$releases"
+            fi
+            echo
+            echo '## Changed files'
+            echo
+            echo '```'
+            git --no-pager diff --compact-summary
+            echo '```'
+            echo '__BODY__'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: PR
+        uses: streetsidesoftware/actions/.github/actions/pr@v1
+        with:
+          commit-message: ${{ steps.info.outputs.title }}
+          branch: ${{ env.NEW_BRANCH }}
+          base: main
+          title: ${{ steps.info.outputs.title }}
+          body: ${{ steps.info.outputs.body }}
+          app_id: ${{ secrets.AUTOMATION_APP_ID }}
+          app_private_key: ${{ secrets.AUTOMATION_PRIVATE_KEY }}
