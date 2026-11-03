@@ -213,4 +213,6 @@ optional suffix is a specialization or the AST parser used (`@cspell/parser-php-
 `@cspell/parser-typescript-tree-sitter`).
 
 Dependency updates are handled by Dependabot (`.github/dependabot.yml`), not Renovate — dev and production
-dependencies are grouped into separate PRs, as are GitHub Actions version bumps.
+dependencies are grouped into separate PRs, as are GitHub Actions version bumps. In addition,
+`.github/workflows/update-cspell.yml` runs daily and opens an `update-cspell` PR that updates `cspell`, `@cspell/*`, and
+`cspell-*` (including transitive ones such as dictionaries) within their current major version.

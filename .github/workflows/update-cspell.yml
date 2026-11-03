@@ -1,0 +1,67 @@
+name: '🔗 Update CSpell'
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+env:
+  NEW_BRANCH: update-cspell
+
+jobs:
+  update-cspell:
+    if: github.repository_owner == 'streetsidesoftware'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22.x
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Current Version
+        id: current
+        run: echo "version=$(node -p 'require("./node_modules/cspell/package.json").version')" >> "$GITHUB_OUTPUT"
+
+      # Stays within the current major; transitive matches (cspell-lib, @cspell/dict-*, ...) are updated too.
+      - name: Update
+        run: pnpm -r update 'cspell' '@cspell/*' 'cspell-*'
+
+      - name: New Version
+        id: new
+        run: echo "version=$(node -p 'require("./node_modules/cspell/package.json").version')" >> "$GITHUB_OUTPUT"
+
+      - name: PR Body
+        id: body
+        uses: streetsidesoftware/actions/public/pr-body@v1
+        with:
+          title: Update cspell
+          message: |
+            ## Summary
+
+            Updates cspell and its dependencies from `${{ steps.current.outputs.version }}` to `${{ steps.new.outputs.version }}`.
+
+            [cspell changes](https://github.com/streetsidesoftware/cspell/compare/v${{ steps.current.outputs.version }}...v${{ steps.new.outputs.version }})
+
+      - name: PR
+        uses: streetsidesoftware/actions/.github/actions/pr@v1
+        with:
+          commit-message: 'chore: update cspell to ${{ steps.new.outputs.version }}'
+          branch: ${{ env.NEW_BRANCH }}
+          base: main
+          title: 'chore: update cspell to ${{ steps.new.outputs.version }}'
+          body: ${{ steps.body.outputs.body }}
+          app_id: ${{ secrets.AUTOMATION_APP_ID }}
+          app_private_key: ${{ secrets.AUTOMATION_PRIVATE_KEY }}
