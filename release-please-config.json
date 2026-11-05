@@ -1,6 +1,8 @@
 {
   "include-v-in-tag": false,
   "tag-separator": "@",
+  "prerelease-type": "alpha",
+  "prerelease": true,
   "plugins": [
     {
       "type": "node-workspace",

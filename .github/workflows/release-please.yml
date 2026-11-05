@@ -1,5 +1,7 @@
 name: '🏷️ release-please'
 
+# Creates the releases and tags for a merged release PR. The release PR itself is maintained by release-please-pr.yml.
+
 on:
   workflow_dispatch:
   push:
@@ -9,20 +11,18 @@ on:
 permissions:
   contents: write
   pull-requests: write
-  id-token: write
 
-# Do not cancel in-progress jobs. This can break the publish flow.
+# Run one at a time. Cancelling a run in progress can leave a release half done.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
 
 jobs:
   release-please:
     if: github.repository_owner == 'streetsidesoftware'
     runs-on: ubuntu-latest
-    outputs:
-      release_created: ${{ steps.release.outputs.release_created }}
-
     steps:
-      # We need to generate a GitHub App token for authentication with release-please
-      # to make sure other workflows trigger.
+      # An App token, so the tags Release Please pushes start the Publish to NPM workflow.
       - id: generate-token
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 #v3.3.0
         with:
@@ -30,8 +30,8 @@ jobs:
           private-key: ${{ secrets.AUTOMATION_PRIVATE_KEY }}
 
       - uses: googleapis/release-please-action@v5
-        id: release
         with:
           token: ${{ steps.generate-token.outputs.token }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+          skip-github-pull-request: true
