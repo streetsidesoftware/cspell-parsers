@@ -5,14 +5,18 @@ it.
 
 ## The flow
 
-1. **release-please opens a release PR.** `.github/workflows/release-please.yml` bumps versions and changelogs
+1. **release-please opens a release PR.** `.github/workflows/release-please-pr.yml` bumps versions and changelogs
    from conventional commits, for each package in `release-please-config.json`'s `packages` map. Versions are
-   tracked in `.release-please-manifest.json`.
+   tracked in `.release-please-manifest.json`. A newer merge to `main` cancels a run in progress, and the workflow
+   is safe to re-run by hand.
 2. **Merging the release PR tags the root package** as `cspell-parsers@x.y.z`, from the `"."` entry. The
    `tag-separator: "@"` and `include-v-in-tag: false` settings give that format.
+   `.github/workflows/release-please.yml` creates the releases and tags. Its runs are never cancelled, since that
+   could leave a release half done.
 3. **The tag triggers publishing.** `.github/workflows/publish.yml` runs
-   `lerna publish from-package --no-private`, which publishes every workspace package whose version changed and
-   skips `private: true` ones.
+   `lerna publish from-package --no-private --pre-dist-tag alpha`, which publishes every workspace package whose
+   version changed and skips `private: true` ones. Prerelease versions, such as `3.2.0-alpha.0`, go to the npm
+   `alpha` tag, so users who install the package still get `latest`.
 
 ## Rules
 
