@@ -12,8 +12,8 @@ allowBuilds:
 blockExoticSubdeps: true
 
 catalog:
-  '@cspell/cspell-types': ^10.3.3
-  cspell: ^10.3.4
+  '@cspell/cspell-types': ^10.4.1
+  cspell: ^10.4.1
 
 minimumReleaseAge: 2880
 
