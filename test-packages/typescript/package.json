@@ -13,6 +13,6 @@
     "@cspell/parser-typescript-tree-sitter-wasm": "workspace:*"
   },
   "devDependencies": {
-    "@cspell/cspell-types": "^10.3.3"
+    "@cspell/cspell-types": "^10.4.1"
   }
 }
