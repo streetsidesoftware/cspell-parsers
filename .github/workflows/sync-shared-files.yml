@@ -1,0 +1,56 @@
+name: '🔗 Sync Shared Files'
+
+on:
+  schedule:
+    - cron: '0 6 * * 1' # Monday at 6 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    if: github.repository_owner == 'streetsidesoftware'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22.x
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Copy the sponsor and footer blocks
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm exec copy-github-files streetsidesoftware/.github 'static/*.md'
+
+      # fix-parser-readme reads each package's built dist/plugin.js.
+      - name: Build
+        run: pnpm run build
+
+      - name: Update the READMEs
+        run: pnpm run build:readme
+
+      - name: PR
+        uses: streetsidesoftware/actions/.github/actions/pr@v1
+        with:
+          commit-message: 'chore: sync shared files'
+          branch: sync-shared-files
+          base: main
+          body: |
+            Copies `static/*.md` from [streetsidesoftware/.github](https://github.com/streetsidesoftware/.github/tree/main/static) and regenerates the READMEs.
+
+            Edit those blocks there, not here.
+          app_id: ${{ secrets.AUTOMATION_APP_ID }}
+          app_private_key: ${{ secrets.AUTOMATION_PRIVATE_KEY }}

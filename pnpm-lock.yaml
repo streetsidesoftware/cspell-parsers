@@ -190,6 +190,9 @@ importers:
       '@lerna-lite/publish':
         specifier: ^5.6.1
         version: 5.7.0(@types/node@24.19.2)(conventional-commits-filter@6.0.1)(supports-color@9.4.0)
+      '@streetsidesoftware/copy-github-files':
+        specifier: ^1.1.0
+        version: 1.1.0
       '@tsconfig/node22':
         specifier: ^22.0.6
         version: 22.0.6
@@ -1259,6 +1262,11 @@ packages:
   '@simple-libs/stream-utils@2.0.0':
     resolution: {integrity: sha512-fCTuZK4QBa+39Oz9l4OGfJfz+GpwCp3AqO7Zch3to99xHPgstVsRFpeQ8LNd2o1Gv8raL2mCFwiaHh7bFSp5DQ==}
     engines: {node: '>=22'}
+
+  '@streetsidesoftware/copy-github-files@1.1.0':
+    resolution: {integrity: sha512-FIY64vVK7TJfriCJbVzM+imoCeCGPDf0iyj1ZsoZ7PmAN0ELFcWoCrv0N06JdTxYCyxML08ZOoivI6+kyL3oQg==}
+    engines: {node: '>=22.18.0'}
+    hasBin: true
 
   '@streetsidesoftware/unindent@1.0.1':
     resolution: {integrity: sha512-ZXfg7MT3AT9ZOq/hgzbqNc01zVPG+PFkr+kbB2OHlMcNrtvK10ZPkNgy38MqTErjNeajh4VG1sSSv5zIyjOXxg==}
@@ -4003,6 +4011,8 @@ snapshots:
       semver: 7.8.5
 
   '@simple-libs/stream-utils@2.0.0': {}
+
+  '@streetsidesoftware/copy-github-files@1.1.0': {}
 
   '@streetsidesoftware/unindent@1.0.1': {}
 
