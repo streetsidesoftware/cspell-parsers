@@ -40,6 +40,9 @@ before `eslint`/`prettier`; `pnpm run lint-ci` runs all three with `--dry-run` s
 text is maintained in one place:
 
 - `static/requirements.md`, `static/sponsor.md` and `static/footer.md` are injected whole.
+- `static/sponsor.md`, `static/sponsor-pub.md` and `static/footer.md` are copies of the shared blocks in
+  [`streetsidesoftware/.github`](https://github.com/streetsidesoftware/.github/tree/main/static). Edit them there.
+  The `Sync Shared Files` workflow copies them weekly and opens a PR with the updated READMEs.
 - `static/customization-options-intro.md` is the start of the "Customization options" section. Its
   `{@ given-by @}` placeholder is filled by the directive's `value=`, which differs for single- and
   multi-parser packages. A README that needs local text between its parts injects single sections with
