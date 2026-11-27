@@ -33,6 +33,10 @@ jobs:
         uses: github/codeql-action/init@v4
         with:
           languages: 'javascript'
+          # Fixtures are parser test input, some of it malformed on purpose.
+          config: |
+            paths-ignore:
+              - '**/fixtures/**'
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
